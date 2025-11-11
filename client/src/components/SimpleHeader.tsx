@@ -15,16 +15,17 @@ export default function SimpleHeader({
     <header className="sticky top-0 z-40 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
       <div className="flex items-center justify-between px-6 py-4 md:px-12 gap-4">
         {/* Logo */}
-        <img 
-          src={logoSrc} 
-          alt="Kahani Logo" 
+        <img
+          src={logoSrc}
+          alt="Kahani Logo"
           className="h-12 w-auto object-contain"
         />
 
         {/* Navigation buttons */}
         <div className="flex items-center gap-3">
           {/* View Demo Button */}
-          <Link href="/book-demo" data-testid="link-header-demo">
+
+          {/* <Link href="/book-demo" data-testid="link-header-demo">
             <button
               className="flex items-center gap-2 px-4 py-2.5 font-medium text-sm border-2 border-[#8B7355] text-[#8B7355] hover:bg-[#8B7355]/10 rounded-md transition-colors min-h-[44px]"
               data-testid="button-header-demo"
@@ -32,7 +33,7 @@ export default function SimpleHeader({
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">View Demo</span>
             </button>
-          </Link>
+          </Link> */}
 
           {/* Record Now Button */}
           <button
