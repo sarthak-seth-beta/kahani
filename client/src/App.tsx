@@ -21,6 +21,7 @@ import ThankYou from "@/pages/ThankYou";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import Affiliate from "@/pages/Affiliate";
+import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
 import Blogs from "@/pages/Blogs";
 import AlbumsGallery from "@/pages/AlbumsGallery";
@@ -92,6 +93,7 @@ function App() {
           <Route path="/thank-you" component={ThankYou} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
+          <Route path="/about-us" component={AboutUs} />
           <Route path="/affiliate" component={Affiliate} />
           <Route path="/contact-us" component={ContactUs} />
           <Route path="/blogs" component={Blogs} />

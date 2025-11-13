@@ -63,6 +63,13 @@ export function Footer() {
             </h3>
             <ul className="space-y-3">
               <li>
+                <Link href="/about-us">
+                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-about-us">
+                    About us
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/affiliate">
                   <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-affiliate">
                     Affiliate

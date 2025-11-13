@@ -348,7 +348,7 @@ export async function sendFreeTrialConfirmation(
       { type: 'text', text: relation },
       { type: 'text', text: albumName },
       { type: 'text', text: relation },
-      { type: 'text', text: relation }
+      { type: 'text', text: relation },
     ];
 
     return sendTemplateMessageWithRetry(
