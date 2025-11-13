@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import heroImage from "@assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
 import { Button } from "@/components/ui/button";
 
@@ -6,10 +7,28 @@ interface HeroSectionProps {
   onStartTrialClick?: () => void;
 }
 
+const storyTexts = [
+  "DADI'S",
+  "NANI'S",
+  "DADA'S",
+  "PAPA'S",
+  "NANA'S",
+  "MUMMY'S",
+];
+
 export default function HeroSection({
   imageSrc = heroImage,
   onStartTrialClick,
 }: HeroSectionProps) {
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % storyTexts.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
   return (
     <section className="relative w-full min-h-screen flex flex-col">
       {/* Full Screen Background Image */}
@@ -31,7 +50,9 @@ export default function HeroSection({
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-16 sm:mb-24 font-['Outfit'] max-w-4xl"
           data-testid="text-hero-headline"
         >
-          DADI'S
+          <span key={currentTextIndex} className="inline-block animate-fade-in">
+            {storyTexts[currentTextIndex]}
+          </span>
           <br />
           STORIES AND VOICES
           <br />
