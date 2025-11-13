@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ScrollToTop from "@/components/ScrollToTop";
 import SimpleHeader from "@/components/SimpleHeader";
 import HeroSection from "@/components/HeroSection";
+import AboutUsSection from "@/components/AboutUsSection";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
@@ -54,6 +55,9 @@ function HomePage() {
 
       {/* Hero Section - Full Screen with Button */}
       <HeroSection onStartTrialClick={handleStartTrialClick} />
+
+      {/* About Us Section */}
+      <AboutUsSection />
 
       {/* Value Proposition with Logo */}
       <ValueProposition />
