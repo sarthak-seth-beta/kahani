@@ -35,20 +35,29 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* Legal */}
           <div>
-            <h3 className="text-lg font-semibold mb-4" data-testid="heading-legal">
+            <h3
+              className="text-lg font-semibold mb-4"
+              data-testid="heading-legal"
+            >
               Legal
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link href="/privacy-policy">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-privacy-policy">
+                  <span
+                    className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer"
+                    data-testid="link-privacy-policy"
+                  >
                     Privacy policy
                   </span>
                 </Link>
               </li>
               <li>
                 <Link href="/terms-of-service">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-terms-of-service">
+                  <span
+                    className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer"
+                    data-testid="link-terms-of-service"
+                  >
                     Terms of Service
                   </span>
                 </Link>
@@ -58,34 +67,49 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-lg font-semibold mb-4" data-testid="heading-company">
+            <h3
+              className="text-lg font-semibold mb-4"
+              data-testid="heading-company"
+            >
               Company
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link href="/about-us">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-about-us">
+                  <span
+                    className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer"
+                    data-testid="link-about-us"
+                  >
                     About us
                   </span>
                 </Link>
               </li>
               <li>
                 <Link href="/affiliate">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-affiliate">
+                  <span
+                    className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer"
+                    data-testid="link-affiliate"
+                  >
                     Affiliate
                   </span>
                 </Link>
               </li>
               <li>
                 <Link href="/contact-us">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-contact-us">
+                  <span
+                    className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer"
+                    data-testid="link-contact-us"
+                  >
                     Contact us
                   </span>
                 </Link>
               </li>
               <li>
                 <Link href="/blogs">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer" data-testid="link-blogs">
+                  <span
+                    className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer"
+                    data-testid="link-blogs"
+                  >
                     Blogs
                   </span>
                 </Link>
@@ -97,7 +121,10 @@ export function Footer() {
         {/* Copyright */}
         <div className="mt-12 pt-8 border-t border-[#EEE9DF]/20 text-center">
           <p className="text-[#EEE9DF]/60 text-sm">
-            © {new Date().getFullYear()} Kahani. All rights reserved.
+            © 2025 Kahani. All rights reserved.
+          </p>
+          <p className="text-[#EEE9DF]/60 text-sm mt-2">
+            by Sprism Culture Labs Pvt Ltd
           </p>
         </div>
       </div>

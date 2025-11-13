@@ -1,4 +1,21 @@
-import { type Product, type Order, type FreeTrial, type Feedback, type InsertOrder, type InsertFreeTrial, type InsertFeedback, type WhatsappToken, type InsertWhatsappToken, type WebhookEvent, type FreeTrialRow, type InsertFreeTrialRow, type VoiceNoteRow, type InsertVoiceNoteRow, freeTrials, voiceNotes } from "@shared/schema";
+import {
+  type Product,
+  type Order,
+  type FreeTrial,
+  type Feedback,
+  type InsertOrder,
+  type InsertFreeTrial,
+  type InsertFeedback,
+  type WhatsappToken,
+  type InsertWhatsappToken,
+  type WebhookEvent,
+  type FreeTrialRow,
+  type InsertFreeTrialRow,
+  type VoiceNoteRow,
+  type InsertVoiceNoteRow,
+  freeTrials,
+  voiceNotes,
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and, lte } from "drizzle-orm";
@@ -11,27 +28,35 @@ export interface IStorage {
   updateOrder(id: string, updates: Partial<Order>): Promise<Order>;
   createFreeTrial(trial: InsertFreeTrial): Promise<FreeTrial>;
   getFreeTrial(id: string): Promise<FreeTrial | undefined>;
-  
+
   createFreeTrialDb(trial: InsertFreeTrialRow): Promise<FreeTrialRow>;
   getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined>;
-  getFreeTrialByStorytellerPhone(phone: string): Promise<FreeTrialRow | undefined>;
-  updateFreeTrialDb(id: string, updates: Partial<FreeTrialRow>): Promise<FreeTrialRow>;
+  getFreeTrialByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined>;
+  updateFreeTrialDb(
+    id: string,
+    updates: Partial<FreeTrialRow>,
+  ): Promise<FreeTrialRow>;
   getFreeTrialsNeedingRetry(): Promise<FreeTrialRow[]>;
   getScheduledQuestionsDue(): Promise<FreeTrialRow[]>;
   getPendingReminders(): Promise<FreeTrialRow[]>;
-  
+
   createVoiceNote(voiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow>;
   getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]>;
-  updateVoiceNote(id: string, updates: Partial<VoiceNoteRow>): Promise<VoiceNoteRow>;
-  
+  updateVoiceNote(
+    id: string,
+    updates: Partial<VoiceNoteRow>,
+  ): Promise<VoiceNoteRow>;
+
   getStories(uniqueCode: string): Promise<any>;
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   getFeedbackByOrderCode(orderCode: string): Promise<Feedback | undefined>;
-  
+
   createWhatsappToken(token: InsertWhatsappToken): Promise<WhatsappToken>;
   getWhatsappToken(token: string): Promise<WhatsappToken | undefined>;
   consumeWhatsappToken(token: string): Promise<WhatsappToken | undefined>;
-  
+
   isWebhookProcessed(idempotencyKey: string): Promise<boolean>;
   markWebhookProcessed(idempotencyKey: string): Promise<WebhookEvent>;
 }
@@ -44,8 +69,10 @@ const initialProducts: Product[] = [
     price: 999,
     questionCount: 50,
     durationDays: 50,
-    description: "Honor their service and sacrifice. Capture combat experiences, camaraderie, and life-changing moments.",
-    image: "https://images.unsplash.com/photo-1562141292-a10cc3b8f8f7?w=800&h=600&fit=crop",
+    description:
+      "Honor their service and sacrifice. Capture combat experiences, camaraderie, and life-changing moments.",
+    image:
+      "https://images.unsplash.com/photo-1562141292-a10cc3b8f8f7?w=800&h=600&fit=crop",
     features: [
       "50 thoughtfully crafted questions",
       "Daily WhatsApp delivery over 50 days",
@@ -69,8 +96,10 @@ const initialProducts: Product[] = [
     price: 799,
     questionCount: 30,
     durationDays: 30,
-    description: "Preserve generational wisdom, childhood memories, family traditions, and life lessons.",
-    image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&h=600&fit=crop",
+    description:
+      "Preserve generational wisdom, childhood memories, family traditions, and life lessons.",
+    image:
+      "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&h=600&fit=crop",
     features: [
       "30 heartwarming questions",
       "Daily WhatsApp delivery over 30 days",
@@ -94,8 +123,10 @@ const initialProducts: Product[] = [
     price: 1099,
     questionCount: 40,
     durationDays: 40,
-    description: "Document professional achievements, career pivots, leadership experiences, and hard-earned wisdom.",
-    image: "https://images.unsplash.com/photo-1560439513-74b037a25d84?w=800&h=600&fit=crop",
+    description:
+      "Document professional achievements, career pivots, leadership experiences, and hard-earned wisdom.",
+    image:
+      "https://images.unsplash.com/photo-1560439513-74b037a25d84?w=800&h=600&fit=crop",
     features: [
       "40 career-focused questions",
       "Daily WhatsApp delivery over 40 days",
@@ -119,8 +150,10 @@ const initialProducts: Product[] = [
     price: 999,
     questionCount: 35,
     durationDays: 35,
-    description: "Preserve immigration journeys, cultural heritage, adaptation stories, and traditions passed through generations.",
-    image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=800&h=600&fit=crop",
+    description:
+      "Preserve immigration journeys, cultural heritage, adaptation stories, and traditions passed through generations.",
+    image:
+      "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=800&h=600&fit=crop",
     features: [
       "35 culturally sensitive questions",
       "Flexible delivery schedule",
@@ -144,8 +177,10 @@ const initialProducts: Product[] = [
     price: 1199,
     questionCount: 45,
     durationDays: 45,
-    description: "Capture compassionate care stories, patient connections, medical breakthroughs, and career highlights.",
-    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=600&fit=crop",
+    description:
+      "Capture compassionate care stories, patient connections, medical breakthroughs, and career highlights.",
+    image:
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=600&fit=crop",
     features: [
       "45 healthcare-focused questions",
       "Flexible scheduling for busy professionals",
@@ -169,8 +204,10 @@ const initialProducts: Product[] = [
     price: 1299,
     questionCount: 50,
     durationDays: 50,
-    description: "Document business ventures, entrepreneurial challenges, successes, failures, and insights.",
-    image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&h=600&fit=crop",
+    description:
+      "Document business ventures, entrepreneurial challenges, successes, failures, and insights.",
+    image:
+      "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&h=600&fit=crop",
     features: [
       "50 business-focused questions",
       "Flexible delivery schedule",
@@ -257,17 +294,24 @@ export class DatabaseStorage implements IStorage {
     return this.freeTrialsLegacy.get(id);
   }
 
-  async createFreeTrialDb(insertTrial: InsertFreeTrialRow): Promise<FreeTrialRow> {
+  async createFreeTrialDb(
+    insertTrial: InsertFreeTrialRow,
+  ): Promise<FreeTrialRow> {
     const [trial] = await db.insert(freeTrials).values(insertTrial).returning();
     return trial;
   }
 
   async getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined> {
-    const [trial] = await db.select().from(freeTrials).where(eq(freeTrials.id, id));
+    const [trial] = await db
+      .select()
+      .from(freeTrials)
+      .where(eq(freeTrials.id, id));
     return trial;
   }
 
-  async getFreeTrialByStorytellerPhone(phone: string): Promise<FreeTrialRow | undefined> {
+  async getFreeTrialByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined> {
     const [trial] = await db
       .select()
       .from(freeTrials)
@@ -275,17 +319,20 @@ export class DatabaseStorage implements IStorage {
     return trial;
   }
 
-  async updateFreeTrialDb(id: string, updates: Partial<FreeTrialRow>): Promise<FreeTrialRow> {
+  async updateFreeTrialDb(
+    id: string,
+    updates: Partial<FreeTrialRow>,
+  ): Promise<FreeTrialRow> {
     const [updatedTrial] = await db
       .update(freeTrials)
       .set(updates)
       .where(eq(freeTrials.id, id))
       .returning();
-    
+
     if (!updatedTrial) {
       throw new Error(`Free trial with id ${id} not found`);
     }
-    
+
     return updatedTrial;
   }
 
@@ -297,8 +344,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(freeTrials.conversationState, "awaiting_readiness"),
-          lte(freeTrials.retryReadinessAt, now)
-        )
+          lte(freeTrials.retryReadinessAt, now),
+        ),
       );
     return trials;
   }
@@ -311,8 +358,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(freeTrials.conversationState, "in_progress"),
-          lte(freeTrials.nextQuestionScheduledFor, now)
-        )
+          lte(freeTrials.nextQuestionScheduledFor, now),
+        ),
       );
     return trials;
   }
@@ -326,17 +373,19 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(freeTrials.conversationState, "in_progress"),
-          lte(freeTrials.lastQuestionSentAt, reminderThreshold)
-        )
+          lte(freeTrials.lastQuestionSentAt, reminderThreshold),
+        ),
       );
-    return trials.filter(trial => {
+    return trials.filter((trial) => {
       if (trial.reminderSentAt) return false;
       if (!trial.nextQuestionScheduledFor) return true;
       return trial.nextQuestionScheduledFor <= now;
     });
   }
 
-  async createVoiceNote(insertVoiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow> {
+  async createVoiceNote(
+    insertVoiceNote: InsertVoiceNoteRow,
+  ): Promise<VoiceNoteRow> {
     const [voiceNote] = await db
       .insert(voiceNotes)
       .values(insertVoiceNote)
@@ -352,36 +401,39 @@ export class DatabaseStorage implements IStorage {
     return notes;
   }
 
-  async updateVoiceNote(id: string, updates: Partial<VoiceNoteRow>): Promise<VoiceNoteRow> {
+  async updateVoiceNote(
+    id: string,
+    updates: Partial<VoiceNoteRow>,
+  ): Promise<VoiceNoteRow> {
     const [updatedNote] = await db
       .update(voiceNotes)
       .set(updates)
       .where(eq(voiceNotes.id, id))
       .returning();
-    
+
     if (!updatedNote) {
       throw new Error(`Voice note with id ${id} not found`);
     }
-    
+
     return updatedNote;
   }
 
   async getStories(uniqueCode: string): Promise<any> {
     const order = Array.from(this.orders.values()).find(
-      (o) => o.uniqueCode === uniqueCode
+      (o) => o.uniqueCode === uniqueCode,
     );
-    
+
     if (!order) {
       return null;
     }
 
     const allProducts = await this.getAllProducts();
-    
+
     let totalQuestions = 0;
     let primaryCategory = "Stories";
-    
+
     for (const item of order.items) {
-      const product = allProducts.find(p => p.id === item.productId);
+      const product = allProducts.find((p) => p.id === item.productId);
       if (product) {
         totalQuestions += product.questionCount * item.quantity;
         if (!primaryCategory || primaryCategory === "Stories") {
@@ -389,7 +441,7 @@ export class DatabaseStorage implements IStorage {
         }
       }
     }
-    
+
     return {
       elderName: "Your Loved One",
       category: primaryCategory,
@@ -409,13 +461,17 @@ export class DatabaseStorage implements IStorage {
     return feedback;
   }
 
-  async getFeedbackByOrderCode(orderCode: string): Promise<Feedback | undefined> {
+  async getFeedbackByOrderCode(
+    orderCode: string,
+  ): Promise<Feedback | undefined> {
     return Array.from(this.feedbacks.values()).find(
-      (f) => f.orderCode === orderCode
+      (f) => f.orderCode === orderCode,
     );
   }
 
-  async createWhatsappToken(insertToken: InsertWhatsappToken): Promise<WhatsappToken> {
+  async createWhatsappToken(
+    insertToken: InsertWhatsappToken,
+  ): Promise<WhatsappToken> {
     const id = randomUUID();
     const token: WhatsappToken = {
       ...insertToken,
@@ -430,7 +486,9 @@ export class DatabaseStorage implements IStorage {
     return this.whatsappTokens.get(token);
   }
 
-  async consumeWhatsappToken(token: string): Promise<WhatsappToken | undefined> {
+  async consumeWhatsappToken(
+    token: string,
+  ): Promise<WhatsappToken | undefined> {
     const whatsappToken = this.whatsappTokens.get(token);
     if (!whatsappToken) {
       return undefined;

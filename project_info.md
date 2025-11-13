@@ -5,6 +5,7 @@
 LegacyScribe is a full-stack story preservation platform that helps families record and preserve life stories of their elders through WhatsApp. The service delivers structured questions via WhatsApp, collects voice note responses, and compiles them into memory books.
 
 ### Core Business Model
+
 - **Free Trial**: Users get 1 album (15 questions) with automated WhatsApp delivery
 - **Paid Service**: Purchase multiple albums with custom story books
 - **Question Delivery**: One question every 2 days, with 36-hour reminders if unanswered
@@ -15,6 +16,7 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
 ## 🏗️ Technical Architecture
 
 ### Frontend Stack
+
 - **Framework**: React 18.3 + TypeScript 5.6
 - **Build Tool**: Vite 5.4
 - **Routing**: Wouter 3.3 (lightweight client-side routing)
@@ -25,6 +27,7 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
 - **Animations**: Framer Motion, PageFlip library
 
 ### Backend Stack
+
 - **Runtime**: Node.js 20.19 + Express.js 4.21
 - **Language**: TypeScript (tsx for execution)
 - **Database**: PostgreSQL (Supabase) via Drizzle ORM 0.39
@@ -37,6 +40,7 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
 **Tables:**
 
 1. **`free_trials`** - Trial records and conversation state
+
    ```sql
    - id (varchar, UUID primary key)
    - customer_phone (varchar, E.164 format)
@@ -55,7 +59,7 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
    - reminder_sent_at (timestamp, nullable)
    - next_question_scheduled_for (timestamp, nullable)
    - created_at (timestamp, default now())
-   
+
    INDEXES:
    - conversation_state_idx (for scheduler queries)
    - retry_readiness_at_idx (for retry logic)
@@ -63,6 +67,7 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
    ```
 
 2. **`voice_notes`** - Voice note metadata
+
    ```sql
    - id (varchar, UUID primary key)
    - free_trial_id (varchar, FK to free_trials)
@@ -76,11 +81,11 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
    - download_status (varchar, default 'pending')
    - size_bytes (integer, nullable)
    - received_at (timestamp, default now())
-   
+
    CONSTRAINTS:
    - UNIQUE (free_trial_id, question_index) - prevents duplicate answers
    - FK free_trial_id ON DELETE CASCADE
-   
+
    INDEXES:
    - free_trial_id_idx
    ```
@@ -88,10 +93,10 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
 ### WhatsApp Integration Architecture
 
 **Message Flow:**
+
 1. **Free Trial Signup** → Two messages sent to buyer:
    - Order confirmation
    - Shareable WhatsApp link for storyteller
-   
 2. **Storyteller Activation** → Storyteller clicks link:
    - System receives first message with trial ID
    - Sends welcome + readiness question
@@ -113,15 +118,18 @@ LegacyScribe is a full-stack story preservation platform that helps families rec
    - Schedule next question for +48 hours
 
 **API Endpoints:**
+
 - `POST /webhook/whatsapp` - Receives incoming messages
 - `GET /webhook/whatsapp` - Meta webhook verification
 
 ### Background Scheduler
 
 **Implementation**: `setInterval` (hourly checks)
+
 - **Production Note**: Replace with external cron job (Render Cron, Vercel Cron, etc.)
 
 **Scheduled Jobs:**
+
 1. `sendScheduledQuestions()` - Sends questions that are past their scheduled time
 2. `sendPendingReminders()` - Sends 36-hour reminders for unanswered questions
 
@@ -242,21 +250,19 @@ DATABASE_URL="postgresql://..."  # Used by drizzle.config.ts for CLI commands on
   - Click "Generate Access Token" in API Setup
   - **Temporary tokens expire every 24 hours**
   - For production: Create System User token in Meta Business Settings (doesn't expire)
-  
 - **`WHATSAPP_PHONE_NUMBER_ID`**:
   - Found in API Setup under "Phone Number ID"
   - Format: 15-digit number
-  
 - **`WHATSAPP_BUSINESS_PHONE`**:
   - Your WhatsApp Business phone number
   - Format: E.164 (e.g., `1234567890` for US, `919876543210` for India)
-  
 - **`WHATSAPP_WEBHOOK_VERIFY_TOKEN`**:
   - Create your own random string (e.g., `my_secure_token_12345`)
   - Set this in Meta webhook configuration
   - Must match exactly between Meta dashboard and your `.env`
 
 **Webhook Setup in Meta Dashboard:**
+
 1. Go to WhatsApp > Configuration
 2. Edit Webhook:
    - Callback URL: `https://your-domain.com/webhook/whatsapp`
@@ -266,6 +272,7 @@ DATABASE_URL="postgresql://..."  # Used by drizzle.config.ts for CLI commands on
 #### Database Configuration
 
 **Supabase Setup:**
+
 1. Create project at https://supabase.com
 2. Go to Project Settings > Database
 3. Toggle "Use connection pooling" → **ON**
@@ -274,6 +281,7 @@ DATABASE_URL="postgresql://..."  # Used by drizzle.config.ts for CLI commands on
 6. **Important**: URL encode special characters in password (@ becomes %40)
 
 **Database Note:**
+
 - Runtime app uses `SUPABASE_DATABASE_URL`
 - Drizzle CLI uses `DATABASE_URL` (cannot modify `drizzle.config.ts`)
 - For schema changes: Generate SQL with `npx drizzle-kit generate`, then apply manually to Supabase
@@ -369,6 +377,7 @@ npm run dev
 ```
 
 This starts:
+
 - **Express server**: `http://localhost:5000`
 - **Vite dev server**: Integrated with Express
 - **Background scheduler**: Hourly job for questions/reminders
@@ -391,6 +400,7 @@ ngrok http 5000
 ```
 
 **Test Flow:**
+
 1. Go to `http://localhost:5000`
 2. Click "Start Free Trial"
 3. Fill form and submit
@@ -404,18 +414,21 @@ ngrok http 5000
 ### Manual Testing Checklist
 
 **Frontend:**
+
 - [ ] Landing page loads with all 6 sections
 - [ ] Album selection (free trial checkout) works
 - [ ] Free trial form submission
 - [ ] Book demo page flip animation
 
 **Backend:**
+
 - [ ] Free trial API creates record in database
 - [ ] WhatsApp messages sent successfully
 - [ ] Webhook receives and processes messages
 - [ ] Scheduler runs and sends questions
 
 **Database:**
+
 - [ ] Check free_trials table: `SELECT * FROM free_trials;`
 - [ ] Check voice_notes table: `SELECT * FROM voice_notes;`
 
@@ -453,6 +466,7 @@ npm run build
 ```
 
 This creates:
+
 - `dist/public/` - Frontend static files
 - `dist/index.js` - Backend bundle
 
@@ -465,11 +479,13 @@ npm start
 ### Environment-Specific Notes
 
 **Development:**
+
 - Hot reload enabled
 - WhatsApp sends custom text messages
 - Logs verbose output
 
 **Production:**
+
 - WhatsApp uses approved templates (`kahani_free_trial_confirmation`)
 - External cron job required for scheduler (not `setInterval`)
 - Set `NODE_ENV=production`
@@ -481,6 +497,7 @@ npm start
 ### Public Endpoints
 
 **Free Trial:**
+
 ```
 POST /api/free-trial
 Body: {
@@ -493,6 +510,7 @@ Response: { id, buyerName, storytellerName, ... }
 ```
 
 **WhatsApp Webhook:**
+
 ```
 POST /webhook/whatsapp
 Headers: { Content-Type: application/json }
@@ -520,22 +538,25 @@ Response: hub.challenge (for Meta verification)
 ## 🎨 Design System
 
 **Theme Variables (index.css):**
+
 ```css
 :root {
-  --primary: 210 100% 50%;     /* Primary Blue */
-  --accent: 45 100% 51%;       /* Gold Accent */
-  --background: 0 0% 100%;     /* White */
-  --foreground: 222 47% 11%;   /* Dark Text */
+  --primary: 210 100% 50%; /* Primary Blue */
+  --accent: 45 100% 51%; /* Gold Accent */
+  --background: 0 0% 100%; /* White */
+  --foreground: 222 47% 11%; /* Dark Text */
   /* ... see client/src/index.css for full list */
 }
 ```
 
 **Typography:**
+
 - Font: Inter (Google Fonts)
 - Headings: 700 weight
 - Body: 400 weight
 
 **Components:**
+
 - All UI components in `client/src/components/ui/`
 - Custom theme via Tailwind + Shadcn
 
@@ -546,16 +567,19 @@ Response: hub.challenge (for Meta verification)
 ### Common Issues
 
 **1. "Error: password authentication failed for user 'postgres'"**
+
 - Check `SUPABASE_DATABASE_URL` is correct
 - Verify password is URL-encoded (@ → %40)
 - Ensure using session pooler URL (not direct connection)
 
 **2. "WhatsApp access token expired"**
+
 - Temporary tokens expire every 24 hours
 - Generate new token from Meta dashboard
 - For production: Set up System User token
 
 **3. "Port 5000 already in use"**
+
 ```bash
 # Find and kill process
 lsof -ti:5000 | xargs kill -9
@@ -564,6 +588,7 @@ lsof -ti:5000 | xargs kill -9
 ```
 
 **4. "Database relation does not exist"**
+
 ```bash
 # Push schema to database
 npm run db:push
@@ -574,6 +599,7 @@ npx drizzle-kit generate
 ```
 
 **5. Scheduler not running**
+
 - Check logs for "Starting background scheduler"
 - Verify database connection is active
 - For production: Replace with external cron job
@@ -581,12 +607,14 @@ npx drizzle-kit generate
 ### Debug Tips
 
 **Check Database Connection:**
+
 ```bash
 # Using psql
 psql $SUPABASE_DATABASE_URL -c "SELECT NOW();"
 ```
 
 **View Logs:**
+
 ```bash
 # Server logs
 npm run dev
@@ -596,6 +624,7 @@ export const db = drizzle(pool, { schema, logger: true });
 ```
 
 **Test WhatsApp API:**
+
 ```bash
 curl -X POST "https://graph.facebook.com/v22.0/${PHONE_ID}/messages" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -613,11 +642,13 @@ curl -X POST "https://graph.facebook.com/v22.0/${PHONE_ID}/messages" \
 ## 📚 Additional Resources
 
 **Documentation:**
+
 - `replit.md` - Detailed feature documentation
 - `design_guidelines.md` - UI/UX design system
 - `PAYMENT_WEBHOOK_SETUP.md` - Payment integration guide
 
 **External Docs:**
+
 - WhatsApp Business API: https://developers.facebook.com/docs/whatsapp
 - Drizzle ORM: https://orm.drizzle.team/docs/overview
 - Shadcn UI: https://ui.shadcn.com/docs
@@ -631,11 +662,13 @@ Use this prompt when working with Cursor AI on this project:
 
 \`\`\`
 You are working on LegacyScribe (Kahani), a story preservation platform built with:
+
 - Frontend: React 18 + TypeScript + Vite + Wouter routing + TanStack Query + Shadcn UI
 - Backend: Node.js + Express + TypeScript + Drizzle ORM (PostgreSQL)
 - Integration: WhatsApp Business API (Meta Graph API v22)
 
 ARCHITECTURE RULES:
+
 1. Database schema is in shared/schema.ts (single source of truth)
 2. Use Drizzle ORM for all database operations (no raw SQL except debugging)
 3. WhatsApp conversation state machine in server/conversationHandler.ts
@@ -644,6 +677,7 @@ ARCHITECTURE RULES:
 6. Use IStorage interface in server/storage.ts for database operations
 
 KEY FEATURES:
+
 - Free trial: 1 album (15 questions), automated WhatsApp delivery
 - Question cadence: Every 2 days (48 hours) after voice note received
 - Reminders: 36 hours after question delivery if no response
@@ -651,29 +685,34 @@ KEY FEATURES:
 - Idempotency: Webhook messages tracked by ID, voice notes by (trial_id, question_index)
 
 TECH PATTERNS:
+
 - Forms: React Hook Form + Zod validation + zodResolver
 - API calls: TanStack Query with apiRequest() from @lib/queryClient
 - Routing: Wouter (<Link>, useLocation)
-- Components: Shadcn UI (import from @/components/ui/*)
+- Components: Shadcn UI (import from @/components/ui/\*)
 - Styling: Tailwind CSS + custom theme in index.css
 
 DATABASE:
+
 - Primary: Supabase PostgreSQL (SUPABASE_DATABASE_URL)
 - Tables: free_trials, voice_notes
 - Migrations: Generate with drizzle-kit, apply manually to Supabase
 
 WHATSAPP INTEGRATION:
+
 - Two-message flow: (1) buyer confirmation, (2) shareable storyteller link
 - Webhook: POST /webhook/whatsapp (receives incoming messages)
 - API: server/whatsapp.ts (sendTextMessage, sendTemplateMessage)
 - E.164 phone format: Auto-converts 10-digit Indian numbers to 91XXXXXXXXXX
 
 IMPORTANT CONSTRAINTS:
+
 - Cannot modify: vite.config.ts, drizzle.config.ts (forbidden files)
 - @assets alias must remain pointed to attached_assets/
 - Temporary WhatsApp tokens expire every 24 hours (use System User for prod)
 
 WHEN MAKING CHANGES:
+
 1. Update shared/schema.ts first for data model changes
 2. Use npm run db:push to sync schema (or manual migration for Supabase)
 3. Follow existing patterns in codebase
@@ -681,7 +720,8 @@ WHEN MAKING CHANGES:
 5. Check conversation state transitions are correct
 
 FILE LOCATIONS:
-- Frontend pages: client/src/pages/*.tsx
+
+- Frontend pages: client/src/pages/\*.tsx
 - API routes: server/routes.ts
 - Database ops: server/storage.ts
 - WhatsApp logic: server/conversationHandler.ts

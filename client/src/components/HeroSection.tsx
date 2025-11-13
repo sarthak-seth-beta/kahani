@@ -8,7 +8,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({
   imageSrc = heroImage,
-  onStartTrialClick
+  onStartTrialClick,
 }: HeroSectionProps) {
   return (
     <section className="relative w-full min-h-screen flex flex-col">
@@ -19,7 +19,7 @@ export default function HeroSection({
           alt="Kahani storytelling experience"
           className="w-full h-full object-cover"
         />
-        
+
         {/* Dark gradient overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1B2632]/70 via-[#1B2632]/30 to-transparent" />
       </div>
@@ -27,12 +27,14 @@ export default function HeroSection({
       {/* Content - Centered with More Space */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-16 sm:pb-20 pt-24 sm:pt-32">
         {/* Text Overlay - Three Lines */}
-        <h1 
+        <h1
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-16 sm:mb-24 font-['Outfit'] max-w-4xl"
           data-testid="text-hero-headline"
         >
-          DADI'S<br />
-          STORIES AND VOICES<br />
+          DADI'S
+          <br />
+          STORIES AND VOICES
+          <br />
           IN A BOOK
         </h1>
 

@@ -17,29 +17,37 @@ const albums: Album[] = [
   {
     id: 1,
     title: "Our Family History",
-    description: "Revisit the people, places, and small moments that shaped your earliest memories",
-    imageSrc: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
+    description:
+      "Revisit the people, places, and small moments that shaped your earliest memories",
+    imageSrc:
+      "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
     imageAlt: "Our Family History",
   },
   {
     id: 2,
     title: "Their Life Paths",
-    description: "Reflect on your life's journey — the moments, choices, and people that taught you who you are",
-    imageSrc: "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
+    description:
+      "Reflect on your life's journey — the moments, choices, and people that taught you who you are",
+    imageSrc:
+      "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
     imageAlt: "Their Life Paths",
   },
   {
     id: 3,
     title: "Words of Wisdom",
-    description: "Share the wisdom, values, and reflections that your life's journey has taught you",
-    imageSrc: "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
+    description:
+      "Share the wisdom, values, and reflections that your life's journey has taught you",
+    imageSrc:
+      "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
     imageAlt: "Words of Wisdom",
   },
   {
     id: 4,
     title: "Love & Relationships",
-    description: "Explore the bonds that matter most — love, connections, and relationships",
-    imageSrc: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
+    description:
+      "Explore the bonds that matter most — love, connections, and relationships",
+    imageSrc:
+      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
     imageAlt: "Love & Relationships",
   },
 ];
@@ -61,12 +69,15 @@ export default function Checkout() {
   };
 
   const handleBuyNow = () => {
-    const selectedAlbums = albums.filter(album => quantities[album.id] > 0);
-    console.log("Buy Now - Selected Albums:", selectedAlbums.map(album => ({
-      id: album.id,
-      title: album.title,
-      quantity: quantities[album.id]
-    })));
+    const selectedAlbums = albums.filter((album) => quantities[album.id] > 0);
+    console.log(
+      "Buy Now - Selected Albums:",
+      selectedAlbums.map((album) => ({
+        id: album.id,
+        title: album.title,
+        quantity: quantities[album.id],
+      })),
+    );
   };
 
   const handleFreeTrial = () => {
@@ -100,8 +111,8 @@ export default function Checkout() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-8 sm:py-12">
         <div className="space-y-6">
           {albums.map((album) => (
-            <Card 
-              key={album.id} 
+            <Card
+              key={album.id}
               className="overflow-hidden shadow-lg"
               data-testid={`album-card-${album.id}`}
             >
@@ -120,13 +131,13 @@ export default function Checkout() {
                 <div className="p-6 sm:p-8">
                   {/* Title and Description */}
                   <div className="mb-6">
-                    <h2 
+                    <h2
                       className="text-2xl sm:text-3xl font-bold text-[#1B2632] mb-3"
                       data-testid={`album-title-${album.id}`}
                     >
                       {album.title}
                     </h2>
-                    <p 
+                    <p
                       className="text-[#1B2632]/70 text-base sm:text-lg leading-relaxed"
                       data-testid={`album-description-${album.id}`}
                     >
@@ -136,7 +147,9 @@ export default function Checkout() {
 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-4">
-                    <span className="text-[#1B2632]/70 font-medium">Quantity:</span>
+                    <span className="text-[#1B2632]/70 font-medium">
+                      Quantity:
+                    </span>
                     <div className="flex items-center gap-3">
                       <Button
                         variant="outline"
@@ -148,7 +161,7 @@ export default function Checkout() {
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span 
+                      <span
                         className="text-xl font-bold text-[#1B2632] min-w-[3ch] text-center"
                         data-testid={`quantity-${album.id}`}
                       >
@@ -174,7 +187,8 @@ export default function Checkout() {
         {/* Info Section */}
         <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
           <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
-            Need help choosing? Each album contains 15 thoughtfully crafted questions designed to preserve precious memories.
+            Need help choosing? Each album contains 15 thoughtfully crafted
+            questions designed to preserve precious memories.
           </p>
         </div>
 

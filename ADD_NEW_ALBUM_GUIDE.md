@@ -24,17 +24,18 @@ Add your new album to the `albumQuestions` object with your desired number of qu
 ```typescript
 export const albumQuestions: AlbumQuestions = {
   // ... existing albums ...
-  
+
   "Your New Album Name": [
     "Question 1?",
     "Question 2?",
     // ... add your desired number of questions
-    "Question N?"
-  ]
+    "Question N?",
+  ],
 };
 ```
 
-**Important**: 
+**Important**:
+
 - **Album name must match exactly across all files** - The album name is used as a dictionary key to look up questions. If it doesn't match, `getQuestionsForAlbum()` returns an empty array and questions won't be found.
 - **Question count** - Albums can have any number of questions. The system dynamically uses `getTotalQuestionsForAlbum()` to determine the count. Currently, all existing albums have 15 questions, but you're free to use a different number.
 - **Questions ending with "?"** - This is a style convention, not a technical requirement. Questions are just strings and the code doesn't validate the format.
@@ -50,7 +51,7 @@ Add your album to the `defaultAlbums` array:
 ```typescript
 const defaultAlbums: AlbumCard[] = [
   // ... existing albums ...
-  
+
   {
     id: 4, // Increment from last album
     title: "Your New Album Name", // Must match albumQuestions key exactly
@@ -62,12 +63,13 @@ const defaultAlbums: AlbumCard[] = [
       "Question 1?",
       "Question 2?",
       // ... all questions (must match albumQuestions.ts)
-    ]
-  }
+    ],
+  },
 ];
 ```
 
 **Fields to update**:
+
 - `id`: Next sequential number (4, 5, 6, etc.)
 - `title`: Must match exactly with `albumQuestions.ts`
 - `description`: Marketing description for the album
@@ -86,7 +88,7 @@ Add your album to the `albums` array:
 ```typescript
 const albums: Album[] = [
   // ... existing albums ...
-  
+
   {
     id: 4, // Must match SectionFourAlbums.tsx id
     title: "Your New Album Name", // Must match exactly
@@ -98,7 +100,9 @@ const albums: Album[] = [
 ```
 
 **Also update**:
+
 - The `quantities` state default (if needed):
+
 ```typescript
 const [quantities, setQuantities] = useState<Record<number, number>>({
   1: 1,
@@ -119,7 +123,7 @@ Add your album to the `albums` array (same structure as Checkout.tsx):
 ```typescript
 const albums: Album[] = [
   // ... existing albums ...
-  
+
   {
     id: 4, // Must match other files
     title: "Your New Album Name", // Must match exactly
@@ -155,25 +159,26 @@ If you want the new album to appear in the interactive demo, add a new entry to 
 ```typescript
 export const demoBooks: Record<string, DemoBook> = {
   // ... existing demos ...
-  
-  'your-new-album-slug': { // URL-friendly slug
-    id: 'your-new-album-slug',
-    title: 'Your New Album Name', // Must match exactly
-    subtitle: 'Subtitle for demo',
-    coverColor: 'from-purple-600 to-purple-800', // Tailwind gradient
+
+  "your-new-album-slug": {
+    // URL-friendly slug
+    id: "your-new-album-slug",
+    title: "Your New Album Name", // Must match exactly
+    subtitle: "Subtitle for demo",
+    coverColor: "from-purple-600 to-purple-800", // Tailwind gradient
     pages: [
       // Add demo pages with sample content
       {
         id: 1,
         content: {
-          type: 'cover',
-          title: 'Your New Album Name',
-          text: 'Demo description...',
-        }
+          type: "cover",
+          title: "Your New Album Name",
+          text: "Demo description...",
+        },
       },
       // ... more demo pages
-    ]
-  }
+    ],
+  },
 };
 ```
 
@@ -187,7 +192,7 @@ When adding a new album, verify:
 
 - [ ] Added to `shared/albumQuestions.ts` with exactly 15 questions
 - [ ] Added to `client/src/components/SectionFourAlbums.tsx` with all fields
-- [ ] Added to `client/src/pages/Checkout.tsx` 
+- [ ] Added to `client/src/pages/Checkout.tsx`
 - [ ] Added to `client/src/pages/FreeTrialCheckout.tsx`
 - [ ] Album name matches **exactly** across all files (case-sensitive)
 - [ ] Album ID is consistent across frontend files
@@ -228,6 +233,7 @@ After adding a new album:
 Here's a complete example:
 
 ### 1. `shared/albumQuestions.ts`
+
 ```typescript
 "Memories & Milestones": [
   "What was your most memorable birthday celebration?",
@@ -237,6 +243,7 @@ Here's a complete example:
 ```
 
 ### 2. `client/src/components/SectionFourAlbums.tsx`
+
 ```typescript
 {
   id: 4,
@@ -249,6 +256,7 @@ Here's a complete example:
 ```
 
 ### 3. `client/src/pages/Checkout.tsx` & `FreeTrialCheckout.tsx`
+
 ```typescript
 {
   id: 4,
@@ -282,20 +290,22 @@ Here's a complete example:
 ## Troubleshooting
 
 **Album not appearing?**
+
 - Check that album name matches exactly (case-sensitive)
 - Verify ID is consistent across frontend files
 - Clear browser cache
 
 **Questions not sending?**
+
 - Verify questions are in `albumQuestions.ts`
 - Check that album name in database matches exactly
 - Check server logs for errors
 
 **Album gallery not working?**
+
 - Verify `getQuestionByIndex()` can find questions
 - Check that album name in trial record matches exactly
 
 ---
 
 That's it! Your new album should now be fully integrated into the system.
-

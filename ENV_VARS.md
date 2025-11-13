@@ -3,6 +3,7 @@
 ## Required Environment Variables
 
 ### Database
+
 - **`SUPABASE_DATABASE_URL`** (Primary)
   - Location: `server/db.ts`
   - Description: PostgreSQL connection string for Supabase (with connection pooling)
@@ -15,6 +16,7 @@
   - Note: Required by `drizzle.config.ts` for schema generation
 
 ### Supabase Storage (Voice Notes)
+
 - **`SUPABASE_URL`**
   - Location: `server/supabase.ts`
   - Description: Supabase project URL for Storage API
@@ -31,6 +33,7 @@
   - Note: Required for voice note file storage
 
 ### WhatsApp Business API
+
 - **`WHATSAPP_ACCESS_TOKEN`**
   - Location: `server/whatsapp.ts`
   - Description: Meta/Facebook WhatsApp Business API access token
@@ -58,6 +61,7 @@
   - Default: `'919876543210'`
 
 ### Payment Gateway
+
 - **`RAZORPAY_WEBHOOK_SECRET`**
   - Location: `server/routes.ts` (line 233)
   - Description: Secret key for verifying Razorpay webhook signatures
@@ -65,6 +69,7 @@
   - Note: Optional but required for production webhook verification
 
 ### Application Configuration
+
 - **`APP_BASE_URL`**
   - Location: `server/routes.ts` (line 376)
   - Description: Base URL of the application for generating invite links
@@ -85,6 +90,7 @@
 ## Optional Environment Variables
 
 ### Replit-Specific
+
 - **`REPLIT_DOMAINS`**
   - Location: `server/conversationHandler.ts` (line 228)
   - Description: Comma-separated list of Replit domain names
@@ -110,36 +116,43 @@ The following environment variables are mentioned in documentation but **not act
 ## Summary by File
 
 ### `server/db.ts`
+
 - `SUPABASE_DATABASE_URL` (primary)
 - `DATABASE_URL` (fallback)
 
 ### `server/index.ts`
+
 - `PORT`
 
 ### `server/routes.ts`
+
 - `RAZORPAY_WEBHOOK_SECRET`
 - `WHATSAPP_BUSINESS_NUMBER_E164`
 - `APP_BASE_URL`
 - `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
 
 ### `server/whatsapp.ts`
+
 - `WHATSAPP_PHONE_NUMBER_ID`
 - `WHATSAPP_ACCESS_TOKEN`
 - `NODE_ENV` (multiple checks)
 - `WHATSAPP_BUSINESS_PHONE`
 
 ### `server/conversationHandler.ts`
+
 - `REPLIT_DOMAINS`
 - `WHATSAPP_ACCESS_TOKEN` (for downloading voice note files)
 
 ### `server/supabase.ts`
+
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 ### `vite.config.ts`
+
 - `NODE_ENV`
 - `REPL_ID`
 
 ### `drizzle.config.ts`
-- `DATABASE_URL`
 
+- `DATABASE_URL`

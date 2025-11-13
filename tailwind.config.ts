@@ -6,9 +6,9 @@ export default {
   theme: {
     extend: {
       borderRadius: {
-        lg: "0.75rem", /* 12px */
-        md: "0.5rem", /* 8px */
-        sm: "0.25rem", /* 4px */
+        lg: "0.75rem" /* 12px */,
+        md: "0.5rem" /* 8px */,
+        sm: "0.25rem" /* 4px */,
       },
       colors: {
         // Flat / base colors (regular buttons)
@@ -77,7 +77,7 @@ export default {
         "sidebar-accent": {
           DEFAULT: "hsl(var(--sidebar-accent) / <alpha-value>)",
           foreground: "hsl(var(--sidebar-accent-foreground) / <alpha-value>)",
-          border: "var(--sidebar-accent-border)"
+          border: "var(--sidebar-accent-border)",
         },
         status: {
           online: "rgb(34 197 94)",

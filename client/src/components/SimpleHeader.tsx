@@ -9,7 +9,7 @@ interface SimpleHeaderProps {
 
 export default function SimpleHeader({
   logoSrc = kahaniLogo,
-  onRecordClick
+  onRecordClick,
 }: SimpleHeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">

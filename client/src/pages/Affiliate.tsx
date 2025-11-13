@@ -22,13 +22,13 @@ export default function Affiliate() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            
-            <img 
-              src={kahaniLogo} 
-              alt="Kahani Logo" 
+
+            <img
+              src={kahaniLogo}
+              alt="Kahani Logo"
               className="h-12 w-auto object-contain"
             />
-            
+
             <div className="w-[44px]" />
           </div>
         </header>
@@ -38,9 +38,9 @@ export default function Affiliate() {
           <div className="text-center space-y-8">
             {/* Logo */}
             <div className="flex justify-center mb-8">
-              <img 
-                src={kahaniLogo} 
-                alt="Kahani Logo" 
+              <img
+                src={kahaniLogo}
+                alt="Kahani Logo"
                 className="h-24 w-auto object-contain"
               />
             </div>
@@ -55,29 +55,27 @@ export default function Affiliate() {
               <p className="font-semibold text-foreground">
                 Hello! We'd be thrilled to work with you.
               </p>
-              
+
               <p>
-                Thank you for considering Kahani's affiliate program. At Kahani, we're passionate about helping people preserve their stories and share the joy of memories, and we'd love for you to join us.
+                Thank you for considering Kahani's affiliate program. At Kahani,
+                we're passionate about helping people preserve their stories and
+                share the joy of memories, and we'd love for you to join us.
               </p>
-              
+
               <p>
-                As an approved partner, you'll earn rewards simply by referring new members to Kahani. If selected to collaborate, a member of our team will reach out to get you started right away.
+                As an approved partner, you'll earn rewards simply by referring
+                new members to Kahani. If selected to collaborate, a member of
+                our team will reach out to get you started right away.
               </p>
-              
+
               <p className="font-medium text-foreground">
                 We're excited to team up with you!
               </p>
-              
+
               <div className="pt-4">
-                <p className="text-foreground">
-                  Best regards,
-                </p>
-                <p className="font-semibold text-primary">
-                  Vani
-                </p>
-                <p className="text-primary">
-                  Team Kahani
-                </p>
+                <p className="text-foreground">Best regards,</p>
+                <p className="font-semibold text-primary">Vani</p>
+                <p className="text-primary">Team Kahani</p>
               </div>
             </div>
 

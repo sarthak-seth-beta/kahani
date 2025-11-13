@@ -2,9 +2,7 @@ interface CTASectionProps {
   onStartTrialClick?: () => void;
 }
 
-export default function CTASection({
-  onStartTrialClick
-}: CTASectionProps) {
+export default function CTASection({ onStartTrialClick }: CTASectionProps) {
   return (
     <section className="w-full bg-[#EEE9DF] px-6 pb-12">
       <div className="max-w-2xl mx-auto">

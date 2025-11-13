@@ -7,7 +7,12 @@ interface IntroSlideProps {
   logoSrc?: string;
 }
 
-export function IntroSlide({ coverSrc, title, artist, logoSrc }: IntroSlideProps) {
+export function IntroSlide({
+  coverSrc,
+  title,
+  artist,
+  logoSrc,
+}: IntroSlideProps) {
   return (
     <div
       style={{

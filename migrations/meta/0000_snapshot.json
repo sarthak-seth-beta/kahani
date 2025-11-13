@@ -291,12 +291,8 @@
           "name": "voice_notes_free_trial_id_free_trials_id_fk",
           "tableFrom": "voice_notes",
           "tableTo": "free_trials",
-          "columnsFrom": [
-            "free_trial_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["free_trial_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

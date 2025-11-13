@@ -3,7 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, FileQuestion, Star, ShoppingCart, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  FileQuestion,
+  Star,
+  ShoppingCart,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 
@@ -81,19 +89,21 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existingItem = cart.find((item: any) => item.productId === product.id);
-    
+    const existingItem = cart.find(
+      (item: any) => item.productId === product.id,
+    );
+
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
       cart.push({ productId: product.id, quantity: 1 });
     }
-    
+
     localStorage.setItem("cart", JSON.stringify(cart));
     window.dispatchEvent(new Event("storage"));
-    
+
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
@@ -114,7 +124,9 @@ export default function ProductDetail() {
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
           <Link href="/products" data-testid="link-back-to-products">
-            <Button data-testid="button-back-to-products">Back to Products</Button>
+            <Button data-testid="button-back-to-products">
+              Back to Products
+            </Button>
           </Link>
         </div>
       </div>
@@ -144,13 +156,20 @@ export default function ProductDetail() {
           </div>
 
           <div>
-            <Badge variant="secondary" className="mb-4" data-testid="badge-category">
+            <Badge
+              variant="secondary"
+              className="mb-4"
+              data-testid="badge-category"
+            >
               {product.category}
             </Badge>
-            <h1 className="text-4xl font-bold mb-4" data-testid="text-product-name">
+            <h1
+              className="text-4xl font-bold mb-4"
+              data-testid="text-product-name"
+            >
               {product.name}
             </h1>
-            
+
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -159,14 +178,20 @@ export default function ProductDetail() {
                     className="h-5 w-5 fill-secondary text-secondary"
                   />
                 ))}
-                <span className="ml-2 text-muted-foreground" data-testid="text-rating">
+                <span
+                  className="ml-2 text-muted-foreground"
+                  data-testid="text-rating"
+                >
                   5.0 ({productTestimonials.length * 20} reviews)
                 </span>
               </div>
             </div>
 
             <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-5xl font-bold text-primary" data-testid="text-price">
+              <span
+                className="text-5xl font-bold text-primary"
+                data-testid="text-price"
+              >
                 ₹{product.price}
               </span>
               <div className="text-muted-foreground">
@@ -185,7 +210,11 @@ export default function ProductDetail() {
               <h3 className="text-xl font-semibold mb-4">What's Included</h3>
               <ul className="space-y-3">
                 {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2" data-testid={`feature-${index}`}>
+                  <li
+                    key={index}
+                    className="flex items-center gap-2"
+                    data-testid={`feature-${index}`}
+                  >
                     <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
                     <span>{feature}</span>
                   </li>
@@ -210,7 +239,9 @@ export default function ProductDetail() {
             <Card>
               <CardContent className="p-8">
                 <h2 className="text-2xl font-bold mb-4">About This Pack</h2>
-                <p className="text-muted-foreground leading-relaxed text-lg">{product.description}</p>
+                <p className="text-muted-foreground leading-relaxed text-lg">
+                  {product.description}
+                </p>
               </CardContent>
             </Card>
 
@@ -241,16 +272,29 @@ export default function ProductDetail() {
                 <h3 className="text-xl font-bold mb-6">What Families Say</h3>
                 <div className="space-y-6">
                   {productTestimonials.map((testimonial, index) => (
-                    <div key={index} className="border-b last:border-0 pb-6 last:pb-0" data-testid={`testimonial-${index}`}>
+                    <div
+                      key={index}
+                      className="border-b last:border-0 pb-6 last:pb-0"
+                      data-testid={`testimonial-${index}`}
+                    >
                       <div className="flex gap-1 mb-2">
                         {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-secondary text-secondary" />
+                          <Star
+                            key={i}
+                            className="h-4 w-4 fill-secondary text-secondary"
+                          />
                         ))}
                       </div>
-                      <p className="text-muted-foreground italic mb-2">"{testimonial.text}"</p>
+                      <p className="text-muted-foreground italic mb-2">
+                        "{testimonial.text}"
+                      </p>
                       <div>
-                        <p className="font-semibold text-sm">{testimonial.name}</p>
-                        <p className="text-xs text-muted-foreground">{testimonial.relationship}</p>
+                        <p className="font-semibold text-sm">
+                          {testimonial.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {testimonial.relationship}
+                        </p>
                       </div>
                     </div>
                   ))}

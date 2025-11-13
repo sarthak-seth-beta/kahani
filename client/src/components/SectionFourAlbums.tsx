@@ -19,8 +19,10 @@ const defaultAlbums: AlbumCard[] = [
   {
     id: 1,
     title: "Our Family History",
-    description: "These questions help you revisit the people, places, and small moments that shaped your earliest memories — the roots of who you are today.",
-    imageSrc: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
+    description:
+      "These questions help you revisit the people, places, and small moments that shaped your earliest memories — the roots of who you are today.",
+    imageSrc:
+      "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
     imageAlt: "Our Family History",
     questions: [
       "When you think of your childhood home, what picture or feeling comes to mind first?",
@@ -37,14 +39,16 @@ const defaultAlbums: AlbumCard[] = [
       "What kind of music or entertainment did your family enjoy together?",
       "Did your family face any hardships when you were young, and how did you overcome them?",
       "What values did your parents emphasize most when raising you?",
-      "Is there a family story that has been passed down through generations?"
-    ]
+      "Is there a family story that has been passed down through generations?",
+    ],
   },
   {
     id: 2,
     title: "Their Life Paths",
-    description: "These questions invite you to reflect on your life's journey — the moments, choices, and people that taught you who you are.",
-    imageSrc: "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
+    description:
+      "These questions invite you to reflect on your life's journey — the moments, choices, and people that taught you who you are.",
+    imageSrc:
+      "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
     imageAlt: "Their Life Paths",
     questions: [
       "What was your first job, and how did you feel earning your first income?",
@@ -61,14 +65,16 @@ const defaultAlbums: AlbumCard[] = [
       "How did you handle setbacks or failures along the way?",
       "What traditions or practices have you carried forward from your own upbringing?",
       "What unexpected joy or surprise has life brought you?",
-      "How has your definition of success changed over the years?"
-    ]
+      "How has your definition of success changed over the years?",
+    ],
   },
   {
     id: 3,
     title: "Words of Wisdom",
-    description: "These questions encourage you to share the wisdom, values, and reflections that your life's journey has taught you — the thoughts you'd like to pass on.",
-    imageSrc: "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
+    description:
+      "These questions encourage you to share the wisdom, values, and reflections that your life's journey has taught you — the thoughts you'd like to pass on.",
+    imageSrc:
+      "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
     imageAlt: "Words of Wisdom",
     questions: [
       "What lesson from your parents has stayed with you through life?",
@@ -85,27 +91,29 @@ const defaultAlbums: AlbumCard[] = [
       "What do you think is most important when raising a family?",
       "What advice would you give about handling difficult times?",
       "What do you believe makes a relationship strong and lasting?",
-      "Looking back on your life, what matters most to you now?"
-    ]
+      "Looking back on your life, what matters most to you now?",
+    ],
   },
   {
     id: 4,
     title: "Love & Relationships",
-    description: "These questions explore the bonds that matter most — the love, connections, and relationships that have shaped your heart and life.",
-    imageSrc: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
+    description:
+      "These questions explore the bonds that matter most — the love, connections, and relationships that have shaped your heart and life.",
+    imageSrc:
+      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
     imageAlt: "Love & Relationships",
     questions: [
       "How did you know you had found the right person to spend your life with?",
       "What is the most important lesson you've learned about love?",
       "How has your understanding of relationships changed over the years?",
-      "What advice would you give to someone about building lasting relationships?"
-    ]
-  }
+      "What advice would you give to someone about building lasting relationships?",
+    ],
+  },
 ];
 
 export default function SectionFourAlbums({
   albums = defaultAlbums,
-  onTryDemo
+  onTryDemo,
 }: SectionFourAlbumsProps) {
   return (
     <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
@@ -122,16 +130,16 @@ export default function SectionFourAlbums({
           aria-label="Albums carousel"
           aria-roledescription="carousel"
           style={{
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch'
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
+          <div className="flex gap-6 pb-4" style={{ width: "max-content" }}>
             {albums.map((album) => (
               <div
                 key={album.id}
                 className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg overflow-hidden"
-                style={{ scrollSnapAlign: 'start' }}
+                style={{ scrollSnapAlign: "start" }}
                 aria-roledescription="carousel item"
                 data-testid={`album-${album.id}`}
               >

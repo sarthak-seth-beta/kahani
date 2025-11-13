@@ -22,13 +22,13 @@ export default function AboutUs() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            
-            <img 
-              src={kahaniLogo} 
-              alt="Kahani Logo" 
+
+            <img
+              src={kahaniLogo}
+              alt="Kahani Logo"
               className="h-12 w-auto object-contain"
             />
-            
+
             <div className="w-[44px]" />
           </div>
         </header>
@@ -38,9 +38,9 @@ export default function AboutUs() {
           <div className="text-center space-y-8">
             {/* Logo */}
             <div className="flex justify-center mb-8">
-              <img 
-                src={kahaniLogo} 
-                alt="Kahani Logo" 
+              <img
+                src={kahaniLogo}
+                alt="Kahani Logo"
                 className="h-24 w-auto object-contain"
               />
             </div>
@@ -53,11 +53,17 @@ export default function AboutUs() {
             {/* Content */}
             <div className="space-y-6 text-lg sm:text-xl text-muted-foreground leading-relaxed text-left">
               <p>
-                Kahani is a storytelling platform by Sprism Culture Labs Pvt. Ltd., designed to document and preserve the lived experiences of our elders. With curated themes and empathetic questions, Kahani enables meaningful reflection and conversation, helping families capture memories that might otherwise be lost.
+                Kahani is a storytelling platform by Sprism Culture Labs Pvt.
+                Ltd., designed to document and preserve the lived experiences of
+                our elders. With curated themes and empathetic questions, Kahani
+                enables meaningful reflection and conversation, helping families
+                capture memories that might otherwise be lost.
               </p>
-              
+
               <p>
-                Built with cultural sensitivity and a deep respect for personal history, Kahani strengthens bonds, celebrates life journeys, and creates a lasting archive of wisdom for future generations.
+                Built with cultural sensitivity and a deep respect for personal
+                history, Kahani strengthens bonds, celebrates life journeys, and
+                creates a lasting archive of wisdom for future generations.
               </p>
             </div>
 
@@ -81,4 +87,3 @@ export default function AboutUs() {
     </div>
   );
 }
-

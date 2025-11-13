@@ -13,48 +13,56 @@ interface SectionFiveFAQsProps {
 const defaultFAQs: FAQItem[] = [
   {
     question: "What is Kahani?",
-    answer: "A simple way to save your loved ones' voices and stories — forever."
+    answer:
+      "A simple way to save your loved ones' voices and stories — forever.",
   },
   {
     question: "How does it work?",
-    answer: "We send story questions on WhatsApp. They reply with voice notes. We turn those into a beautiful memory book."
+    answer:
+      "We send story questions on WhatsApp. They reply with voice notes. We turn those into a beautiful memory book.",
   },
   {
     question: "Who is it for?",
-    answer: "Anyone who wants to keep their parents', grandparents', or loved ones' stories alive."
+    answer:
+      "Anyone who wants to keep their parents', grandparents', or loved ones' stories alive.",
   },
   {
     question: "Is it private?",
-    answer: "Completely. Your chats and voice notes stay encrypted and safe — always."
+    answer:
+      "Completely. Your chats and voice notes stay encrypted and safe — always.",
   },
   {
     question: "Can I redo or delete a story?",
-    answer: "Yes. You can re-record or ask us to remove any message before your book is made."
+    answer:
+      "Yes. You can re-record or ask us to remove any message before your book is made.",
   },
   {
     question: "What do I get in the end?",
-    answer: "A keepsake book with their stories, photos, and QR codes to hear their voices."
+    answer:
+      "A keepsake book with their stories, photos, and QR codes to hear their voices.",
   },
   {
     question: "Do I need an app?",
-    answer: "No app, no login. Everything happens on WhatsApp."
+    answer: "No app, no login. Everything happens on WhatsApp.",
   },
   {
     question: "Can they speak in Hindi or another language?",
-    answer: "Yes. Any Indian language works — the book keeps their voice just as it is."
+    answer:
+      "Yes. Any Indian language works — the book keeps their voice just as it is.",
   },
   {
     question: "How long does it take?",
-    answer: "Usually 2–4 weeks after the stories are sent."
+    answer: "Usually 2–4 weeks after the stories are sent.",
   },
   {
     question: "Can I gift this?",
-    answer: "Absolutely. You can gift a Kahani to anyone you love — one link starts their journey."
-  }
+    answer:
+      "Absolutely. You can gift a Kahani to anyone you love — one link starts their journey.",
+  },
 ];
 
 export default function SectionFiveFAQs({
-  faqs = defaultFAQs
+  faqs = defaultFAQs,
 }: SectionFiveFAQsProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -98,7 +106,9 @@ export default function SectionFiveFAQs({
               {/* Answer Body */}
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  openIndex === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  openIndex === index
+                    ? "max-h-96 opacity-100"
+                    : "max-h-0 opacity-0"
                 }`}
               >
                 {openIndex === index && (

@@ -18,7 +18,7 @@ export const albumQuestions: AlbumQuestions = {
     "What kind of music or entertainment did your family enjoy together?",
     "Did your family face any hardships when you were young, and how did you overcome them?",
     "What values did your parents emphasize most when raising you?",
-    "Is there a family story that has been passed down through generations?"
+    "Is there a family story that has been passed down through generations?",
   ],
   "Their Life Paths": [
     "What was your first job, and how did you feel earning your first income?",
@@ -35,7 +35,7 @@ export const albumQuestions: AlbumQuestions = {
     "How did you handle setbacks or failures along the way?",
     "What traditions or practices have you carried forward from your own upbringing?",
     "What unexpected joy or surprise has life brought you?",
-    "How has your definition of success changed over the years?"
+    "How has your definition of success changed over the years?",
   ],
   "Words of Wisdom": [
     "What lesson from your parents has stayed with you through life?",
@@ -52,21 +52,24 @@ export const albumQuestions: AlbumQuestions = {
     "What do you think is most important when raising a family?",
     "What advice would you give about handling difficult times?",
     "What do you believe makes a relationship strong and lasting?",
-    "Looking back on your life, what matters most to you now?"
+    "Looking back on your life, what matters most to you now?",
   ],
   "Love & Relationships": [
     "How did you know you had found the right person to spend your life with?",
     "What is the most important lesson you've learned about love?",
     "How has your understanding of relationships changed over the years?",
-    "What advice would you give to someone about building lasting relationships?"
-  ]
+    "What advice would you give to someone about building lasting relationships?",
+  ],
 };
 
 export function getQuestionsForAlbum(albumName: string): string[] {
   return albumQuestions[albumName] || [];
 }
 
-export function getQuestionByIndex(albumName: string, index: number): string | undefined {
+export function getQuestionByIndex(
+  albumName: string,
+  index: number,
+): string | undefined {
   const questions = getQuestionsForAlbum(albumName);
   return questions[index];
 }

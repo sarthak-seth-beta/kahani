@@ -22,13 +22,13 @@ export default function ContactUs() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            
-            <img 
-              src={kahaniLogo} 
-              alt="Kahani Logo" 
+
+            <img
+              src={kahaniLogo}
+              alt="Kahani Logo"
               className="h-12 w-auto object-contain"
             />
-            
+
             <div className="w-[44px]" />
           </div>
         </header>
@@ -38,9 +38,9 @@ export default function ContactUs() {
           <div className="text-center space-y-8">
             {/* Logo */}
             <div className="flex justify-center mb-8">
-              <img 
-                src={kahaniLogo} 
-                alt="Kahani Logo" 
+              <img
+                src={kahaniLogo}
+                alt="Kahani Logo"
                 className="h-24 w-auto object-contain"
               />
             </div>
@@ -53,25 +53,28 @@ export default function ContactUs() {
             {/* Content */}
             <div className="space-y-6 text-lg sm:text-xl text-muted-foreground leading-relaxed">
               <p className="font-semibold text-foreground flex items-center justify-center gap-2">
-                We'd love to hear from you! <Heart className="h-5 w-5 text-[#FFB162] fill-[#FFB162]" />
+                We'd love to hear from you!{" "}
+                <Heart className="h-5 w-5 text-[#FFB162] fill-[#FFB162]" />
               </p>
-              
+
               <p>
-                Whether you have questions, ideas, or just want to share a story, feel free to reach out to us at:
+                Whether you have questions, ideas, or just want to share a
+                story, feel free to reach out to us at:
               </p>
-              
+
               <p className="text-2xl font-semibold">
-                <a 
-                  href="mailto:info.kahani.xyz@gmail.com" 
+                <a
+                  href="mailto:info.kahani.xyz@gmail.com"
                   className="text-primary hover:underline"
                   data-testid="link-email"
                 >
                   info.kahani.xyz@gmail.com
                 </a>
               </p>
-              
+
               <p className="text-foreground">
-                Our team at Kahani is always happy to listen, help, and celebrate your stories with you.
+                Our team at Kahani is always happy to listen, help, and
+                celebrate your stories with you.
               </p>
             </div>
 

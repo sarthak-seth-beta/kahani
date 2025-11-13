@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { pgTable, varchar, text, integer, timestamp, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  varchar,
+  text,
+  integer,
+  timestamp,
+  jsonb,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -76,7 +85,9 @@ export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const insertFreeTrialSchema = z.object({
   customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
   buyerName: z.string().min(2, "Name must be at least 2 characters"),
-  storytellerName: z.string().min(2, "Storyteller name must be at least 2 characters"),
+  storytellerName: z
+    .string()
+    .min(2, "Storyteller name must be at least 2 characters"),
   selectedAlbum: z.string().min(2, "Album selection is required"),
 });
 
@@ -86,7 +97,15 @@ export const freeTrialSchema = insertFreeTrialSchema.extend({
   id: z.string(),
   createdAt: z.string(),
   storytellerPhone: z.string().optional(),
-  conversationState: z.enum(["awaiting_initial_contact", "awaiting_readiness", "ready", "in_progress", "completed"]).default("awaiting_initial_contact"),
+  conversationState: z
+    .enum([
+      "awaiting_initial_contact",
+      "awaiting_readiness",
+      "ready",
+      "in_progress",
+      "completed",
+    ])
+    .default("awaiting_initial_contact"),
   currentQuestionIndex: z.number().default(0),
   retryReadinessAt: z.string().optional(),
   retryCount: z.number().default(0),
@@ -167,38 +186,44 @@ const baseFeedbackSchema = z.object({
   followUpPhone: z.string().optional(),
 });
 
-export const insertFeedbackSchema = baseFeedbackSchema.superRefine((data, ctx) => {
-  if (data.allowTestimonial) {
-    if (!data.testimonialName) {
+export const insertFeedbackSchema = baseFeedbackSchema.superRefine(
+  (data, ctx) => {
+    if (data.allowTestimonial) {
+      if (!data.testimonialName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Name is required when allowing testimonial usage",
+          path: ["testimonialName"],
+        });
+      }
+      if (!data.testimonialRelationship) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Relationship is required when allowing testimonial usage",
+          path: ["testimonialRelationship"],
+        });
+      }
+    }
+    if (data.allowFollowUp && !data.followUpEmail) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Name is required when allowing testimonial usage",
-        path: ["testimonialName"],
+        message: "Email is required when allowing follow-up",
+        path: ["followUpEmail"],
       });
     }
-    if (!data.testimonialRelationship) {
+    if (
+      data.allowFollowUp &&
+      data.followUpEmail &&
+      !z.string().email().safeParse(data.followUpEmail).success
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Relationship is required when allowing testimonial usage",
-        path: ["testimonialRelationship"],
+        message: "Invalid email address",
+        path: ["followUpEmail"],
       });
     }
-  }
-  if (data.allowFollowUp && !data.followUpEmail) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Email is required when allowing follow-up",
-      path: ["followUpEmail"],
-    });
-  }
-  if (data.allowFollowUp && data.followUpEmail && !z.string().email().safeParse(data.followUpEmail).success) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Invalid email address",
-      path: ["followUpEmail"],
-    });
-  }
-});
+  },
+);
 
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 
@@ -209,57 +234,89 @@ export const feedbackSchema = baseFeedbackSchema.extend({
 
 export type Feedback = z.infer<typeof feedbackSchema>;
 
-export const freeTrials = pgTable("free_trials", {
-  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
-  buyerName: varchar("buyer_name", { length: 255 }).notNull(),
-  storytellerName: varchar("storyteller_name", { length: 255 }).notNull(),
-  selectedAlbum: varchar("selected_album", { length: 255 }).notNull(),
-  storytellerPhone: varchar("storyteller_phone", { length: 20 }),
-  conversationState: varchar("conversation_state", { length: 50 })
-    .notNull()
-    .default("awaiting_initial_contact"),
-  currentQuestionIndex: integer("current_question_index").notNull().default(0),
-  retryReadinessAt: timestamp("retry_readiness_at", { withTimezone: true }),
-  retryCount: integer("retry_count").notNull().default(0),
-  lastReadinessResponse: varchar("last_readiness_response", { length: 50 }),
-  welcomeSentAt: timestamp("welcome_sent_at", { withTimezone: true }),
-  readinessAskedAt: timestamp("readiness_asked_at", { withTimezone: true }),
-  lastQuestionSentAt: timestamp("last_question_sent_at", { withTimezone: true }),
-  reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
-  nextQuestionScheduledFor: timestamp("next_question_scheduled_for", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => ({
-  conversationStateIdx: index("free_trials_conversation_state_idx").on(table.conversationState),
-  retryReadinessIdx: index("free_trials_retry_readiness_at_idx").on(table.retryReadinessAt),
-  nextQuestionScheduledIdx: index("free_trials_next_question_scheduled_idx").on(table.nextQuestionScheduledFor),
-}));
+export const freeTrials = pgTable(
+  "free_trials",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
+    buyerName: varchar("buyer_name", { length: 255 }).notNull(),
+    storytellerName: varchar("storyteller_name", { length: 255 }).notNull(),
+    selectedAlbum: varchar("selected_album", { length: 255 }).notNull(),
+    storytellerPhone: varchar("storyteller_phone", { length: 20 }),
+    conversationState: varchar("conversation_state", { length: 50 })
+      .notNull()
+      .default("awaiting_initial_contact"),
+    currentQuestionIndex: integer("current_question_index")
+      .notNull()
+      .default(0),
+    retryReadinessAt: timestamp("retry_readiness_at", { withTimezone: true }),
+    retryCount: integer("retry_count").notNull().default(0),
+    lastReadinessResponse: varchar("last_readiness_response", { length: 50 }),
+    welcomeSentAt: timestamp("welcome_sent_at", { withTimezone: true }),
+    readinessAskedAt: timestamp("readiness_asked_at", { withTimezone: true }),
+    lastQuestionSentAt: timestamp("last_question_sent_at", {
+      withTimezone: true,
+    }),
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+    nextQuestionScheduledFor: timestamp("next_question_scheduled_for", {
+      withTimezone: true,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    conversationStateIdx: index("free_trials_conversation_state_idx").on(
+      table.conversationState,
+    ),
+    retryReadinessIdx: index("free_trials_retry_readiness_at_idx").on(
+      table.retryReadinessAt,
+    ),
+    nextQuestionScheduledIdx: index(
+      "free_trials_next_question_scheduled_idx",
+    ).on(table.nextQuestionScheduledFor),
+  }),
+);
 
 export type FreeTrialRow = typeof freeTrials.$inferSelect;
 export type InsertFreeTrialRow = typeof freeTrials.$inferInsert;
 
-export const voiceNotes = pgTable("voice_notes", {
-  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  freeTrialId: varchar("free_trial_id", { length: 255 })
-    .notNull()
-    .references(() => freeTrials.id, { onDelete: "cascade" }),
-  questionIndex: integer("question_index").notNull(),
-  questionText: text("question_text").notNull(),
-  mediaId: varchar("media_id", { length: 255 }).notNull(),
-  mediaUrl: text("media_url"),
-  localFilePath: text("local_file_path"),
-  mimeType: varchar("mime_type", { length: 100 }),
-  mediaSha256: varchar("media_sha256", { length: 64 }),
-  downloadStatus: varchar("download_status", { length: 20 }).notNull().default("pending"),
-  sizeBytes: integer("size_bytes"),
-  receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => ({
-  freeTrialIdIdx: index("voice_notes_free_trial_id_idx").on(table.freeTrialId),
-  uniqueQuestionIdx: uniqueIndex("voice_notes_trial_question_idx").on(
-    table.freeTrialId,
-    table.questionIndex
-  ),
-}));
+export const voiceNotes = pgTable(
+  "voice_notes",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    freeTrialId: varchar("free_trial_id", { length: 255 })
+      .notNull()
+      .references(() => freeTrials.id, { onDelete: "cascade" }),
+    questionIndex: integer("question_index").notNull(),
+    questionText: text("question_text").notNull(),
+    mediaId: varchar("media_id", { length: 255 }).notNull(),
+    mediaUrl: text("media_url"),
+    localFilePath: text("local_file_path"),
+    mimeType: varchar("mime_type", { length: 100 }),
+    mediaSha256: varchar("media_sha256", { length: 64 }),
+    downloadStatus: varchar("download_status", { length: 20 })
+      .notNull()
+      .default("pending"),
+    sizeBytes: integer("size_bytes"),
+    receivedAt: timestamp("received_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    freeTrialIdIdx: index("voice_notes_free_trial_id_idx").on(
+      table.freeTrialId,
+    ),
+    uniqueQuestionIdx: uniqueIndex("voice_notes_trial_question_idx").on(
+      table.freeTrialId,
+      table.questionIndex,
+    ),
+  }),
+);
 
 export type VoiceNoteRow = typeof voiceNotes.$inferSelect;
 export type InsertVoiceNoteRow = typeof voiceNotes.$inferInsert;

@@ -12,18 +12,18 @@ export default function HeroHeader({
   backgroundSrc = heroImage,
   logoSrc = kahaniLogo,
   onRecord,
-  onStartTrial
+  onStartTrial,
 }: HeroHeaderProps) {
   return (
     <section className="relative min-h-screen w-full flex flex-col bg-gradient-to-b from-[#EEE9DF] to-[#C9C1B1]">
       {/* Hero Background with Blur - Late afternoon sunlight feel */}
       <div className="relative flex-1 flex flex-col overflow-hidden">
         {/* Background Image with Soft Blur */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-60"
           style={{ backgroundImage: `url(${backgroundSrc})` }}
         />
-        
+
         {/* Warm Gradient Overlay - Like sunlight on old photos */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#A35139]/20 via-[#FFB162]/10 to-[#1B2632]/30" />
 
@@ -33,9 +33,9 @@ export default function HeroHeader({
           <nav className="flex items-center justify-between px-6 py-6 md:px-12 md:py-8">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <img 
-                src={logoSrc} 
-                alt="Kahani Logo" 
+              <img
+                src={logoSrc}
+                alt="Kahani Logo"
                 className="h-12 w-auto object-contain drop-shadow-lg"
               />
             </div>
@@ -64,7 +64,7 @@ export default function HeroHeader({
                   in a book
                 </span>
               </h1>
-              
+
               {/* Subtle tagline */}
               <p className="text-center text-[#1B2632]/60 mt-8 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed">
                 late afternoon sunlight on memories that last forever

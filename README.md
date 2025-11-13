@@ -5,6 +5,7 @@ A production-ready e-commerce platform for preserving family stories through Wha
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Razorpay account (for payment processing)
 - Meta WhatsApp Business account (for messaging)
@@ -46,6 +47,7 @@ SESSION_SECRET=your_session_secret
 ## ✨ Features
 
 ### E-commerce
+
 - 📱 Mobile-first responsive design
 - 🛒 Shopping cart with multi-item support
 - 📦 6 curated question pack categories
@@ -53,6 +55,7 @@ SESSION_SECRET=your_session_secret
 - ✅ Order confirmation with unique codes
 
 ### Payment Integration
+
 - 🔐 Production-ready Razorpay webhook system
 - ✓ HMAC SHA-256 signature verification
 - ✓ Event-specific idempotency (handles payment.authorized → payment.captured)
@@ -60,6 +63,7 @@ SESSION_SECRET=your_session_secret
 - ✓ Automatic retry with exponential backoff
 
 ### WhatsApp Integration
+
 - 📲 Automated order confirmations
 - 🔗 Forwardable invitation links for elders
 - 🎟️ Token-based tracking (90-day expiration)
@@ -67,6 +71,7 @@ SESSION_SECRET=your_session_secret
 - ✅ E.164 phone number validation
 
 ### Additional Features
+
 - ⭐ Customer feedback system with star ratings
 - 📝 Testimonial collection with consent
 - 🆓 Free trial signup
@@ -75,12 +80,14 @@ SESSION_SECRET=your_session_secret
 ## 🏗️ Architecture
 
 ### Frontend
+
 - **React** + **TypeScript** + **Vite**
 - **Tailwind CSS** + **Shadcn UI**
 - **TanStack Query** for server state
 - **React Hook Form** + **Zod** validation
 
 ### Backend
+
 - **Express.js** + **Node.js**
 - **In-memory storage** (ready for PostgreSQL migration)
 - **Meta WhatsApp Cloud API** (v22.0)
@@ -88,18 +95,19 @@ SESSION_SECRET=your_session_secret
 
 ### Key Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/webhooks/payment` | Razorpay payment webhook handler |
-| GET | `/w/invite/:token` | Forwardable WhatsApp invite redirect |
-| POST | `/api/orders` | Create new order |
-| GET | `/api/orders/:id` | Get order details |
-| POST | `/api/free-trial` | Free trial signup |
-| POST | `/api/feedback` | Submit customer feedback |
+| Method | Endpoint            | Description                          |
+| ------ | ------------------- | ------------------------------------ |
+| POST   | `/webhooks/payment` | Razorpay payment webhook handler     |
+| GET    | `/w/invite/:token`  | Forwardable WhatsApp invite redirect |
+| POST   | `/api/orders`       | Create new order                     |
+| GET    | `/api/orders/:id`   | Get order details                    |
+| POST   | `/api/free-trial`   | Free trial signup                    |
+| POST   | `/api/feedback`     | Submit customer feedback             |
 
 ## 🔒 Security
 
 ### Implemented
+
 - ✅ HMAC SHA-256 webhook signature verification
 - ✅ Type-safe Buffer handling for raw body capture
 - ✅ Event-specific idempotency keys
@@ -108,7 +116,9 @@ SESSION_SECRET=your_session_secret
 - ✅ Proper HTTP error codes (401, 400, 404, 500)
 
 ### Development Mode
+
 When credentials are missing:
+
 - Logs warnings but continues operation
 - Signature verification skipped (with clear warnings)
 - WhatsApp messages silently skipped
@@ -119,6 +129,7 @@ When credentials are missing:
 ## 🧪 Testing
 
 ### Using Postman
+
 1. Import `LegacyScribe_Postman_Collection.json`
 2. Update `base_url` variable
 3. Run requests in sequence:
@@ -159,6 +170,7 @@ curl -X POST http://localhost:5000/webhooks/payment \
 ## 📦 Database Schema
 
 ### Orders
+
 ```typescript
 {
   id: string;
@@ -175,6 +187,7 @@ curl -X POST http://localhost:5000/webhooks/payment \
 ```
 
 ### WhatsApp Tokens
+
 ```typescript
 {
   id: string;
@@ -187,9 +200,10 @@ curl -X POST http://localhost:5000/webhooks/payment \
 ```
 
 ### Webhook Events
+
 ```typescript
 {
-  idempotencyKey: string;     // "${payment_id}_${event}"
+  idempotencyKey: string; // "${payment_id}_${event}"
   processedAt: string;
 }
 ```
@@ -229,17 +243,20 @@ See [PAYMENT_WEBHOOK_SETUP.md](./PAYMENT_WEBHOOK_SETUP.md) for detailed checklis
 When payment is successful:
 
 **Message 1: Order Confirmation** (Template)
+
 ```
 Uses Meta's pre-approved "hello_world" template
 ```
 
 **Message 2: Forwardable Link** (Text)
+
 ```
-Thank you for your order! Please forward this link to your elder for direct chat: 
+Thank you for your order! Please forward this link to your elder for direct chat:
 https://your-domain.replit.app/w/invite/{token}
 ```
 
 **Elder clicks link →** Redirects to:
+
 ```
 https://wa.me/919876543210?text=Hi,%20I'm%20contacting%20on%20behalf%20of%20order%20ORD-ABC123.%20Token:%20{token}
 ```
@@ -247,6 +264,7 @@ https://wa.me/919876543210?text=Hi,%20I'm%20contacting%20on%20behalf%20of%20orde
 ## 🛠️ Development
 
 ### Project Structure
+
 ```
 ├── client/                 # React frontend
 │   ├── src/
@@ -274,6 +292,7 @@ https://wa.me/919876543210?text=Hi,%20I'm%20contacting%20on%20behalf%20of%20orde
 ## 🤝 Support
 
 For issues or questions:
+
 - Check [PAYMENT_WEBHOOK_SETUP.md](./PAYMENT_WEBHOOK_SETUP.md) troubleshooting section
 - Review server logs in Replit console
 - Verify environment variables are set correctly

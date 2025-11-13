@@ -57,13 +57,8 @@
         },
         "url": {
           "raw": "{{base_url}}/api/orders",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "orders"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["api", "orders"]
         },
         "description": "Creates a new order with phone-only checkout. Order ID is automatically saved for use in webhook tests."
       },
@@ -85,13 +80,8 @@
         },
         "url": {
           "raw": "{{base_url}}/webhooks/payment",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "webhooks",
-            "payment"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["webhooks", "payment"]
         },
         "description": "Test payment webhook in development mode (without signature verification). Uses order_id from previous request."
       },
@@ -113,13 +103,8 @@
         },
         "url": {
           "raw": "{{base_url}}/webhooks/payment",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "webhooks",
-            "payment"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["webhooks", "payment"]
         },
         "description": "Test payment.authorized event (non-terminal). Should be acknowledged without processing."
       },
@@ -141,13 +126,8 @@
         },
         "url": {
           "raw": "{{base_url}}/webhooks/payment",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "webhooks",
-            "payment"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["webhooks", "payment"]
         },
         "description": "Test payment.captured event (terminal success). Should update order, send WhatsApp messages, and generate token."
       },
@@ -169,13 +149,8 @@
         },
         "url": {
           "raw": "{{base_url}}/webhooks/payment",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "webhooks",
-            "payment"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["webhooks", "payment"]
         },
         "description": "Test payment.failed event (terminal failure). Should be marked as processed without WhatsApp sends."
       },
@@ -188,14 +163,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/api/orders/{{order_id}}",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "orders",
-            "{{order_id}}"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["api", "orders", "{{order_id}}"]
         },
         "description": "Retrieve order details to verify payment status, confirmation timestamp, and payment ID."
       },
@@ -208,14 +177,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/w/invite/550e8400-e29b-41d4-a716-446655440000",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "w",
-            "invite",
-            "550e8400-e29b-41d4-a716-446655440000"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["w", "invite", "550e8400-e29b-41d4-a716-446655440000"]
         },
         "description": "Test invite redirect with a sample token. Replace token with actual token from database or webhook response. Should redirect (302) to wa.me URL."
       },
@@ -228,13 +191,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/api/products",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "products"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["api", "products"]
         },
         "description": "List all available question pack products."
       },
@@ -256,13 +214,8 @@
         },
         "url": {
           "raw": "{{base_url}}/api/free-trial",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "free-trial"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["api", "free-trial"]
         },
         "description": "Register for free trial with phone number only. Should send WhatsApp confirmation message."
       },

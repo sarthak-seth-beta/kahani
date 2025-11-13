@@ -1,8 +1,8 @@
-declare module 'page-flip' {
+declare module "page-flip" {
   export interface PageFlipOptions {
     width?: number;
     height?: number;
-    size?: 'fixed' | 'stretch';
+    size?: "fixed" | "stretch";
     minWidth?: number;
     maxWidth?: number;
     minHeight?: number;
@@ -23,7 +23,7 @@ declare module 'page-flip' {
 
   export class PageFlip {
     constructor(element: HTMLElement, options?: PageFlipOptions);
-    
+
     loadFromHTML(pages: NodeListOf<Element> | Element[]): void;
     flipNext(): void;
     flipPrev(): void;

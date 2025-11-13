@@ -6,14 +6,17 @@ export function useCart() {
   useEffect(() => {
     const updateCartCount = () => {
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-      const total = cart.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      const total = cart.reduce(
+        (sum: number, item: any) => sum + item.quantity,
+        0,
+      );
       setCartCount(total);
     };
 
     updateCartCount();
 
     window.addEventListener("storage", updateCartCount);
-    
+
     const interval = setInterval(updateCartCount, 500);
 
     return () => {

@@ -4,7 +4,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -71,7 +77,8 @@ export default function Feedback() {
   const overallRating = form.watch("overallRating");
 
   const submitFeedbackMutation = useMutation({
-    mutationFn: (data: FeedbackFormData) => apiRequest("POST", "/api/feedback/submit", data),
+    mutationFn: (data: FeedbackFormData) =>
+      apiRequest("POST", "/api/feedback/submit", data),
     onSuccess: (feedback) => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedback/check"] });
       const code = `LEGACY-${orderCode.substring(0, 6).toUpperCase()}`;
@@ -119,7 +126,9 @@ export default function Feedback() {
             Please use a valid feedback link from your order confirmation.
           </p>
           <Link href="/products" data-testid="link-browse-products-invalid">
-            <Button size="lg" data-testid="button-browse-products-invalid">Browse Products</Button>
+            <Button size="lg" data-testid="button-browse-products-invalid">
+              Browse Products
+            </Button>
           </Link>
         </div>
       </div>
@@ -142,9 +151,15 @@ export default function Feedback() {
             <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-success/20 text-success mb-6 animate-bounce">
               <CheckCircle2 className="h-10 w-10" />
             </div>
-            <h1 className="text-4xl font-bold mb-4" data-testid="heading-thank-you">Thank You!</h1>
+            <h1
+              className="text-4xl font-bold mb-4"
+              data-testid="heading-thank-you"
+            >
+              Thank You!
+            </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-2">
-              Your feedback helps us preserve more family stories for future generations.
+              Your feedback helps us preserve more family stories for future
+              generations.
             </p>
             <p className="text-muted-foreground">
               We read every single review and use your insights to improve.
@@ -158,7 +173,9 @@ export default function Feedback() {
                   <Share2 className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">Refer a Friend, Get 20% Off</h2>
+                  <h2 className="text-2xl font-bold">
+                    Refer a Friend, Get 20% Off
+                  </h2>
                   <p className="text-sm text-muted-foreground">
                     Share LegacyScribe and you both save!
                   </p>
@@ -166,7 +183,9 @@ export default function Feedback() {
               </div>
 
               <div className="bg-background rounded-lg p-4 mb-4">
-                <Label className="text-sm font-medium mb-2 block">Your Referral Code</Label>
+                <Label className="text-sm font-medium mb-2 block">
+                  Your Referral Code
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     value={referralCode}
@@ -186,7 +205,8 @@ export default function Feedback() {
               </div>
 
               <p className="text-sm text-muted-foreground mb-4">
-                Give this code to friends. When they purchase, you both get 20% off your next order!
+                Give this code to friends. When they purchase, you both get 20%
+                off your next order!
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -213,13 +233,20 @@ export default function Feedback() {
           </Card>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href={`/stories/${orderCode}`} data-testid="link-view-stories">
+            <Link
+              href={`/stories/${orderCode}`}
+              data-testid="link-view-stories"
+            >
               <Button size="lg" data-testid="button-view-stories">
                 View My Stories
               </Button>
             </Link>
             <Link href="/products" data-testid="link-browse-more">
-              <Button size="lg" variant="outline" data-testid="button-browse-more">
+              <Button
+                size="lg"
+                variant="outline"
+                data-testid="button-browse-more"
+              >
                 Browse More Categories
               </Button>
             </Link>
@@ -238,10 +265,13 @@ export default function Feedback() {
           </div>
           <h1 className="text-3xl font-bold mb-4">Thank You!</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            We've already received your feedback. We appreciate your time and insights!
+            We've already received your feedback. We appreciate your time and
+            insights!
           </p>
           <Link href="/products" data-testid="link-browse-products">
-            <Button size="lg" data-testid="button-browse-products">Browse More Categories</Button>
+            <Button size="lg" data-testid="button-browse-products">
+              Browse More Categories
+            </Button>
           </Link>
         </div>
       </div>
@@ -266,7 +296,10 @@ export default function Feedback() {
         <Card>
           <CardContent className="p-6 sm:p-10">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
                 <FormField
                   control={form.control}
                   name="overallRating"
@@ -304,32 +337,67 @@ export default function Feedback() {
                             className="space-y-2"
                           >
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="very-easy" id="very-easy" data-testid="radio-whatsapp-very-easy" />
-                              <Label htmlFor="very-easy" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="very-easy"
+                                id="very-easy"
+                                data-testid="radio-whatsapp-very-easy"
+                              />
+                              <Label
+                                htmlFor="very-easy"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Very Easy - They loved it!
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="easy" id="easy" data-testid="radio-whatsapp-easy" />
-                              <Label htmlFor="easy" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="easy"
+                                id="easy"
+                                data-testid="radio-whatsapp-easy"
+                              />
+                              <Label
+                                htmlFor="easy"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Easy - No major issues
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="neutral" id="neutral" data-testid="radio-whatsapp-neutral" />
-                              <Label htmlFor="neutral" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="neutral"
+                                id="neutral"
+                                data-testid="radio-whatsapp-neutral"
+                              />
+                              <Label
+                                htmlFor="neutral"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Neutral - Some confusion
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="difficult" id="difficult" data-testid="radio-whatsapp-difficult" />
-                              <Label htmlFor="difficult" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="difficult"
+                                id="difficult"
+                                data-testid="radio-whatsapp-difficult"
+                              />
+                              <Label
+                                htmlFor="difficult"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Difficult - Needed help
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="very-difficult" id="very-difficult" data-testid="radio-whatsapp-very-difficult" />
-                              <Label htmlFor="very-difficult" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="very-difficult"
+                                id="very-difficult"
+                                data-testid="radio-whatsapp-very-difficult"
+                              />
+                              <Label
+                                htmlFor="very-difficult"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Very Difficult - Too complicated
                               </Label>
                             </div>
@@ -357,32 +425,67 @@ export default function Feedback() {
                             className="space-y-2"
                           >
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="very-satisfied" id="very-satisfied" data-testid="radio-quality-very-satisfied" />
-                              <Label htmlFor="very-satisfied" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="very-satisfied"
+                                id="very-satisfied"
+                                data-testid="radio-quality-very-satisfied"
+                              />
+                              <Label
+                                htmlFor="very-satisfied"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Very Satisfied
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="satisfied" id="satisfied" data-testid="radio-quality-satisfied" />
-                              <Label htmlFor="satisfied" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="satisfied"
+                                id="satisfied"
+                                data-testid="radio-quality-satisfied"
+                              />
+                              <Label
+                                htmlFor="satisfied"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Satisfied
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="neutral" id="quality-neutral" data-testid="radio-quality-neutral" />
-                              <Label htmlFor="quality-neutral" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="neutral"
+                                id="quality-neutral"
+                                data-testid="radio-quality-neutral"
+                              />
+                              <Label
+                                htmlFor="quality-neutral"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Neutral
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="dissatisfied" id="dissatisfied" data-testid="radio-quality-dissatisfied" />
-                              <Label htmlFor="dissatisfied" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="dissatisfied"
+                                id="dissatisfied"
+                                data-testid="radio-quality-dissatisfied"
+                              />
+                              <Label
+                                htmlFor="dissatisfied"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Dissatisfied
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="very-dissatisfied" id="very-dissatisfied" data-testid="radio-quality-very-dissatisfied" />
-                              <Label htmlFor="very-dissatisfied" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="very-dissatisfied"
+                                id="very-dissatisfied"
+                                data-testid="radio-quality-very-dissatisfied"
+                              />
+                              <Label
+                                htmlFor="very-dissatisfied"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Very Dissatisfied
                               </Label>
                             </div>
@@ -410,32 +513,67 @@ export default function Feedback() {
                             className="space-y-2"
                           >
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="definitely-yes" id="definitely-yes" data-testid="radio-recommend-definitely-yes" />
-                              <Label htmlFor="definitely-yes" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="definitely-yes"
+                                id="definitely-yes"
+                                data-testid="radio-recommend-definitely-yes"
+                              />
+                              <Label
+                                htmlFor="definitely-yes"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Definitely Yes
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="probably-yes" id="probably-yes" data-testid="radio-recommend-probably-yes" />
-                              <Label htmlFor="probably-yes" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="probably-yes"
+                                id="probably-yes"
+                                data-testid="radio-recommend-probably-yes"
+                              />
+                              <Label
+                                htmlFor="probably-yes"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Probably Yes
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="not-sure" id="not-sure" data-testid="radio-recommend-not-sure" />
-                              <Label htmlFor="not-sure" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="not-sure"
+                                id="not-sure"
+                                data-testid="radio-recommend-not-sure"
+                              />
+                              <Label
+                                htmlFor="not-sure"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Not Sure
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="probably-not" id="probably-not" data-testid="radio-recommend-probably-not" />
-                              <Label htmlFor="probably-not" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="probably-not"
+                                id="probably-not"
+                                data-testid="radio-recommend-probably-not"
+                              />
+                              <Label
+                                htmlFor="probably-not"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Probably Not
                               </Label>
                             </div>
                             <div className="flex items-center space-x-3 p-3 rounded-lg hover-elevate transition-all">
-                              <RadioGroupItem value="definitely-not" id="definitely-not" data-testid="radio-recommend-definitely-not" />
-                              <Label htmlFor="definitely-not" className="flex-1 cursor-pointer font-normal">
+                              <RadioGroupItem
+                                value="definitely-not"
+                                id="definitely-not"
+                                data-testid="radio-recommend-definitely-not"
+                              />
+                              <Label
+                                htmlFor="definitely-not"
+                                className="flex-1 cursor-pointer font-normal"
+                              >
                                 Definitely Not
                               </Label>
                             </div>
@@ -457,7 +595,8 @@ export default function Feedback() {
                           Tell us more about your experience
                         </FormLabel>
                         <p className="text-sm text-muted-foreground mb-3">
-                          What did you love? What could we improve? Any special moments to share?
+                          What did you love? What could we improve? Any special
+                          moments to share?
                         </p>
                         <FormControl>
                           <div className="relative">
@@ -472,7 +611,10 @@ export default function Feedback() {
                               }}
                               data-testid="textarea-written-feedback"
                             />
-                            <p className="absolute bottom-3 right-3 text-xs text-muted-foreground" data-testid="text-character-count">
+                            <p
+                              className="absolute bottom-3 right-3 text-xs text-muted-foreground"
+                              data-testid="text-character-count"
+                            >
                               {characterCount} / 500
                             </p>
                           </div>
@@ -498,7 +640,8 @@ export default function Feedback() {
                             />
                           </FormControl>
                           <FormLabel className="font-normal cursor-pointer">
-                            You can feature my feedback as a testimonial on your website
+                            You can feature my feedback as a testimonial on your
+                            website
                           </FormLabel>
                         </div>
                       </FormItem>
@@ -613,7 +756,9 @@ export default function Feedback() {
                   type="submit"
                   size="lg"
                   className="w-full text-lg"
-                  disabled={overallRating === 0 || submitFeedbackMutation.isPending}
+                  disabled={
+                    overallRating === 0 || submitFeedbackMutation.isPending
+                  }
                   data-testid="button-submit-feedback"
                 >
                   {submitFeedbackMutation.isPending ? (

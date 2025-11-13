@@ -67,6 +67,7 @@ SESSION_SECRET=your_session_secret_here
 ## Database Schema
 
 ### Orders Table
+
 ```typescript
 {
   id: string;                      // Unique order ID
@@ -83,6 +84,7 @@ SESSION_SECRET=your_session_secret_here
 ```
 
 ### WhatsApp Tokens Table
+
 ```typescript
 {
   id: string;                      // UUID
@@ -95,10 +97,11 @@ SESSION_SECRET=your_session_secret_here
 ```
 
 ### Webhook Events Table (Idempotency)
+
 ```typescript
 {
-  idempotencyKey: string;          // Primary key: "${payment_id}_${event}"
-  processedAt: string;             // ISO timestamp
+  idempotencyKey: string; // Primary key: "${payment_id}_${event}"
+  processedAt: string; // ISO timestamp
 }
 ```
 
@@ -111,6 +114,7 @@ SESSION_SECRET=your_session_secret_here
 **Authentication:** HMAC SHA-256 signature verification
 
 **Razorpay Payload Structure:**
+
 ```json
 {
   "event": "payment.captured",
@@ -128,6 +132,7 @@ SESSION_SECRET=your_session_secret_here
 ```
 
 **Request Headers:**
+
 ```
 X-Razorpay-Signature: <hmac_sha256_signature>
 Content-Type: application/json
@@ -145,6 +150,7 @@ Content-Type: application/json
 3. **payment.failed** → Mark as processed, no WhatsApp sent
 
 **Response Codes:**
+
 - `200` - Success (event processed or acknowledged)
 - `401` - Invalid signature
 - `400` - Invalid payload/amount mismatch
@@ -152,6 +158,7 @@ Content-Type: application/json
 - `500` - Internal server error
 
 **Success Response:**
+
 ```json
 {
   "message": "Payment processed successfully",
@@ -167,12 +174,14 @@ Content-Type: application/json
 **URL:** `https://your-domain.replit.app/w/invite/550e8400-e29b-41d4-a716-446655440000`
 
 **Behavior:**
+
 1. Validates token exists
 2. Checks expiration (90 days from creation)
 3. Marks token as consumed
 4. Redirects (302) to: `https://wa.me/919876543210?text=Hi%2C%20I'm%20contacting%20on%20behalf%20of%20order%20ORD-123456.%20Token%3A%20550e8400...`
 
 **Response Codes:**
+
 - `302` - Redirect to WhatsApp
 - `404` - Invalid token
 - `410` - Token expired
@@ -193,11 +202,13 @@ Content-Type: application/json
 **Recipient:** Customer's phone number
 
 **Message Format:**
+
 ```
 Thank you for your order! Please forward this link to your elder for direct chat: https://your-domain.replit.app/w/invite/{token}
 ```
 
 **Features:**
+
 - `preview_url: true` - Shows link preview in WhatsApp
 - Forwardable - Customer can forward to elder
 - Token-based tracking - Maps elder's chat back to original order
@@ -209,6 +220,7 @@ Thank you for your order! Please forward this link to your elder for direct chat
 **Endpoint:** `POST http://localhost:5000/webhooks/payment`
 
 **Headers:**
+
 ```
 Content-Type: application/json
 ```
@@ -216,6 +228,7 @@ Content-Type: application/json
 **Note:** In development mode (without `RAZORPAY_WEBHOOK_SECRET`), signature verification is skipped with a warning.
 
 **Body (payment.captured):**
+
 ```json
 {
   "event": "payment.captured",
@@ -233,6 +246,7 @@ Content-Type: application/json
 ```
 
 **Expected Response:**
+
 ```json
 {
   "message": "Payment processed successfully",
@@ -244,13 +258,14 @@ Content-Type: application/json
 ### 2. Test Payment Webhook (Production Mode)
 
 **Prerequisites:**
+
 1. Create an order first: `POST /api/orders`
 2. Note the order `id` returned
 3. Calculate signature:
 
 ```javascript
 // Node.js example
-const crypto = require('crypto');
+const crypto = require("crypto");
 const payload = JSON.stringify({
   event: "payment.captured",
   payload: {
@@ -259,21 +274,22 @@ const payload = JSON.stringify({
         id: "pay_test123",
         order_id: "your_order_id_here",
         amount: 99900,
-        status: "captured"
-      }
-    }
-  }
+        status: "captured",
+      },
+    },
+  },
 });
 
 const signature = crypto
-  .createHmac('sha256', 'your_webhook_secret')
+  .createHmac("sha256", "your_webhook_secret")
   .update(payload)
-  .digest('hex');
+  .digest("hex");
 
-console.log('X-Razorpay-Signature:', signature);
+console.log("X-Razorpay-Signature:", signature);
 ```
 
 **Headers:**
+
 ```
 Content-Type: application/json
 X-Razorpay-Signature: <calculated_signature>
@@ -288,6 +304,7 @@ X-Razorpay-Signature: <calculated_signature>
 **Method:** GET (open in browser or use Postman with "Automatically follow redirects" disabled)
 
 **Expected Response:**
+
 ```
 HTTP/1.1 302 Found
 Location: https://wa.me/919876543210?text=Hi%2C%20I'm%20contacting%20on%20behalf%20of%20order%20ORD-123456.%20Token%3A%20550e8400...
@@ -298,11 +315,13 @@ Location: https://wa.me/919876543210?text=Hi%2C%20I'm%20contacting%20on%20behalf
 **Endpoint:** `POST http://localhost:5000/api/orders`
 
 **Headers:**
+
 ```
 Content-Type: application/json
 ```
 
 **Body:**
+
 ```json
 {
   "customerPhone": "9876543210",
@@ -319,6 +338,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -338,6 +358,7 @@ Content-Type: application/json
 **Method:** HMAC SHA-256
 
 **Process:**
+
 1. Razorpay sends raw request body + signature in header
 2. Server captures raw body before JSON parsing
 3. Calculates HMAC using raw body + webhook secret
@@ -351,11 +372,13 @@ Content-Type: application/json
 **Key Format:** `${payment_id}_${event}`
 
 **Prevents:**
+
 - Duplicate webhook processing
 - Multiple WhatsApp message sends
 - Race conditions from Razorpay retries
 
 **Implementation:**
+
 - Event-specific keys allow multi-event flows (authorized → captured)
 - Terminal events (captured/failed) marked as processed
 - Non-terminal events acknowledged without marking
@@ -363,6 +386,7 @@ Content-Type: application/json
 ### 3. Amount Validation
 
 **Checks:**
+
 1. Amount is a valid number
 2. Amount in paise converts correctly to rupees
 3. Converted amount matches order total
@@ -376,6 +400,7 @@ Content-Type: application/json
 **Format:** E.164 (without + prefix)
 
 **Normalization:**
+
 - `9876543210` → `919876543210` (adds India code)
 - `919876543210` → `919876543210` (already normalized)
 
@@ -386,10 +411,12 @@ Content-Type: application/json
 ### WhatsApp API Retries
 
 **Retry Conditions:**
+
 - `429 Too Many Requests` (rate limiting)
 - `5xx Server Errors` (Meta API issues)
 
 **Backoff Strategy:** Exponential
+
 - Attempt 1: Immediate
 - Attempt 2: +1 second
 - Attempt 3: +2 seconds
@@ -404,15 +431,18 @@ Content-Type: application/json
 ### Graceful Degradation
 
 **Development Mode (no credentials):**
+
 ```
 ⚠️  DEVELOPMENT MODE: WHATSAPP_PHONE_NUMBER_ID not configured
 ⚠️  Skipping WhatsApp message
 ```
+
 - Order still created
 - Payment still processed
 - WhatsApp silently skipped with warning logs
 
 **WhatsApp Send Failures:**
+
 - Order marked as paid regardless
 - Logs warning but returns 200 to Razorpay
 - Prevents webhook retries from Razorpay
@@ -420,11 +450,12 @@ Content-Type: application/json
 ### Error Logging
 
 All errors logged with context:
+
 ```javascript
-console.error('Failed to send WhatsApp message:', {
+console.error("Failed to send WhatsApp message:", {
   error: error.response?.data || error.message,
   to: recipientNumber,
-  template: templateName
+  template: templateName,
 });
 ```
 
@@ -509,6 +540,7 @@ Database Models:
 ## Support
 
 For issues or questions:
+
 - Check logs in Replit console
 - Review Meta Business Manager for WhatsApp account status
 - Verify Razorpay webhook logs in dashboard

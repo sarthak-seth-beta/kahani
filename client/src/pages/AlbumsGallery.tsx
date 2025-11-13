@@ -13,8 +13,12 @@ export default function AlbumsGallery() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/albums/:trialId");
   const trialId = params?.trialId || "";
-  
-  const { data: albumData, isLoading, error } = useQuery({
+
+  const {
+    data: albumData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: [`/api/albums/${trialId}`],
     enabled: !!trialId,
   });
@@ -25,13 +29,16 @@ export default function AlbumsGallery() {
   const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   // Register audio element refs from child components
-  const handleAudioRef = useCallback((trackId: string, audio: HTMLAudioElement | null) => {
-    if (audio) {
-      audioRefs.current.set(trackId, audio);
-    } else {
-      audioRefs.current.delete(trackId);
-    }
-  }, []);
+  const handleAudioRef = useCallback(
+    (trackId: string, audio: HTMLAudioElement | null) => {
+      if (audio) {
+        audioRefs.current.set(trackId, audio);
+      } else {
+        audioRefs.current.delete(trackId);
+      }
+    },
+    [],
+  );
 
   // Close button handler
   const handleClose = () => {
@@ -74,14 +81,18 @@ export default function AlbumsGallery() {
   useEffect(() => {
     const savedIndex = window.history.state?.vinylIndex;
     const maxIndex = albumData?.tracks?.length || 0;
-    if (typeof savedIndex === "number" && savedIndex >= 0 && savedIndex <= maxIndex) {
+    if (
+      typeof savedIndex === "number" &&
+      savedIndex >= 0 &&
+      savedIndex <= maxIndex
+    ) {
       setIndex(savedIndex);
     }
   }, [albumData]);
-  
+
   if (!trialId) {
     return (
-      <div 
+      <div
         style={{
           background: "#FDF4DC",
           width: "100%",
@@ -100,7 +111,7 @@ export default function AlbumsGallery() {
 
   if (error) {
     return (
-      <div 
+      <div
         style={{
           background: "#FDF4DC",
           width: "100%",
@@ -135,7 +146,7 @@ export default function AlbumsGallery() {
 
   if (isLoading || !albumData) {
     return (
-      <div 
+      <div
         style={{
           background: "#FDF4DC",
           width: "100%",
@@ -153,7 +164,7 @@ export default function AlbumsGallery() {
   }
 
   const { trial, tracks: apiTracks } = albumData;
-  
+
   const tracks: Track[] = apiTracks.map((apiTrack: any) => ({
     id: `track-${apiTrack.questionIndex}`,
     title: apiTrack.questionText,
@@ -193,7 +204,7 @@ export default function AlbumsGallery() {
           }
         }}
         onDurationLoad={(duration) => {
-          setDurations(prev => new Map(prev).set(track.id, duration));
+          setDurations((prev) => new Map(prev).set(track.id, duration));
         }}
         onAudioRef={handleAudioRef}
       />
@@ -201,7 +212,7 @@ export default function AlbumsGallery() {
   ];
 
   return (
-    <div 
+    <div
       data-testid="albums-gallery-page"
       style={{
         background: "#FDF4DC",

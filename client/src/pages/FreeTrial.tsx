@@ -27,7 +27,7 @@ export default function FreeTrial() {
   const [, setLocation] = useLocation();
 
   const urlParams = new URLSearchParams(window.location.search);
-  const albumFromUrl = urlParams.get('album') || '';
+  const albumFromUrl = urlParams.get("album") || "";
 
   const form = useForm<FreeTrialFormData>({
     resolver: zodResolver(insertFreeTrialSchema),
@@ -50,7 +50,7 @@ export default function FreeTrial() {
     },
     onSuccess: (trial) => {
       queryClient.invalidateQueries({ queryKey: ["/api/free-trial"] });
-      
+
       form.reset();
       setLocation("/thank-you");
     },
@@ -73,9 +73,9 @@ export default function FreeTrial() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center mb-6">
-            <img 
-              src={kahaniLogo} 
-              alt="Kahani Logo" 
+            <img
+              src={kahaniLogo}
+              alt="Kahani Logo"
               className="h-24 w-auto object-contain"
             />
           </div>
@@ -83,7 +83,8 @@ export default function FreeTrial() {
             Start Your Free Trial
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience the joy of preserving precious memories. Get started with 10 thoughtfully crafted questions delivered via WhatsApp.
+            Experience the joy of preserving precious memories. Get started with
+            10 thoughtfully crafted questions delivered via WhatsApp.
           </p>
         </div>
 
@@ -94,45 +95,79 @@ export default function FreeTrial() {
           </h2>
           <div className="space-y-4">
             <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">•</span>
+              <span className="text-lg font-semibold text-primary mt-0.5">
+                •
+              </span>
               <div>
-                <p className="font-semibold text-lg mb-1">Week full of Thoughtful Questions</p>
-                <p className="text-muted-foreground">Carefully curated to capture meaningful memories and life stories</p>
+                <p className="font-semibold text-lg mb-1">
+                  Week full of Thoughtful Questions
+                </p>
+                <p className="text-muted-foreground">
+                  Carefully curated to capture meaningful memories and life
+                  stories
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">•</span>
+              <span className="text-lg font-semibold text-primary mt-0.5">
+                •
+              </span>
               <div>
                 <p className="font-semibold text-lg mb-1">WhatsApp Delivery</p>
-                <p className="text-muted-foreground">Questions sent directly to your phone via WhatsApp to the Storyteller</p>
+                <p className="text-muted-foreground">
+                  Questions sent directly to your phone via WhatsApp to the
+                  Storyteller
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">•</span>
+              <span className="text-lg font-semibold text-primary mt-0.5">
+                •
+              </span>
               <div>
-                <p className="font-semibold text-lg mb-1">Voice & Text Responses</p>
-                <p className="text-muted-foreground">Record directly via voice messages</p>
+                <p className="font-semibold text-lg mb-1">
+                  Voice & Text Responses
+                </p>
+                <p className="text-muted-foreground">
+                  Record directly via voice messages
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">•</span>
+              <span className="text-lg font-semibold text-primary mt-0.5">
+                •
+              </span>
               <div>
-                <p className="font-semibold text-lg mb-1">Beautiful Story Format</p>
-                <p className="text-muted-foreground">Your responses compiled into a keepsake story you'll treasure</p>
+                <p className="font-semibold text-lg mb-1">
+                  Beautiful Story Format
+                </p>
+                <p className="text-muted-foreground">
+                  Your responses compiled into a keepsake story you'll treasure
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">•</span>
+              <span className="text-lg font-semibold text-primary mt-0.5">
+                •
+              </span>
               <div>
-                <p className="font-semibold text-lg mb-1">No payment information Required</p>
-                <p className="text-muted-foreground">Start completely free - no payment information needed</p>
+                <p className="font-semibold text-lg mb-1">
+                  No payment information Required
+                </p>
+                <p className="text-muted-foreground">
+                  Start completely free - no payment information needed
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">•</span>
+              <span className="text-lg font-semibold text-primary mt-0.5">
+                •
+              </span>
               <div>
                 <p className="font-semibold text-lg mb-1">Flexible Schedule</p>
-                <p className="text-muted-foreground">Questions delivered at your preferred pace and timing</p>
+                <p className="text-muted-foreground">
+                  Questions delivered at your preferred pace and timing
+                </p>
               </div>
             </div>
           </div>
@@ -140,17 +175,19 @@ export default function FreeTrial() {
 
         {/* How It Works */}
         <div className="mb-12 bg-card rounded-xl p-8 border">
-          <h2 className="text-2xl font-semibold mb-6">
-            How It Works
-          </h2>
+          <h2 className="text-2xl font-semibold mb-6">How It Works</h2>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
                 1
               </div>
               <div>
-                <p className="font-semibold text-lg mb-1">Enter Your Phone Number</p>
-                <p className="text-muted-foreground">Just your WhatsApp number is all we need to get started</p>
+                <p className="font-semibold text-lg mb-1">
+                  Enter Your Phone Number
+                </p>
+                <p className="text-muted-foreground">
+                  Just your WhatsApp number is all we need to get started
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -159,7 +196,9 @@ export default function FreeTrial() {
               </div>
               <div>
                 <p className="font-semibold text-lg mb-1">Receive Questions</p>
-                <p className="text-muted-foreground">Get thoughtful questions delivered to your WhatsApp</p>
+                <p className="text-muted-foreground">
+                  Get thoughtful questions delivered to your WhatsApp
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -168,7 +207,9 @@ export default function FreeTrial() {
               </div>
               <div>
                 <p className="font-semibold text-lg mb-1">Share Your Story</p>
-                <p className="text-muted-foreground">Reply with voice or text messages at your own pace</p>
+                <p className="text-muted-foreground">
+                  Reply with voice or text messages at your own pace
+                </p>
               </div>
             </div>
           </div>
@@ -188,8 +229,12 @@ export default function FreeTrial() {
               {/* Buyer Information Section */}
               <div className="space-y-5">
                 <div className="border-b pb-2">
-                  <h3 className="text-lg font-semibold text-foreground">Your Information</h3>
-                  <p className="text-sm text-muted-foreground">Tell us about yourself</p>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Your Information
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Tell us about yourself
+                  </p>
                 </div>
 
                 <FormField
@@ -266,14 +311,12 @@ export default function FreeTrial() {
               <FormField
                 control={form.control}
                 name="selectedAlbum"
-                render={({ field }) => (
-                  <input type="hidden" {...field} />
-                )}
+                render={({ field }) => <input type="hidden" {...field} />}
               />
 
-              <Button 
-                type="submit" 
-                size="lg" 
+              <Button
+                type="submit"
+                size="lg"
                 className="w-full text-lg h-14 mt-8"
                 disabled={freeTrialMutation.isPending}
                 data-testid="button-start-trial"
@@ -289,7 +332,8 @@ export default function FreeTrial() {
               </Button>
 
               <p className="text-sm text-center text-muted-foreground">
-                No payment required. Cancel anytime. Your first question will arrive via WhatsApp shortly.
+                No payment required. Cancel anytime. Your first question will
+                arrive via WhatsApp shortly.
               </p>
             </form>
           </Form>
@@ -303,7 +347,10 @@ export default function FreeTrial() {
           </div>
           <p className="text-muted-foreground">
             Questions about the trial?{" "}
-            <a href="mailto:support@legacyscribe.com" className="text-primary hover:underline font-medium">
+            <a
+              href="mailto:support@legacyscribe.com"
+              className="text-primary hover:underline font-medium"
+            >
               Contact us
             </a>
           </p>

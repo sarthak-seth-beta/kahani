@@ -1,5 +1,12 @@
-import { useState, useRef, useEffect, Children, cloneElement, isValidElement } from 'react';
-import styles from '@/styles/pager.module.css';
+import {
+  useState,
+  useRef,
+  useEffect,
+  Children,
+  cloneElement,
+  isValidElement,
+} from "react";
+import styles from "@/styles/pager.module.css";
 
 interface SwipePagerProps {
   index: number;
@@ -7,7 +14,11 @@ interface SwipePagerProps {
   children: React.ReactNode;
 }
 
-export default function SwipePager({ index, onIndexChange, children }: SwipePagerProps) {
+export default function SwipePager({
+  index,
+  onIndexChange,
+  children,
+}: SwipePagerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [startX, setStartX] = useState(0);
@@ -77,25 +88,25 @@ export default function SwipePager({ index, onIndexChange, children }: SwipePage
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && index > 0) {
+      if (e.key === "ArrowLeft" && index > 0) {
         onIndexChange(index - 1);
-      } else if (e.key === 'ArrowRight' && index < totalSlides - 1) {
+      } else if (e.key === "ArrowRight" && index < totalSlides - 1) {
         onIndexChange(index + 1);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [index, totalSlides, onIndexChange]);
 
   // Mouse event listeners
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
       return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
       };
     }
   }, [isDragging]);
@@ -116,7 +127,7 @@ export default function SwipePager({ index, onIndexChange, children }: SwipePage
         return (
           <div
             key={i}
-            className={`${styles.slide} ${isDragging ? styles.dragging : ''}`}
+            className={`${styles.slide} ${isDragging ? styles.dragging : ""}`}
             style={{ transform }}
           >
             {isValidElement(child) ? cloneElement(child) : child}

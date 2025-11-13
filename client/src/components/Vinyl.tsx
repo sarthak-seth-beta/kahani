@@ -1,4 +1,4 @@
-import styles from '@/styles/vinyl.module.css';
+import styles from "@/styles/vinyl.module.css";
 
 interface VinylProps {
   isPlaying: boolean;
@@ -7,13 +7,18 @@ interface VinylProps {
   albumCoverSrc: string;
 }
 
-export default function Vinyl({ isPlaying, onToggle, size = 320, albumCoverSrc }: VinylProps) {
+export default function Vinyl({
+  isPlaying,
+  onToggle,
+  size = 320,
+  albumCoverSrc,
+}: VinylProps) {
   const handleClick = () => {
     onToggle();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === ' ' || e.key === 'Enter') {
+    if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
       onToggle();
     }
@@ -21,19 +26,19 @@ export default function Vinyl({ isPlaying, onToggle, size = 320, albumCoverSrc }
 
   return (
     <div
-      className={`${styles.record} ${styles.spinning} ${!isPlaying ? styles.paused : ''}`}
-      style={{ '--size': `${size}px` } as React.CSSProperties}
+      className={`${styles.record} ${styles.spinning} ${!isPlaying ? styles.paused : ""}`}
+      style={{ "--size": `${size}px` } as React.CSSProperties}
       onClick={handleClick}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      aria-label={isPlaying ? 'Pause track' : 'Play track'}
+      aria-label={isPlaying ? "Pause track" : "Play track"}
       data-testid="vinyl-record"
     >
       {/* Center label with album cover - rotates with the record */}
-      <img 
-        src={albumCoverSrc} 
-        alt="Album cover" 
+      <img
+        src={albumCoverSrc}
+        alt="Album cover"
         className={styles.labelImg}
         draggable={false}
       />
@@ -46,7 +51,7 @@ export default function Vinyl({ isPlaying, onToggle, size = 320, albumCoverSrc }
           onToggle();
         }}
         aria-pressed={isPlaying}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
+        aria-label={isPlaying ? "Pause" : "Play"}
         data-testid="button-play-pause"
       >
         {isPlaying ? (

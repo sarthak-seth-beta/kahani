@@ -1,6 +1,7 @@
 # Scheduler Architecture Recommendations
 
 ## Current Issues
+
 - Using `setInterval` which runs in-process
 - No persistence if server crashes
 - Polling every 10 seconds is inefficient
@@ -13,6 +14,7 @@
 **Best for:** Production, reliability, scalability
 
 **Pros:**
+
 - ✅ Persistent jobs (survives server restarts)
 - ✅ Built-in retry logic
 - ✅ Job prioritization
@@ -21,44 +23,47 @@
 - ✅ Job status tracking
 
 **Cons:**
+
 - ❌ Requires Redis
 - ❌ More complex setup
 
 **Installation:**
+
 ```bash
 npm install bullmq ioredis
 npm install --save-dev @types/ioredis
 ```
 
 **Implementation:**
+
 ```typescript
 // server/queue.ts
-import { Queue, Worker } from 'bullmq';
-import Redis from 'ioredis';
+import { Queue, Worker } from "bullmq";
+import Redis from "ioredis";
 
-const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const connection = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
 
-export const messageQueue = new Queue('whatsapp-messages', { connection });
+export const messageQueue = new Queue("whatsapp-messages", { connection });
 
 export const messageWorker = new Worker(
-  'whatsapp-messages',
+  "whatsapp-messages",
   async (job) => {
     const { trialId, messageType, ...data } = job.data;
-    
-    if (messageType === 'question') {
+
+    if (messageType === "question") {
       await sendScheduledQuestion(trialId);
-    } else if (messageType === 'reminder') {
+    } else if (messageType === "reminder") {
       await sendReminder(trialId);
     }
   },
-  { connection }
+  { connection },
 );
 
 // When scheduling a message:
 await messageQueue.add(
-  'send-question',
-  { trialId, messageType: 'question' },
-  { delay: 2000 } // 2 seconds delay
+  "send-question",
+  { trialId, messageType: "question" },
+  { delay: 2000 }, // 2 seconds delay
 );
 ```
 
@@ -69,28 +74,32 @@ await messageQueue.add(
 **Best for:** Development, simple use cases
 
 **Pros:**
+
 - ✅ Simple to implement
 - ✅ No external dependencies
 - ✅ Good for fixed schedules
 
 **Cons:**
+
 - ❌ Still in-process (lost on restart)
 - ❌ Not ideal for dynamic scheduling
 - ❌ No built-in retry logic
 
 **Installation:**
+
 ```bash
 npm install node-cron
 npm install --save-dev @types/node-cron
 ```
 
 **Implementation:**
+
 ```typescript
 // server/scheduler.ts
-import cron from 'node-cron';
+import cron from "node-cron";
 
 // Run every 10 seconds
-cron.schedule('*/10 * * * * *', async () => {
+cron.schedule("*/10 * * * * *", async () => {
   await processScheduledTasks();
 });
 ```
@@ -108,31 +117,32 @@ Since you already store `nextQuestionScheduledFor` in the database:
 3. **Use cron/interval** to check database periodically for missed jobs
 
 **Implementation:**
+
 ```typescript
 // server/scheduler.ts
-import { Queue } from 'bullmq';
-import Redis from 'ioredis';
+import { Queue } from "bullmq";
+import Redis from "ioredis";
 
-const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-export const messageQueue = new Queue('whatsapp-messages', { connection });
+const connection = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+export const messageQueue = new Queue("whatsapp-messages", { connection });
 
 // When scheduling (in conversationHandler.ts):
 export async function scheduleNextQuestion(trialId: string, delayMs: number) {
   const scheduledTime = new Date(Date.now() + delayMs);
-  
+
   // Store in DB (source of truth)
   await storage.updateFreeTrialDb(trialId, {
     nextQuestionScheduledFor: scheduledTime,
   });
-  
+
   // Add to queue for immediate execution
   await messageQueue.add(
     `question-${trialId}`,
-    { trialId, type: 'question' },
-    { 
+    { trialId, type: "question" },
+    {
       delay: delayMs,
       jobId: `question-${trialId}`, // Prevent duplicates
-    }
+    },
   );
 }
 
@@ -143,8 +153,8 @@ setInterval(async () => {
     // Re-queue if not already processing
     await messageQueue.add(
       `question-${trial.id}`,
-      { trialId: trial.id, type: 'question' },
-      { jobId: `question-${trial.id}` }
+      { trialId: trial.id, type: "question" },
+      { jobId: `question-${trial.id}` },
     );
   }
 }, 60 * 1000);
@@ -157,6 +167,7 @@ setInterval(async () => {
 **Best for:** Production environments (Render, Vercel, etc.)
 
 **Implementation:**
+
 1. Create an endpoint: `POST /api/cron/process-scheduled`
 2. Use external cron service to call it:
    - Render Cron Jobs
@@ -166,12 +177,12 @@ setInterval(async () => {
 
 ```typescript
 // server/routes.ts
-app.post('/api/cron/process-scheduled', async (req, res) => {
+app.post("/api/cron/process-scheduled", async (req, res) => {
   // Verify cron secret
-  if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (req.headers["authorization"] !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
-  
+
   await processScheduledTasks();
   res.json({ success: true });
 });
@@ -184,6 +195,7 @@ app.post('/api/cron/process-scheduled', async (req, res) => {
 **For your use case (WhatsApp messages with 2-10 second delays):**
 
 Use **Option 3 (Hybrid)** because:
+
 1. You already have database persistence ✅
 2. You need immediate execution for short delays (2-10 seconds)
 3. You need reliability (database as backup)
@@ -191,10 +203,10 @@ Use **Option 3 (Hybrid)** because:
 5. Periodic check catches any missed jobs
 
 **Migration Path:**
+
 1. Install BullMQ + Redis
 2. Replace `setInterval` with queue-based scheduling
 3. Keep database queries as backup/recovery mechanism
 4. Add worker to process queue jobs
 
 Would you like me to implement the hybrid approach?
-

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import SwipePager from '@/components/SwipePager';
-import IntroSlide from '@/components/IntroSlide';
-import TrackSlide, { TrackSlideRef } from '@/components/TrackSlide';
-import { ALBUM, TRACKS } from '@/tracks';
-import styles from '@/styles/vinyl-gallery.module.css';
+import { useState, useEffect, useRef } from "react";
+import SwipePager from "@/components/SwipePager";
+import IntroSlide from "@/components/IntroSlide";
+import TrackSlide, { TrackSlideRef } from "@/components/TrackSlide";
+import { ALBUM, TRACKS } from "@/tracks";
+import styles from "@/styles/vinyl-gallery.module.css";
 
 export default function VinylGallery() {
   const [index, setIndex] = useState(0);
@@ -13,13 +13,13 @@ export default function VinylGallery() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        trackRefs.current.forEach(ref => ref?.pause());
+        trackRefs.current.forEach((ref) => ref?.pause());
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -35,7 +35,7 @@ export default function VinylGallery() {
   // Keyboard handler for Space key (play/pause)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === ' ' && index > 0) {
+      if (e.key === " " && index > 0) {
         e.preventDefault();
         const trackRef = trackRefs.current[index - 1];
         if (trackRef && trackRef.togglePlayPause) {
@@ -44,8 +44,8 @@ export default function VinylGallery() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [index]);
 
   const handleIndexChange = (newIndex: number) => {
@@ -59,26 +59,26 @@ export default function VinylGallery() {
   return (
     <div className={styles.vinylGalleryPage}>
       <SwipePager index={index} onIndexChange={handleIndexChange}>
-      {/* Intro Slide */}
-      <IntroSlide
-        albumTitle={ALBUM.title}
-        artist={ALBUM.artist}
-        coverSrc={ALBUM.coverSrc}
-        logoSrc={ALBUM.logoSrc}
-      />
-
-      {/* Track Slides */}
-      {TRACKS.map((track, i) => (
-        <TrackSlide
-          key={track.id}
-          ref={(el) => {
-            trackRefs.current[i] = el;
-          }}
-          trackTitle={track.title}
-          audioSrc={track.audioSrc}
-          albumCoverSrc={ALBUM.coverSrc}
+        {/* Intro Slide */}
+        <IntroSlide
+          albumTitle={ALBUM.title}
+          artist={ALBUM.artist}
+          coverSrc={ALBUM.coverSrc}
+          logoSrc={ALBUM.logoSrc}
         />
-      ))}
+
+        {/* Track Slides */}
+        {TRACKS.map((track, i) => (
+          <TrackSlide
+            key={track.id}
+            ref={(el) => {
+              trackRefs.current[i] = el;
+            }}
+            trackTitle={track.title}
+            audioSrc={track.audioSrc}
+            albumCoverSrc={ALBUM.coverSrc}
+          />
+        ))}
       </SwipePager>
     </div>
   );

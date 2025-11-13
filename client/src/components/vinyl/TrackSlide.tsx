@@ -19,7 +19,15 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function TrackSlide({ track, isActive, isPlaying, onPlay, onPause, onDurationLoad, onAudioRef }: TrackSlideProps) {
+export function TrackSlide({
+  track,
+  isActive,
+  isPlaying,
+  onPlay,
+  onPause,
+  onDurationLoad,
+  onAudioRef,
+}: TrackSlideProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -65,7 +73,8 @@ export function TrackSlide({ track, isActive, isPlaying, onPlay, onPause, onDura
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isPlaying, onPause]);
 
   // Audio event handlers
@@ -147,10 +156,10 @@ export function TrackSlide({ track, isActive, isPlaying, onPlay, onPause, onDura
         {track.title}
       </h2>
 
-      <Vinyl 
-        isPlaying={isPlaying} 
-        onToggle={handleToggle} 
-        size={Math.min(window.innerWidth * 0.75, 300)} 
+      <Vinyl
+        isPlaying={isPlaying}
+        onToggle={handleToggle}
+        size={Math.min(window.innerWidth * 0.75, 300)}
         labelImageSrc={ALBUM.coverSrc}
       />
 

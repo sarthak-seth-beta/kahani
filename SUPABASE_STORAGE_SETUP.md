@@ -5,6 +5,7 @@ This guide will help you set up Supabase Storage for voice note file storage.
 ## What Was Implemented
 
 ✅ Voice notes are now automatically:
+
 1. Downloaded from WhatsApp when received
 2. Uploaded to Supabase Storage
 3. Stored with permanent URLs (no expiration)
@@ -43,6 +44,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **⚠️ Important:**
+
 - Never commit the Service Role Key to version control
 - The Service Role Key has admin privileges - keep it secret
 - Use environment variables or secrets management in your deployment platform
@@ -52,6 +54,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 After setting up:
 
 1. **Check logs:** When a voice note is received, you should see:
+
    ```
    Voice note downloaded and uploaded to Supabase: {
      voiceNoteId: '...',
@@ -61,7 +64,7 @@ After setting up:
    }
    ```
 
-2. **Check Supabase Storage:** 
+2. **Check Supabase Storage:**
    - Go to Storage → voice-notes bucket
    - You should see uploaded files with names like `{voiceNoteId}.ogg`
 
@@ -96,17 +99,20 @@ downloadAndStoreVoiceNote() [async]
 ### File Naming
 
 Files are stored with the format: `{voiceNoteId}.{extension}`
+
 - Example: `550e8400-e29b-41d4-a716-446655440000.ogg`
 - Extension is determined from MIME type (ogg, mp3, or m4a)
 
 ### Public URLs
 
 Files are accessible via public URLs like:
+
 ```
 https://{project-ref}.supabase.co/storage/v1/object/public/voice-notes/{voiceNoteId}.ogg
 ```
 
 These URLs are:
+
 - ✅ Permanent (don't expire)
 - ✅ Publicly accessible (no authentication needed)
 - ✅ CDN-backed (fast delivery)
@@ -119,6 +125,7 @@ These URLs are:
 **Cause:** Missing environment variables
 
 **Solution:**
+
 - Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set
 - Check that they're loaded in your environment (restart server if needed)
 
@@ -127,6 +134,7 @@ These URLs are:
 **Cause:** Bucket doesn't exist or wrong permissions
 
 **Solution:**
+
 1. Verify bucket name is exactly `voice-notes`
 2. Ensure bucket is set to **Public**
 3. Check that Service Role Key has correct permissions
@@ -134,6 +142,7 @@ These URLs are:
 ### Files not uploading
 
 **Check:**
+
 1. Server logs for error messages
 2. Supabase Storage dashboard for files
 3. Database `voice_notes` table - check `downloadStatus` field:
@@ -146,6 +155,7 @@ These URLs are:
 **Cause:** Bucket might not be public
 
 **Solution:**
+
 1. Go to Storage → voice-notes bucket
 2. Click **Settings** (gear icon)
 3. Ensure **Public bucket** is enabled
@@ -163,17 +173,19 @@ To test the implementation:
 ## Cost Considerations
 
 Supabase Free Tier includes:
+
 - 1 GB storage
 - 2 GB bandwidth/month
 
 For production:
+
 - Monitor storage usage in Supabase Dashboard
 - Consider upgrading if you exceed free tier limits
 - Voice notes are typically 30-60 seconds, ~100-500KB each
 
 ## Security Notes
 
-1. **Service Role Key:** 
+1. **Service Role Key:**
    - Only use on server-side
    - Never expose in client code
    - Rotate if compromised
@@ -196,4 +208,3 @@ For production:
 - [ ] Add authentication for file access
 - [ ] Implement file compression
 - [ ] Add CDN caching headers
-

@@ -1,4 +1,4 @@
-import {  useRef, useEffect, useState, type ReactNode } from "react";
+import { useRef, useEffect, useState, type ReactNode } from "react";
 import styles from "@/styles/pager.module.css";
 
 interface SwipePagerProps {
@@ -7,7 +7,11 @@ interface SwipePagerProps {
   children: ReactNode[];
 }
 
-export function SwipePager({ index, onIndexChange, children }: SwipePagerProps) {
+export function SwipePager({
+  index,
+  onIndexChange,
+  children,
+}: SwipePagerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -71,7 +75,7 @@ export function SwipePager({ index, onIndexChange, children }: SwipePagerProps) 
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     handleMove(touch.clientX, touch.clientY);
-    
+
     // Only prevent default if horizontal drag is confirmed and significant
     if (isDragHorizontalRef.current && Math.abs(dragOffset) > 10) {
       e.preventDefault();
@@ -137,14 +141,15 @@ export function SwipePager({ index, onIndexChange, children }: SwipePagerProps) 
       {children.map((child, i) => {
         const isActive = i === index;
         const offset = (i - index) * 100;
-        const transform = isActive && isDragging
-          ? `translateX(calc(${offset}% + ${dragOffset}px))`
-          : `translateX(${offset}%)`;
+        const transform =
+          isActive && isDragging
+            ? `translateX(calc(${offset}% + ${dragOffset}px))`
+            : `translateX(${offset}%)`;
 
         return (
           <div
             key={i}
-            className={`${styles.slide} ${isDragging ? styles.dragging : ''}`}
+            className={`${styles.slide} ${isDragging ? styles.dragging : ""}`}
             style={{
               transform,
               zIndex: isActive ? 1 : 0,

@@ -38,7 +38,9 @@ export default function StoryViewer() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-4">Stories Not Found</h1>
-          <p className="text-muted-foreground mb-6">This story collection doesn't exist or has been removed.</p>
+          <p className="text-muted-foreground mb-6">
+            This story collection doesn't exist or has been removed.
+          </p>
           <Link href="/" data-testid="link-back-home">
             <Button data-testid="button-back-home">Back to Home</Button>
           </Link>
@@ -47,7 +49,8 @@ export default function StoryViewer() {
     );
   }
 
-  const progressPercentage = (stories.responses.length / stories.totalQuestions) * 100;
+  const progressPercentage =
+    (stories.responses.length / stories.totalQuestions) * 100;
 
   return (
     <div className="min-h-screen bg-background py-12">
@@ -62,10 +65,15 @@ export default function StoryViewer() {
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2" data-testid="text-story-title">
+              <h1
+                className="text-4xl font-bold mb-2"
+                data-testid="text-story-title"
+              >
                 {stories.elderName}'s Story
               </h1>
-              <Badge variant="secondary" data-testid="badge-category">{stories.category}</Badge>
+              <Badge variant="secondary" data-testid="badge-category">
+                {stories.category}
+              </Badge>
             </div>
             <Button variant="outline" data-testid="button-download">
               <Download className="h-4 w-4 mr-2" />
@@ -77,7 +85,8 @@ export default function StoryViewer() {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-semibold" data-testid="text-progress">
-                {stories.responses.length} of {stories.totalQuestions} questions answered
+                {stories.responses.length} of {stories.totalQuestions} questions
+                answered
               </span>
             </div>
             <Progress value={progressPercentage} className="h-2" />
@@ -90,9 +99,15 @@ export default function StoryViewer() {
               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-muted mb-4">
                 <MessageCircle className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="text-2xl font-bold mb-2" data-testid="text-no-responses">No responses yet</h2>
+              <h2
+                className="text-2xl font-bold mb-2"
+                data-testid="text-no-responses"
+              >
+                No responses yet
+              </h2>
               <p className="text-muted-foreground">
-                Questions are being sent to {stories.elderName}. Check back soon for their responses!
+                Questions are being sent to {stories.elderName}. Check back soon
+                for their responses!
               </p>
             </CardContent>
           </Card>
@@ -104,13 +119,18 @@ export default function StoryViewer() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-semibold text-primary">Question {index + 1}</span>
+                        <span className="font-semibold text-primary">
+                          Question {index + 1}
+                        </span>
                         <Badge variant="outline" className="text-xs">
                           <Calendar className="h-3 w-3 mr-1" />
                           {new Date(response.answeredAt).toLocaleDateString()}
                         </Badge>
                       </div>
-                      <p className="text-lg font-semibold mb-4" data-testid={`question-${index}`}>
+                      <p
+                        className="text-lg font-semibold mb-4"
+                        data-testid={`question-${index}`}
+                      >
                         {response.questionText}
                       </p>
                     </div>
@@ -118,7 +138,11 @@ export default function StoryViewer() {
 
                   {response.audioUrl && (
                     <div className="mb-4">
-                      <audio controls className="w-full" data-testid={`audio-${index}`}>
+                      <audio
+                        controls
+                        className="w-full"
+                        data-testid={`audio-${index}`}
+                      >
                         <source src={response.audioUrl} type="audio/mpeg" />
                         Your browser does not support the audio element.
                       </audio>
@@ -127,7 +151,10 @@ export default function StoryViewer() {
 
                   {response.responseText && (
                     <div className="bg-muted/50 rounded-lg p-4">
-                      <p className="text-muted-foreground leading-relaxed" data-testid={`response-text-${index}`}>
+                      <p
+                        className="text-muted-foreground leading-relaxed"
+                        data-testid={`response-text-${index}`}
+                      >
                         {response.responseText}
                       </p>
                     </div>
@@ -138,14 +165,18 @@ export default function StoryViewer() {
           </div>
         )}
 
-        {stories.responses.length > 0 && stories.responses.length < stories.totalQuestions && (
-          <div className="mt-8 p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg text-center">
-            <h3 className="text-xl font-bold mb-2">More Stories Coming Soon</h3>
-            <p className="text-muted-foreground">
-              We're still collecting {stories.elderName}'s wonderful stories. Check back regularly for updates!
-            </p>
-          </div>
-        )}
+        {stories.responses.length > 0 &&
+          stories.responses.length < stories.totalQuestions && (
+            <div className="mt-8 p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg text-center">
+              <h3 className="text-xl font-bold mb-2">
+                More Stories Coming Soon
+              </h3>
+              <p className="text-muted-foreground">
+                We're still collecting {stories.elderName}'s wonderful stories.
+                Check back regularly for updates!
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

@@ -8,7 +8,12 @@ interface VinylProps {
   labelImageSrc: string;
 }
 
-export function Vinyl({ isPlaying, onToggle, size = 300, labelImageSrc }: VinylProps) {
+export function Vinyl({
+  isPlaying,
+  onToggle,
+  size = 300,
+  labelImageSrc,
+}: VinylProps) {
   const style = {
     "--size": `${size}px`,
   } as CSSProperties;

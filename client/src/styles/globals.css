@@ -4,14 +4,15 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
 body {
-  background: #FDF4DC;
+  background: #fdf4dc;
   color: #000000;
 }
 
@@ -35,6 +36,7 @@ button:focus-visible {
 
 @supports (padding: env(safe-area-inset-top)) {
   body {
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 }
