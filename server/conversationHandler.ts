@@ -279,7 +279,7 @@ async function handleVoiceNote(
     });
 
     const appUrl = process.env.APP_BASE_URL
-      ? `https://${process.env.APP_BASE_URL.split(",")[0]}`
+      ? `${process.env.APP_BASE_URL.split(",")[0]}`
       : "http://localhost:3000";
     const albumLink = `${appUrl}/albums/${trial.id}`;
 
