@@ -6,6 +6,7 @@ import {
   integer,
   timestamp,
   jsonb,
+  boolean,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -320,3 +321,53 @@ export const voiceNotes = pgTable(
 
 export type VoiceNoteRow = typeof voiceNotes.$inferSelect;
 export type InsertVoiceNoteRow = typeof voiceNotes.$inferInsert;
+
+export const albums = pgTable(
+  "albums",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    title: varchar("title", { length: 255 }).notNull().unique(),
+    description: text("description").notNull(),
+    questions: jsonb("questions").$type<string[]>().notNull(),
+    coverImage: text("cover_image").notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    titleIdx: uniqueIndex("albums_title_idx").on(table.title),
+    isActiveIdx: index("albums_is_active_idx").on(table.isActive),
+  }),
+);
+
+export type AlbumRow = typeof albums.$inferSelect;
+export type InsertAlbumRow = typeof albums.$inferInsert;
+
+export const albumSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  questions: z.array(z.string()),
+  coverImage: z.string(),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type Album = z.infer<typeof albumSchema>;
+
+export const insertAlbumSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  questions: z.array(z.string()).min(1, "At least one question is required"),
+  coverImage: z.string().url("Cover image must be a valid URL"),
+  isActive: z.boolean().default(true),
+});
+
+export type InsertAlbum = z.infer<typeof insertAlbumSchema>;

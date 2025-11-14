@@ -1,60 +1,29 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Footer } from "@/components/Footer";
 
 interface Album {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  imageSrc: string;
-  imageAlt: string;
+  cover_image: string;
 }
-
-const albums: Album[] = [
-  {
-    id: 1,
-    title: "Our Family History",
-    description:
-      "Revisit the people, places, and small moments that shaped your earliest memories",
-    imageSrc:
-      "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
-    imageAlt: "Our Family History",
-  },
-  {
-    id: 2,
-    title: "Their Life Paths",
-    description:
-      "Reflect on your life's journey — the moments, choices, and people that taught you who you are",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
-    imageAlt: "Their Life Paths",
-  },
-  {
-    id: 3,
-    title: "Words of Wisdom",
-    description:
-      "Share the wisdom, values, and reflections that your life's journey has taught you",
-    imageSrc:
-      "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
-    imageAlt: "Words of Wisdom",
-  },
-  {
-    id: 4,
-    title: "Love & Relationships",
-    description:
-      "Explore the bonds that matter most — love, connections, and relationships",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
-    imageAlt: "Love & Relationships",
-  },
-];
 
 export default function FreeTrialCheckout() {
   const [, setLocation] = useLocation();
-  const [selectedAlbumId, setSelectedAlbumId] = useState<number | null>(null);
+  const {
+    data: albums,
+    isLoading,
+    error,
+  } = useQuery<Album[]>({
+    queryKey: ["/api/albums"],
+  });
+
+  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
 
   const handleStartTrial = () => {
     if (selectedAlbumId === null) {
@@ -106,8 +75,19 @@ export default function FreeTrialCheckout() {
           </ul>
         </div>
 
-        <div className="space-y-6">
-          {albums.map((album) => {
+        {isLoading && (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-[#A35139]" />
+          </div>
+        )}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-[#1B2632]/70">Failed to load albums</p>
+          </div>
+        )}
+        {albums && albums.length > 0 && (
+          <div className="space-y-6">
+            {albums.map((album) => {
             const isSelected = selectedAlbumId === album.id;
 
             return (
@@ -125,8 +105,8 @@ export default function FreeTrialCheckout() {
                   {/* Album Image */}
                   <div className="relative h-48 sm:h-64 w-full overflow-hidden">
                     <img
-                      src={album.imageSrc}
-                      alt={album.imageAlt}
+                      src={album.cover_image}
+                      alt={album.title}
                       className="w-full h-full object-cover"
                       data-testid={`album-image-${album.id}`}
                     />
@@ -184,19 +164,22 @@ export default function FreeTrialCheckout() {
                 </CardContent>
               </Card>
             );
-          })}
-        </div>
+            })}
+          </div>
+        )}
 
-        {/* Info Section */}
-        <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
-          <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
-            Each album contains 15 thoughtfully crafted questions. Select one to
-            experience our story preservation service.
-          </p>
-        </div>
+        {albums && albums.length > 0 && (
+          <>
+            {/* Info Section */}
+            <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
+              <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
+                Each album contains thoughtfully crafted questions. Select one to
+                experience our story preservation service.
+              </p>
+            </div>
 
-        {/* Start Free Trial Button */}
-        <div className="mt-8">
+            {/* Start Free Trial Button */}
+            <div className="mt-8">
           <Button
             size="lg"
             className="w-full bg-[#A35139] text-white rounded-2xl shadow-xl border border-[#A35139] disabled:opacity-50"
@@ -213,7 +196,9 @@ export default function FreeTrialCheckout() {
               Please select one album above to start your free trial
             </p>
           )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}

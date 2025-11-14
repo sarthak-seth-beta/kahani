@@ -8,10 +8,6 @@ import {
   downloadVoiceNoteMedia,
   downloadMediaFile,
 } from "./whatsapp";
-import {
-  getQuestionByIndex,
-  getTotalQuestionsForAlbum,
-} from "@shared/albumQuestions";
 import { uploadVoiceNoteToStorage } from "./supabase";
 
 interface WhatsAppMessage {
@@ -182,7 +178,10 @@ async function sendFirstQuestion(
   fromNumber: string,
 ): Promise<void> {
   const questionIndex = 0;
-  const question = getQuestionByIndex(trial.selectedAlbum, questionIndex);
+  const question = await storage.getQuestionByIndex(
+    trial.selectedAlbum,
+    questionIndex,
+  );
 
   if (!question) {
     console.error("No question found for album:", trial.selectedAlbum);
@@ -216,7 +215,7 @@ async function handleVoiceNote(
   const audioId = message.audio.id;
   const mimeType = message.audio.mime_type;
 
-  const currentQuestion = getQuestionByIndex(
+  const currentQuestion = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     trial.currentQuestionIndex,
   );
@@ -268,7 +267,9 @@ async function handleVoiceNote(
 
   await sendVoiceNoteAcknowledgment(fromNumber);
 
-  const totalQuestions = getTotalQuestionsForAlbum(trial.selectedAlbum);
+  const totalQuestions = await storage.getTotalQuestionsForAlbum(
+    trial.selectedAlbum,
+  );
   const nextQuestionIndex = trial.currentQuestionIndex + 1;
 
   if (nextQuestionIndex >= totalQuestions) {

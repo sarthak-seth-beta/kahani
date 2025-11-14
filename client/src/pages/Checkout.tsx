@@ -1,67 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Minus, Plus, ArrowLeft } from "lucide-react";
+import { Minus, Plus, ArrowLeft, Loader2 } from "lucide-react";
 import { Footer } from "@/components/Footer";
 
 interface Album {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  imageSrc: string;
-  imageAlt: string;
+  cover_image: string;
 }
-
-const albums: Album[] = [
-  {
-    id: 1,
-    title: "Our Family History",
-    description:
-      "Revisit the people, places, and small moments that shaped your earliest memories",
-    imageSrc:
-      "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
-    imageAlt: "Our Family History",
-  },
-  {
-    id: 2,
-    title: "Their Life Paths",
-    description:
-      "Reflect on your life's journey — the moments, choices, and people that taught you who you are",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
-    imageAlt: "Their Life Paths",
-  },
-  {
-    id: 3,
-    title: "Words of Wisdom",
-    description:
-      "Share the wisdom, values, and reflections that your life's journey has taught you",
-    imageSrc:
-      "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
-    imageAlt: "Words of Wisdom",
-  },
-  {
-    id: 4,
-    title: "Love & Relationships",
-    description:
-      "Explore the bonds that matter most — love, connections, and relationships",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
-    imageAlt: "Love & Relationships",
-  },
-];
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
-  const [quantities, setQuantities] = useState<Record<number, number>>({
-    1: 1,
-    2: 1,
-    3: 1,
-    4: 1,
+  const {
+    data: albums,
+    isLoading,
+    error,
+  } = useQuery<Album[]>({
+    queryKey: ["/api/albums"],
   });
 
-  const handleQuantityChange = (albumId: number, delta: number) => {
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  // Initialize quantities when albums load
+  useEffect(() => {
+    if (albums) {
+      const initialQuantities: Record<string, number> = {};
+      albums.forEach((album) => {
+        initialQuantities[album.id] = 1;
+      });
+      setQuantities(initialQuantities);
+    }
+  }, [albums]);
+
+  const handleQuantityChange = (albumId: string, delta: number) => {
     setQuantities((prev) => ({
       ...prev,
       [albumId]: Math.max(1, (prev[albumId] || 1) + delta),
@@ -69,6 +44,7 @@ export default function Checkout() {
   };
 
   const handleBuyNow = () => {
+    if (!albums) return;
     const selectedAlbums = albums.filter((album) => quantities[album.id] > 0);
     console.log(
       "Buy Now - Selected Albums:",
@@ -109,8 +85,19 @@ export default function Checkout() {
 
       {/* Album Selection */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-8 sm:py-12">
-        <div className="space-y-6">
-          {albums.map((album) => (
+        {isLoading && (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-[#A35139]" />
+          </div>
+        )}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-[#1B2632]/70">Failed to load albums</p>
+          </div>
+        )}
+        {albums && albums.length > 0 && (
+          <div className="space-y-6">
+            {albums.map((album) => (
             <Card
               key={album.id}
               className="overflow-hidden shadow-lg"
@@ -120,8 +107,8 @@ export default function Checkout() {
                 {/* Album Image */}
                 <div className="relative h-48 sm:h-64 w-full overflow-hidden">
                   <img
-                    src={album.imageSrc}
-                    alt={album.imageAlt}
+                    src={album.cover_image}
+                    alt={album.title}
                     className="w-full h-full object-cover"
                     data-testid={`album-image-${album.id}`}
                   />
@@ -181,19 +168,22 @@ export default function Checkout() {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {/* Info Section */}
-        <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
-          <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
-            Need help choosing? Each album contains 15 thoughtfully crafted
-            questions designed to preserve precious memories.
-          </p>
-        </div>
+        {albums && albums.length > 0 && (
+          <>
+            {/* Info Section */}
+            <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
+              <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
+                Need help choosing? Each album contains thoughtfully crafted
+                questions designed to preserve precious memories.
+              </p>
+            </div>
 
-        {/* Single Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+            {/* Single Action Buttons */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
           <Button
             size="lg"
             className="flex-1 bg-[#1B2632] text-[#EEE9DF] rounded-2xl shadow-xl border border-[#1B2632]"
@@ -211,7 +201,9 @@ export default function Checkout() {
           >
             Start Free Trial
           </Button>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}

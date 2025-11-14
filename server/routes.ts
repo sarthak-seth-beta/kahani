@@ -31,6 +31,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/albums", async (req, res) => {
+    try {
+      const allAlbums = await storage.getAllAlbums();
+      // Transform to match frontend expectations
+      const albumsResponse = allAlbums.map((album) => ({
+        id: album.id,
+        title: album.title,
+        description: album.description,
+        cover_image: album.coverImage,
+        questions: album.questions,
+      }));
+      res.json(albumsResponse);
+    } catch (error: any) {
+      console.error("Error fetching albums:", error);
+      // Provide more detailed error information
+      const errorMessage = error?.message || "Unknown error";
+      const errorStack =
+        process.env.NODE_ENV === "development" ? error?.stack : undefined;
+      res.status(500).json({
+        error: "Failed to fetch albums",
+        message: errorMessage,
+        ...(errorStack && { stack: errorStack }),
+      });
+    }
+  });
+
   app.post("/api/free-trial", async (req, res) => {
     try {
       const validatedData = insertFreeTrialSchema.parse(req.body);
@@ -121,27 +147,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const voiceNotes = await storage.getVoiceNotesByTrialId(trialId);
 
-      const { getQuestionByIndex, getTotalQuestionsForAlbum } = await import(
-        "@shared/albumQuestions"
+      const totalQuestions = await storage.getTotalQuestionsForAlbum(
+        trial.selectedAlbum,
       );
 
-      const totalQuestions = getTotalQuestionsForAlbum(trial.selectedAlbum);
+      const tracks = await Promise.all(
+        Array.from({ length: totalQuestions }, async (_, index) => {
+          const questionText = await storage.getQuestionByIndex(
+            trial.selectedAlbum,
+            index,
+          );
+          const voiceNote = voiceNotes.find(
+            (note) => note.questionIndex === index,
+          );
 
-      const tracks = Array.from({ length: totalQuestions }, (_, index) => {
-        const questionText = getQuestionByIndex(trial.selectedAlbum, index);
-        const voiceNote = voiceNotes.find(
-          (note) => note.questionIndex === index,
-        );
-
-        return {
-          questionIndex: index,
-          questionText,
-          voiceNoteId: voiceNote?.id || null,
-          answeredAt: voiceNote?.receivedAt || null,
-          mediaUrl: voiceNote?.mediaUrl || null,
-          mediaId: voiceNote?.mediaId || null,
-        };
-      });
+          return {
+            questionIndex: index,
+            questionText,
+            voiceNoteId: voiceNote?.id || null,
+            answeredAt: voiceNote?.receivedAt || null,
+            mediaUrl: voiceNote?.mediaUrl || null,
+            mediaId: voiceNote?.mediaId || null,
+          };
+        }),
+      );
 
       res.json({
         trial: {

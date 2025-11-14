@@ -8,6 +8,13 @@
       "when": 1762701351536,
       "tag": "0000_strong_ted_forrester",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1762701351537,
+      "tag": "0001_add_albums",
+      "breakpoints": true
     }
   ]
 }

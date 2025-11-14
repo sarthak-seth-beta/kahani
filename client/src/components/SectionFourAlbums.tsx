@@ -1,12 +1,12 @@
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Music } from "lucide-react";
+import { Music, Loader2 } from "lucide-react";
 
 export interface AlbumCard {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  imageSrc: string;
-  imageAlt: string;
+  cover_image: string;
   questions: string[];
 }
 
@@ -15,106 +15,45 @@ export interface SectionFourAlbumsProps {
   onTryDemo?: () => void;
 }
 
-const defaultAlbums: AlbumCard[] = [
-  {
-    id: 1,
-    title: "Our Family History",
-    description:
-      "These questions help you revisit the people, places, and small moments that shaped your earliest memories — the roots of who you are today.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
-    imageAlt: "Our Family History",
-    questions: [
-      "When you think of your childhood home, what picture or feeling comes to mind first?",
-      "Did your family have any small traditions or habits that made your days special?",
-      "Which dishes instantly take you back to your childhood, and who used to make them?",
-      "What was your neighborhood like when you were growing up?",
-      "Who were your childhood friends, and what games did you play together?",
-      "What was school like for you as a child?",
-      "Did you have a favorite teacher or mentor who influenced you?",
-      "What festivals or celebrations did your family observe?",
-      "What stories did your parents or grandparents tell you about their own childhoods?",
-      "What was your relationship like with your siblings or cousins?",
-      "Were there any family heirlooms or treasures that were important to your family?",
-      "What kind of music or entertainment did your family enjoy together?",
-      "Did your family face any hardships when you were young, and how did you overcome them?",
-      "What values did your parents emphasize most when raising you?",
-      "Is there a family story that has been passed down through generations?",
-    ],
-  },
-  {
-    id: 2,
-    title: "Their Life Paths",
-    description:
-      "These questions invite you to reflect on your life's journey — the moments, choices, and people that taught you who you are.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
-    imageAlt: "Their Life Paths",
-    questions: [
-      "What was your first job, and how did you feel earning your first income?",
-      "What were your dreams when you were young, and how did they change with time?",
-      "Was there a mistake that ended up teaching you something important?",
-      "How did you meet your life partner, and what drew you to them?",
-      "What was the proudest moment of your career or work life?",
-      "Have you ever taken a risk that completely changed your life's direction?",
-      "What was the most difficult decision you ever had to make?",
-      "Who has been your greatest source of support throughout your life?",
-      "What accomplishment are you most proud of?",
-      "If you could go back and give your younger self advice, what would it be?",
-      "What was a turning point in your life that shaped who you became?",
-      "How did you handle setbacks or failures along the way?",
-      "What traditions or practices have you carried forward from your own upbringing?",
-      "What unexpected joy or surprise has life brought you?",
-      "How has your definition of success changed over the years?",
-    ],
-  },
-  {
-    id: 3,
-    title: "Words of Wisdom",
-    description:
-      "These questions encourage you to share the wisdom, values, and reflections that your life's journey has taught you — the thoughts you'd like to pass on.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
-    imageAlt: "Words of Wisdom",
-    questions: [
-      "What lesson from your parents has stayed with you through life?",
-      "Have you ever experienced a complete change in your beliefs or outlook?",
-      "How have your personal or spiritual beliefs guided your path?",
-      "What do you think is the secret to a happy life?",
-      "What would you like future generations to know about living a meaningful life?",
-      "What does love mean to you, and how has that understanding evolved?",
-      "What do you consider your greatest strength, and how did you develop it?",
-      "If you could share one piece of wisdom with the world, what would it be?",
-      "What brings you the most peace and contentment in life?",
-      "How do you want to be remembered by those you love?",
-      "What role has forgiveness played in your life?",
-      "What do you think is most important when raising a family?",
-      "What advice would you give about handling difficult times?",
-      "What do you believe makes a relationship strong and lasting?",
-      "Looking back on your life, what matters most to you now?",
-    ],
-  },
-  {
-    id: 4,
-    title: "Love & Relationships",
-    description:
-      "These questions explore the bonds that matter most — the love, connections, and relationships that have shaped your heart and life.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
-    imageAlt: "Love & Relationships",
-    questions: [
-      "How did you know you had found the right person to spend your life with?",
-      "What is the most important lesson you've learned about love?",
-      "How has your understanding of relationships changed over the years?",
-      "What advice would you give to someone about building lasting relationships?",
-    ],
-  },
-];
-
 export default function SectionFourAlbums({
-  albums = defaultAlbums,
+  albums: propAlbums,
   onTryDemo,
 }: SectionFourAlbumsProps) {
+  const {
+    data: fetchedAlbums,
+    isLoading,
+    error,
+  } = useQuery<AlbumCard[]>({
+    queryKey: ["/api/albums"],
+    enabled: !propAlbums, // Only fetch if albums not provided as prop
+  });
+
+  // Use prop albums if provided, otherwise use fetched albums
+  const albums = propAlbums || fetchedAlbums || [];
+
+  if (isLoading && !propAlbums) {
+    return (
+      <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#A35139]" />
+        </div>
+      </section>
+    );
+  }
+
+  if (error && !propAlbums) {
+    return (
+      <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="text-[#1B2632]/70">Failed to load albums</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (!albums || albums.length === 0) {
+    return null;
+  }
   return (
     <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
       <div className="max-w-6xl mx-auto space-y-10 sm:space-y-12">
@@ -156,8 +95,8 @@ export default function SectionFourAlbums({
                 {/* Cover Image */}
                 <div className="w-full aspect-video bg-[#C9C1B1]/30 overflow-hidden">
                   <img
-                    src={album.imageSrc}
-                    alt={album.imageAlt}
+                    src={album.cover_image}
+                    alt={album.title}
                     className="w-full h-full object-cover"
                   />
                 </div>

@@ -13,8 +13,10 @@ import {
   type InsertFreeTrialRow,
   type VoiceNoteRow,
   type InsertVoiceNoteRow,
+  type AlbumRow,
   freeTrials,
   voiceNotes,
+  albums,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -59,6 +61,12 @@ export interface IStorage {
 
   isWebhookProcessed(idempotencyKey: string): Promise<boolean>;
   markWebhookProcessed(idempotencyKey: string): Promise<WebhookEvent>;
+
+  getAllAlbums(): Promise<AlbumRow[]>;
+  getAlbumByTitle(title: string): Promise<AlbumRow | undefined>;
+  getAlbumById(id: string): Promise<AlbumRow | undefined>;
+  getQuestionByIndex(albumId: string, index: number): Promise<string | undefined>;
+  getTotalQuestionsForAlbum(albumId: string): Promise<number>;
 }
 
 const initialProducts: Product[] = [
@@ -512,6 +520,72 @@ export class DatabaseStorage implements IStorage {
     };
     this.webhookEvents.set(idempotencyKey, event);
     return event;
+  }
+
+  async getAllAlbums(): Promise<AlbumRow[]> {
+    try {
+      const allAlbums = await db
+        .select()
+        .from(albums)
+        .where(eq(albums.isActive, true));
+      return allAlbums;
+    } catch (error: any) {
+      // If table doesn't exist, return empty array with helpful error message
+      if (error?.message?.includes("does not exist") || error?.code === "42P01") {
+        console.error(
+          "Albums table does not exist. Please run the migration: npm run db:push or apply migrations/0001_add_albums.sql manually",
+        );
+        throw new Error(
+          "Albums table not found. Please run database migration first.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async getAlbumByTitle(title: string): Promise<AlbumRow | undefined> {
+    const [album] = await db
+      .select()
+      .from(albums)
+      .where(and(eq(albums.title, title), eq(albums.isActive, true)));
+    return album;
+  }
+
+  async getAlbumById(id: string): Promise<AlbumRow | undefined> {
+    const [album] = await db
+      .select()
+      .from(albums)
+      .where(and(eq(albums.id, id), eq(albums.isActive, true)));
+    return album;
+  }
+
+  async getQuestionByIndex(
+    albumTitleOrId: string,
+    index: number,
+  ): Promise<string | undefined> {
+    // Try to find by title first (for backward compatibility)
+    let album = await this.getAlbumByTitle(albumTitleOrId);
+    // If not found by title, try by ID
+    if (!album) {
+      album = await this.getAlbumById(albumTitleOrId);
+    }
+    if (!album || !album.questions) {
+      return undefined;
+    }
+    return album.questions[index];
+  }
+
+  async getTotalQuestionsForAlbum(albumTitleOrId: string): Promise<number> {
+    // Try to find by title first (for backward compatibility)
+    let album = await this.getAlbumByTitle(albumTitleOrId);
+    // If not found by title, try by ID
+    if (!album) {
+      album = await this.getAlbumById(albumTitleOrId);
+    }
+    if (!album || !album.questions) {
+      return 0;
+    }
+    return album.questions.length;
   }
 }
 

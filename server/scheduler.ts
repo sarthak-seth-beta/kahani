@@ -1,7 +1,6 @@
 import cron from "node-cron";
 import { storage } from "./storage";
 import { sendTextMessageWithRetry } from "./whatsapp";
-import { getQuestionByIndex } from "@shared/albumQuestions";
 import { processRetryReminders } from "./conversationHandler";
 
 let isProcessing = false;
@@ -17,7 +16,7 @@ export async function sendScheduledQuestions(): Promise<void> {
       continue;
     }
 
-    const question = getQuestionByIndex(
+    const question = await storage.getQuestionByIndex(
       trial.selectedAlbum,
       trial.currentQuestionIndex,
     );
@@ -90,7 +89,7 @@ export async function sendPendingReminders(): Promise<void> {
       continue;
     }
 
-    const question = getQuestionByIndex(
+    const question = await storage.getQuestionByIndex(
       trial.selectedAlbum,
       trial.currentQuestionIndex,
     );
