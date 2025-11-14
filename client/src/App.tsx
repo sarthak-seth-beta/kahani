@@ -26,6 +26,7 @@ import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
 import Blogs from "@/pages/Blogs";
 import AlbumsGallery from "@/pages/AlbumsGallery";
+import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
 import NotFound from "@/pages/not-found";
@@ -103,6 +104,10 @@ function App() {
           <Route path="/contact-us" component={ContactUs} />
           <Route path="/blogs" component={Blogs} />
           <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
+          <Route
+            path="/playlist-albums/:trialId"
+            component={PlaylistAlbumsGallery}
+          />
           <Route path="/all-albums" component={AllAlbums} />
           <Route path="/vinyl-gallery" component={VinylGallery} />
           <Route component={NotFound} />

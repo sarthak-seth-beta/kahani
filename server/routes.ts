@@ -172,12 +172,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }),
       );
 
+      // Fetch album metadata
+      let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+      if (!album) {
+        // Try to get by ID if selectedAlbum is an ID
+        album = await storage.getAlbumById(trial.selectedAlbum);
+      }
+
+      // Fallback values if album metadata is missing
+      const albumDescription = album?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+      const albumCoverImage = album?.coverImage || "/attached_assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
+
       res.json({
         trial: {
           id: trial.id,
           storytellerName: trial.storytellerName,
           buyerName: trial.buyerName,
           selectedAlbum: trial.selectedAlbum,
+        },
+        album: {
+          description: albumDescription,
+          coverImage: albumCoverImage,
         },
         tracks,
       });
