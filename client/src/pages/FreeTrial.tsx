@@ -1,7 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
+import { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,7 +28,23 @@ export default function FreeTrial() {
   const [, setLocation] = useLocation();
 
   const urlParams = new URLSearchParams(window.location.search);
-  const albumFromUrl = urlParams.get("album") || "";
+  const albumIdFromUrl = urlParams.get("albumId") || "";
+  const albumTitleFromUrl = urlParams.get("album") || ""; // Backward compatibility
+
+  // Fetch albums to get title from ID
+  const { data: albums } = useQuery<Array<{ id: string; title: string }>>({
+    queryKey: ["/api/albums"],
+  });
+
+  // Determine selected album title
+  const selectedAlbumTitle = useMemo(() => {
+    if (albumIdFromUrl && albums) {
+      const album = albums.find((a) => a.id === albumIdFromUrl);
+      if (album) return album.title;
+    }
+    // Fallback to title from URL (backward compatibility) or default
+    return albumTitleFromUrl || "Our Family History";
+  }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
   const form = useForm<FreeTrialFormData>({
     resolver: zodResolver(insertFreeTrialSchema),
@@ -35,9 +52,16 @@ export default function FreeTrial() {
       customerPhone: "",
       buyerName: "",
       storytellerName: "",
-      selectedAlbum: albumFromUrl || "Our Family History", // Default to first album if not provided
+      selectedAlbum: selectedAlbumTitle,
     },
   });
+
+  // Update form when album title is determined
+  useEffect(() => {
+    if (selectedAlbumTitle) {
+      form.setValue("selectedAlbum", selectedAlbumTitle);
+    }
+  }, [selectedAlbumTitle, form]);
 
   const freeTrialMutation = useMutation({
     mutationFn: async (data: FreeTrialFormData) => {

@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Music, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Music,
+  Loader2,
+  Share2,
+  Copy,
+  Mail,
+  MessageCircle,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export interface AlbumCard {
   id: string;
@@ -19,6 +33,7 @@ export default function SectionFourAlbums({
   albums: propAlbums,
   onTryDemo,
 }: SectionFourAlbumsProps) {
+  const { toast } = useToast();
   const {
     data: fetchedAlbums,
     isLoading,
@@ -30,6 +45,66 @@ export default function SectionFourAlbums({
 
   // Use prop albums if provided, otherwise use fetched albums
   const albums = propAlbums || fetchedAlbums || [];
+
+  const getShareUrl = (albumId: string) => {
+    return `${window.location.origin}/free-trial?albumId=${encodeURIComponent(
+      albumId
+    )}`;
+  };
+
+  const handleCopyLink = async (albumId: string, albumTitle: string) => {
+    const url = getShareUrl(albumId);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied!",
+        description: `${albumTitle} link copied to clipboard.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareWhatsApp = (albumId: string, albumTitle: string) => {
+    const url = getShareUrl(albumId);
+    const message = `Check out this Kahani album: ${albumTitle}\n\n${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  const handleShareEmail = (albumId: string, albumTitle: string) => {
+    const url = getShareUrl(albumId);
+    const subject = `Check out this Kahani album: ${albumTitle}`;
+    const body = `I found this interesting Kahani album that you might like:\n\n${albumTitle}\n\n${url}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+  };
+
+  const handleNativeShare = async (albumId: string, albumTitle: string) => {
+    const url = getShareUrl(albumId);
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: `Kahani Album: ${albumTitle}`,
+          text: `Check out this Kahani album: ${albumTitle}`,
+          url: url,
+        });
+      } catch (err) {
+        // User cancelled or error occurred
+        if ((err as Error).name !== "AbortError") {
+          toast({
+            title: "Share failed",
+            description: "Please try another sharing method.",
+            variant: "destructive",
+          });
+        }
+      }
+    }
+  };
 
   if (isLoading && !propAlbums) {
     return (
@@ -77,14 +152,59 @@ export default function SectionFourAlbums({
             {albums.map((album) => (
               <div
                 key={album.id}
-                className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg overflow-hidden"
+                className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg overflow-hidden relative"
                 style={{ scrollSnapAlign: "start" }}
                 aria-roledescription="carousel item"
                 data-testid={`album-${album.id}`}
               >
+                {/* Share Icon - Top Right */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white rounded-full shadow-md transition-all duration-200 hover:scale-110"
+                      aria-label={`Share ${album.title} album`}
+                      data-testid={`share-album-${album.id}`}
+                    >
+                      <Share2 className="h-5 w-5 text-[#A35139]" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => handleCopyLink(album.id, album.title)}
+                      className="cursor-pointer"
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy link
+                    </DropdownMenuItem>
+                    {typeof navigator.share === "function" && (
+                      <DropdownMenuItem
+                        onClick={() => handleNativeShare(album.id, album.title)}
+                        className="cursor-pointer"
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share...
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => handleShareWhatsApp(album.id, album.title)}
+                      className="cursor-pointer"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Share on WhatsApp
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleShareEmail(album.id, album.title)}
+                      className="cursor-pointer"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Share via Email
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 {/* Content - Title and Description First */}
                 <div className="p-5 sm:p-6 space-y-3 sm:space-y-4">
-                  <h3 className="text-xl sm:text-2xl font-bold text-[#1B2632] font-['Outfit']">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#1B2632] font-['Outfit'] pr-10">
                     {album.title}
                   </h3>
                   <p className="text-[#1B2632]/70 leading-relaxed text-sm sm:text-base">

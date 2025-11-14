@@ -33,7 +33,7 @@ export default function FreeTrialCheckout() {
     if (!selectedAlbum) return;
 
     console.log("Starting Free Trial with Album:", selectedAlbum.title);
-    setLocation(`/free-trial?album=${encodeURIComponent(selectedAlbum.title)}`);
+    setLocation(`/free-trial?albumId=${encodeURIComponent(selectedAlbumId)}`);
   };
 
   return (
