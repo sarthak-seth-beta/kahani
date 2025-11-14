@@ -282,12 +282,13 @@ async function handleVoiceNote(
     const appUrl = process.env.APP_BASE_URL
       ? `${process.env.APP_BASE_URL.split(",")[0]}`
       : "http://localhost:3000";
-    const albumLink = `${appUrl}/vinyl-albums/${trial.id}`;
+    const playlistAlbumLink = `${appUrl}/playlist-albums/${trial.id}`;
+    const vinylAlbumLink = `${appUrl}/vinyl-albums/${trial.id}`;
 
-    await sendAlbumCompletionMessage(fromNumber, albumLink);
+    await sendAlbumCompletionMessage(fromNumber, playlistAlbumLink, vinylAlbumLink);
 
     if (trial.customerPhone) {
-      await sendAlbumCompletionMessage(trial.customerPhone, albumLink);
+      await sendAlbumCompletionMessage(trial.customerPhone, playlistAlbumLink, vinylAlbumLink);
     }
   } else {
     const now = new Date();

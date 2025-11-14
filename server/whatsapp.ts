@@ -453,12 +453,15 @@ export async function sendVoiceNoteAcknowledgment(
 
 export async function sendAlbumCompletionMessage(
   recipientNumber: string,
-  albumLink: string,
+  playlistAlbumLink: string,
+  vinylAlbumLink: string,
 ): Promise<boolean> {
   const isProduction = process.env.NODE_ENV === "production";
 
   if (isProduction) {
-    const templateParams = [{ type: "text", text: albumLink }];
+    // Combine both links in a single message for the template
+    const combinedLinks = `Playlist Album: ${playlistAlbumLink}\n\nVinyl Album: ${vinylAlbumLink}`;
+    const templateParams = [{ type: "text", text: combinedLinks }];
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
@@ -466,7 +469,7 @@ export async function sendAlbumCompletionMessage(
       templateParams,
     );
   } else {
-    const message = `Here's your mini album:\n\n${albumLink}\n\nA short glimpse of the memories you've shared so far.`;
+    const message = `Here's your mini album:\n\nPlaylist Album: ${playlistAlbumLink}\n\nVinyl Album: ${vinylAlbumLink}\n\nA short glimpse of the memories you've shared so far.`;
 
     return sendTextMessageWithRetry(recipientNumber, message);
   }
