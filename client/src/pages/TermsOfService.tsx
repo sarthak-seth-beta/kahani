@@ -39,7 +39,7 @@ export default function TermsOfService() {
             Kahani – Terms of Service
           </h1>
           <p className="text-muted-foreground mb-8">
-            Effective Date: December 01, 2025
+            Effective Date: November 01, 2025
           </p>
 
           <p className="text-lg mb-8 text-foreground">
