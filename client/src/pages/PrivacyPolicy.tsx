@@ -148,6 +148,13 @@ export default function PrivacyPolicy() {
               confidentiality and use your data only for the purposes specified
               by Kahani.
             </p>
+
+            <h3 className="text-xl font-semibold mb-2 text-foreground">
+              3.4 No Sale of Data
+            </h3>
+            <p className="mb-4 text-muted-foreground">
+              Kahani does not sell personal data to third parties.
+            </p>
           </section>
 
           <section className="mb-8">

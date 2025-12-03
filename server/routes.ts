@@ -74,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sendFreeTrialConfirmation, sendShareableLink } = await import(
         "./whatsapp"
       );
-
+      
       const confirmationSent = await sendFreeTrialConfirmation(
         normalizedPhone,
         validatedData.buyerName,
