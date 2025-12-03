@@ -347,7 +347,8 @@ export async function sendFreeTrialConfirmation(
   relation: string,
   albumName: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = false;
 
   if (isProduction) {
     const templateParams = [
