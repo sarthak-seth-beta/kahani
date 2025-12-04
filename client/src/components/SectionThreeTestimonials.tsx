@@ -20,7 +20,7 @@ const defaultTestimonials: Testimonial[] = [
       "We never imagined how easy it would be for Dad to share his stories, no writing, just speaking. And now our children can hear his voice, laugh with him, and feel closer than ever. Kahani has given our family a legacy,",
     author: "— Aarav & Family",
     photoSrc:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/arnav_family.jpg",
     photoAlt: "Aarav & Family",
   },
   {
@@ -36,10 +36,10 @@ const defaultTestimonials: Testimonial[] = [
     id: 3,
     quote:
       "What Kahani did was unlock stories we had never heard before. My grandmother's childhood in a small village, her friendships, the festivals she celebrated, all captured, preserved, and now part of our family's history. It truly brought the past alive,",
-    author: "— Rohan S.",
+    author: "— Riya S.",
     photoSrc:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-    photoAlt: "Rohan S.",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/riya_s.jpg",
+    photoAlt: "Ria S.",
   },
   {
     id: 4,

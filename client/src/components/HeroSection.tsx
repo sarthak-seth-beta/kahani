@@ -67,7 +67,7 @@ export default function HeroSection({
             size="lg"
             data-testid="button-start-trial"
           >
-            start your free trial
+            Start Your Free Trial
           </Button>
         </div>
       </div>

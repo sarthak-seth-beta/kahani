@@ -19,7 +19,7 @@ export function Footer() {
               <SiFacebook className="w-5 h-5 text-[#EEE9DF]" />
             </a>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2"
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 rounded-full bg-[#EEE9DF]/10 hover:bg-[#FFB162]/20 flex items-center justify-center transition-colors"

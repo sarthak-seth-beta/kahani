@@ -43,7 +43,7 @@ export default function SimpleHeader({
 
           {/* Home Button */}
           <button
-            onClick={handleRecordClick}
+            onClick={() => setLocation("/")}
             className="btn-gradient-soft px-5 py-2.5 font-medium text-sm shadow-md min-h-[44px] min-w-[44px] flex items-center gap-2"
             data-testid="button-record"
           >

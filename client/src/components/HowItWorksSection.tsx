@@ -16,7 +16,7 @@ const defaultSteps: Step[] = [
     description:
       "Choose the story album you want to create — the one that will capture your family's heart.",
     imageSrc:
-      "https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_step_1.jpg",
   },
   {
     number: "2",
@@ -24,7 +24,7 @@ const defaultSteps: Step[] = [
     description:
       "Share your memories, moments, and wisdom — just speak naturally, and let your stories come alive.",
     imageSrc:
-      "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&q=80",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_step_2.jpg",
   },
   {
     number: "3",
@@ -32,7 +32,7 @@ const defaultSteps: Step[] = [
     description:
       "Your stories are now safely preserved, ready to be cherished for generations.",
     imageSrc:
-      "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?w=800&q=80",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_step_3.jpg",
   },
   // {
   //   number: "4",
