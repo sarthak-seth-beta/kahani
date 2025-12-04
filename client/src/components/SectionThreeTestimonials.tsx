@@ -29,7 +29,7 @@ const defaultTestimonials: Testimonial[] = [
       "मैंने कभी नहीं सोचा था कि बचपन की मेरी छोटी-छोटी कहानियाँ या सीखे हुए सबक इतना मायने रखेंगे। Kahani पर अपनी कहानियाँ रिकॉर्ड करना ऐसा था जैसे मेरी ज़िन्दगी फिर से जी रही हूँ, हँसी, चुनौतियाँ, सब कुछ। और अब मेरे पोते-पोतियाँ मुझे सुन सकते हैं, मुझे समझ सकते हैं,",
     author: "— दादी, Meena B.",
     photoSrc:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/meena_dadi.jpg",
     photoAlt: "Dadi Meena B.",
   },
   {
@@ -56,7 +56,7 @@ const defaultTestimonials: Testimonial[] = [
       "The best part is seeing how the album brings us together. My cousins, my niece and nephew, they all want to listen to the recordings now. It's more than a book, it's our story, our voices, our memories. Thank you, Kahani,",
     author: "— Sonal & Amit P",
     photoSrc:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/sonal_amit_p.jpg",
     photoAlt: "Sonal & Amit P",
   },
 ];
