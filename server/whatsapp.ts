@@ -376,8 +376,8 @@ export async function sendStorytellerOnboarding(
   relation: string,
   customerName: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
-
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = false;
   if (isProduction) {
     const templateParams = [
       { type: "text", text: relation },
@@ -422,7 +422,8 @@ export async function sendReadinessCheck(
   recipientNumber: string,
   relation: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = false;
 
   if (isProduction) {
     const templateParams = [{ type: "text", text: relation }];
@@ -442,7 +443,8 @@ export async function sendReadinessCheck(
 export async function sendVoiceNoteAcknowledgment(
   recipientNumber: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = false;
 
   if (isProduction) {
     return sendTemplateMessageWithRetry(recipientNumber, "2s4_en", []);
@@ -458,7 +460,8 @@ export async function sendAlbumCompletionMessage(
   playlistAlbumLink: string,
   vinylAlbumLink: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = false;
 
   if (isProduction) {
     // Combine both links in a single message for the template
