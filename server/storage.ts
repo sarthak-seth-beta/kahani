@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, lte } from "drizzle-orm";
+import { eq, and, lte, inArray, asc } from "drizzle-orm";
 
 export interface IStorage {
   getAllProducts(): Promise<Product[]>;
@@ -34,6 +34,9 @@ export interface IStorage {
   createFreeTrialDb(trial: InsertFreeTrialRow): Promise<FreeTrialRow>;
   getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined>;
   getFreeTrialByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined>;
+  getActiveTrialByStorytellerPhone(
     phone: string,
   ): Promise<FreeTrialRow | undefined>;
   updateFreeTrialDb(
@@ -327,6 +330,26 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(freeTrials)
       .where(eq(freeTrials.storytellerPhone, phone));
+    return trial;
+  }
+
+  async getActiveTrialByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined> {
+    const [trial] = await db
+      .select()
+      .from(freeTrials)
+      .where(
+        and(
+          eq(freeTrials.storytellerPhone, phone),
+          inArray(freeTrials.conversationState, [
+            "in_progress",
+            "awaiting_readiness",
+          ]),
+        ),
+      )
+      .orderBy(asc(freeTrials.createdAt))
+      .limit(1);
     return trial;
   }
 

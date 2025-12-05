@@ -58,7 +58,7 @@ async function findTrialByOrderId(
 
 /**
  * Resolves which trial to use based on message content and phone number
- * Priority: Order ID in message > Phone number lookup
+ * Priority: Order ID in message > Active trial lookup > Any trial lookup
  */
 async function resolveTrial(
   messageText: string,
@@ -69,12 +69,37 @@ async function resolveTrial(
   if (orderId) {
     const trial = await findTrialByOrderId(orderId, fromNumber);
     if (trial) {
+      console.log("Resolved trial by order ID:", {
+        trialId: trial.id,
+        orderId,
+        fromNumber,
+      });
       return trial;
     }
   }
 
-  // Priority 2: Fall back to phone number lookup
-  return await storage.getFreeTrialByStorytellerPhone(fromNumber);
+  // Priority 2: Look for active trial (in_progress or awaiting_readiness), oldest first
+  const activeTrial = await storage.getActiveTrialByStorytellerPhone(fromNumber);
+  if (activeTrial) {
+    console.log("Resolved active trial by phone number:", {
+      trialId: activeTrial.id,
+      conversationState: activeTrial.conversationState,
+      createdAt: activeTrial.createdAt,
+      fromNumber,
+    });
+    return activeTrial;
+  }
+
+  // Priority 3: Fall back to any trial (for edge cases)
+  const anyTrial = await storage.getFreeTrialByStorytellerPhone(fromNumber);
+  if (anyTrial) {
+    console.log("Resolved any trial by phone number (fallback):", {
+      trialId: anyTrial.id,
+      conversationState: anyTrial.conversationState,
+      fromNumber,
+    });
+  }
+  return anyTrial;
 }
 
 /**
