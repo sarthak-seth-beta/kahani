@@ -18,6 +18,127 @@ interface WhatsAppMessage {
   audio?: { id: string; mime_type: string };
 }
 
+const ORDER_ID_PATTERN = /([a-f0-9-]{36})/i;
+
+/**
+ * Extracts order ID (trial ID) from message text
+ */
+function extractOrderId(messageText: string): string | null {
+  const match = messageText.match(ORDER_ID_PATTERN);
+  return match ? match[1] : null;
+}
+
+/**
+ * Finds trial by order ID and associates phone number if needed
+ */
+async function findTrialByOrderId(
+  orderId: string,
+  fromNumber: string,
+): Promise<any | null> {
+  const trial = await storage.getFreeTrialDb(orderId);
+  
+  if (!trial) {
+    return null;
+  }
+
+  // Associate phone number if not already set
+  if (!trial.storytellerPhone) {
+    const updatedTrial = await storage.updateFreeTrialDb(trial.id, {
+      storytellerPhone: fromNumber,
+    });
+    console.log("Associated storyteller phone with trial:", {
+      trialId: updatedTrial.id,
+      storytellerPhone: fromNumber,
+    });
+    return updatedTrial;
+  }
+
+  return trial;
+}
+
+/**
+ * Resolves which trial to use based on message content and phone number
+ * Priority: Order ID in message > Phone number lookup
+ */
+async function resolveTrial(
+  messageText: string,
+  fromNumber: string,
+): Promise<any | null> {
+  // Priority 1: Check for order ID in message
+  const orderId = extractOrderId(messageText);
+  if (orderId) {
+    const trial = await findTrialByOrderId(orderId, fromNumber);
+    if (trial) {
+      return trial;
+    }
+  }
+
+  // Priority 2: Fall back to phone number lookup
+  return await storage.getFreeTrialByStorytellerPhone(fromNumber);
+}
+
+/**
+ * Handles case when no trial is found
+ */
+async function handleNoTrialFound(
+  fromNumber: string,
+  messageText: string,
+): Promise<void> {
+  console.log("No free trial found for phone:", fromNumber, "Message:", messageText);
+
+  await sendTextMessageWithRetry(
+    fromNumber,
+    "Hi! I'm Vaani from Kahani. It looks like you haven't started a story collection yet. To get started, please ask the person who wants to preserve your stories to create a free trial and share the link with you. Once you click that link, we can begin your storytelling journey!",
+  );
+}
+
+/**
+ * Handles text messages during in_progress state
+ */
+async function handleInProgressTextMessage(
+  trial: any,
+  fromNumber: string,
+  messageText: string,
+): Promise<void> {
+  const orderId = extractOrderId(messageText);
+  
+  if (orderId && orderId === trial.id) {
+    // User explicitly referenced this trial
+    await sendTextMessageWithRetry(
+      fromNumber,
+      `Great! I found your story collection. You're currently working on answering questions. Please send a voice note to answer the current question.`,
+    );
+  } else {
+    // Generic reminder
+    await sendTextMessageWithRetry(
+      fromNumber,
+      "Please send a voice note to answer the question. I'll be waiting to hear your story!",
+    );
+  }
+}
+
+/**
+ * Handles completed trial state
+ */
+async function handleCompletedTrial(
+  trial: any,
+  fromNumber: string,
+  messageText: string,
+): Promise<void> {
+  const orderId = extractOrderId(messageText);
+  const isExplicitReference = orderId === trial.id;
+
+  // Only send completion message if:
+  // 1. User explicitly referenced this trial (order ID matches), OR
+  // 2. No order ID was provided (legacy behavior - phone lookup)
+  if (isExplicitReference || !orderId) {
+    await sendTextMessageWithRetry(
+      fromNumber,
+      `Thank you ${trial.storytellerName}! You've completed all the questions${isExplicitReference ? " for this story collection" : ""}. Your stories will be compiled into a beautiful book for your family.`,
+    );
+  }
+}
+
 export async function handleIncomingMessage(
   fromNumber: string,
   message: WhatsAppMessage,
@@ -25,39 +146,11 @@ export async function handleIncomingMessage(
 ): Promise<void> {
   const messageText = message.text?.body || "";
 
-  let trial = await storage.getFreeTrialByStorytellerPhone(fromNumber);
+  // Resolve which trial to use
+  const trial = await resolveTrial(messageText, fromNumber);
 
   if (!trial) {
-    const orderIdMatch = messageText.match(/([a-f0-9-]{36})/i);
-    if (orderIdMatch) {
-      const trialId = orderIdMatch[1];
-      trial = await storage.getFreeTrialDb(trialId);
-
-      if (trial && !trial.storytellerPhone) {
-        trial = await storage.updateFreeTrialDb(trial.id, {
-          storytellerPhone: fromNumber,
-        });
-        console.log("Associated storyteller phone with trial:", {
-          trialId: trial.id,
-          storytellerPhone: fromNumber,
-        });
-      }
-    }
-  }
-
-  if (!trial) {
-    console.log(
-      "No free trial found for phone:",
-      fromNumber,
-      "Message:",
-      messageText,
-    );
-
-    // Send a helpful response when no trial is found
-    await sendTextMessageWithRetry(
-      fromNumber,
-      "Hi! I'm Vaani from Kahani. It looks like you haven't started a story collection yet. To get started, please ask the person who wants to preserve your stories to create a free trial and share the link with you. Once you click that link, we can begin your storytelling journey!",
-    );
+    await handleNoTrialFound(fromNumber, messageText);
     return;
   }
 
@@ -66,8 +159,10 @@ export async function handleIncomingMessage(
     storytellerName: trial.storytellerName,
     conversationState: trial.conversationState,
     messageType,
+    hasOrderId: !!extractOrderId(messageText),
   });
 
+  // Route to appropriate handler based on conversation state
   switch (trial.conversationState) {
     case "awaiting_initial_contact":
       await handleInitialContact(trial, fromNumber);
@@ -83,18 +178,12 @@ export async function handleIncomingMessage(
       if (messageType === "audio") {
         await handleVoiceNote(trial, fromNumber, message);
       } else if (messageType === "text") {
-        await sendTextMessageWithRetry(
-          fromNumber,
-          "Please send a voice note to answer the question. I'll be waiting to hear your story!",
-        );
+        await handleInProgressTextMessage(trial, fromNumber, messageText);
       }
       break;
 
     case "completed":
-      await sendTextMessageWithRetry(
-        fromNumber,
-        `Thank you ${trial.storytellerName}! You've completed all the questions. Your stories will be compiled into a beautiful book for your family.`,
-      );
+      await handleCompletedTrial(trial, fromNumber, messageText);
       break;
 
     default:
