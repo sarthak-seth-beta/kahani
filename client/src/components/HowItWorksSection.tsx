@@ -48,10 +48,10 @@ export default function HowItWorksSection({
   steps = defaultSteps,
 }: HowItWorksSectionProps) {
   return (
-    <section className="w-full bg-white px-4 sm:px-6 py-16 sm:py-20">
+    <section id="how-it-works" className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-6xl mx-auto">
         {/* Section Title */}
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center mb-10 sm:mb-12 font-['Outfit']">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center mb-8 sm:mb-10 font-['Outfit']">
           How It Works
         </h2>
 

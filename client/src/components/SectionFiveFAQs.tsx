@@ -71,11 +71,11 @@ export default function SectionFiveFAQs({
   };
 
   return (
-    <section className="w-full bg-white px-4 sm:px-6 py-16 sm:py-20">
-      <div className="max-w-3xl mx-auto space-y-12">
-        {/* Closure Text */}
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center leading-tight font-['Outfit']">
-          Keep stories alive, because stories are what make us.
+    <section id="faqs" className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-3xl mx-auto space-y-8 sm:space-y-10">
+        {/* FAQs Heading */}
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
+          Frequently Asked Questions
         </h2>
 
         {/* FAQ Accordion */}
@@ -97,19 +97,17 @@ export default function SectionFiveFAQs({
                   {faq.question}
                 </span>
                 <ChevronDown
-                  className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${
-                    openIndex === index ? "rotate-180" : ""
-                  }`}
+                  className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${openIndex === index ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
               {/* Answer Body */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  openIndex === index
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index
                     ? "max-h-96 opacity-100"
                     : "max-h-0 opacity-0"
-                }`}
+                  }`}
               >
                 {openIndex === index && (
                   <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
@@ -125,6 +123,11 @@ export default function SectionFiveFAQs({
             </div>
           ))}
         </div>
+
+        {/* Closure Text */}
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center leading-tight font-['Outfit'] pt-8 border-t border-[#1B2632]/10">
+          Keep stories alive, because stories are what make us.
+        </h2>
       </div>
     </section>
   );
