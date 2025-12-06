@@ -327,7 +327,8 @@ async function handleReadinessResponse(
       conversationState: "awaiting_readiness",
     });
 
-    const isProduction = process.env.NODE_ENV === "production";
+    // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
     if (!isProduction) {
       await sendTextMessageWithRetry(
         fromNumber,
@@ -336,7 +337,8 @@ async function handleReadinessResponse(
     }
     // In production, no additional message is sent after "Maybe Later" button click
   } else {
-    const isProduction = process.env.NODE_ENV === "production";
+    // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
     if (!isProduction) {
       await sendTextMessageWithRetry(
         fromNumber,
@@ -359,7 +361,8 @@ async function sendQuestion(
   fromNumber: string,
   questionIndex?: number,
 ): Promise<void> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
   
   // Use provided questionIndex or current question index
   const targetQuestionIndex = questionIndex ?? trial.currentQuestionIndex;
@@ -494,7 +497,8 @@ async function handleVoiceNote(
       );
     }
   } else {
-    const isProduction = process.env.NODE_ENV === "production";
+    // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
     
     if (isProduction) {
       // In production: ask readiness before next question
@@ -645,7 +649,8 @@ export async function processRetryReminders(): Promise<void> {
 
       console.log("Sent 3rd retry - closing flow:", trial.id);
 
-      const isProduction = process.env.NODE_ENV === "production";
+      // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
       if (!isProduction) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 

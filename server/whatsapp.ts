@@ -191,7 +191,7 @@ export async function sendTemplateMessageWithRetry(
     template: {
       name: templateName,
       language: {
-        code: "en_US",
+        code: "en",
       },
     },
   };
@@ -349,7 +349,8 @@ export async function sendFreeTrialConfirmation(
   relation: string,
   albumName: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {
@@ -376,7 +377,8 @@ export async function sendStorytellerOnboarding(
   relation: string,
   customerName: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
   // const isProduction = false;
   if (isProduction) {
     const templateParams = [
@@ -402,7 +404,8 @@ export async function sendShareableLink(
   buyerName: string,
   orderId: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
   // const isProduction = false;
   const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
 
@@ -434,7 +437,8 @@ export async function sendReadinessCheck(
   recipientNumber: string,
   relation: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
 
   if (isProduction) {
     const templateParams = [{ type: "text", text: relation }];
@@ -455,7 +459,8 @@ export async function sendVoiceNoteAcknowledgment(
   recipientNumber: string,
   storytellerName: string,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {
@@ -479,7 +484,8 @@ export async function sendAlbumCompletionMessage(
   albumId: string,
   isCustomer: boolean,
 ): Promise<boolean> {
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {

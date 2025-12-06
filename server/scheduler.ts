@@ -10,7 +10,8 @@ export async function sendScheduledQuestions(): Promise<void> {
 
   console.log(`Found ${trials.length} trials with questions due`);
 
-  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = process.env.NODE_ENV === "production";
+const isProduction = true;
 
   for (const trial of trials) {
     if (!trial.storytellerPhone) {
