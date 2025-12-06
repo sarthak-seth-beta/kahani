@@ -150,6 +150,14 @@ async function retryWithBackoff<T>(
       lastError = error;
       const status = error.response?.status;
 
+      console.log(`Retry attempt ${attempt + 1}/${maxRetries + 1} failed:`, {
+        status,
+        errorMessage: error.message,
+        errorType: error.constructor?.name,
+        isAxiosError: error.isAxiosError,
+        responseData: error.response?.data,
+      });
+
       if (status === 429 || (status >= 500 && status < 600)) {
         if (attempt < maxRetries) {
           const delayMs = initialDelayMs * Math.pow(2, attempt);
@@ -161,6 +169,12 @@ async function retryWithBackoff<T>(
         }
       }
 
+      // For non-retryable errors, log and throw immediately
+      console.log("Non-retryable error, throwing:", {
+        status,
+        errorMessage: error.message,
+        responseData: error.response?.data,
+      });
       throw error;
     }
   }
@@ -317,13 +331,24 @@ export async function sendTextMessageWithRetry(
 
     return true;
   } catch (error: any) {
-    const errorDetails = error.response?.data || error.message;
-    console.error("Failed to send WhatsApp text message after retries:", {
+    // Log comprehensive error details
+    const errorDetails = error.response?.data || error.message || error;
+    const errorInfo: any = {
       error: errorDetails,
       to: recipientNumber,
       statusCode: error.response?.status,
       statusText: error.response?.statusText,
-    });
+    };
+
+    // Add more error context
+    if (error.code) errorInfo.errorCode = error.code;
+    if (error.message) errorInfo.errorMessage = error.message;
+    if (error.stack) errorInfo.stack = error.stack;
+    if (error.response?.data) errorInfo.responseData = error.response.data;
+    if (error.config?.url) errorInfo.requestUrl = error.config.url;
+    if (error.config?.method) errorInfo.requestMethod = error.config.method;
+
+    console.error("Failed to send WhatsApp text message after retries:", errorInfo);
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
@@ -334,7 +359,120 @@ export async function sendTextMessageWithRetry(
         type: whatsappError.type,
         error_subcode: whatsappError.error_subcode,
         fbtrace_id: whatsappError.fbtrace_id,
+        error_data: whatsappError.error_data,
       });
+    } else if (error.response?.data) {
+      // Log the full response data if it's not in the standard error format
+      console.error("WhatsApp API Response Data:", JSON.stringify(error.response.data, null, 2));
+    }
+
+    return false;
+  }
+}
+
+export async function sendInteractiveMessageWithCTA(
+  recipientNumber: string,
+  messageText: string,
+  buttonTitle: string,
+  buttonUrl: string,
+): Promise<boolean> {
+  const config = getConfig();
+  if (!config) return false;
+
+  if (!validateE164(recipientNumber)) {
+    console.error("Invalid E.164 phone number:", recipientNumber);
+    return false;
+  }
+
+  const { phoneNumberId, accessToken } = config;
+  const url = `${WHATSAPP_BASE_URL}/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: recipientNumber,
+    type: "interactive",
+    interactive: {
+      type: "cta_url",
+      body: {
+        text: messageText,
+      },
+      action: {
+        name: "cta_url",
+        parameters: {
+          display_text: buttonTitle,
+          url: buttonUrl,
+        },
+      },
+    },
+  };
+
+  try {
+    const response = await retryWithBackoff(async () => {
+      return await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    });
+
+    const messageId = response.data.messages?.[0]?.id;
+    const responseStatus = response.data.messages?.[0]?.message_status;
+
+    console.log("WhatsApp interactive message sent:", {
+      to: recipientNumber,
+      messageId,
+      status: responseStatus,
+      buttonTitle,
+      buttonUrl,
+      fullResponse: response.data,
+    });
+
+    // Check for warnings or errors in the response
+    if (response.data.errors) {
+      console.warn("WhatsApp API returned errors:", response.data.errors);
+    }
+    if (response.data.meta) {
+      console.log("WhatsApp API meta:", response.data.meta);
+    }
+
+    return true;
+  } catch (error: any) {
+    // Log comprehensive error details
+    const errorDetails = error.response?.data || error.message || error;
+    const errorInfo: any = {
+      error: errorDetails,
+      to: recipientNumber,
+      statusCode: error.response?.status,
+      statusText: error.response?.statusText,
+      buttonTitle,
+      buttonUrl,
+    };
+
+    // Add more error context
+    if (error.code) errorInfo.errorCode = error.code;
+    if (error.message) errorInfo.errorMessage = error.message;
+    if (error.stack) errorInfo.stack = error.stack;
+    if (error.response?.data) errorInfo.responseData = error.response.data;
+    if (error.config?.url) errorInfo.requestUrl = error.config.url;
+    if (error.config?.method) errorInfo.requestMethod = error.config.method;
+
+    console.error("Failed to send WhatsApp interactive message after retries:", errorInfo);
+
+    // Log specific WhatsApp API error codes
+    if (error.response?.data?.error) {
+      const whatsappError = error.response.data.error;
+      console.error("WhatsApp API Error Details:", {
+        code: whatsappError.code,
+        message: whatsappError.message,
+        type: whatsappError.type,
+        error_subcode: whatsappError.error_subcode,
+        fbtrace_id: whatsappError.fbtrace_id,
+        error_data: whatsappError.error_data,
+      });
+    } else if (error.response?.data) {
+      // Log the full response data if it's not in the standard error format
+      console.error("WhatsApp API Response Data:", JSON.stringify(error.response.data, null, 2));
     }
 
     return false;
@@ -529,6 +667,61 @@ const isProduction = true;
 
     return sendTextMessageWithRetry(recipientNumber, message);
   }
+}
+
+export async function sendStorytellerCompletionMessages(
+  recipientNumber: string,
+  storytellerName: string,
+  albumId: string,
+): Promise<boolean> {
+  // Send first message: simple text message
+  const firstMessage = `Thank you ${storytellerName}! You've completed all the questions. Your stories will be compiled into a beautiful book for your family.`;
+  
+  const firstMessageSent = await sendTextMessageWithRetry(recipientNumber, firstMessage);
+  if (!firstMessageSent) {
+    console.error("Failed to send first completion message to storyteller:", recipientNumber);
+    return false;
+  }
+
+  // Wait 2 seconds before sending the second message
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  // Send second message: interactive message with CTA button
+  const secondMessage = `Hello ${storytellerName}, your Kahani album is ready 🌼\n\nIt holds the stories you shared, in your own voice, for your family to listen to whenever they miss you.\n\nThank you for trusting me with your memories.`;
+  const buttonTitle = "Open Website";
+  const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
+
+  const secondMessageSent = await sendInteractiveMessageWithCTA(
+    recipientNumber,
+    secondMessage,
+    buttonTitle,
+    buttonUrl,
+  );
+
+  if (!secondMessageSent) {
+    console.error("Failed to send second completion message to storyteller:", recipientNumber);
+    return false;
+  }
+
+  return true;
+}
+
+export async function sendBuyerCompletionMessage(
+  recipientNumber: string,
+  buyerName: string,
+  storytellerName: string,
+  albumId: string,
+): Promise<boolean> {
+  const message = `Hello ${buyerName} 👋\n\nHere is ${storytellerName}'s Kahani album — their stories in their own voice 🎧📖\n\nWhen you have a quiet moment, please do listen!\n\nThese are the memories you can carry with you, always ❤️`;
+  const buttonTitle = "Open Website";
+  const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
+
+  return await sendInteractiveMessageWithCTA(
+    recipientNumber,
+    message,
+    buttonTitle,
+    buttonUrl,
+  );
 }
 
 export async function downloadVoiceNoteMedia(mediaId: string): Promise<{

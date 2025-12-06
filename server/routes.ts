@@ -632,6 +632,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: messageType,
       });
 
+      console.log("WhatsApp message:", JSON.stringify(message, null, 2));
+
       const messageIdempotencyKey = `whatsapp_msg_${message.id}`;
       const alreadyProcessed = await storage.isWebhookProcessed(
         messageIdempotencyKey,
@@ -646,11 +648,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { handleIncomingMessage } = await import("./conversationHandler");
-      await handleIncomingMessage(fromNumber, message, messageType);
-
-      await storage.markWebhookProcessed(messageIdempotencyKey);
+      try {
+        await handleIncomingMessage(fromNumber, message, messageType);
+        console.log("handleIncomingMessage completed successfully for:", fromNumber);
+        await storage.markWebhookProcessed(messageIdempotencyKey);
+      } catch (error: any) {
+        console.error("Error in handleIncomingMessage:", {
+          error: error.message,
+          stack: error.stack,
+          fromNumber,
+          messageType,
+        });
+        // Don't mark as processed if there was an error
+        throw error;
+      }
     } catch (error: any) {
-      console.error("Error processing WhatsApp webhook:", error);
+      console.error("Error processing WhatsApp webhook:", {
+        error: error.message,
+        stack: error.stack,
+      });
     }
   });
 

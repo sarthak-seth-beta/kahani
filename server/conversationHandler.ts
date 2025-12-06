@@ -4,7 +4,6 @@ import {
   sendStorytellerOnboarding,
   sendReadinessCheck,
   sendVoiceNoteAcknowledgment,
-  sendAlbumCompletionMessage,
   downloadVoiceNoteMedia,
   downloadMediaFile,
 } from "./whatsapp";
@@ -16,6 +15,10 @@ interface WhatsAppMessage {
   type: string;
   text?: { body: string };
   audio?: { id: string; mime_type: string };
+  button?: {
+    payload?: string;
+    text?: string;
+  };
   interactive?: {
     type: string;
     button_reply?: { id: string; title: string };
@@ -190,6 +193,9 @@ export async function handleIncomingMessage(
     } else if (message.interactive.list_reply) {
       interactiveText = message.interactive.list_reply.title;
     }
+  } else if (messageType === "button" && message.button) {
+    // Handle button type messages (from WhatsApp templates)
+    interactiveText = message.button.text || message.button.payload || "";
   }
 
   // Resolve which trial to use
@@ -216,9 +222,18 @@ export async function handleIncomingMessage(
       break;
 
     case "awaiting_readiness":
-      if (messageType === "text" || messageType === "interactive") {
-        const responseText = messageType === "interactive" ? interactiveText : messageText;
+      if (messageType === "text" || messageType === "interactive" || messageType === "button") {
+        const responseText = messageType === "button" || messageType === "interactive" ? interactiveText : messageText;
+        console.log("Calling handleReadinessResponse:", {
+          trialId: trial.id,
+          fromNumber,
+          responseText,
+          messageType,
+        });
         await handleReadinessResponse(trial, fromNumber, responseText);
+        console.log("handleReadinessResponse completed for trial:", trial.id);
+      } else {
+        console.log("Message type not handled in awaiting_readiness:", messageType);
       }
       break;
 
@@ -273,7 +288,21 @@ async function handleReadinessResponse(
   fromNumber: string,
   response: string,
 ): Promise<void> {
-  const normalizedResponse = response.toLowerCase().trim();
+  console.log("handleReadinessResponse called:", {
+    trialId: trial.id,
+    fromNumber,
+    response,
+    responseLength: response.length,
+  });
+
+  // Normalize response: lowercase, trim, and normalize apostrophes/quotes
+  let normalizedResponse = response.toLowerCase().trim();
+  // Normalize different apostrophe types (straight, curly, etc.)
+  normalizedResponse = normalizedResponse.replace(/[''`]/g, "'");
+  // Normalize different dash types
+  normalizedResponse = normalizedResponse.replace(/[–—]/g, "-");
+  
+  console.log("Normalized response:", normalizedResponse, "original:", response);
 
   // Handle button responses from template (exact matches)
   const yesButtonPatterns = [
@@ -286,13 +315,28 @@ async function handleReadinessResponse(
   ];
   const maybeButtonPatterns = ["maybe later"];
 
+  // Normalize patterns too
+  const normalizedYesPatterns = yesButtonPatterns.map(p => 
+    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-")
+  );
+  const normalizedMaybePatterns = maybeButtonPatterns.map(p => 
+    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-")
+  );
+
   // Check for button responses first (exact match)
-  const isYesButton = yesButtonPatterns.some((pattern) =>
-    normalizedResponse === pattern.toLowerCase(),
+  const isYesButton = normalizedYesPatterns.some((pattern) =>
+    normalizedResponse === pattern,
   );
-  const isMaybeButton = maybeButtonPatterns.some((pattern) =>
-    normalizedResponse === pattern.toLowerCase(),
+  const isMaybeButton = normalizedMaybePatterns.some((pattern) =>
+    normalizedResponse === pattern,
   );
+
+  console.log("Button pattern matching:", {
+    isYesButton,
+    isMaybeButton,
+    normalizedResponse,
+    matchedPattern: isYesButton ? yesButtonPatterns.find(p => normalizedResponse === p.toLowerCase()) : null,
+  });
 
   // Fallback to text patterns (for non-production or manual text responses)
   const yesPatterns = ["yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin"];
@@ -305,10 +349,18 @@ async function handleReadinessResponse(
     normalizedResponse.includes(pattern),
   );
 
+  console.log("Text pattern matching:", {
+    isYesText,
+    isMaybeText,
+  });
+
   const isYes = isYesButton || isYesText;
   const isMaybe = isMaybeButton || isMaybeText;
 
+  console.log("Final decision:", { isYes, isMaybe });
+
   if (isYes) {
+    console.log("Processing YES response, updating trial state to in_progress");
     await storage.updateFreeTrialDb(trial.id, {
       conversationState: "in_progress",
       lastReadinessResponse: "yes",
@@ -316,8 +368,15 @@ async function handleReadinessResponse(
       retryCount: 0,
     });
 
+    console.log("Trial state updated to in_progress, calling sendQuestion");
     // Send the question (could be first question or next question)
-    await sendQuestion(trial, fromNumber);
+    try {
+      await sendQuestion(trial, fromNumber);
+      console.log("sendQuestion completed successfully");
+    } catch (error) {
+      console.error("Error in sendQuestion:", error);
+      throw error;
+    }
   } else if (isMaybe) {
     const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
 
@@ -361,12 +420,21 @@ async function sendQuestion(
   fromNumber: string,
   questionIndex?: number,
 ): Promise<void> {
+  console.log("sendQuestion called:", {
+    trialId: trial.id,
+    fromNumber,
+    questionIndex,
+    currentQuestionIndex: trial.currentQuestionIndex,
+    selectedAlbum: trial.selectedAlbum,
+  });
+
   // const isProduction = process.env.NODE_ENV === "production";
 const isProduction = true;
   
   // Use provided questionIndex or current question index
-  const targetQuestionIndex = questionIndex ?? trial.currentQuestionIndex;
+  const targetQuestionIndex = questionIndex ?? trial.currentQuestionIndex ?? 0;
   
+  console.log("Fetching question with targetQuestionIndex:", targetQuestionIndex);
   const question = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     targetQuestionIndex,
@@ -377,19 +445,28 @@ const isProduction = true;
     return;
   }
 
+  console.log("Question retrieved:", {
+    questionIndex: targetQuestionIndex,
+    questionLength: question.length,
+    questionPreview: question.substring(0, 50) + "...",
+  });
+
   const questionMessage = `Here is the question we want you to talk about:
 
 ${question}
 
 Take your time and reply with a voice note whenever you are ready.`;
 
-  await sendTextMessageWithRetry(fromNumber, questionMessage);
+  console.log("Sending question message to:", fromNumber);
+  const messageSent = await sendTextMessageWithRetry(fromNumber, questionMessage);
+  console.log("Question message send result:", messageSent);
 
   await storage.updateFreeTrialDb(trial.id, {
     currentQuestionIndex: targetQuestionIndex,
     lastQuestionSentAt: new Date(),
     nextQuestionScheduledFor: null,
   });
+  console.log("Trial updated with question sent timestamp");
 }
 
 async function handleVoiceNote(
@@ -469,31 +546,22 @@ async function handleVoiceNote(
       reminderSentAt: null,
     });
 
-    const appUrl = process.env.APP_BASE_URL
-      ? `${process.env.APP_BASE_URL.split(",")[0]}`
-      : "http://localhost:3000";
-    const playlistAlbumLink = `${appUrl}/playlist-albums/${trial.id}`;
-    const vinylAlbumLink = `${appUrl}/vinyl-albums/${trial.id}`;
+    const { sendStorytellerCompletionMessages, sendBuyerCompletionMessage } = await import("./whatsapp");
 
-    await sendAlbumCompletionMessage(
+    // Send to storyteller
+    await sendStorytellerCompletionMessages(
       fromNumber,
-      playlistAlbumLink,
-      vinylAlbumLink,
       trial.storytellerName,
-      trial.customerName,
       trial.id,
-      false,
     );
 
+    // Send to buyer if phone number exists
     if (trial.customerPhone) {
-      await sendAlbumCompletionMessage(
+      await sendBuyerCompletionMessage(
         trial.customerPhone,
-        playlistAlbumLink,
-        vinylAlbumLink,
+        trial.buyerName,
         trial.storytellerName,
-        trial.customerName,
         trial.id,
-        true
       );
     }
   } else {
