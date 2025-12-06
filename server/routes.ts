@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const whatsappSent = await sendTemplateMessage(
         normalizedPhone,
         "hello_world",
-        "en_US",
+        "en",
       );
 
       if (!whatsappSent) {

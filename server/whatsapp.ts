@@ -25,7 +25,7 @@ function getConfig(): WhatsAppConfig | null {
 export async function sendTemplateMessage(
   recipientNumber: string,
   templateName: string = "hello_world",
-  languageCode: string = "en_US",
+  languageCode: string = "en",
 ): Promise<boolean> {
   const config = getConfig();
   if (!config) return false;
