@@ -16,6 +16,11 @@ interface WhatsAppMessage {
   type: string;
   text?: { body: string };
   audio?: { id: string; mime_type: string };
+  interactive?: {
+    type: string;
+    button_reply?: { id: string; title: string };
+    list_reply?: { id: string; title: string };
+  };
 }
 
 const ORDER_ID_PATTERN = /([a-f0-9-]{36})/i;
@@ -36,7 +41,7 @@ async function findTrialByOrderId(
   fromNumber: string,
 ): Promise<any | null> {
   const trial = await storage.getFreeTrialDb(orderId);
-  
+
   if (!trial) {
     return null;
   }
@@ -79,7 +84,8 @@ async function resolveTrial(
   }
 
   // Priority 2: Look for active trial (in_progress or awaiting_readiness), oldest first
-  const activeTrial = await storage.getActiveTrialByStorytellerPhone(fromNumber);
+  const activeTrial =
+    await storage.getActiveTrialByStorytellerPhone(fromNumber);
   if (activeTrial) {
     console.log("Resolved active trial by phone number:", {
       trialId: activeTrial.id,
@@ -109,7 +115,12 @@ async function handleNoTrialFound(
   fromNumber: string,
   messageText: string,
 ): Promise<void> {
-  console.log("No free trial found for phone:", fromNumber, "Message:", messageText);
+  console.log(
+    "No free trial found for phone:",
+    fromNumber,
+    "Message:",
+    messageText,
+  );
 
   await sendTextMessageWithRetry(
     fromNumber,
@@ -126,7 +137,7 @@ async function handleInProgressTextMessage(
   messageText: string,
 ): Promise<void> {
   const orderId = extractOrderId(messageText);
-  
+
   if (orderId && orderId === trial.id) {
     // User explicitly referenced this trial
     await sendTextMessageWithRetry(
@@ -170,12 +181,22 @@ export async function handleIncomingMessage(
   messageType: string,
 ): Promise<void> {
   const messageText = message.text?.body || "";
+  
+  // Handle interactive messages (button clicks)
+  let interactiveText = "";
+  if (messageType === "interactive" && message.interactive) {
+    if (message.interactive.button_reply) {
+      interactiveText = message.interactive.button_reply.title;
+    } else if (message.interactive.list_reply) {
+      interactiveText = message.interactive.list_reply.title;
+    }
+  }
 
   // Resolve which trial to use
-  const trial = await resolveTrial(messageText, fromNumber);
+  const trial = await resolveTrial(messageText || interactiveText, fromNumber);
 
   if (!trial) {
-    await handleNoTrialFound(fromNumber, messageText);
+    await handleNoTrialFound(fromNumber, messageText || interactiveText);
     return;
   }
 
@@ -184,7 +205,8 @@ export async function handleIncomingMessage(
     storytellerName: trial.storytellerName,
     conversationState: trial.conversationState,
     messageType,
-    hasOrderId: !!extractOrderId(messageText),
+    hasOrderId: !!extractOrderId(messageText || interactiveText),
+    interactiveText,
   });
 
   // Route to appropriate handler based on conversation state
@@ -194,8 +216,9 @@ export async function handleIncomingMessage(
       break;
 
     case "awaiting_readiness":
-      if (messageType === "text") {
-        await handleReadinessResponse(trial, fromNumber, messageText);
+      if (messageType === "text" || messageType === "interactive") {
+        const responseText = messageType === "interactive" ? interactiveText : messageText;
+        await handleReadinessResponse(trial, fromNumber, responseText);
       }
       break;
 
@@ -237,8 +260,12 @@ async function handleInitialContact(
   });
 }
 
-async function askReadiness(trial: any, fromNumber: string): Promise<void> {
+export async function askReadiness(trial: any, fromNumber: string): Promise<void> {
   await sendReadinessCheck(fromNumber, trial.storytellerName);
+  
+  await storage.updateFreeTrialDb(trial.id, {
+    readinessAskedAt: new Date(),
+  });
 }
 
 async function handleReadinessResponse(
@@ -248,15 +275,38 @@ async function handleReadinessResponse(
 ): Promise<void> {
   const normalizedResponse = response.toLowerCase().trim();
 
-  const yesPatterns = ["yes", "yeah", "yep", "sure", "ready", "ok", "okay"];
-  const maybePatterns = ["maybe", "not sure", "later", "wait"];
+  // Handle button responses from template (exact matches)
+  const yesButtonPatterns = [
+    "yes, let's begin",
+    "yes let's begin",
+    "yes, lets begin",
+    "yes lets begin",
+    "yes let's begin",
+    "yes, let us begin",
+  ];
+  const maybeButtonPatterns = ["maybe later"];
 
-  const isYes = yesPatterns.some((pattern) =>
+  // Check for button responses first (exact match)
+  const isYesButton = yesButtonPatterns.some((pattern) =>
+    normalizedResponse === pattern.toLowerCase(),
+  );
+  const isMaybeButton = maybeButtonPatterns.some((pattern) =>
+    normalizedResponse === pattern.toLowerCase(),
+  );
+
+  // Fallback to text patterns (for non-production or manual text responses)
+  const yesPatterns = ["yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin"];
+  const maybePatterns = ["not sure", "later", "wait"];
+
+  const isYesText = yesPatterns.some((pattern) =>
     normalizedResponse.includes(pattern),
   );
-  const isMaybe = maybePatterns.some((pattern) =>
+  const isMaybeText = maybePatterns.some((pattern) =>
     normalizedResponse.includes(pattern),
   );
+
+  const isYes = isYesButton || isYesText;
+  const isMaybe = isMaybeButton || isMaybeText;
 
   if (isYes) {
     await storage.updateFreeTrialDb(trial.id, {
@@ -266,24 +316,33 @@ async function handleReadinessResponse(
       retryCount: 0,
     });
 
-    await sendFirstQuestion(trial, fromNumber);
+    // Send the question (could be first question or next question)
+    await sendQuestion(trial, fromNumber);
   } else if (isMaybe) {
     const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
 
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
       retryReadinessAt: retryAt,
+      conversationState: "awaiting_readiness",
     });
 
-    await sendTextMessageWithRetry(
-      fromNumber,
-      "No problem! I'll check back with you in a few hours. Take your time.",
-    );
+    const isProduction = process.env.NODE_ENV === "production";
+    if (!isProduction) {
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "No problem! I'll check back with you in a few hours. Take your time.",
+      );
+    }
+    // In production, no additional message is sent after "Maybe Later" button click
   } else {
-    await sendTextMessageWithRetry(
-      fromNumber,
-      "I didn't quite understand. Please reply with 'yes' if you're ready to start, or 'maybe' if you need more time.",
-    );
+    const isProduction = process.env.NODE_ENV === "production";
+    if (!isProduction) {
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "I didn't quite understand. Please reply with 'yes' if you're ready to start, or 'maybe' if you need more time.",
+      );
+    }
   }
 }
 
@@ -292,13 +351,26 @@ async function sendFirstQuestion(
   fromNumber: string,
 ): Promise<void> {
   const questionIndex = 0;
+  await sendQuestion(trial, fromNumber, questionIndex);
+}
+
+async function sendQuestion(
+  trial: any,
+  fromNumber: string,
+  questionIndex?: number,
+): Promise<void> {
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Use provided questionIndex or current question index
+  const targetQuestionIndex = questionIndex ?? trial.currentQuestionIndex;
+  
   const question = await storage.getQuestionByIndex(
     trial.selectedAlbum,
-    questionIndex,
+    targetQuestionIndex,
   );
 
   if (!question) {
-    console.error("No question found for album:", trial.selectedAlbum);
+    console.error("No question found for album:", trial.selectedAlbum, "index:", targetQuestionIndex);
     return;
   }
 
@@ -311,8 +383,9 @@ Take your time and reply with a voice note whenever you are ready.`;
   await sendTextMessageWithRetry(fromNumber, questionMessage);
 
   await storage.updateFreeTrialDb(trial.id, {
-    currentQuestionIndex: questionIndex,
+    currentQuestionIndex: targetQuestionIndex,
     lastQuestionSentAt: new Date(),
+    nextQuestionScheduledFor: null,
   });
 }
 
@@ -379,7 +452,7 @@ async function handleVoiceNote(
     }
   }
 
-  await sendVoiceNoteAcknowledgment(fromNumber);
+  await sendVoiceNoteAcknowledgment(fromNumber, trial.storytellerName);
 
   const totalQuestions = await storage.getTotalQuestionsForAlbum(
     trial.selectedAlbum,
@@ -399,20 +472,50 @@ async function handleVoiceNote(
     const playlistAlbumLink = `${appUrl}/playlist-albums/${trial.id}`;
     const vinylAlbumLink = `${appUrl}/vinyl-albums/${trial.id}`;
 
-    await sendAlbumCompletionMessage(fromNumber, playlistAlbumLink, vinylAlbumLink);
+    await sendAlbumCompletionMessage(
+      fromNumber,
+      playlistAlbumLink,
+      vinylAlbumLink,
+      trial.storytellerName,
+      trial.customerName,
+      trial.id,
+      false,
+    );
 
     if (trial.customerPhone) {
-      await sendAlbumCompletionMessage(trial.customerPhone, playlistAlbumLink, vinylAlbumLink);
+      await sendAlbumCompletionMessage(
+        trial.customerPhone,
+        playlistAlbumLink,
+        vinylAlbumLink,
+        trial.storytellerName,
+        trial.customerName,
+        trial.id,
+        true
+      );
     }
   } else {
-    const now = new Date();
-    const nextQuestionScheduledFor = new Date(now.getTime() + 2000);
+    const isProduction = process.env.NODE_ENV === "production";
+    
+    if (isProduction) {
+      // In production: ask readiness before next question
+      await storage.updateFreeTrialDb(trial.id, {
+        currentQuestionIndex: nextQuestionIndex,
+        conversationState: "awaiting_readiness",
+        reminderSentAt: null,
+      });
+      
+      await askReadiness(trial, fromNumber);
+    } else {
+      // In non-production: schedule next question immediately (2 seconds)
+      const now = new Date();
+      const nextQuestionScheduledFor = new Date(now.getTime() + 2000);
 
-    await storage.updateFreeTrialDb(trial.id, {
-      currentQuestionIndex: nextQuestionIndex,
-      nextQuestionScheduledFor,
-      reminderSentAt: null,
-    });
+      await storage.updateFreeTrialDb(trial.id, {
+        currentQuestionIndex: nextQuestionIndex,
+        nextQuestionScheduledFor,
+        reminderSentAt: null,
+      });
+    }
   }
 }
 
@@ -542,12 +645,15 @@ export async function processRetryReminders(): Promise<void> {
 
       console.log("Sent 3rd retry - closing flow:", trial.id);
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const isProduction = process.env.NODE_ENV === "production";
+      if (!isProduction) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      await sendTextMessageWithRetry(
-        trial.storytellerPhone,
-        `Hi ${trial.storytellerName}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
-      );
+        await sendTextMessageWithRetry(
+          trial.storytellerPhone,
+          `Hi ${trial.storytellerName}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
+        );
+      }
 
       continue;
     }
@@ -558,6 +664,7 @@ export async function processRetryReminders(): Promise<void> {
       readinessAskedAt: new Date(),
       retryCount: nextRetryCount,
       retryReadinessAt: nextRetryAt,
+      conversationState: "awaiting_readiness",
     });
 
     console.log("Retry reminder sent:", {

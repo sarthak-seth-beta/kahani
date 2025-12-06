@@ -341,27 +341,27 @@ export async function sendTextMessageWithRetry(
   }
 }
 
+//ToDo: Add sendLanguageSelectionMessage function
+
 export async function sendFreeTrialConfirmation(
   recipientNumber: string,
   customerName: string,
   relation: string,
   albumName: string,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = false;
+  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = false;
 
   if (isProduction) {
     const templateParams = [
       { type: "text", text: customerName },
-      { type: "text", text: relation },
-      { type: "text", text: albumName },
       { type: "text", text: relation },
       { type: "text", text: relation },
     ];
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "1c1_en",
+      "buyerconfirmation_vaani_en",
       templateParams,
     );
   } else {
@@ -376,8 +376,8 @@ export async function sendStorytellerOnboarding(
   relation: string,
   customerName: string,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = false;
+  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = false;
   if (isProduction) {
     const templateParams = [
       { type: "text", text: relation },
@@ -386,7 +386,7 @@ export async function sendStorytellerOnboarding(
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "1s1_en",
+      "introtostoryteller_vaani_en",
       templateParams,
     );
   } else {
@@ -402,35 +402,46 @@ export async function sendShareableLink(
   buyerName: string,
   orderId: string,
 ): Promise<boolean> {
-  const businessPhone =
-    process.env.WHATSAPP_BUSINESS_NUMBER_E164 || "919876543210";
+  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = false;
+  const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
 
   const prefilledMessage = `Hi, ${buyerName} has placed an order ${orderId} for me.`;
 
   const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
 
-  const message = `Please share this link with *${storytellerName}*:
+  if (isProduction) {
+    const templateParams = [
+      { type: "text", text: storytellerName },
+      { type: "text", text: whatsappLink },
+    ];
 
-${whatsappLink}
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      "forward_vaani_en",
+      templateParams,
+    );
+  } else {
+    const message = `Please share this link with *${storytellerName}*:
+    ${whatsappLink} 
+    When ${storytellerName} opens this link, they'll be able to start chatting with us directly on WhatsApp!`;
 
-When ${storytellerName} opens this link, they'll be able to start chatting with us directly on WhatsApp!`;
-
-  return sendTextMessageWithRetry(recipientNumber, message);
+    return sendTextMessageWithRetry(recipientNumber, message);
+  }
 }
 
 export async function sendReadinessCheck(
   recipientNumber: string,
   relation: string,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = false;
+  const isProduction = process.env.NODE_ENV === "production";
 
   if (isProduction) {
     const templateParams = [{ type: "text", text: relation }];
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "2s1_en",
+      "ready_vaani_en",
       templateParams,
     );
   } else {
@@ -442,12 +453,16 @@ export async function sendReadinessCheck(
 
 export async function sendVoiceNoteAcknowledgment(
   recipientNumber: string,
+  storytellerName: string,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = false;
+  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = false;
 
   if (isProduction) {
-    return sendTemplateMessageWithRetry(recipientNumber, "2s4_en", []);
+    const templateParams = [
+      { type: "text", text: storytellerName },
+    ];
+    return sendTemplateMessageWithRetry(recipientNumber, "thanks_vaani_en", templateParams);
   } else {
     const message = `Thank you for sharing your story! It's been saved and recorded safely. We will send you the next question very soon.`;
 
@@ -459,18 +474,48 @@ export async function sendAlbumCompletionMessage(
   recipientNumber: string,
   playlistAlbumLink: string,
   vinylAlbumLink: string,
+  storytellerName: string,
+  customerName: string,
+  albumId: string,
+  isCustomer: boolean,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = false;
+  const isProduction = process.env.NODE_ENV === "production";
+  // const isProduction = false;
 
   if (isProduction) {
-    // Combine both links in a single message for the template
-    const combinedLinks = `Playlist Album: ${playlistAlbumLink}\n\nVinyl Album: ${vinylAlbumLink}`;
-    const templateParams = [{ type: "text", text: combinedLinks }];
+  
+    const templateName = isCustomer ? "albumlink_vaani_en" : "albumlinkstoryteller_vaani_en";
+    const buttonParams = {
+    type: "button",
+    sub_type: "url",
+    index: "0",
+    parameters: [
+      { type: "text", text: `/playlist-albums/${albumId}` }
+    ]
+  }
+    const templateParams = isCustomer ? [
+  {
+    type: "body",
+    parameters: [
+      { type: "text", text: customerName },
+      { type: "text", text: storytellerName }
+    ]
+  },
+  buttonParams
+]
+ : [
+  {
+    type: "body",
+    parameters: [
+      { type: "text", text: storytellerName },
+    ]
+  },
+  buttonParams
+];
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "2c1_en",
+     templateName,
       templateParams,
     );
   } else {

@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { storage } from "./storage";
 import { sendTextMessageWithRetry } from "./whatsapp";
-import { processRetryReminders } from "./conversationHandler";
+import { processRetryReminders, askReadiness } from "./conversationHandler";
 
 let isProcessing = false;
 
@@ -9,6 +9,8 @@ export async function sendScheduledQuestions(): Promise<void> {
   const trials = await storage.getScheduledQuestionsDue();
 
   console.log(`Found ${trials.length} trials with questions due`);
+
+  const isProduction = process.env.NODE_ENV === "production";
 
   for (const trial of trials) {
     if (!trial.storytellerPhone) {
@@ -31,25 +33,38 @@ export async function sendScheduledQuestions(): Promise<void> {
       continue;
     }
 
-    const questionMessage = `Here is your next question:
+    try {
+      if (isProduction) {
+        // In production: ask readiness before sending question
+        await storage.updateFreeTrialDb(trial.id, {
+          conversationState: "awaiting_readiness",
+          nextQuestionScheduledFor: null,
+        });
+
+        await askReadiness(trial, trial.storytellerPhone);
+
+        console.log("Sent readiness check before question to trial:", trial.id);
+      } else {
+        // In non-production: send question directly
+        const questionMessage = `Here is your next question:
 
 ${question}
 
 Take your time and reply with a voice note whenever you are ready.`;
 
-    try {
-      await sendTextMessageWithRetry(trial.storytellerPhone, questionMessage);
+        await sendTextMessageWithRetry(trial.storytellerPhone, questionMessage);
 
-      await storage.updateFreeTrialDb(trial.id, {
-        lastQuestionSentAt: new Date(),
-        nextQuestionScheduledFor: null,
-        reminderSentAt: null,
-      });
+        await storage.updateFreeTrialDb(trial.id, {
+          lastQuestionSentAt: new Date(),
+          nextQuestionScheduledFor: null,
+          reminderSentAt: null,
+        });
 
-      console.log("Sent scheduled question to trial:", trial.id);
+        console.log("Sent scheduled question to trial:", trial.id);
+      }
     } catch (error) {
       console.error(
-        "Error sending scheduled question to trial:",
+        "Error sending scheduled question/readiness to trial:",
         trial.id,
         error,
       );
