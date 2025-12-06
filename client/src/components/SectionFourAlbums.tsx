@@ -38,7 +38,7 @@ export default function SectionFourAlbums({
 
   if (isLoading && !propAlbums) {
     return (
-      <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
+      <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-8 sm:py-12">
         <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-[#A35139]" />
         </div>
@@ -48,7 +48,7 @@ export default function SectionFourAlbums({
 
   if (error && !propAlbums) {
     return (
-      <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
+      <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-8 sm:py-12">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-[#1B2632]/70">Failed to load albums</p>
         </div>
@@ -60,8 +60,8 @@ export default function SectionFourAlbums({
     return null;
   }
   return (
-    <section className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-16 sm:py-20">
-      <div className="max-w-6xl mx-auto space-y-10 sm:space-y-12">
+    <section id="albums" className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
         {/* Heading */}
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
           Explore albums
@@ -112,7 +112,7 @@ export default function SectionFourAlbums({
                   </p>
                   <Button
                     onClick={() => setLocation("/all-albums")}
-                    className="px-6 py-3 bg-[#A35139] text-white border-[#A35139] rounded-xl font-semibold text-base shadow-lg hover:bg-[#8B4229] transition-colors mt-4"
+                    className="px-8 py-3 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-base shadow-xl hover:bg-[#1B2632]/90 transition-colors mt-4"
                     size="lg"
                     data-testid="button-view-all-albums"
                   >
@@ -140,16 +140,13 @@ export default function SectionFourAlbums({
           <div className="text-center pt-8">
             <Button
               onClick={onTryDemo}
-              className="px-8 py-4 bg-[#A35139] text-white border-[#A35139] rounded-xl font-semibold text-lg shadow-lg"
+              className="px-8 py-4 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-lg shadow-xl"
               size="lg"
               data-testid="button-try-demo"
             >
               <Music className="h-5 w-5 mr-2" />
-              Try Interactive Demo
+              View Sample Album
             </Button>
-            <p className="text-[#1B2632]/60 text-sm mt-3">
-              Experience a sample Kahani album
-            </p>
           </div>
         )}
       </div>

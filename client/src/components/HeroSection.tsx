@@ -44,32 +44,20 @@ export default function HeroSection({
       </div>
 
       {/* Content - Centered with More Space */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-16 sm:pb-20 pt-24 sm:pt-32">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-8 sm:pb-12 pt-24 sm:pt-32">
         {/* Text Overlay - Three Lines */}
         <h1
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-16 sm:mb-24 font-['Outfit'] max-w-4xl"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-8 sm:mb-12 font-['Outfit'] max-w-4xl"
           data-testid="text-hero-headline"
         >
-          <span key={currentTextIndex} className="inline-block animate-fade-in">
+          <span key={currentTextIndex} className="inline-block animate-fade-in text-[#FFB162]">
             {storyTexts[currentTextIndex]}
           </span>
           <br />
-          STORIES AND VOICES
+          STORIES AND VOICE
           <br />
-          IN A BOOK
+          NOW AND FOREVER
         </h1>
-
-        {/* Start Trial Button - Positioned Lower */}
-        <div className="w-full max-w-md mt-8 sm:mt-12">
-          <Button
-            onClick={onStartTrialClick}
-            className="w-full bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-lg shadow-2xl"
-            size="lg"
-            data-testid="button-start-trial"
-          >
-            Start Your Free Trial
-          </Button>
-        </div>
       </div>
     </section>
   );

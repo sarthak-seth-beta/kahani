@@ -66,28 +66,16 @@ export default function SectionThreeTestimonials({
   testimonials = defaultTestimonials,
 }: SectionThreeTestimonialsProps) {
   return (
-    <section className="w-full bg-white px-4 sm:px-6 py-16 sm:py-20">
-      <div className="max-w-6xl mx-auto space-y-10 sm:space-y-12">
-        {/* Learn More Button */}
-        <div className="w-full max-w-2xl mx-auto">
-          <Button
-            onClick={onLearnMore}
-            className="w-full bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-lg shadow-lg"
-            size="lg"
-            data-testid="button-learn-more"
-          >
-            Learn more
-          </Button>
-        </div>
-
+    <section id="why-kahani" className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
         {/* Heading */}
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
-          What people have to say?
+          Why Kahani?
         </h2>
 
         {/* Testimonials Slider */}
         <div
-          className="overflow-x-auto scrollbar-hide -mx-6 px-6 pb-8"
+          className="overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6 pb-8"
           role="region"
           aria-label="Testimonials carousel"
           aria-roledescription="carousel"
