@@ -264,6 +264,7 @@ export const freeTrials = pgTable(
     nextQuestionScheduledFor: timestamp("next_question_scheduled_for", {
       withTimezone: true,
     }),
+    customCoverImageUrl: text("custom_cover_image_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

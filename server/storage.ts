@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, lte, inArray, asc } from "drizzle-orm";
+import { eq, and, lte, inArray, asc, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   getAllProducts(): Promise<Product[]>;
@@ -34,6 +34,9 @@ export interface IStorage {
   createFreeTrialDb(trial: InsertFreeTrialRow): Promise<FreeTrialRow>;
   getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined>;
   getFreeTrialByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined>;
+  getFreeTrialByBuyerPhone(
     phone: string,
   ): Promise<FreeTrialRow | undefined>;
   getActiveTrialByStorytellerPhone(
@@ -316,10 +319,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined> {
+    // Use getTableColumns to select all fields, ensuring customCoverImageUrl is included
     const [trial] = await db
-      .select()
+      .select(getTableColumns(freeTrials))
       .from(freeTrials)
       .where(eq(freeTrials.id, id));
+    
+    // Debug logging to verify customCoverImageUrl is retrieved
+    if (trial) {
+      console.log("Retrieved trial from database:", {
+        id: trial.id,
+        customCoverImageUrl: trial.customCoverImageUrl,
+        customCoverImageUrlType: typeof trial.customCoverImageUrl,
+        customCoverImageUrlValue: trial.customCoverImageUrl,
+        hasCustomCover: !!trial.customCoverImageUrl,
+        // Log all keys to see if field exists with different name
+        trialKeys: Object.keys(trial),
+      });
+      
+      // Also check if it exists as snake_case (in case Drizzle didn't map it)
+      const trialAny = trial as any;
+      if (trialAny.custom_cover_image_url) {
+        console.warn("Found custom_cover_image_url in snake_case format:", trialAny.custom_cover_image_url);
+      }
+    }
+    
     return trial;
   }
 
@@ -330,6 +354,18 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(freeTrials)
       .where(eq(freeTrials.storytellerPhone, phone));
+    return trial;
+  }
+
+  async getFreeTrialByBuyerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined> {
+    const [trial] = await db
+      .select()
+      .from(freeTrials)
+      .where(eq(freeTrials.customerPhone, phone))
+      .orderBy(asc(freeTrials.createdAt))
+      .limit(1);
     return trial;
   }
 
@@ -357,6 +393,14 @@ export class DatabaseStorage implements IStorage {
     id: string,
     updates: Partial<FreeTrialRow>,
   ): Promise<FreeTrialRow> {
+    // Debug logging for customCoverImageUrl updates
+    if (updates.customCoverImageUrl !== undefined) {
+      console.log("Updating customCoverImageUrl:", {
+        trialId: id,
+        newValue: updates.customCoverImageUrl,
+      });
+    }
+    
     const [updatedTrial] = await db
       .update(freeTrials)
       .set(updates)
@@ -365,6 +409,15 @@ export class DatabaseStorage implements IStorage {
 
     if (!updatedTrial) {
       throw new Error(`Free trial with id ${id} not found`);
+    }
+
+    // Verify the update worked
+    if (updates.customCoverImageUrl !== undefined) {
+      console.log("Updated trial customCoverImageUrl:", {
+        trialId: id,
+        customCoverImageUrl: updatedTrial.customCoverImageUrl,
+        updateSuccessful: updatedTrial.customCoverImageUrl === updates.customCoverImageUrl,
+      });
     }
 
     return updatedTrial;

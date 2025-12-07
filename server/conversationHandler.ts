@@ -6,8 +6,9 @@ import {
   sendVoiceNoteAcknowledgment,
   downloadVoiceNoteMedia,
   downloadMediaFile,
+  sendPhotoRequestToBuyer,
 } from "./whatsapp";
-import { uploadVoiceNoteToStorage } from "./supabase";
+import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
 
 interface WhatsAppMessage {
   id: string;
@@ -15,6 +16,7 @@ interface WhatsAppMessage {
   type: string;
   text?: { body: string };
   audio?: { id: string; mime_type: string };
+  image?: { id: string; mime_type: string; sha256: string; caption?: string };
   button?: {
     payload?: string;
     text?: string;
@@ -198,7 +200,16 @@ export async function handleIncomingMessage(
     interactiveText = message.button.text || message.button.payload || "";
   }
 
-  // Resolve which trial to use
+  // Check if message is from buyer and is an image - handle separately
+  if (messageType === "image") {
+    const buyerTrial = await storage.getFreeTrialByBuyerPhone(fromNumber);
+    if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
+      await handleBuyerImageMessage(buyerTrial, fromNumber, message);
+      return;
+    }
+  }
+
+  // Resolve which trial to use (normal flow)
   const trial = await resolveTrial(messageText || interactiveText, fromNumber);
 
   if (!trial) {
@@ -213,6 +224,8 @@ export async function handleIncomingMessage(
     messageType,
     hasOrderId: !!extractOrderId(messageText || interactiveText),
     interactiveText,
+    fromNumber,
+    isBuyer: trial.customerPhone === fromNumber,
   });
 
   // Route to appropriate handler based on conversation state
@@ -451,15 +464,39 @@ const isProduction = true;
     questionPreview: question.substring(0, 50) + "...",
   });
 
-  const questionMessage = `Here is the question we want you to talk about:
+  const questionMessage = `Thank you, ${trial.storytellerName}.
+
+Take a moment, sit back, and think about this:
 
 ${question}
 
-Take your time and reply with a voice note whenever you are ready.`;
+Whenever you are ready to share, please send me a voice note 🎙️`
+
+//   const questionMessage = `Here is the question we want you to talk about:
+
+// ${question}
+
+// Take your time and reply with a voice note whenever you are ready.`;
 
   console.log("Sending question message to:", fromNumber);
   const messageSent = await sendTextMessageWithRetry(fromNumber, questionMessage);
   console.log("Question message send result:", messageSent);
+
+  // Send photo request to buyer if image not uploaded yet
+  if (trial.customerPhone && !trial.customCoverImageUrl) {
+    console.log("Sending photo request to buyer:", {
+      buyerPhone: trial.customerPhone,
+      buyerName: trial.buyerName,
+      storytellerName: trial.storytellerName,
+    });
+    await sendPhotoRequestToBuyer(
+      trial.customerPhone,
+      trial.buyerName,
+      trial.storytellerName,
+    ).catch((error) => {
+      console.error("Failed to send photo request to buyer:", error);
+    });
+  }
 
   await storage.updateFreeTrialDb(trial.id, {
     currentQuestionIndex: targetQuestionIndex,
@@ -685,6 +722,126 @@ async function downloadAndStoreVoiceNote(
     await storage.updateVoiceNote(voiceNoteId, {
       downloadStatus: "failed",
     });
+  }
+}
+
+async function handleBuyerImageMessage(
+  trial: any,
+  fromNumber: string,
+  message: WhatsAppMessage,
+): Promise<void> {
+  if (!message.image || !message.image.id) {
+    console.error("Invalid image message - missing image data");
+    return;
+  }
+
+  const imageId = message.image.id;
+  const mimeType = message.image.mime_type || "image/jpeg";
+
+  console.log("Processing buyer image message:", {
+    trialId: trial.id,
+    buyerPhone: fromNumber,
+    imageId,
+    mimeType,
+  });
+
+  try {
+    // Step 1: Get media info (URL) from WhatsApp
+    console.log("Step 1: Getting media info from WhatsApp for image:", imageId);
+    const mediaInfo = await downloadVoiceNoteMedia(imageId); // Reuse same function for images
+
+    if (!mediaInfo) {
+      console.error("Failed to get media info for image:", imageId);
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, I couldn't download your image. Could you please try sending it again? 📸",
+      );
+      return;
+    }
+
+    console.log("Retrieved media info for image:", {
+      mediaId: imageId,
+      mimeType: mediaInfo.mimeType,
+      fileSize: mediaInfo.fileSize,
+      url: mediaInfo.url,
+      sha256: mediaInfo.sha256,
+    });
+
+    // Step 2: Download the actual file from WhatsApp
+    console.log("Step 2: Downloading image file from WhatsApp...");
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+    if (!accessToken) {
+      console.error("WhatsApp access token not available for downloading file");
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, there was an issue processing your image. Please try again later. 📸",
+      );
+      return;
+    }
+
+    console.log("Access token available, downloading file from URL:", mediaInfo.url);
+    const fileBuffer = await downloadMediaFile(mediaInfo.url, accessToken);
+
+    if (!fileBuffer) {
+      console.error("Failed to download image file:", imageId);
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, I couldn't download your image. Could you please try sending it again? 📸",
+      );
+      return;
+    }
+
+    console.log("Image file downloaded successfully, size:", fileBuffer.length, "bytes");
+
+    // Step 3: Upload to Supabase Storage
+    console.log("Step 3: Uploading image to Supabase Storage...");
+    const supabaseUrl = await uploadImageToStorage(
+      fileBuffer,
+      trial.id,
+      mimeType,
+    );
+
+    if (!supabaseUrl) {
+      console.error("Failed to upload image to Supabase Storage:", trial.id);
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, there was an issue saving your image. Please try again later. 📸",
+      );
+      return;
+    }
+
+    console.log("Image uploaded to Supabase successfully, URL:", supabaseUrl);
+
+    // Step 4: Update database with Supabase URL
+    console.log("Step 4: Updating database with image URL...");
+    await storage.updateFreeTrialDb(trial.id, {
+      customCoverImageUrl: supabaseUrl,
+    });
+
+    console.log("Image uploaded and saved:", {
+      trialId: trial.id,
+      imageId,
+      supabaseUrl,
+    });
+
+    // Step 5: Send cute acknowledgment message with emojis
+    console.log("Step 5: Sending acknowledgment message to buyer...");
+    const acknowledgmentMessage = `Perfect! Thank you so much for the beautiful photo! 📸✨\n\nI've saved it and it will be used as the cover for ${trial.storytellerName}'s album. It's going to look amazing! 🎨💫\n\nYour album is coming together beautifully! ❤️`;
+    
+    await sendTextMessageWithRetry(fromNumber, acknowledgmentMessage);
+    console.log("Acknowledgment message sent successfully to buyer:", fromNumber);
+  } catch (error) {
+    console.error("Error processing buyer image message:", {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      trialId: trial.id,
+      imageId,
+      fromNumber,
+    });
+    await sendTextMessageWithRetry(
+      fromNumber,
+      "Sorry, there was an issue processing your image. Please try again later. 📸",
+    );
   }
 }
 

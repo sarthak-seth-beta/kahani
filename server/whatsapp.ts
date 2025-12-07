@@ -724,6 +724,32 @@ export async function sendBuyerCompletionMessage(
   );
 }
 
+export async function sendPhotoRequestToBuyer(
+  recipientNumber: string,
+  buyerName: string,
+  storytellerName: string,
+): Promise<boolean> {
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = true;
+
+  if (isProduction) {
+    const templateParams = [
+      { type: "text", text: buyerName },
+      { type: "text", text: storytellerName },
+    ];
+
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      "photorequest_vaani_en",
+      templateParams,
+    );
+  } else {
+    const message = `Hi ${buyerName} 😊\n\n${storytellerName}'s first few stories are now saved beautifully.\n\nCould you please send *one nice photo of ${storytellerName} for the album cover, along with their full name* as you would like it to appear?`;
+
+    return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
+
 export async function downloadVoiceNoteMedia(mediaId: string): Promise<{
   url: string;
   mimeType: string;
@@ -781,13 +807,47 @@ export async function downloadMediaFile(
         Authorization: `Bearer ${accessToken}`,
       },
       responseType: "arraybuffer",
+      timeout: 30000, // 30 second timeout
     });
 
     return Buffer.from(response.data);
   } catch (error: any) {
-    console.error("Failed to download media file:", {
-      error: error.response?.data || error.message,
-    });
+    // Log comprehensive error details
+    const errorDetails: any = {
+      errorMessage: error.message,
+      errorCode: error.code,
+      isAxiosError: error.isAxiosError,
+      statusCode: error.response?.status,
+      statusText: error.response?.statusText,
+      requestUrl: mediaUrl,
+    };
+
+    // Add response data if available
+    if (error.response?.data) {
+      // For arraybuffer responses, try to convert to string if possible
+      if (error.response.data instanceof ArrayBuffer) {
+        try {
+          errorDetails.responseData = Buffer.from(error.response.data).toString('utf-8').substring(0, 500);
+        } catch {
+          errorDetails.responseData = `[ArrayBuffer of size ${error.response.data.byteLength}]`;
+        }
+      } else {
+        errorDetails.responseData = error.response.data;
+      }
+    }
+
+    // Add request config details
+    if (error.config) {
+      errorDetails.requestMethod = error.config.method;
+      errorDetails.requestHeaders = error.config.headers;
+    }
+
+    // Add stack trace for debugging
+    if (error.stack) {
+      errorDetails.stack = error.stack;
+    }
+
+    console.error("Failed to download media file:", errorDetails);
     return null;
   }
 }

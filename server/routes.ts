@@ -179,9 +179,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         album = await storage.getAlbumById(trial.selectedAlbum);
       }
 
+      console.log("Album:", album);
+
       // Fallback values if album metadata is missing
       const albumDescription = album?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-      const albumCoverImage = album?.coverImage || "/attached_assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
+      // Use custom cover image if available, otherwise use album cover image
+      // Check for both null/undefined and empty string
+      // Also check snake_case version in case Drizzle didn't map it (fallback)
+      const trialAny = trial as any;
+      const customCoverImageUrlValue = trial.customCoverImageUrl || trialAny.custom_cover_image_url;
+      const customCoverImage = customCoverImageUrlValue && String(customCoverImageUrlValue).trim() !== "" 
+        ? String(customCoverImageUrlValue).trim()
+        : null;
+      const albumCoverImage = customCoverImage || album?.coverImage || "/attached_assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
+      
+      // Debug logging
+      console.log("Album cover image selection:", {
+        trialId: trial.id,
+        customCoverImageUrl: trial.customCoverImageUrl,
+        custom_cover_image_url: trialAny.custom_cover_image_url,
+        customCoverImageUrlValue,
+        customCoverImage,
+        albumCoverImage: album?.coverImage,
+        finalCoverImage: albumCoverImage,
+      });
 
       res.json({
         trial: {
