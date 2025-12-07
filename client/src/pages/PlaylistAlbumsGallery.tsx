@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Share2, Play, Pause, Shuffle } from "lucide-react";
+import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe } from "lucide-react";
 import { MiniPlayer } from "@/components/playlist/MiniPlayer";
 
 const FALLBACK_AUDIO_URL = "/audio/fallback-voice-note.mp3";
@@ -46,10 +46,24 @@ export default function PlaylistAlbumsGallery() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/playlist-albums/:trialId");
   const trialId = params?.trialId || "";
-  const localeParam =
-    new URLSearchParams(window.location.search).get("locale")?.toLowerCase() ||
-    "en";
-  const normalizedLocale = localeParam === "hi" ? "hn" : localeParam;
+
+  // Initialize language from URL param, fallback to English
+  const getInitialLanguage = () => {
+    const urlLocale = new URLSearchParams(window.location.search)
+      .get("locale")
+      ?.toLowerCase();
+    if (urlLocale === "hi" || urlLocale === "hn") {
+      return "hi";
+    }
+    return "en";
+  };
+
+  const [selectedLanguage, setSelectedLanguage] = useState<"en" | "hi">(
+    getInitialLanguage,
+  );
+
+  // Update normalized locale based on selected language
+  const normalizedLocale = selectedLanguage === "hi" ? "hn" : "en";
   const albumApiPath = `/api/albums/${trialId}?locale=${normalizedLocale}`;
 
   const {
@@ -68,6 +82,26 @@ export default function PlaylistAlbumsGallery() {
   const [durations, setDurations] = useState<Map<number, number>>(new Map());
   const audioRefs = useRef<Map<number, HTMLAudioElement>>(new Map());
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // State for shuffle mode and tracking played tracks
+  const [isShuffleMode, setIsShuffleMode] = useState(false);
+  const [playedTracksInShuffle, setPlayedTracksInShuffle] = useState<
+    Set<number>
+  >(new Set());
+
+  // State for language dropdown
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+
+  // Handle language change
+  const handleLanguageChange = useCallback((language: "en" | "hi") => {
+    setSelectedLanguage(language);
+    setIsLanguageDropdownOpen(false);
+
+    // Update URL with new locale
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("locale", language);
+    window.history.pushState({}, "", currentUrl.toString());
+  }, []);
 
   // Register audio element refs
   const handleAudioRef = useCallback(
@@ -90,6 +124,22 @@ export default function PlaylistAlbumsGallery() {
     audio.load();
   }, []);
 
+  // Sync language with URL on mount or URL change
+  useEffect(() => {
+    const urlLocale = new URLSearchParams(window.location.search)
+      .get("locale")
+      ?.toLowerCase();
+    if (urlLocale === "hi" || urlLocale === "hn") {
+      if (selectedLanguage !== "hi") {
+        setSelectedLanguage("hi");
+      }
+    } else {
+      if (selectedLanguage !== "en") {
+        setSelectedLanguage("en");
+      }
+    }
+  }, []); // Only run on mount
+
   // Load durations for all tracks
   useEffect(() => {
     if (albumData?.tracks) {
@@ -103,7 +153,7 @@ export default function PlaylistAlbumsGallery() {
 
   // Handle play/pause
   const handlePlayPause = useCallback(
-    (trackIndex: number) => {
+    (trackIndex: number, isShufflePlay: boolean = false) => {
       const track = albumData?.tracks[trackIndex];
       if (!track) return;
 
@@ -136,10 +186,64 @@ export default function PlaylistAlbumsGallery() {
       setPlayingTrackIndex(trackIndex);
       setIsPlaying(true);
 
+      // Track this track as played in shuffle mode (only when starting to play)
+      if (
+        (isShuffleMode || isShufflePlay) &&
+        !playedTracksInShuffle.has(trackIndex)
+      ) {
+        setPlayedTracksInShuffle((prev) => new Set(prev).add(trackIndex));
+      }
+
       const handleEnded = () => {
-        setIsPlaying(false);
-        setPlayingTrackIndex(null);
-        currentAudioRef.current = null;
+        // Get next track (using current state values)
+        const currentShuffleMode = isShuffleMode;
+        const currentPlayedTracks = playedTracksInShuffle;
+
+        let nextIndex: number | null = null;
+
+        if (currentShuffleMode) {
+          // In shuffle mode, pick from unplayed tracks
+          if (!albumData?.tracks) {
+            setIsPlaying(false);
+            setPlayingTrackIndex(null);
+            currentAudioRef.current = null;
+            return;
+          }
+
+          const unplayedTracks = albumData.tracks
+            .map((_, index) => index)
+            .filter((index) => !currentPlayedTracks.has(index));
+
+          if (unplayedTracks.length === 0) {
+            // All tracks played, reset and pick any track
+            setPlayedTracksInShuffle(new Set());
+            nextIndex = Math.floor(Math.random() * albumData.tracks.length);
+          } else {
+            // Pick random from unplayed tracks
+            const randomUnplayedIndex = Math.floor(
+              Math.random() * unplayedTracks.length,
+            );
+            nextIndex = unplayedTracks[randomUnplayedIndex];
+          }
+        } else {
+          // Normal mode: play next sequential track
+          const nextSeqIndex = trackIndex + 1;
+          if (albumData?.tracks && nextSeqIndex < albumData.tracks.length) {
+            nextIndex = nextSeqIndex;
+          }
+        }
+
+        if (nextIndex !== null) {
+          // Autoplay next track
+          setTimeout(() => {
+            handlePlayPause(nextIndex!, currentShuffleMode);
+          }, 100);
+        } else {
+          // No more tracks to play
+          setIsPlaying(false);
+          setPlayingTrackIndex(null);
+          currentAudioRef.current = null;
+        }
       };
 
       const handlePause = () => {
@@ -161,23 +265,51 @@ export default function PlaylistAlbumsGallery() {
         currentAudioRef.current = null;
       });
     },
-    [albumData, playingTrackIndex, isPlaying],
+    [
+      albumData,
+      playingTrackIndex,
+      isPlaying,
+      isShuffleMode,
+      playedTracksInShuffle,
+    ],
   );
 
   // Handle play button (first track)
   const handlePlay = useCallback(() => {
     if (albumData?.tracks && albumData.tracks.length > 0) {
-      handlePlayPause(0);
+      setIsShuffleMode(false);
+      setPlayedTracksInShuffle(new Set());
+      handlePlayPause(0, false);
     }
   }, [albumData, handlePlayPause]);
 
   // Handle shuffle button
   const handleShuffle = useCallback(() => {
     if (albumData?.tracks && albumData.tracks.length > 0) {
-      const randomIndex = Math.floor(Math.random() * albumData.tracks.length);
-      handlePlayPause(randomIndex);
+      setIsShuffleMode(true);
+
+      // Get unplayed tracks
+      const unplayedTracks = albumData.tracks
+        .map((_, index) => index)
+        .filter((index) => !playedTracksInShuffle.has(index));
+
+      let randomIndex: number;
+
+      if (unplayedTracks.length === 0) {
+        // All tracks played, reset and pick any track
+        setPlayedTracksInShuffle(new Set());
+        randomIndex = Math.floor(Math.random() * albumData.tracks.length);
+      } else {
+        // Pick random from unplayed tracks
+        const randomUnplayedIndex = Math.floor(
+          Math.random() * unplayedTracks.length,
+        );
+        randomIndex = unplayedTracks[randomUnplayedIndex];
+      }
+
+      handlePlayPause(randomIndex, true);
     }
-  }, [albumData, handlePlayPause]);
+  }, [albumData, handlePlayPause, playedTracksInShuffle]);
 
   // Calculate total duration
   const totalDuration = Array.from(durations.values()).reduce(
@@ -309,57 +441,188 @@ export default function PlaylistAlbumsGallery() {
         >
           <ArrowLeft size={24} color="#000" />
         </button>
-        <button
-          onClick={async () => {
-            if (!albumData) return;
-            const url = window.location.href;
-            if (navigator.share) {
-              try {
-                await navigator.share({
-                  title: albumData.trial.selectedAlbum,
-                  text: `Check out this Kahani album: ${albumData.trial.selectedAlbum}`,
-                  url: url,
-                });
-              } catch (error) {
-                // User cancelled or error occurred
-                if (error instanceof Error && error.name !== "AbortError") {
-                  console.error("Error sharing:", error);
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {/* Language Dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(0, 0, 0, 0.2)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                padding: "0.5rem 0.75rem",
+                borderRadius: "8px",
+                transition: "all 0.2s ease",
+                fontFamily: "Outfit, sans-serif",
+                fontSize: "0.875rem",
+                color: "#000",
+                minWidth: "100px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(0, 0, 0, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+              aria-label="Select language"
+            >
+              <Globe size={18} color="#000" />
+              <span>{selectedLanguage === "hi" ? "हिंदी" : "English"}</span>
+            </button>
+            {isLanguageDropdownOpen && (
+              <>
+                <div
+                  style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 998,
+                  }}
+                  onClick={() => setIsLanguageDropdownOpen(false)}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 0.5rem)",
+                    right: 0,
+                    background: "#FFF",
+                    border: "1px solid rgba(0, 0, 0, 0.1)",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    zIndex: 999,
+                    minWidth: "140px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <button
+                    onClick={() => handleLanguageChange("en")}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem 1rem",
+                      background:
+                        selectedLanguage === "en"
+                          ? "rgba(163, 81, 57, 0.1)"
+                          : "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "Outfit, sans-serif",
+                      fontSize: "0.875rem",
+                      color: "#000",
+                      textAlign: "left",
+                      display: "flex",
+                      alignItems: "center",
+                      transition: "background 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedLanguage !== "en") {
+                        e.currentTarget.style.background =
+                          "rgba(0, 0, 0, 0.05)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedLanguage !== "en") {
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange("hi")}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem 1rem",
+                      background:
+                        selectedLanguage === "hi"
+                          ? "rgba(163, 81, 57, 0.1)"
+                          : "transparent",
+                      border: "none",
+                      borderTop: "1px solid rgba(0, 0, 0, 0.1)",
+                      cursor: "pointer",
+                      fontFamily: "Outfit, sans-serif",
+                      fontSize: "0.875rem",
+                      color: "#000",
+                      textAlign: "left",
+                      display: "flex",
+                      alignItems: "center",
+                      transition: "background 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedLanguage !== "hi") {
+                        e.currentTarget.style.background =
+                          "rgba(0, 0, 0, 0.05)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedLanguage !== "hi") {
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    हिंदी
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          <button
+            onClick={async () => {
+              if (!albumData) return;
+              const url = window.location.href;
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: albumData.trial.selectedAlbum,
+                    text: `Check out this Kahani album: ${albumData.trial.selectedAlbum}`,
+                    url: url,
+                  });
+                } catch (error) {
+                  // User cancelled or error occurred
+                  if (error instanceof Error && error.name !== "AbortError") {
+                    console.error("Error sharing:", error);
+                  }
+                }
+              } else {
+                // Fallback: copy to clipboard
+                try {
+                  await navigator.clipboard.writeText(url);
+                  // You could show a toast notification here
+                  alert("Link copied to clipboard!");
+                } catch (error) {
+                  console.error("Failed to copy link:", error);
+                  alert("Failed to copy link. Please copy manually: " + url);
                 }
               }
-            } else {
-              // Fallback: copy to clipboard
-              try {
-                await navigator.clipboard.writeText(url);
-                // You could show a toast notification here
-                alert("Link copied to clipboard!");
-              } catch (error) {
-                console.error("Failed to copy link:", error);
-                alert("Failed to copy link. Please copy manually: " + url);
-              }
-            }
-          }}
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "44px",
-            height: "44px",
-            borderRadius: "50%",
-            transition: "background 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-          }}
-          aria-label="Share album"
-        >
-          <Share2 size={24} color="#000" />
-        </button>
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              transition: "background 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+            aria-label="Share album"
+          >
+            <Share2 size={24} color="#000" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
