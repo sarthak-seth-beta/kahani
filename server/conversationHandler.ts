@@ -438,7 +438,10 @@ async function handleReadinessResponse(
       throw error;
     }
   } else if (isMaybe) {
-    const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+    // const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+    const retryAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+
+
 
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
