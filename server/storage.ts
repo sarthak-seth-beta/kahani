@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, lte, inArray, asc } from "drizzle-orm";
+import { eq, and, lte, inArray, asc, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   getAllProducts(): Promise<Product[]>;
@@ -34,6 +34,9 @@ export interface IStorage {
   createFreeTrialDb(trial: InsertFreeTrialRow): Promise<FreeTrialRow>;
   getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined>;
   getFreeTrialByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined>;
+  getFreeTrialByBuyerPhone(
     phone: string,
   ): Promise<FreeTrialRow | undefined>;
   getActiveTrialByStorytellerPhone(
@@ -71,8 +74,12 @@ export interface IStorage {
   getQuestionByIndex(
     albumId: string,
     index: number,
+    languagePreference?: string | null,
   ): Promise<string | undefined>;
-  getTotalQuestionsForAlbum(albumId: string): Promise<number>;
+  getTotalQuestionsForAlbum(
+    albumId: string,
+    languagePreference?: string | null,
+  ): Promise<number>;
 }
 
 const initialProducts: Product[] = [
@@ -299,6 +306,7 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date().toISOString(),
       conversationState: "awaiting_initial_contact",
       currentQuestionIndex: 0,
+      retryCount: 0,
     };
     this.freeTrialsLegacy.set(id, trial);
     return trial;
@@ -316,10 +324,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined> {
+    // Use getTableColumns to select all fields, ensuring customCoverImageUrl is included
     const [trial] = await db
-      .select()
+      .select(getTableColumns(freeTrials))
       .from(freeTrials)
       .where(eq(freeTrials.id, id));
+    
+    // Debug logging to verify customCoverImageUrl is retrieved
+    if (trial) {
+      console.log("Retrieved trial from database:", {
+        id: trial.id,
+        customCoverImageUrl: trial.customCoverImageUrl,
+        customCoverImageUrlType: typeof trial.customCoverImageUrl,
+        customCoverImageUrlValue: trial.customCoverImageUrl,
+        hasCustomCover: !!trial.customCoverImageUrl,
+        // Log all keys to see if field exists with different name
+        trialKeys: Object.keys(trial),
+      });
+      
+      // Also check if it exists as snake_case (in case Drizzle didn't map it)
+      const trialAny = trial as any;
+      if (trialAny.custom_cover_image_url) {
+        console.warn("Found custom_cover_image_url in snake_case format:", trialAny.custom_cover_image_url);
+      }
+    }
+    
     return trial;
   }
 
@@ -330,6 +359,18 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(freeTrials)
       .where(eq(freeTrials.storytellerPhone, phone));
+    return trial;
+  }
+
+  async getFreeTrialByBuyerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow | undefined> {
+    const [trial] = await db
+      .select()
+      .from(freeTrials)
+      .where(eq(freeTrials.customerPhone, phone))
+      .orderBy(asc(freeTrials.createdAt))
+      .limit(1);
     return trial;
   }
 
@@ -357,6 +398,14 @@ export class DatabaseStorage implements IStorage {
     id: string,
     updates: Partial<FreeTrialRow>,
   ): Promise<FreeTrialRow> {
+    // Debug logging for customCoverImageUrl updates
+    if (updates.customCoverImageUrl !== undefined) {
+      console.log("Updating customCoverImageUrl:", {
+        trialId: id,
+        newValue: updates.customCoverImageUrl,
+      });
+    }
+    
     const [updatedTrial] = await db
       .update(freeTrials)
       .set(updates)
@@ -365,6 +414,15 @@ export class DatabaseStorage implements IStorage {
 
     if (!updatedTrial) {
       throw new Error(`Free trial with id ${id} not found`);
+    }
+
+    // Verify the update worked
+    if (updates.customCoverImageUrl !== undefined) {
+      console.log("Updated trial customCoverImageUrl:", {
+        trialId: id,
+        customCoverImageUrl: updatedTrial.customCoverImageUrl,
+        updateSuccessful: updatedTrial.customCoverImageUrl === updates.customCoverImageUrl,
+      });
     }
 
     return updatedTrial;
@@ -591,6 +649,7 @@ export class DatabaseStorage implements IStorage {
   async getQuestionByIndex(
     albumTitleOrId: string,
     index: number,
+    languagePreference?: string | null,
   ): Promise<string | undefined> {
     // Try to find by title first (for backward compatibility)
     let album = await this.getAlbumByTitle(albumTitleOrId);
@@ -598,20 +657,45 @@ export class DatabaseStorage implements IStorage {
     if (!album) {
       album = await this.getAlbumById(albumTitleOrId);
     }
-    if (!album || !album.questions) {
+    if (!album) {
+      return undefined;
+    }
+
+    // Use Hindi questions if preference is 'hn' and questions_hn exists and is not null
+    if (languagePreference === "hn" && album.questionsHn && album.questionsHn.length > 0) {
+      if (index < album.questionsHn.length) {
+        return album.questionsHn[index];
+      }
+    }
+
+    // Fallback to English questions
+    if (!album.questions || index >= album.questions.length) {
       return undefined;
     }
     return album.questions[index];
   }
 
-  async getTotalQuestionsForAlbum(albumTitleOrId: string): Promise<number> {
+  async getTotalQuestionsForAlbum(
+    albumTitleOrId: string,
+    languagePreference?: string | null,
+  ): Promise<number> {
     // Try to find by title first (for backward compatibility)
     let album = await this.getAlbumByTitle(albumTitleOrId);
     // If not found by title, try by ID
     if (!album) {
       album = await this.getAlbumById(albumTitleOrId);
     }
-    if (!album || !album.questions) {
+    if (!album) {
+      return 0;
+    }
+
+    // If Hindi preferred and questions_hn available, use that length
+    if (languagePreference === "hn" && album.questionsHn && album.questionsHn.length > 0) {
+      return album.questionsHn.length;
+    }
+
+    // Fallback to English questions length
+    if (!album.questions) {
       return 0;
     }
     return album.questions.length;

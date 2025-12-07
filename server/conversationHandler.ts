@@ -6,8 +6,10 @@ import {
   sendVoiceNoteAcknowledgment,
   downloadVoiceNoteMedia,
   downloadMediaFile,
+  sendPhotoRequestToBuyer,
+  getLocalizedMessage,
 } from "./whatsapp";
-import { uploadVoiceNoteToStorage } from "./supabase";
+import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
 
 interface WhatsAppMessage {
   id: string;
@@ -15,6 +17,7 @@ interface WhatsAppMessage {
   type: string;
   text?: { body: string };
   audio?: { id: string; mime_type: string };
+  image?: { id: string; mime_type: string; sha256: string; caption?: string };
   button?: {
     payload?: string;
     text?: string;
@@ -125,10 +128,9 @@ async function handleNoTrialFound(
     messageText,
   );
 
-  await sendTextMessageWithRetry(
-    fromNumber,
-    "Hi! I'm Vaani from Kahani. It looks like you haven't started a story collection yet. To get started, please ask the person who wants to preserve your stories to create a free trial and share the link with you. Once you click that link, we can begin your storytelling journey!",
-  );
+  // Default to English for unknown users
+  const message = getLocalizedMessage("noTrialFound", null);
+  await sendTextMessageWithRetry(fromNumber, message);
 }
 
 /**
@@ -143,16 +145,18 @@ async function handleInProgressTextMessage(
 
   if (orderId && orderId === trial.id) {
     // User explicitly referenced this trial
-    await sendTextMessageWithRetry(
-      fromNumber,
-      `Great! I found your story collection. You're currently working on answering questions. Please send a voice note to answer the current question.`,
+    const message = getLocalizedMessage(
+      "foundStoryCollection",
+      trial.storytellerLanguagePreference,
     );
+    await sendTextMessageWithRetry(fromNumber, message);
   } else {
     // Generic reminder
-    await sendTextMessageWithRetry(
-      fromNumber,
-      "Please send a voice note to answer the question. I'll be waiting to hear your story!",
+    const message = getLocalizedMessage(
+      "sendVoiceNoteReminder",
+      trial.storytellerLanguagePreference,
     );
+    await sendTextMessageWithRetry(fromNumber, message);
   }
 }
 
@@ -171,10 +175,12 @@ async function handleCompletedTrial(
   // 1. User explicitly referenced this trial (order ID matches), OR
   // 2. No order ID was provided (legacy behavior - phone lookup)
   if (isExplicitReference || !orderId) {
-    await sendTextMessageWithRetry(
-      fromNumber,
-      `Thank you ${trial.storytellerName}! You've completed all the questions${isExplicitReference ? " for this story collection" : ""}. Your stories will be compiled into a beautiful book for your family.`,
+    const message = getLocalizedMessage(
+      "completedAllQuestions",
+      trial.storytellerLanguagePreference,
+      { name: trial.storytellerName },
     );
+    await sendTextMessageWithRetry(fromNumber, message);
   }
 }
 
@@ -198,7 +204,41 @@ export async function handleIncomingMessage(
     interactiveText = message.button.text || message.button.payload || "";
   }
 
-  // Resolve which trial to use
+  // Check if message is from buyer and is an image - handle separately
+  if (messageType === "image") {
+    const buyerTrial = await storage.getFreeTrialByBuyerPhone(fromNumber);
+    if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
+      await handleBuyerImageMessage(buyerTrial, fromNumber, message);
+      return;
+    }
+  }
+
+  // Check if message is from buyer and is a language selection button response
+  if (
+    (messageType === "interactive" || messageType === "button") &&
+    interactiveText
+  ) {
+    const buyerTrial = await storage.getFreeTrialByBuyerPhone(fromNumber);
+    if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
+      // Check if this is a language selection response
+      const normalizedText = interactiveText.toLowerCase().trim();
+      if (normalizedText === "english" || normalizedText === "हिंदी") {
+        const languagePreference = normalizedText === "english" ? "en" : "hn";
+        await storage.updateFreeTrialDb(buyerTrial.id, {
+          storytellerLanguagePreference: languagePreference,
+        });
+        console.log("Language preference set:", {
+          trialId: buyerTrial.id,
+          preference: languagePreference,
+          buttonText: interactiveText,
+        });
+        // Acknowledge the selection (optional - buyer doesn't need confirmation)
+        return;
+      }
+    }
+  }
+
+  // Resolve which trial to use (normal flow)
   const trial = await resolveTrial(messageText || interactiveText, fromNumber);
 
   if (!trial) {
@@ -213,6 +253,8 @@ export async function handleIncomingMessage(
     messageType,
     hasOrderId: !!extractOrderId(messageText || interactiveText),
     interactiveText,
+    fromNumber,
+    isBuyer: trial.customerPhone === fromNumber,
   });
 
   // Route to appropriate handler based on conversation state
@@ -262,6 +304,7 @@ async function handleInitialContact(
     fromNumber,
     trial.storytellerName,
     trial.buyerName,
+    trial.storytellerLanguagePreference,
   );
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -276,7 +319,11 @@ async function handleInitialContact(
 }
 
 export async function askReadiness(trial: any, fromNumber: string): Promise<void> {
-  await sendReadinessCheck(fromNumber, trial.storytellerName);
+  await sendReadinessCheck(
+    fromNumber,
+    trial.storytellerName,
+    trial.storytellerLanguagePreference,
+  );
   
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
@@ -305,6 +352,7 @@ async function handleReadinessResponse(
   console.log("Normalized response:", normalizedResponse, "original:", response);
 
   // Handle button responses from template (exact matches)
+  // Include both English and Hindi button texts
   const yesButtonPatterns = [
     "yes, let's begin",
     "yes let's begin",
@@ -312,8 +360,13 @@ async function handleReadinessResponse(
     "yes lets begin",
     "yes let's begin",
     "yes, let us begin",
+    "हाँ, शुरू करते हैं",  // Hindi button text
+    "हाँ शुरू करते हैं",   // Hindi without comma
   ];
-  const maybeButtonPatterns = ["maybe later"];
+  const maybeButtonPatterns = [
+    "maybe later",
+    "थोड़ी देर में",        // Hindi button text
+  ];
 
   // Normalize patterns too
   const normalizedYesPatterns = yesButtonPatterns.map(p => 
@@ -339,8 +392,15 @@ async function handleReadinessResponse(
   });
 
   // Fallback to text patterns (for non-production or manual text responses)
-  const yesPatterns = ["yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin"];
-  const maybePatterns = ["not sure", "later", "wait"];
+  // Include Hindi keywords
+  const yesPatterns = [
+    "yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin",
+    "शुरू", "हाँ", "हां", "ठीक", "तैयार"  // Hindi keywords
+  ];
+  const maybePatterns = [
+    "not sure", "later", "wait",
+    "देर", "बाद में", "थोड़ी"  // Hindi keywords
+  ];
 
   const isYesText = yesPatterns.some((pattern) =>
     normalizedResponse.includes(pattern),
@@ -378,7 +438,10 @@ async function handleReadinessResponse(
       throw error;
     }
   } else if (isMaybe) {
-    const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+    // const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+    const retryAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+
+
 
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
@@ -438,6 +501,7 @@ const isProduction = true;
   const question = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     targetQuestionIndex,
+    trial.storytellerLanguagePreference,
   );
 
   if (!question) {
@@ -451,15 +515,34 @@ const isProduction = true;
     questionPreview: question.substring(0, 50) + "...",
   });
 
-  const questionMessage = `Here is the question we want you to talk about:
-
-${question}
-
-Take your time and reply with a voice note whenever you are ready.`;
+  const questionMessage = getLocalizedMessage(
+    "questionMessage",
+    trial.storytellerLanguagePreference,
+    {
+      name: trial.storytellerName,
+      question: question,
+    },
+  );
 
   console.log("Sending question message to:", fromNumber);
   const messageSent = await sendTextMessageWithRetry(fromNumber, questionMessage);
   console.log("Question message send result:", messageSent);
+
+  // Send photo request to buyer if image not uploaded yet
+  if (trial.customerPhone && !trial.customCoverImageUrl) {
+    console.log("Sending photo request to buyer:", {
+      buyerPhone: trial.customerPhone,
+      buyerName: trial.buyerName,
+      storytellerName: trial.storytellerName,
+    });
+    await sendPhotoRequestToBuyer(
+      trial.customerPhone,
+      trial.buyerName,
+      trial.storytellerName,
+    ).catch((error) => {
+      console.error("Failed to send photo request to buyer:", error);
+    });
+  }
 
   await storage.updateFreeTrialDb(trial.id, {
     currentQuestionIndex: targetQuestionIndex,
@@ -485,6 +568,7 @@ async function handleVoiceNote(
   const currentQuestion = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     trial.currentQuestionIndex,
+    trial.storytellerLanguagePreference,
   );
 
   if (!currentQuestion) {
@@ -532,10 +616,15 @@ async function handleVoiceNote(
     }
   }
 
-  await sendVoiceNoteAcknowledgment(fromNumber, trial.storytellerName);
+  await sendVoiceNoteAcknowledgment(
+    fromNumber,
+    trial.storytellerName,
+    trial.storytellerLanguagePreference,
+  );
 
   const totalQuestions = await storage.getTotalQuestionsForAlbum(
     trial.selectedAlbum,
+    trial.storytellerLanguagePreference,
   );
   const nextQuestionIndex = trial.currentQuestionIndex + 1;
 
@@ -553,6 +642,7 @@ async function handleVoiceNote(
       fromNumber,
       trial.storytellerName,
       trial.id,
+      trial.storytellerLanguagePreference,
     );
 
     // Send to buyer if phone number exists
@@ -562,6 +652,7 @@ async function handleVoiceNote(
         trial.buyerName,
         trial.storytellerName,
         trial.id,
+        trial.storytellerLanguagePreference,
       );
     }
   } else {
@@ -688,6 +779,126 @@ async function downloadAndStoreVoiceNote(
   }
 }
 
+async function handleBuyerImageMessage(
+  trial: any,
+  fromNumber: string,
+  message: WhatsAppMessage,
+): Promise<void> {
+  if (!message.image || !message.image.id) {
+    console.error("Invalid image message - missing image data");
+    return;
+  }
+
+  const imageId = message.image.id;
+  const mimeType = message.image.mime_type || "image/jpeg";
+
+  console.log("Processing buyer image message:", {
+    trialId: trial.id,
+    buyerPhone: fromNumber,
+    imageId,
+    mimeType,
+  });
+
+  try {
+    // Step 1: Get media info (URL) from WhatsApp
+    console.log("Step 1: Getting media info from WhatsApp for image:", imageId);
+    const mediaInfo = await downloadVoiceNoteMedia(imageId); // Reuse same function for images
+
+    if (!mediaInfo) {
+      console.error("Failed to get media info for image:", imageId);
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, I couldn't download your image. Could you please try sending it again? 📸",
+      );
+      return;
+    }
+
+    console.log("Retrieved media info for image:", {
+      mediaId: imageId,
+      mimeType: mediaInfo.mimeType,
+      fileSize: mediaInfo.fileSize,
+      url: mediaInfo.url,
+      sha256: mediaInfo.sha256,
+    });
+
+    // Step 2: Download the actual file from WhatsApp
+    console.log("Step 2: Downloading image file from WhatsApp...");
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+    if (!accessToken) {
+      console.error("WhatsApp access token not available for downloading file");
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, there was an issue processing your image. Please try again later. 📸",
+      );
+      return;
+    }
+
+    console.log("Access token available, downloading file from URL:", mediaInfo.url);
+    const fileBuffer = await downloadMediaFile(mediaInfo.url, accessToken);
+
+    if (!fileBuffer) {
+      console.error("Failed to download image file:", imageId);
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, I couldn't download your image. Could you please try sending it again? 📸",
+      );
+      return;
+    }
+
+    console.log("Image file downloaded successfully, size:", fileBuffer.length, "bytes");
+
+    // Step 3: Upload to Supabase Storage
+    console.log("Step 3: Uploading image to Supabase Storage...");
+    const supabaseUrl = await uploadImageToStorage(
+      fileBuffer,
+      trial.id,
+      mimeType,
+    );
+
+    if (!supabaseUrl) {
+      console.error("Failed to upload image to Supabase Storage:", trial.id);
+      await sendTextMessageWithRetry(
+        fromNumber,
+        "Sorry, there was an issue saving your image. Please try again later. 📸",
+      );
+      return;
+    }
+
+    console.log("Image uploaded to Supabase successfully, URL:", supabaseUrl);
+
+    // Step 4: Update database with Supabase URL
+    console.log("Step 4: Updating database with image URL...");
+    await storage.updateFreeTrialDb(trial.id, {
+      customCoverImageUrl: supabaseUrl,
+    });
+
+    console.log("Image uploaded and saved:", {
+      trialId: trial.id,
+      imageId,
+      supabaseUrl,
+    });
+
+    // Step 5: Send cute acknowledgment message with emojis
+    console.log("Step 5: Sending acknowledgment message to buyer...");
+    const acknowledgmentMessage = `Perfect! Thank you so much for the beautiful photo! 📸✨\n\nI've saved it and it will be used as the cover for ${trial.storytellerName}'s album. It's going to look amazing! 🎨💫\n\nYour album is coming together beautifully! ❤️`;
+    
+    await sendTextMessageWithRetry(fromNumber, acknowledgmentMessage);
+    console.log("Acknowledgment message sent successfully to buyer:", fromNumber);
+  } catch (error) {
+    console.error("Error processing buyer image message:", {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      trialId: trial.id,
+      imageId,
+      fromNumber,
+    });
+    await sendTextMessageWithRetry(
+      fromNumber,
+      "Sorry, there was an issue processing your image. Please try again later. 📸",
+    );
+  }
+}
+
 export async function processRetryReminders(): Promise<void> {
   const trialsNeedingRetry = await storage.getFreeTrialsNeedingRetry();
 
@@ -722,10 +933,12 @@ const isProduction = true;
       if (!isProduction) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        await sendTextMessageWithRetry(
-          trial.storytellerPhone,
-          `Hi ${trial.storytellerName}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
+        const message = getLocalizedMessage(
+          "notRightTime",
+          trial.storytellerLanguagePreference,
+          { name: trial.storytellerName },
         );
+        await sendTextMessageWithRetry(trial.storytellerPhone, message);
       }
 
       continue;

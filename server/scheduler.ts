@@ -1,6 +1,9 @@
 import cron from "node-cron";
 import { storage } from "./storage";
-import { sendTextMessageWithRetry } from "./whatsapp";
+import {
+  sendTextMessageWithRetry,
+  getLocalizedMessage,
+} from "./whatsapp";
 import { processRetryReminders, askReadiness } from "./conversationHandler";
 
 let isProcessing = false;
@@ -22,6 +25,7 @@ const isProduction = true;
     const question = await storage.getQuestionByIndex(
       trial.selectedAlbum,
       trial.currentQuestionIndex,
+      trial.storytellerLanguagePreference,
     );
 
     if (!question) {
@@ -108,6 +112,7 @@ export async function sendPendingReminders(): Promise<void> {
     const question = await storage.getQuestionByIndex(
       trial.selectedAlbum,
       trial.currentQuestionIndex,
+      trial.storytellerLanguagePreference,
     );
 
     if (!question) {
@@ -120,11 +125,14 @@ export async function sendPendingReminders(): Promise<void> {
       continue;
     }
 
-    const reminderMessage = `Hi ${trial.storytellerName}, just a gentle reminder about the question I sent earlier:
-
-${question}
-
-Whenever you're ready, please share your story with a voice note. Take your time.`;
+    const reminderMessage = getLocalizedMessage(
+      "reminderMessage",
+      trial.storytellerLanguagePreference,
+      {
+        name: trial.storytellerName,
+        question: question || "",
+      },
+    );
 
     try {
       await sendTextMessageWithRetry(trial.storytellerPhone, reminderMessage);
