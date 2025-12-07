@@ -71,77 +71,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedAlbum: validatedData.selectedAlbum,
       });
 
-      const {
-        sendFreeTrialConfirmation,
-        sendShareableLink,
-        sendLanguageSelectionMessage,
-      } = await import("./whatsapp");
-
-      const confirmationSent = await sendFreeTrialConfirmation(
-        normalizedPhone,
-        validatedData.buyerName,
-        validatedData.storytellerName,
-        validatedData.selectedAlbum,
-      );
-
-      if (!confirmationSent) {
-        console.warn(
-          "WhatsApp confirmation message failed for trial:",
-          trial.id,
-        );
-      }
-
-      // Send language selection template after buyer confirmation (2 second delay)
-      let languageSelectionSent = false;
-      if (confirmationSent) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        languageSelectionSent = await sendLanguageSelectionMessage(
-          normalizedPhone,
-          validatedData.storytellerName,
-        );
-
-        if (!languageSelectionSent) {
-          console.warn(
-            "WhatsApp language selection message failed for trial:",
-            trial.id,
-          );
-        }
-      }
-
-      let shareableLinkSent = false;
-      if (confirmationSent) {
-        shareableLinkSent = await sendShareableLink(
-          normalizedPhone,
-          validatedData.storytellerName,
-          validatedData.buyerName,
-          trial.id,
-        );
-
-        if (!shareableLinkSent) {
-          console.warn(
-            "WhatsApp shareable link message failed for trial:",
-            trial.id,
-          );
-        }
-      }
-
-      console.log("Free trial created:", {
-        id: trial.id,
-        buyerName: trial.buyerName,
-        storytellerName: trial.storytellerName,
-        selectedAlbum: trial.selectedAlbum,
-        customerPhone: normalizedPhone,
-        confirmationSent,
-        languageSelectionSent,
-        shareableLinkSent,
-      });
-
+      // Send response immediately - don't wait for WhatsApp messages
       res.json({
         ...trial,
-        confirmationSent,
-        languageSelectionSent,
-        shareableLinkSent,
+        confirmationSent: false, // Will be updated asynchronously
+        languageSelectionSent: false,
+        shareableLinkSent: false, // Will be sent after language selection
       });
+
+      // Handle WhatsApp messages asynchronously (don't await)
+      (async () => {
+        try {
+          const {
+            sendFreeTrialConfirmation,
+            sendShareableLink,
+            sendLanguageSelectionMessage,
+          } = await import("./whatsapp");
+
+          const confirmationSent = await sendFreeTrialConfirmation(
+            normalizedPhone,
+            validatedData.buyerName,
+            validatedData.storytellerName,
+            validatedData.selectedAlbum,
+          );
+
+          if (!confirmationSent) {
+            console.warn(
+              "WhatsApp confirmation message failed for trial:",
+              trial.id,
+            );
+          }
+
+          // Send language selection template after buyer confirmation (2 second delay)
+          let languageSelectionSent = false;
+          if (confirmationSent) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            languageSelectionSent = await sendLanguageSelectionMessage(
+              normalizedPhone,
+              validatedData.storytellerName,
+            );
+
+            if (!languageSelectionSent) {
+              console.warn(
+                "WhatsApp language selection message failed for trial:",
+                trial.id,
+              );
+            }
+          }
+
+          // Note: Shareable link will be sent after buyer selects language via button
+          // See conversationHandler.ts for the implementation
+
+          console.log("Free trial WhatsApp messages sent:", {
+            id: trial.id,
+            buyerName: trial.buyerName,
+            storytellerName: trial.storytellerName,
+            selectedAlbum: trial.selectedAlbum,
+            customerPhone: normalizedPhone,
+            confirmationSent,
+            languageSelectionSent,
+            shareableLinkSent: false, // Will be sent after language selection
+          });
+        } catch (error) {
+          console.error(
+            "Error sending WhatsApp messages for trial:",
+            trial.id,
+            error,
+          );
+        }
+      })();
     } catch (error: any) {
       console.error("Error creating free trial:", error);
       if (error.name === "ZodError") {
@@ -149,7 +147,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(400)
           .json({ error: "Invalid input", details: error.errors });
       }
-      // Provide more detailed error information
       const errorMessage = error?.message || "Unknown error";
       const errorStack =
         process.env.NODE_ENV === "development" ? error?.stack : undefined;
@@ -179,44 +176,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Album not found" });
       }
 
-      const voiceNotes = await storage.getVoiceNotesByTrialId(trialId);
-
-      const totalQuestions = await storage.getTotalQuestionsForAlbum(
-        trial.selectedAlbum,
-        languagePreference || trial.storytellerLanguagePreference,
-      );
-
-      const tracks = await Promise.all(
-        Array.from({ length: totalQuestions }, async (_, index) => {
-          const questionText = await storage.getQuestionByIndex(
-            trial.selectedAlbum,
-            index,
-            languagePreference || trial.storytellerLanguagePreference,
-          );
-          const voiceNote = voiceNotes.find(
-            (note) => note.questionIndex === index,
-          );
-
-          return {
-            questionIndex: index,
-            questionText,
-            voiceNoteId: voiceNote?.id || null,
-            answeredAt: voiceNote?.receivedAt || null,
-            mediaUrl: voiceNote?.mediaUrl || null,
-            mediaId: voiceNote?.mediaId || null,
-          };
-        }),
-      );
-
-      // Fetch album metadata
+      // Fetch album ONCE at the beginning
       let album = await storage.getAlbumByTitle(trial.selectedAlbum);
       if (!album) {
-        // Try to get by ID if selectedAlbum is an ID
         album = await storage.getAlbumById(trial.selectedAlbum);
       }
+      if (!album) {
+        return res.status(404).json({ error: "Album not found" });
+      }
 
-      console.log("Album:", album);
+      const voiceNotes = await storage.getVoiceNotesByTrialId(trialId);
 
+      // Use in-memory album data instead of querying
+      const finalLanguagePreference =
+        languagePreference || trial.storytellerLanguagePreference;
+      const questions =
+        finalLanguagePreference === "hn" &&
+        album.questionsHn &&
+        album.questionsHn.length > 0
+          ? album.questionsHn
+          : album.questions;
+
+      const totalQuestions = questions.length;
+
+      // Build tracks from in-memory data (no additional queries)
+      const tracks = questions.map((questionText, index) => {
+        const voiceNote = voiceNotes.find(
+          (note) => note.questionIndex === index,
+        );
+
+        return {
+          questionIndex: index,
+          questionText,
+          voiceNoteId: voiceNote?.id || null,
+          answeredAt: voiceNote?.receivedAt || null,
+          mediaUrl: voiceNote?.mediaUrl || null,
+          mediaId: voiceNote?.mediaId || null,
+        };
+      });
+
+      // Album metadata already fetched above, no need to fetch again
       // Fallback values if album metadata is missing
       const albumDescription =
         album?.description ||

@@ -27,6 +27,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Check, Heart } from "lucide-react";
+import { PhoneInput } from "@/components/PhoneInput";
 
 type FreeTrialFormData = z.infer<typeof insertFreeTrialSchema>;
 
@@ -270,11 +271,10 @@ export default function FreeTrial() {
                       Your Whatsapp Number
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="e.g. +1234567890"
-                        className="h-12 text-base"
+                      <PhoneInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        defaultCountry="IN"
                         data-testid="input-customer-phone"
                       />
                     </FormControl>

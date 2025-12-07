@@ -232,7 +232,28 @@ export async function handleIncomingMessage(
           preference: languagePreference,
           buttonText: interactiveText,
         });
-        // Acknowledge the selection (optional - buyer doesn't need confirmation)
+
+        // Send shareable link after language selection
+        const { sendShareableLink } = await import("./whatsapp");
+        const shareableLinkSent = await sendShareableLink(
+          fromNumber,
+          buyerTrial.storytellerName,
+          buyerTrial.buyerName,
+          buyerTrial.id,
+        );
+
+        if (!shareableLinkSent) {
+          console.warn(
+            "WhatsApp shareable link message failed for trial:",
+            buyerTrial.id,
+          );
+        } else {
+          console.log("Shareable link sent after language selection:", {
+            trialId: buyerTrial.id,
+            languagePreference,
+          });
+        }
+
         return;
       }
     }
