@@ -74,8 +74,12 @@ export interface IStorage {
   getQuestionByIndex(
     albumId: string,
     index: number,
+    languagePreference?: string | null,
   ): Promise<string | undefined>;
-  getTotalQuestionsForAlbum(albumId: string): Promise<number>;
+  getTotalQuestionsForAlbum(
+    albumId: string,
+    languagePreference?: string | null,
+  ): Promise<number>;
 }
 
 const initialProducts: Product[] = [
@@ -302,6 +306,7 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date().toISOString(),
       conversationState: "awaiting_initial_contact",
       currentQuestionIndex: 0,
+      retryCount: 0,
     };
     this.freeTrialsLegacy.set(id, trial);
     return trial;
@@ -644,6 +649,7 @@ export class DatabaseStorage implements IStorage {
   async getQuestionByIndex(
     albumTitleOrId: string,
     index: number,
+    languagePreference?: string | null,
   ): Promise<string | undefined> {
     // Try to find by title first (for backward compatibility)
     let album = await this.getAlbumByTitle(albumTitleOrId);
@@ -651,20 +657,45 @@ export class DatabaseStorage implements IStorage {
     if (!album) {
       album = await this.getAlbumById(albumTitleOrId);
     }
-    if (!album || !album.questions) {
+    if (!album) {
+      return undefined;
+    }
+
+    // Use Hindi questions if preference is 'hn' and questions_hn exists and is not null
+    if (languagePreference === "hn" && album.questionsHn && album.questionsHn.length > 0) {
+      if (index < album.questionsHn.length) {
+        return album.questionsHn[index];
+      }
+    }
+
+    // Fallback to English questions
+    if (!album.questions || index >= album.questions.length) {
       return undefined;
     }
     return album.questions[index];
   }
 
-  async getTotalQuestionsForAlbum(albumTitleOrId: string): Promise<number> {
+  async getTotalQuestionsForAlbum(
+    albumTitleOrId: string,
+    languagePreference?: string | null,
+  ): Promise<number> {
     // Try to find by title first (for backward compatibility)
     let album = await this.getAlbumByTitle(albumTitleOrId);
     // If not found by title, try by ID
     if (!album) {
       album = await this.getAlbumById(albumTitleOrId);
     }
-    if (!album || !album.questions) {
+    if (!album) {
+      return 0;
+    }
+
+    // If Hindi preferred and questions_hn available, use that length
+    if (languagePreference === "hn" && album.questionsHn && album.questionsHn.length > 0) {
+      return album.questionsHn.length;
+    }
+
+    // Fallback to English questions length
+    if (!album.questions) {
       return 0;
     }
     return album.questions.length;

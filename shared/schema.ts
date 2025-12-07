@@ -265,6 +265,9 @@ export const freeTrials = pgTable(
       withTimezone: true,
     }),
     customCoverImageUrl: text("custom_cover_image_url"),
+    storytellerLanguagePreference: varchar("storyteller_language_preference", {
+      length: 2,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -332,6 +335,7 @@ export const albums = pgTable(
     title: varchar("title", { length: 255 }).notNull().unique(),
     description: text("description").notNull(),
     questions: jsonb("questions").$type<string[]>().notNull(),
+    questionsHn: jsonb("questions_hn").$type<string[]>(),
     coverImage: text("cover_image").notNull(),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })

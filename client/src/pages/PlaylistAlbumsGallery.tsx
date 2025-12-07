@@ -46,13 +46,19 @@ export default function PlaylistAlbumsGallery() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/playlist-albums/:trialId");
   const trialId = params?.trialId || "";
+  const localeParam =
+    new URLSearchParams(window.location.search)
+      .get("locale")
+      ?.toLowerCase() || "en";
+  const normalizedLocale = localeParam === "hi" ? "hn" : localeParam;
+  const albumApiPath = `/api/albums/${trialId}?locale=${normalizedLocale}`;
 
   const {
     data: albumData,
     isLoading,
     error,
   } = useQuery<AlbumData>({
-    queryKey: [`/api/albums/${trialId}`],
+    queryKey: [albumApiPath],
     enabled: !!trialId,
   });
 

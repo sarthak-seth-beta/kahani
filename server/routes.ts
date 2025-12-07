@@ -71,10 +71,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedAlbum: validatedData.selectedAlbum,
       });
 
-      const { sendFreeTrialConfirmation, sendShareableLink } = await import(
-        "./whatsapp"
-      );
-      
+      const {
+        sendFreeTrialConfirmation,
+        sendShareableLink,
+        sendLanguageSelectionMessage,
+      } = await import("./whatsapp");
+
       const confirmationSent = await sendFreeTrialConfirmation(
         normalizedPhone,
         validatedData.buyerName,
@@ -87,6 +89,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "WhatsApp confirmation message failed for trial:",
           trial.id,
         );
+      }
+
+      // Send language selection template after buyer confirmation (2 second delay)
+      let languageSelectionSent = false;
+      if (confirmationSent) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        languageSelectionSent = await sendLanguageSelectionMessage(
+          normalizedPhone,
+          validatedData.storytellerName,
+        );
+
+        if (!languageSelectionSent) {
+          console.warn(
+            "WhatsApp language selection message failed for trial:",
+            trial.id,
+          );
+        }
       }
 
       let shareableLinkSent = false;
@@ -113,10 +132,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedAlbum: trial.selectedAlbum,
         customerPhone: normalizedPhone,
         confirmationSent,
+        languageSelectionSent,
         shareableLinkSent,
       });
 
-      res.json({ ...trial, confirmationSent, shareableLinkSent });
+      res.json({
+        ...trial,
+        confirmationSent,
+        languageSelectionSent,
+        shareableLinkSent,
+      });
     } catch (error: any) {
       console.error("Error creating free trial:", error);
       if (error.name === "ZodError") {
@@ -139,6 +164,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/albums/:trialId", async (req, res) => {
     try {
       const { trialId } = req.params;
+      const localeParam = (req.query.locale as string | undefined)?.toLowerCase();
+      const languagePreference =
+        localeParam === "hn" || localeParam === "hi"
+          ? "hn"
+          : localeParam === "en"
+            ? "en"
+            : undefined;
 
       const trial = await storage.getFreeTrialDb(trialId);
       if (!trial) {
@@ -149,6 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const totalQuestions = await storage.getTotalQuestionsForAlbum(
         trial.selectedAlbum,
+        languagePreference || trial.storytellerLanguagePreference,
       );
 
       const tracks = await Promise.all(
@@ -156,6 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const questionText = await storage.getQuestionByIndex(
             trial.selectedAlbum,
             index,
+            languagePreference || trial.storytellerLanguagePreference,
           );
           const voiceNote = voiceNotes.find(
             (note) => note.questionIndex === index,

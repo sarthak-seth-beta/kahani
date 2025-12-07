@@ -182,6 +182,31 @@ async function retryWithBackoff<T>(
   throw lastError;
 }
 
+/**
+ * Extracts language code from template name and returns the base template name
+ * Templates ending with _hn use Hindi (hi - WhatsApp's ISO 639-1 code), _en use English (en), default to English
+ * Returns: { baseName: string, languageCode: string }
+ */
+function parseTemplateName(templateName: string): { baseName: string; languageCode: string } {
+  if (templateName.endsWith("_hn")) {
+    return {
+      baseName: templateName,
+      languageCode: "hi", // WhatsApp uses "hi" (ISO 639-1) for Hindi, not "hn"
+    };
+  }
+  if (templateName.endsWith("_en")) {
+    return {
+      baseName: templateName,
+      languageCode: "en",
+    };
+  }
+  // Default to English if no suffix
+  return {
+    baseName: templateName,
+    languageCode: "en",
+  };
+}
+
 export async function sendTemplateMessageWithRetry(
   recipientNumber: string,
   templateName: string,
@@ -198,14 +223,27 @@ export async function sendTemplateMessageWithRetry(
   const { phoneNumberId, accessToken } = config;
   const url = `${WHATSAPP_BASE_URL}/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`;
 
+  // Parse template name to extract base name and language code
+  // Template names like "introtostoryteller_vaani_hn" become:
+  // - baseName: "introtostoryteller_vaani"
+  // - languageCode: "hn"
+  const { baseName, languageCode } = parseTemplateName(templateName);
+
+  console.log("Sending WhatsApp template:", {
+    originalTemplateName: templateName,
+    baseTemplateName: baseName,
+    languageCode,
+    recipientNumber,
+  });
+
   const payload: any = {
     messaging_product: "whatsapp",
     to: recipientNumber,
     type: "template",
     template: {
-      name: templateName,
+      name: baseName,
       language: {
-        code: "en",
+        code: languageCode,
       },
     },
   };
@@ -479,7 +517,144 @@ export async function sendInteractiveMessageWithCTA(
   }
 }
 
-//ToDo: Add sendLanguageSelectionMessage function
+/**
+ * Helper function to get language suffix based on storyteller preference
+ * Returns '_en' or '_hn' based on preference, defaults to '_en' if null
+ */
+export function getStorytellerLanguageSuffix(
+  languagePreference: string | null | undefined,
+): string {
+  return languagePreference === "hn" ? "_hn" : "_en";
+}
+
+/**
+ * Helper function to get localized message based on language preference
+ * Returns English or Hindi text based on preference
+ */
+export function getLocalizedMessage(
+  messageKey: string,
+  language: string | null | undefined,
+  params?: Record<string, string>,
+): string {
+  const isHindi = language === "hn";
+  
+  // Message translations map
+  type MessageConfig =
+    | { en: string; hn: string }
+    | {
+        en: (name: string, question?: string) => string;
+        hn: (name: string, question?: string) => string;
+      }
+    | {
+        en: (buyerName: string, storytellerName: string) => string;
+        hn: (buyerName: string, storytellerName: string) => string;
+      };
+
+  const messages: Record<string, MessageConfig> = {
+    noTrialFound: {
+      en: "Hi! I'm Vaani from Kahani 🌸 \n\n It looks like you haven't started a story collection yet.\n\nTo get started, please ask the person who wants to preserve your stories to create a free trial and share the link with you. \n\nOnce you click that link, we can begin your storytelling journey!",
+      hn: "नमस्ते! मैं कहानी से वाणी हूँ 🌸 \n\n ऐसा लगता है कि आपने अभी तक एक कहानी संग्रह शुरू नहीं किया है \n\n शुरू करने के लिए, कृपया उस व्यक्ति से पूछें जो आपकी कहानियों को संरक्षित करना चाहता है कि वे एक निःशुल्क परीक्षण बनाएं और आपके साथ लिंक साझा करें। \n\n एक बार जब आप उस लिंक पर क्लिक करेंगे, तो हम आपकी कहानी सुनाने की यात्रा शुरू कर सकेंगे!",
+    },
+    foundStoryCollection: {
+      en: `Great! I found your story collection. You're currently working on answering questions. Please send a voice note to answer the current question.`,
+      hn: `बहुत बढ़िया! मैंने आपका कहानी संग्रह ढूंढ लिया है। आप वर्तमान में प्रश्नों के उत्तर देने पर काम कर रहे हैं। कृपया वर्तमान प्रश्न का उत्तर देने के लिए एक वॉइस नोट भेजें।`,
+    },
+    sendVoiceNoteReminder: {
+      en: "Please send a voice note to answer the question. I'll be waiting to hear your story!",
+      hn: "कृपया प्रश्न का उत्तर देने के लिए एक वॉइस नोट भेजें। मैं आपकी कहानी सुनने का इंतज़ार कर रही हूँ!",
+    },
+    completedAllQuestions: {
+      en: (name: string) => `Thank you ${name}! You've completed all the questions. Your stories will be compiled into a beautiful book for your family.`,
+      hn: (name: string) => `धन्यवाद ${name}! आपने सभी प्रश्न पूरे कर लिए हैं। आपकी कहानियाँ आपके परिवार के लिए एक सुंदर पुस्तक में संकलित की जाएंगी।`,
+    },
+    albumReady: {
+      en: (name: string) => `Hello ${name}, your Kahani album is ready 🌼\n\nIt holds the stories you shared, in your own voice, for your family to listen to whenever they miss you.\n\nThank you for trusting me with your memories.`,
+      hn: (name: string) => `नमस्ते ${name}, आपका कहानी एल्बम तैयार है 🌼\n\nइसमें आपकी साझा की गई कहानियाँ हैं, आपकी अपनी आवाज़ में, ताकि आपका परिवार जब भी आपको याद करे तो सुन सके।\n\nअपनी यादों पर भरोसा करने के लिए धन्यवाद।`,
+    },
+    notRightTime: {
+      en: (name: string) => `Hi ${name}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
+      hn: (name: string) => `नमस्ते ${name}, ऐसा लगता है कि यह सही समय नहीं हो सकता है। जब भी आप तैयार हों, हम यहाँ हैं। कभी भी संपर्क करने के लिए स्वतंत्र महसूस करें!`,
+    },
+    questionMessage: {
+      en: (name: string, question?: string) => `Thank you, ${name}.\n\nTake a moment, sit back, and think about this:\n\n*${question || ""}*\n\nWhenever you are ready to share, please send me a voice note 🎙️`,
+      hn: (name: string, question?: string) => `धन्यवाद ${name}!\n\nज़रा आराम से बैठिए और इस बात को याद कीजिए:\n\n*${question || ""}*\n\nजब भी आप बताने के लिए तैयार हों, कृपया मुझे एक वॉइस नोट भेजें 🎙️`,
+    },
+    reminderMessage: {
+      en: (name: string, question?: string) => `Hi ${name}, just a gentle reminder about the question I sent earlier:\n\n*${question || ""}*\n\nWhenever you're ready, please share your story with a voice note. Take your time.`,
+      hn: (name: string, question?: string) => `नमस्ते ${name}, मैंने पहले भेजे गए प्रश्न के बारे में एक कोमल अनुस्मारक:\n\n*${question || ""}*\n\nजब भी आप तैयार हों, कृपया एक वॉइस नोट के साथ अपनी कहानी साझा करें। अपना समय लें।`,
+    },
+    buyerCompletionMessage: {
+      en: (buyerName: string, storytellerName: string) => `Hello ${buyerName} 👋\n\nHere is ${storytellerName}'s Kahani album — their stories in their own voice 🎧📖\n\nWhen you have a quiet moment, please do listen!\n\nThese are the memories you can carry with you, always ❤️`,
+      hn: (buyerName: string, storytellerName: string) => `नमस्ते ${buyerName} 👋\n\nयह ${storytellerName} का कहानी एल्बम है — उनकी अपनी आवाज़ में उनकी कहानियाँ 🎧📖\n\nजब आपके पास एक शांत क्षण हो, कृपया ज़रूर सुनें!\n\nये वो यादें हैं जिन्हें आप हमेशा अपने साथ रख सकते हैं ❤️`,
+    },
+  };
+
+  const messageConfig = messages[messageKey];
+  if (!messageConfig) {
+    console.warn(`No message found for key: ${messageKey}`);
+    return "";
+  }
+
+  if (typeof messageConfig.en === "function") {
+    // Handle parameterized messages
+    // Check if this is a buyerCompletionMessage (takes buyerName and storytellerName)
+    if (messageKey === "buyerCompletionMessage") {
+      const func = isHindi
+        ? (messageConfig as {
+            en: (buyerName: string, storytellerName: string) => string;
+            hn: (buyerName: string, storytellerName: string) => string;
+          }).hn
+        : (messageConfig as {
+            en: (buyerName: string, storytellerName: string) => string;
+            hn: (buyerName: string, storytellerName: string) => string;
+          }).en;
+      if (params) {
+        return func(params.buyerName || "", params.storytellerName || "");
+      }
+      return func("", "");
+    }
+    
+    // Handle other parameterized messages (name and question)
+    const func = isHindi
+      ? (messageConfig as {
+          en: (name: string, question?: string) => string;
+          hn: (name: string, question?: string) => string;
+        }).hn
+      : (messageConfig as {
+          en: (name: string, question?: string) => string;
+          hn: (name: string, question?: string) => string;
+        }).en;
+    if (params) {
+      return func(params.name || "", params.question || "");
+    }
+    return func("", "");
+  }
+
+  return isHindi
+    ? (messageConfig as { en: string; hn: string }).hn
+    : (messageConfig as { en: string; hn: string }).en;
+}
+
+export async function sendLanguageSelectionMessage(
+  recipientNumber: string,
+  storytellerName: string,
+): Promise<boolean> {
+  const isProduction = true;
+
+  if (isProduction) {
+    const templateParams = [{ type: "text", text: storytellerName }];
+
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      "language_vaani_en",
+      templateParams,
+    );
+  } else {
+    const message = `Hi ${storytellerName}, please select your preferred language for our conversation.`;
+
+    return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
 
 export async function sendFreeTrialConfirmation(
   recipientNumber: string,
@@ -514,6 +689,7 @@ export async function sendStorytellerOnboarding(
   recipientNumber: string,
   relation: string,
   customerName: string,
+  languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
 const isProduction = true;
@@ -524,9 +700,12 @@ const isProduction = true;
       { type: "text", text: customerName },
     ];
 
+    const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
+    const templateName = `introtostoryteller_vaani${languageSuffix}`;
+
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "introtostoryteller_vaani_en",
+      templateName,
       templateParams,
     );
   } else {
@@ -574,6 +753,7 @@ const isProduction = true;
 export async function sendReadinessCheck(
   recipientNumber: string,
   relation: string,
+  languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
 const isProduction = true;
@@ -581,9 +761,12 @@ const isProduction = true;
   if (isProduction) {
     const templateParams = [{ type: "text", text: relation }];
 
+    const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
+    const templateName = `ready_vaani${languageSuffix}`;
+
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "ready_vaani_en",
+      templateName,
       templateParams,
     );
   } else {
@@ -596,6 +779,7 @@ const isProduction = true;
 export async function sendVoiceNoteAcknowledgment(
   recipientNumber: string,
   storytellerName: string,
+  languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
 const isProduction = true;
@@ -605,7 +789,9 @@ const isProduction = true;
     const templateParams = [
       { type: "text", text: storytellerName },
     ];
-    return sendTemplateMessageWithRetry(recipientNumber, "thanks_vaani_en", templateParams);
+    const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
+    const templateName = `thanks_vaani${languageSuffix}`;
+    return sendTemplateMessageWithRetry(recipientNumber, templateName, templateParams);
   } else {
     const message = `Thank you for sharing your story! It's been saved and recorded safely. We will send you the next question very soon.`;
 
@@ -621,20 +807,26 @@ export async function sendAlbumCompletionMessage(
   customerName: string,
   albumId: string,
   isCustomer: boolean,
+  languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
 const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {
-  
-    const templateName = isCustomer ? "albumlink_vaani_en" : "albumlinkstoryteller_vaani_en";
+    const languageSuffix = isCustomer
+      ? "_en"
+      : getStorytellerLanguageSuffix(languagePreference);
+    const templateName = isCustomer
+      ? "albumlink_vaani_en"
+      : `albumlinkstoryteller_vaani${languageSuffix}`;
+    const localeQuery = languagePreference === "hn" ? "?locale=hn" : "";
     const buttonParams = {
     type: "button",
     sub_type: "url",
     index: "0",
     parameters: [
-      { type: "text", text: `/playlist-albums/${albumId}` }
+      { type: "text", text: `/playlist-albums/${albumId}${!isCustomer ? localeQuery : ""}` }
     ]
   }
     const templateParams = isCustomer ? [
@@ -673,9 +865,14 @@ export async function sendStorytellerCompletionMessages(
   recipientNumber: string,
   storytellerName: string,
   albumId: string,
+  languagePreference?: string | null,
 ): Promise<boolean> {
   // Send first message: simple text message
-  const firstMessage = `Thank you ${storytellerName}! You've completed all the questions. Your stories will be compiled into a beautiful book for your family.`;
+  const firstMessage = getLocalizedMessage(
+    "completedAllQuestions",
+    languagePreference,
+    { name: storytellerName },
+  );
   
   const firstMessageSent = await sendTextMessageWithRetry(recipientNumber, firstMessage);
   if (!firstMessageSent) {
@@ -687,9 +884,14 @@ export async function sendStorytellerCompletionMessages(
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Send second message: interactive message with CTA button
-  const secondMessage = `Hello ${storytellerName}, your Kahani album is ready 🌼\n\nIt holds the stories you shared, in your own voice, for your family to listen to whenever they miss you.\n\nThank you for trusting me with your memories.`;
+  const secondMessage = getLocalizedMessage(
+    "albumReady",
+    languagePreference,
+    { name: storytellerName },
+  );
   const buttonTitle = "Open Website";
-  const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
+  const localeQuery = languagePreference === "hn" ? "?locale=hn" : "";
+  const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}${localeQuery}`;
 
   const secondMessageSent = await sendInteractiveMessageWithCTA(
     recipientNumber,
@@ -711,8 +913,16 @@ export async function sendBuyerCompletionMessage(
   buyerName: string,
   storytellerName: string,
   albumId: string,
+  languagePreference?: string | null,
 ): Promise<boolean> {
-  const message = `Hello ${buyerName} 👋\n\nHere is ${storytellerName}'s Kahani album — their stories in their own voice 🎧📖\n\nWhen you have a quiet moment, please do listen!\n\nThese are the memories you can carry with you, always ❤️`;
+  const message = getLocalizedMessage(
+    "buyerCompletionMessage",
+    languagePreference,
+    {
+      buyerName,
+      storytellerName,
+    },
+  );
   const buttonTitle = "Open Website";
   const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
 
@@ -735,6 +945,7 @@ export async function sendPhotoRequestToBuyer(
   if (isProduction) {
     const templateParams = [
       { type: "text", text: buyerName },
+      { type: "text", text: storytellerName },
       { type: "text", text: storytellerName },
     ];
 

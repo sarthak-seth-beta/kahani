@@ -7,6 +7,7 @@ import {
   downloadVoiceNoteMedia,
   downloadMediaFile,
   sendPhotoRequestToBuyer,
+  getLocalizedMessage,
 } from "./whatsapp";
 import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
 
@@ -127,10 +128,9 @@ async function handleNoTrialFound(
     messageText,
   );
 
-  await sendTextMessageWithRetry(
-    fromNumber,
-    "Hi! I'm Vaani from Kahani. It looks like you haven't started a story collection yet. To get started, please ask the person who wants to preserve your stories to create a free trial and share the link with you. Once you click that link, we can begin your storytelling journey!",
-  );
+  // Default to English for unknown users
+  const message = getLocalizedMessage("noTrialFound", null);
+  await sendTextMessageWithRetry(fromNumber, message);
 }
 
 /**
@@ -145,16 +145,18 @@ async function handleInProgressTextMessage(
 
   if (orderId && orderId === trial.id) {
     // User explicitly referenced this trial
-    await sendTextMessageWithRetry(
-      fromNumber,
-      `Great! I found your story collection. You're currently working on answering questions. Please send a voice note to answer the current question.`,
+    const message = getLocalizedMessage(
+      "foundStoryCollection",
+      trial.storytellerLanguagePreference,
     );
+    await sendTextMessageWithRetry(fromNumber, message);
   } else {
     // Generic reminder
-    await sendTextMessageWithRetry(
-      fromNumber,
-      "Please send a voice note to answer the question. I'll be waiting to hear your story!",
+    const message = getLocalizedMessage(
+      "sendVoiceNoteReminder",
+      trial.storytellerLanguagePreference,
     );
+    await sendTextMessageWithRetry(fromNumber, message);
   }
 }
 
@@ -173,10 +175,12 @@ async function handleCompletedTrial(
   // 1. User explicitly referenced this trial (order ID matches), OR
   // 2. No order ID was provided (legacy behavior - phone lookup)
   if (isExplicitReference || !orderId) {
-    await sendTextMessageWithRetry(
-      fromNumber,
-      `Thank you ${trial.storytellerName}! You've completed all the questions${isExplicitReference ? " for this story collection" : ""}. Your stories will be compiled into a beautiful book for your family.`,
+    const message = getLocalizedMessage(
+      "completedAllQuestions",
+      trial.storytellerLanguagePreference,
+      { name: trial.storytellerName },
     );
+    await sendTextMessageWithRetry(fromNumber, message);
   }
 }
 
@@ -206,6 +210,31 @@ export async function handleIncomingMessage(
     if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
       await handleBuyerImageMessage(buyerTrial, fromNumber, message);
       return;
+    }
+  }
+
+  // Check if message is from buyer and is a language selection button response
+  if (
+    (messageType === "interactive" || messageType === "button") &&
+    interactiveText
+  ) {
+    const buyerTrial = await storage.getFreeTrialByBuyerPhone(fromNumber);
+    if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
+      // Check if this is a language selection response
+      const normalizedText = interactiveText.toLowerCase().trim();
+      if (normalizedText === "english" || normalizedText === "हिंदी") {
+        const languagePreference = normalizedText === "english" ? "en" : "hn";
+        await storage.updateFreeTrialDb(buyerTrial.id, {
+          storytellerLanguagePreference: languagePreference,
+        });
+        console.log("Language preference set:", {
+          trialId: buyerTrial.id,
+          preference: languagePreference,
+          buttonText: interactiveText,
+        });
+        // Acknowledge the selection (optional - buyer doesn't need confirmation)
+        return;
+      }
     }
   }
 
@@ -275,6 +304,7 @@ async function handleInitialContact(
     fromNumber,
     trial.storytellerName,
     trial.buyerName,
+    trial.storytellerLanguagePreference,
   );
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -289,7 +319,11 @@ async function handleInitialContact(
 }
 
 export async function askReadiness(trial: any, fromNumber: string): Promise<void> {
-  await sendReadinessCheck(fromNumber, trial.storytellerName);
+  await sendReadinessCheck(
+    fromNumber,
+    trial.storytellerName,
+    trial.storytellerLanguagePreference,
+  );
   
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
@@ -318,6 +352,7 @@ async function handleReadinessResponse(
   console.log("Normalized response:", normalizedResponse, "original:", response);
 
   // Handle button responses from template (exact matches)
+  // Include both English and Hindi button texts
   const yesButtonPatterns = [
     "yes, let's begin",
     "yes let's begin",
@@ -325,8 +360,13 @@ async function handleReadinessResponse(
     "yes lets begin",
     "yes let's begin",
     "yes, let us begin",
+    "हाँ, शुरू करते हैं",  // Hindi button text
+    "हाँ शुरू करते हैं",   // Hindi without comma
   ];
-  const maybeButtonPatterns = ["maybe later"];
+  const maybeButtonPatterns = [
+    "maybe later",
+    "थोड़ी देर में",        // Hindi button text
+  ];
 
   // Normalize patterns too
   const normalizedYesPatterns = yesButtonPatterns.map(p => 
@@ -352,8 +392,15 @@ async function handleReadinessResponse(
   });
 
   // Fallback to text patterns (for non-production or manual text responses)
-  const yesPatterns = ["yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin"];
-  const maybePatterns = ["not sure", "later", "wait"];
+  // Include Hindi keywords
+  const yesPatterns = [
+    "yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin",
+    "शुरू", "हाँ", "हां", "ठीक", "तैयार"  // Hindi keywords
+  ];
+  const maybePatterns = [
+    "not sure", "later", "wait",
+    "देर", "बाद में", "थोड़ी"  // Hindi keywords
+  ];
 
   const isYesText = yesPatterns.some((pattern) =>
     normalizedResponse.includes(pattern),
@@ -451,6 +498,7 @@ const isProduction = true;
   const question = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     targetQuestionIndex,
+    trial.storytellerLanguagePreference,
   );
 
   if (!question) {
@@ -464,19 +512,14 @@ const isProduction = true;
     questionPreview: question.substring(0, 50) + "...",
   });
 
-  const questionMessage = `Thank you, ${trial.storytellerName}.
-
-Take a moment, sit back, and think about this:
-
-${question}
-
-Whenever you are ready to share, please send me a voice note 🎙️`
-
-//   const questionMessage = `Here is the question we want you to talk about:
-
-// ${question}
-
-// Take your time and reply with a voice note whenever you are ready.`;
+  const questionMessage = getLocalizedMessage(
+    "questionMessage",
+    trial.storytellerLanguagePreference,
+    {
+      name: trial.storytellerName,
+      question: question,
+    },
+  );
 
   console.log("Sending question message to:", fromNumber);
   const messageSent = await sendTextMessageWithRetry(fromNumber, questionMessage);
@@ -522,6 +565,7 @@ async function handleVoiceNote(
   const currentQuestion = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     trial.currentQuestionIndex,
+    trial.storytellerLanguagePreference,
   );
 
   if (!currentQuestion) {
@@ -569,10 +613,15 @@ async function handleVoiceNote(
     }
   }
 
-  await sendVoiceNoteAcknowledgment(fromNumber, trial.storytellerName);
+  await sendVoiceNoteAcknowledgment(
+    fromNumber,
+    trial.storytellerName,
+    trial.storytellerLanguagePreference,
+  );
 
   const totalQuestions = await storage.getTotalQuestionsForAlbum(
     trial.selectedAlbum,
+    trial.storytellerLanguagePreference,
   );
   const nextQuestionIndex = trial.currentQuestionIndex + 1;
 
@@ -590,6 +639,7 @@ async function handleVoiceNote(
       fromNumber,
       trial.storytellerName,
       trial.id,
+      trial.storytellerLanguagePreference,
     );
 
     // Send to buyer if phone number exists
@@ -599,6 +649,7 @@ async function handleVoiceNote(
         trial.buyerName,
         trial.storytellerName,
         trial.id,
+        trial.storytellerLanguagePreference,
       );
     }
   } else {
@@ -879,10 +930,12 @@ const isProduction = true;
       if (!isProduction) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        await sendTextMessageWithRetry(
-          trial.storytellerPhone,
-          `Hi ${trial.storytellerName}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
+        const message = getLocalizedMessage(
+          "notRightTime",
+          trial.storytellerLanguagePreference,
+          { name: trial.storytellerName },
         );
+        await sendTextMessageWithRetry(trial.storytellerPhone, message);
       }
 
       continue;
