@@ -32,14 +32,16 @@ export default function SimpleHeader({
         {/* Navigation buttons */}
         <div className="flex items-center gap-3">
           {/* Record Now Button */}
-          <button
-            onClick={onRecordClick}
-            className="px-6 py-2 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-sm shadow-md hover:bg-[#1B2632]/90 transition-colors flex items-center gap-2 min-h-[40px]"
-            data-testid="button-record"
-          >
-            <Mic className="h-4 w-4" />
-            <span className="hidden sm:inline">Record Now</span>
-          </button>
+          {onRecordClick && (
+            <button
+              onClick={onRecordClick}
+              className="px-6 py-2 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-sm shadow-md hover:bg-[#1B2632]/90 transition-colors flex items-center gap-2 min-h-[40px]"
+              data-testid="button-record"
+            >
+              <Mic className="h-4 w-4" />
+              <span className="hidden sm:inline">Record Now</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

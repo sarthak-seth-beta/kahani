@@ -18,8 +18,15 @@ import { useToast } from "@/hooks/use-toast";
 import { insertFreeTrialSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
-import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
+import SimpleHeader from "@/components/SimpleHeader";
 import { Footer } from "@/components/Footer";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Check, Heart } from "lucide-react";
 
 type FreeTrialFormData = z.infer<typeof insertFreeTrialSchema>;
 
@@ -31,19 +38,22 @@ export default function FreeTrial() {
   const albumIdFromUrl = urlParams.get("albumId") || "";
   const albumTitleFromUrl = urlParams.get("album") || ""; // Backward compatibility
 
-  // Fetch albums to get title from ID
-  const { data: albums } = useQuery<Array<{ id: string; title: string }>>({
+  // Fetch albums to get title and image from ID
+  const { data: albums } = useQuery<Array<{ id: string; title: string; cover_image: string }>>({
     queryKey: ["/api/albums"],
   });
 
-  // Determine selected album title
-  const selectedAlbumTitle = useMemo(() => {
+  // Determine selected album details
+  const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albums) {
       const album = albums.find((a) => a.id === albumIdFromUrl);
-      if (album) return album.title;
+      if (album) return { title: album.title, cover_image: album.cover_image };
     }
     // Fallback to title from URL (backward compatibility) or default
-    return albumTitleFromUrl || "Our Family History";
+    return {
+      title: albumTitleFromUrl || "Our Family History",
+      cover_image: "https://images.unsplash.com/photo-1542038784456-1ea8c935640e?q=80&w=2670&auto=format&fit=crop" // Default image
+    };
   }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
   const form = useForm<FreeTrialFormData>({
@@ -52,16 +62,16 @@ export default function FreeTrial() {
       customerPhone: "",
       buyerName: "",
       storytellerName: "",
-      selectedAlbum: selectedAlbumTitle,
+      selectedAlbum: selectedAlbum.title,
     },
   });
 
   // Update form when album title is determined
   useEffect(() => {
-    if (selectedAlbumTitle) {
-      form.setValue("selectedAlbum", selectedAlbumTitle);
+    if (selectedAlbum.title) {
+      form.setValue("selectedAlbum", selectedAlbum.title);
     }
-  }, [selectedAlbumTitle, form]);
+  }, [selectedAlbum.title, form]);
 
   const freeTrialMutation = useMutation({
     mutationFn: async (data: FreeTrialFormData) => {
@@ -93,156 +103,120 @@ export default function FreeTrial() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SimpleHeader />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center mb-6">
+        {/* Page Heading */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-[#1B2632] font-['Outfit']">
+            Enter your details
+          </h1>
+        </div>
+
+
+
+        {/* Selected Album Summary */}
+        <div className="bg-white rounded-xl shadow-sm border p-4 mb-8 flex items-center gap-4">
+          <div className="h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
             <img
-              src={kahaniLogo}
-              alt="Kahani Logo"
-              className="h-24 w-auto object-contain"
+              src={selectedAlbum.cover_image}
+              alt={selectedAlbum.title}
+              className="h-full w-full object-cover"
             />
           </div>
-          <h1 className="text-5xl font-bold mb-6 leading-tight">
-            Start Your Free Trial
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience the joy of preserving precious memories. Get started with
-            10 thoughtfully crafted questions delivered via WhatsApp.
-          </p>
-        </div>
-
-        {/* Benefits Section */}
-        <div className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-xl p-8 mb-12">
-          <h2 className="text-2xl font-semibold mb-6">
-            What's Included in Your Free Trial
-          </h2>
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">
-                •
-              </span>
-              <div>
-                <p className="font-semibold text-lg mb-1">
-                  Week full of Thoughtful Questions
-                </p>
-                <p className="text-muted-foreground">
-                  Carefully curated to capture meaningful memories and life
-                  stories
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">
-                •
-              </span>
-              <div>
-                <p className="font-semibold text-lg mb-1">WhatsApp Delivery</p>
-                <p className="text-muted-foreground">
-                  Questions sent directly to your phone via WhatsApp to the
-                  Storyteller
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">
-                •
-              </span>
-              <div>
-                <p className="font-semibold text-lg mb-1">
-                  Voice & Text Responses
-                </p>
-                <p className="text-muted-foreground">
-                  Record directly via voice messages
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">
-                •
-              </span>
-              <div>
-                <p className="font-semibold text-lg mb-1">
-                  Beautiful Story Format
-                </p>
-                <p className="text-muted-foreground">
-                  Your responses compiled into a keepsake story you'll treasure
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">
-                •
-              </span>
-              <div>
-                <p className="font-semibold text-lg mb-1">
-                  No payment information Required
-                </p>
-                <p className="text-muted-foreground">
-                  Start completely free - no payment information needed
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-lg font-semibold text-primary mt-0.5">
-                •
-              </span>
-              <div>
-                <p className="font-semibold text-lg mb-1">Flexible Schedule</p>
-                <p className="text-muted-foreground">
-                  Questions delivered at your preferred pace and timing
-                </p>
-              </div>
-            </div>
+          <div className="flex-grow">
+            <p className="text-sm text-muted-foreground uppercase tracking-wide font-semibold mb-1">
+              Selected Album
+            </p>
+            <h3 className="text-xl font-bold text-[#1B2632]">
+              {selectedAlbum.title}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2 bg-[#A35139]/10 px-4 py-2 rounded-full flex-shrink-0">
+            <span className="text-sm font-medium text-[#A35139]">Quantity:</span>
+            <span className="text-lg font-bold text-[#A35139]">1</span>
           </div>
         </div>
 
-        {/* How It Works */}
-        <div className="mb-12 bg-card rounded-xl p-8 border">
-          <h2 className="text-2xl font-semibold mb-6">How It Works</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                1
-              </div>
-              <div>
-                <p className="font-semibold text-lg mb-1">
-                  Enter Your Phone Number
-                </p>
-                <p className="text-muted-foreground">
-                  Just your WhatsApp number is all we need to get started
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                2
-              </div>
-              <div>
-                <p className="font-semibold text-lg mb-1">Receive Questions</p>
-                <p className="text-muted-foreground">
-                  Get thoughtful questions delivered to your WhatsApp
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                3
-              </div>
-              <div>
-                <p className="font-semibold text-lg mb-1">Share Your Story</p>
-                <p className="text-muted-foreground">
-                  Reply with voice or text messages at your own pace
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Info Accordions */}
+        <div className="space-y-4 mb-8">
+          <Accordion type="single" collapsible className="w-full">
+            {/* What's Included */}
+            <AccordionItem value="included" className="border rounded-xl px-6 bg-white shadow-sm">
+              <AccordionTrigger className="text-lg font-semibold text-[#1B2632] hover:no-underline hover:text-[#A35139]">
+                What's Included in this
+              </AccordionTrigger>
+              <AccordionContent className="pt-2 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    "5 thoughtful questions",
+                    "Whatsapp communication and support",
+                    "Voice enabled storytelling",
+                    "Finished voice first memory album",
+                    "Flexible schedule",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="flex-shrink-0 bg-[#A35139]/10 rounded-full p-1">
+                        <Check className="h-3 w-3 text-[#A35139]" />
+                      </div>
+                      <span className="text-[#1B2632]/80">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* How It Works */}
+            <AccordionItem value="how-it-works" className="border rounded-xl px-6 bg-white shadow-sm mt-4">
+              <AccordionTrigger className="text-lg font-semibold text-[#1B2632] hover:no-underline hover:text-[#A35139]">
+                How It Works
+              </AccordionTrigger>
+              <AccordionContent className="pt-2 pb-6">
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#A35139]/10 flex items-center justify-center font-bold text-[#A35139]">
+                      1
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#1B2632] mb-1">
+                        Choose an album
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Select the perfect collection for your stories
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#A35139]/10 flex items-center justify-center font-bold text-[#A35139]">
+                      2
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#1B2632] mb-1">Enter your details</p>
+                      <p className="text-sm text-muted-foreground">
+                        We just need your name and number
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#A35139]/10 flex items-center justify-center font-bold text-[#A35139]">
+                      3
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#1B2632] mb-1">We message you on Whatsapp to start!</p>
+                      <p className="text-sm text-muted-foreground">
+                        Look out for a message from us
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         {/* Form Section */}
-        <div className="bg-card rounded-xl p-8 border-2 border-primary/20 mb-8">
+        <div className="bg-white rounded-xl p-6 sm:p-8 border shadow-sm mb-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">Ready to Begin?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[#1B2632]">Ready to Begin?</h2>
             <p className="text-muted-foreground">
               Enter your WhatsApp number and we'll send you your first question
             </p>
@@ -250,86 +224,71 @@ export default function FreeTrial() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Buyer Information Section */}
-              <div className="space-y-5">
-                <div className="border-b pb-2">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Your Information
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Tell us about yourself
-                  </p>
-                </div>
+              <FormField
+                control={form.control}
+                name="buyerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold text-[#1B2632]">
+                      Your Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Enter your full name"
+                        className="h-12 text-base"
+                        data-testid="input-buyer-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="buyerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">
-                        Your Name
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="text"
-                          placeholder=""
-                          className="h-12 text-base"
-                          data-testid="input-buyer-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="customerPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold text-[#1B2632]">
+                      Your Whatsapp Number
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="e.g. +1234567890"
+                        className="h-12 text-base"
+                        data-testid="input-customer-phone"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="customerPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">
-                        Your WhatsApp Number
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="tel"
-                          placeholder=""
-                          className="h-12 text-base"
-                          data-testid="input-customer-phone"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Storyteller Information */}
-              <div className="space-y-5 pt-4">
-                <FormField
-                  control={form.control}
-                  name="storytellerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">
-                        Who's the story teller
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="text"
-                          placeholder="e.g., Nani, Dadi, Mummy, Dadu, Nanu"
-                          className="h-12 text-base"
-                          data-testid="input-storyteller-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="storytellerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold text-[#1B2632]">
+                      Who's Kahani do you want to record? (what do you call them?)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Mom, Dad, Dadu, Nani, etc"
+                        className="h-12 text-base"
+                        data-testid="input-storyteller-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Hidden field for selected album */}
               <FormField
@@ -338,46 +297,46 @@ export default function FreeTrial() {
                 render={({ field }) => <input type="hidden" {...field} />}
               />
 
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full text-lg h-14 mt-8"
-                disabled={freeTrialMutation.isPending}
-                data-testid="button-start-trial"
-              >
-                {freeTrialMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    Starting Your Trial...
-                  </>
-                ) : (
-                  "Start Free Trial"
-                )}
-              </Button>
+              <div className="flex justify-center mt-8">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-auto px-10 text-lg h-14 bg-[#A35139] text-white rounded-2xl shadow-xl border border-[#A35139] hover:bg-[#A35139]/90 transition-all duration-300"
+                  disabled={freeTrialMutation.isPending}
+                  data-testid="button-start-trial"
+                >
+                  {freeTrialMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      Starting Your Trial...
+                    </>
+                  ) : (
+                    "Record Now"
+                  )}
+                </Button>
+              </div>
 
-              <p className="text-sm text-center text-muted-foreground">
-                No payment required. Cancel anytime. Your first question will
-                arrive via WhatsApp shortly.
-              </p>
+
             </form>
           </Form>
         </div>
 
         {/* Trust Section */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-8 text-muted-foreground">
-            <span className="text-sm font-medium">500+ Stories Preserved</span>
-            <span className="text-sm font-medium">98% Satisfaction</span>
+        <div className="text-center space-y-3 pt-6 pb-2">
+          <div className="flex items-center justify-center gap-2 text-[#1B2632]/80 font-medium">
+            <span>Spreading love. 1,000+ kahaniya recorded</span>
+            <Heart className="h-4 w-4 fill-[#A35139] text-[#A35139]" />
           </div>
-          <p className="text-muted-foreground">
-            Questions about the trial?{" "}
+          <div>
             <a
-              href="mailto:support@legacyscribe.com"
-              className="text-primary hover:underline font-medium"
+              href="https://wa.me/?text=Hi%2C%20I%20have%20a%20question%20about%20the%20free%20trial."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#A35139] hover:text-[#A35139]/80 font-semibold text-sm transition-colors inline-block"
             >
               Contact us
             </a>
-          </p>
+          </div>
         </div>
       </div>
 

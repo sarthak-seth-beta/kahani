@@ -51,7 +51,7 @@ export default function FreeTrialCheckout() {
               <span className="hidden sm:inline">Back</span>
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-[#1B2632]">
-              Free Trial - Choose One Album
+              Choose One Album
             </h1>
             <div className="w-20" />
           </div>
@@ -61,18 +61,10 @@ export default function FreeTrialCheckout() {
       {/* Album Selection */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-8 sm:py-12">
         {/* Trial Info Banner */}
-        <div className="mb-8 p-6 bg-[#A35139]/10 rounded-2xl border-2 border-[#A35139]/30">
-          <h2 className="text-lg font-bold text-[#1B2632] mb-2">
-            Free Trial Details
-          </h2>
-          <ul className="text-[#1B2632]/70 text-sm sm:text-base space-y-1">
-            <li>
-              • Select <strong>one album</strong> to try for free
-            </li>
-            <li>
-              • You'll receive <strong>1 trial album</strong>
-            </li>
-          </ul>
+        <div className="mb-8 p-6 bg-[#A35139]/5 rounded-2xl border border-[#A35139]/20">
+          <p className="text-[#1B2632] text-lg sm:text-xl font-medium text-center font-['Outfit']">
+            Pick the kind of stories you want to preserve - <span className="text-[#A35139] font-bold">childhood</span>, <span className="text-[#A35139] font-bold">love</span>, <span className="text-[#A35139] font-bold">wisdom</span>, or <span className="text-[#A35139] font-bold">family moments</span>.
+          </p>
         </div>
 
         {isLoading && (
@@ -93,11 +85,10 @@ export default function FreeTrialCheckout() {
               return (
                 <Card
                   key={album.id}
-                  className={`overflow-hidden shadow-lg cursor-pointer transition-all ${
-                    isSelected
-                      ? "ring-4 ring-[#A35139] ring-opacity-50"
-                      : "hover-elevate"
-                  }`}
+                  className={`overflow-hidden shadow-lg cursor-pointer transition-all ${isSelected
+                    ? "ring-4 ring-[#A35139] ring-opacity-50"
+                    : "hover-elevate"
+                    }`}
                   onClick={() => setSelectedAlbumId(album.id)}
                   data-testid={`album-card-${album.id}`}
                 >
@@ -110,16 +101,7 @@ export default function FreeTrialCheckout() {
                         className="w-full h-full object-cover"
                         data-testid={`album-image-${album.id}`}
                       />
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-[#A35139]/20 flex items-center justify-center">
-                          <div className="bg-[#A35139] text-white rounded-full p-3">
-                            <Check
-                              className="h-8 w-8"
-                              data-testid={`selected-check-${album.id}`}
-                            />
-                          </div>
-                        </div>
-                      )}
+                      {/* Removed overlay checkmark as per user request to keep only one subtle tick */}
                     </div>
 
                     {/* Album Content */}
@@ -142,8 +124,8 @@ export default function FreeTrialCheckout() {
                         </div>
                         {isSelected && (
                           <div className="flex-shrink-0">
-                            <div className="bg-[#A35139] text-white rounded-full p-2">
-                              <Check className="h-5 w-5" />
+                            <div className="bg-[#A35139] text-white rounded-full p-1 shadow-sm">
+                              <Check className="h-3 w-3" strokeWidth={3} />
                             </div>
                           </div>
                         )}
@@ -173,23 +155,30 @@ export default function FreeTrialCheckout() {
             {/* Info Section */}
             <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
               <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
-                Each album contains thoughtfully crafted questions. Select one
-                to experience our story preservation service.
+                Each album contains thoughtfully crafted questions. To customise your questions, please{" "}
+                <a
+                  href="https://wa.me/?text=Hi%2C%20I%20would%20like%20to%20customize%20my%20album%20questions."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-[#A35139] hover:underline"
+                >
+                  contact us
+                </a>.
               </p>
             </div>
 
             {/* Start Free Trial Button */}
-            <div className="mt-8">
+            <div className="mt-8 flex justify-center">
               <Button
                 size="lg"
-                className="w-full bg-[#A35139] text-white rounded-2xl shadow-xl border border-[#A35139] disabled:opacity-50"
+                className="w-auto px-10 bg-[#A35139] text-white rounded-2xl shadow-xl border border-[#A35139] disabled:opacity-50 transition-all duration-300"
                 onClick={handleStartTrial}
                 disabled={selectedAlbumId === null}
                 data-testid="button-start-free-trial"
               >
                 {selectedAlbumId === null
                   ? "Select an Album to Continue"
-                  : "Start Free Trial"}
+                  : "Record Now"}
               </Button>
               {selectedAlbumId === null && (
                 <p className="text-center text-[#1B2632]/50 text-sm mt-3">
