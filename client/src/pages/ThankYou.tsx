@@ -11,7 +11,6 @@ export default function ThankYou() {
       <SimpleHeader />
       <div className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-2xl w-full text-center space-y-8">
-
           {/* Thank You Message */}
           <div className="space-y-6">
             <h1 className="text-3xl sm:text-5xl font-bold text-[#1B2632]">
@@ -21,12 +20,11 @@ export default function ThankYou() {
             <div className="space-y-6 text-lg sm:text-lg text-[#1B2632]/80 leading-relaxed max-w-xl mx-auto">
               <p>
                 I am Vaani — and from today, I hold your family’s stories close.
-                In the days ahead, your loved one will speak and their memories will find a home that lasts beyond all of us.
+                In the days ahead, your loved one will speak and their memories
+                will find a home that lasts beyond all of us.
               </p>
 
-              <p>
-                Thank you for choosing Kahani. It means more than you know.
-              </p>
+              <p>Thank you for choosing Kahani. It means more than you know.</p>
 
               <p className="font-medium text-[#A35139]">
                 I shall reach out to you on Whatsapp shortly!

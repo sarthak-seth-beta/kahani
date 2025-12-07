@@ -190,7 +190,7 @@ export async function handleIncomingMessage(
   messageType: string,
 ): Promise<void> {
   const messageText = message.text?.body || "";
-  
+
   // Handle interactive messages (button clicks)
   let interactiveText = "";
   if (messageType === "interactive" && message.interactive) {
@@ -264,8 +264,15 @@ export async function handleIncomingMessage(
       break;
 
     case "awaiting_readiness":
-      if (messageType === "text" || messageType === "interactive" || messageType === "button") {
-        const responseText = messageType === "button" || messageType === "interactive" ? interactiveText : messageText;
+      if (
+        messageType === "text" ||
+        messageType === "interactive" ||
+        messageType === "button"
+      ) {
+        const responseText =
+          messageType === "button" || messageType === "interactive"
+            ? interactiveText
+            : messageText;
         console.log("Calling handleReadinessResponse:", {
           trialId: trial.id,
           fromNumber,
@@ -275,7 +282,10 @@ export async function handleIncomingMessage(
         await handleReadinessResponse(trial, fromNumber, responseText);
         console.log("handleReadinessResponse completed for trial:", trial.id);
       } else {
-        console.log("Message type not handled in awaiting_readiness:", messageType);
+        console.log(
+          "Message type not handled in awaiting_readiness:",
+          messageType,
+        );
       }
       break;
 
@@ -318,13 +328,16 @@ async function handleInitialContact(
   });
 }
 
-export async function askReadiness(trial: any, fromNumber: string): Promise<void> {
+export async function askReadiness(
+  trial: any,
+  fromNumber: string,
+): Promise<void> {
   await sendReadinessCheck(
     fromNumber,
     trial.storytellerName,
     trial.storytellerLanguagePreference,
   );
-  
+
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
   });
@@ -348,8 +361,13 @@ async function handleReadinessResponse(
   normalizedResponse = normalizedResponse.replace(/[''`]/g, "'");
   // Normalize different dash types
   normalizedResponse = normalizedResponse.replace(/[–—]/g, "-");
-  
-  console.log("Normalized response:", normalizedResponse, "original:", response);
+
+  console.log(
+    "Normalized response:",
+    normalizedResponse,
+    "original:",
+    response,
+  );
 
   // Handle button responses from template (exact matches)
   // Include both English and Hindi button texts
@@ -360,46 +378,63 @@ async function handleReadinessResponse(
     "yes lets begin",
     "yes let's begin",
     "yes, let us begin",
-    "हाँ, शुरू करते हैं",  // Hindi button text
-    "हाँ शुरू करते हैं",   // Hindi without comma
+    "हाँ, शुरू करते हैं", // Hindi button text
+    "हाँ शुरू करते हैं", // Hindi without comma
   ];
   const maybeButtonPatterns = [
     "maybe later",
-    "थोड़ी देर में",        // Hindi button text
+    "थोड़ी देर में", // Hindi button text
   ];
 
   // Normalize patterns too
-  const normalizedYesPatterns = yesButtonPatterns.map(p => 
-    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-")
+  const normalizedYesPatterns = yesButtonPatterns.map((p) =>
+    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-"),
   );
-  const normalizedMaybePatterns = maybeButtonPatterns.map(p => 
-    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-")
+  const normalizedMaybePatterns = maybeButtonPatterns.map((p) =>
+    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-"),
   );
 
   // Check for button responses first (exact match)
-  const isYesButton = normalizedYesPatterns.some((pattern) =>
-    normalizedResponse === pattern,
+  const isYesButton = normalizedYesPatterns.some(
+    (pattern) => normalizedResponse === pattern,
   );
-  const isMaybeButton = normalizedMaybePatterns.some((pattern) =>
-    normalizedResponse === pattern,
+  const isMaybeButton = normalizedMaybePatterns.some(
+    (pattern) => normalizedResponse === pattern,
   );
 
   console.log("Button pattern matching:", {
     isYesButton,
     isMaybeButton,
     normalizedResponse,
-    matchedPattern: isYesButton ? yesButtonPatterns.find(p => normalizedResponse === p.toLowerCase()) : null,
+    matchedPattern: isYesButton
+      ? yesButtonPatterns.find((p) => normalizedResponse === p.toLowerCase())
+      : null,
   });
 
   // Fallback to text patterns (for non-production or manual text responses)
   // Include Hindi keywords
   const yesPatterns = [
-    "yes", "yeah", "yep", "sure", "ready", "ok", "okay", "begin",
-    "शुरू", "हाँ", "हां", "ठीक", "तैयार"  // Hindi keywords
+    "yes",
+    "yeah",
+    "yep",
+    "sure",
+    "ready",
+    "ok",
+    "okay",
+    "begin",
+    "शुरू",
+    "हाँ",
+    "हां",
+    "ठीक",
+    "तैयार", // Hindi keywords
   ];
   const maybePatterns = [
-    "not sure", "later", "wait",
-    "देर", "बाद में", "थोड़ी"  // Hindi keywords
+    "not sure",
+    "later",
+    "wait",
+    "देर",
+    "बाद में",
+    "थोड़ी", // Hindi keywords
   ];
 
   const isYesText = yesPatterns.some((pattern) =>
@@ -441,8 +476,6 @@ async function handleReadinessResponse(
     // const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
     const retryAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
 
-
-
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
       retryReadinessAt: retryAt,
@@ -450,7 +483,7 @@ async function handleReadinessResponse(
     });
 
     // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+    const isProduction = true;
     if (!isProduction) {
       await sendTextMessageWithRetry(
         fromNumber,
@@ -460,7 +493,7 @@ const isProduction = true;
     // In production, no additional message is sent after "Maybe Later" button click
   } else {
     // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+    const isProduction = true;
     if (!isProduction) {
       await sendTextMessageWithRetry(
         fromNumber,
@@ -492,12 +525,15 @@ async function sendQuestion(
   });
 
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
-  
+  const isProduction = true;
+
   // Use provided questionIndex or current question index
   const targetQuestionIndex = questionIndex ?? trial.currentQuestionIndex ?? 0;
-  
-  console.log("Fetching question with targetQuestionIndex:", targetQuestionIndex);
+
+  console.log(
+    "Fetching question with targetQuestionIndex:",
+    targetQuestionIndex,
+  );
   const question = await storage.getQuestionByIndex(
     trial.selectedAlbum,
     targetQuestionIndex,
@@ -505,7 +541,12 @@ const isProduction = true;
   );
 
   if (!question) {
-    console.error("No question found for album:", trial.selectedAlbum, "index:", targetQuestionIndex);
+    console.error(
+      "No question found for album:",
+      trial.selectedAlbum,
+      "index:",
+      targetQuestionIndex,
+    );
     return;
   }
 
@@ -525,15 +566,24 @@ const isProduction = true;
   );
 
   console.log("Sending question message to:", fromNumber);
-  const messageSent = await sendTextMessageWithRetry(fromNumber, questionMessage);
+  const messageSent = await sendTextMessageWithRetry(
+    fromNumber,
+    questionMessage,
+  );
   console.log("Question message send result:", messageSent);
 
-  // Send photo request to buyer if image not uploaded yet
-  if (trial.customerPhone && !trial.customCoverImageUrl) {
+  // Send photo request to buyer if image not uploaded yet and after 2 questions have been answered
+  // (targetQuestionIndex >= 2 means we're sending the 3rd question, so 2 have been answered)
+  if (
+    trial.customerPhone &&
+    !trial.customCoverImageUrl &&
+    targetQuestionIndex >= 2
+  ) {
     console.log("Sending photo request to buyer:", {
       buyerPhone: trial.customerPhone,
       buyerName: trial.buyerName,
       storytellerName: trial.storytellerName,
+      questionIndex: targetQuestionIndex,
     });
     await sendPhotoRequestToBuyer(
       trial.customerPhone,
@@ -635,7 +685,8 @@ async function handleVoiceNote(
       reminderSentAt: null,
     });
 
-    const { sendStorytellerCompletionMessages, sendBuyerCompletionMessage } = await import("./whatsapp");
+    const { sendStorytellerCompletionMessages, sendBuyerCompletionMessage } =
+      await import("./whatsapp");
 
     // Send to storyteller
     await sendStorytellerCompletionMessages(
@@ -657,8 +708,8 @@ async function handleVoiceNote(
     }
   } else {
     // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
-    
+    const isProduction = true;
+
     if (isProduction) {
       // In production: ask readiness before next question
       await storage.updateFreeTrialDb(trial.id, {
@@ -666,7 +717,7 @@ const isProduction = true;
         conversationState: "awaiting_readiness",
         reminderSentAt: null,
       });
-      
+
       await askReadiness(trial, fromNumber);
     } else {
       // In non-production: schedule next question immediately (2 seconds)
@@ -833,7 +884,10 @@ async function handleBuyerImageMessage(
       return;
     }
 
-    console.log("Access token available, downloading file from URL:", mediaInfo.url);
+    console.log(
+      "Access token available, downloading file from URL:",
+      mediaInfo.url,
+    );
     const fileBuffer = await downloadMediaFile(mediaInfo.url, accessToken);
 
     if (!fileBuffer) {
@@ -845,7 +899,11 @@ async function handleBuyerImageMessage(
       return;
     }
 
-    console.log("Image file downloaded successfully, size:", fileBuffer.length, "bytes");
+    console.log(
+      "Image file downloaded successfully, size:",
+      fileBuffer.length,
+      "bytes",
+    );
 
     // Step 3: Upload to Supabase Storage
     console.log("Step 3: Uploading image to Supabase Storage...");
@@ -881,9 +939,12 @@ async function handleBuyerImageMessage(
     // Step 5: Send cute acknowledgment message with emojis
     console.log("Step 5: Sending acknowledgment message to buyer...");
     const acknowledgmentMessage = `Perfect! Thank you so much for the beautiful photo! 📸✨\n\nI've saved it and it will be used as the cover for ${trial.storytellerName}'s album. It's going to look amazing! 🎨💫\n\nYour album is coming together beautifully! ❤️`;
-    
+
     await sendTextMessageWithRetry(fromNumber, acknowledgmentMessage);
-    console.log("Acknowledgment message sent successfully to buyer:", fromNumber);
+    console.log(
+      "Acknowledgment message sent successfully to buyer:",
+      fromNumber,
+    );
   } catch (error) {
     console.error("Error processing buyer image message:", {
       error: error instanceof Error ? error.message : error,
@@ -929,7 +990,7 @@ export async function processRetryReminders(): Promise<void> {
       console.log("Sent 3rd retry - closing flow:", trial.id);
 
       // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+      const isProduction = true;
       if (!isProduction) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 

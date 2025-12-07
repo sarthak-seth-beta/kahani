@@ -4,17 +4,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Share2,
-  Copy,
-  Mail,
-  MessageCircle,
-} from "lucide-react";
+import { Share2, Copy, Mail, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AlbumCard as AlbumCardType } from "@/components/SectionFourAlbums";
 
-export interface AlbumCardProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "className" | "style"> {
+export interface AlbumCardProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "className" | "style"
+> {
   album: AlbumCardType;
   /**
    * Number of questions to show in preview
@@ -217,4 +214,3 @@ export function AlbumCard({
     </div>
   );
 }
-

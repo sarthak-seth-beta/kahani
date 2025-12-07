@@ -97,17 +97,19 @@ export default function SectionFiveFAQs({
                   {faq.question}
                 </span>
                 <ChevronDown
-                  className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${openIndex === index ? "rotate-180" : ""
-                    }`}
+                  className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${
+                    openIndex === index ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 
               {/* Answer Body */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  openIndex === index
                     ? "max-h-96 opacity-100"
                     : "max-h-0 opacity-0"
-                  }`}
+                }`}
               >
                 {openIndex === index && (
                   <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">

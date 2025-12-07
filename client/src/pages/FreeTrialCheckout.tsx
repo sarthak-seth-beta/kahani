@@ -63,7 +63,11 @@ export default function FreeTrialCheckout() {
         {/* Trial Info Banner */}
         <div className="mb-8 p-6 bg-[#A35139]/5 rounded-2xl border border-[#A35139]/20">
           <p className="text-[#1B2632] text-lg sm:text-xl font-medium text-center font-['Outfit']">
-            Pick the kind of stories you want to preserve - <span className="text-[#A35139] font-bold">childhood</span>, <span className="text-[#A35139] font-bold">love</span>, <span className="text-[#A35139] font-bold">wisdom</span>, or <span className="text-[#A35139] font-bold">family moments</span>.
+            Pick the kind of stories you want to preserve -{" "}
+            <span className="text-[#A35139] font-bold">childhood</span>,{" "}
+            <span className="text-[#A35139] font-bold">love</span>,{" "}
+            <span className="text-[#A35139] font-bold">wisdom</span>, or{" "}
+            <span className="text-[#A35139] font-bold">family moments</span>.
           </p>
         </div>
 
@@ -85,10 +89,11 @@ export default function FreeTrialCheckout() {
               return (
                 <Card
                   key={album.id}
-                  className={`overflow-hidden shadow-lg cursor-pointer transition-all ${isSelected
-                    ? "ring-4 ring-[#A35139] ring-opacity-50"
-                    : "hover-elevate"
-                    }`}
+                  className={`overflow-hidden shadow-lg cursor-pointer transition-all ${
+                    isSelected
+                      ? "ring-4 ring-[#A35139] ring-opacity-50"
+                      : "hover-elevate"
+                  }`}
                   onClick={() => setSelectedAlbumId(album.id)}
                   data-testid={`album-card-${album.id}`}
                 >
@@ -155,7 +160,8 @@ export default function FreeTrialCheckout() {
             {/* Info Section */}
             <div className="mt-8 p-6 bg-[#EEE9DF]/50 rounded-2xl">
               <p className="text-center text-[#1B2632]/70 text-sm sm:text-base">
-                Each album contains thoughtfully crafted questions. To customise your questions, please{" "}
+                Each album contains thoughtfully crafted questions. To customise
+                your questions, please{" "}
                 <a
                   href="https://wa.me/?text=Hi%2C%20I%20would%20like%20to%20customize%20my%20album%20questions."
                   target="_blank"
@@ -163,7 +169,8 @@ export default function FreeTrialCheckout() {
                   className="font-semibold text-[#A35139] hover:underline"
                 >
                   contact us
-                </a>.
+                </a>
+                .
               </p>
             </div>
 

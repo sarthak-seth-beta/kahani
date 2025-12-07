@@ -47,9 +47,8 @@ export default function PlaylistAlbumsGallery() {
   const [match, params] = useRoute("/playlist-albums/:trialId");
   const trialId = params?.trialId || "";
   const localeParam =
-    new URLSearchParams(window.location.search)
-      .get("locale")
-      ?.toLowerCase() || "en";
+    new URLSearchParams(window.location.search).get("locale")?.toLowerCase() ||
+    "en";
   const normalizedLocale = localeParam === "hi" ? "hn" : localeParam;
   const albumApiPath = `/api/albums/${trialId}?locale=${normalizedLocale}`;
 
@@ -63,7 +62,7 @@ export default function PlaylistAlbumsGallery() {
   });
 
   const [playingTrackIndex, setPlayingTrackIndex] = useState<number | null>(
-    null
+    null,
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [durations, setDurations] = useState<Map<number, number>>(new Map());
@@ -79,7 +78,7 @@ export default function PlaylistAlbumsGallery() {
         audioRefs.current.delete(trackIndex);
       }
     },
-    []
+    [],
   );
 
   // Load duration for a track
@@ -162,7 +161,7 @@ export default function PlaylistAlbumsGallery() {
         currentAudioRef.current = null;
       });
     },
-    [albumData, playingTrackIndex, isPlaying]
+    [albumData, playingTrackIndex, isPlaying],
   );
 
   // Handle play button (first track)
@@ -183,7 +182,7 @@ export default function PlaylistAlbumsGallery() {
   // Calculate total duration
   const totalDuration = Array.from(durations.values()).reduce(
     (sum, duration) => sum + duration,
-    0
+    0,
   );
 
   if (!trialId) {
@@ -642,4 +641,3 @@ export default function PlaylistAlbumsGallery() {
     </div>
   );
 }
-

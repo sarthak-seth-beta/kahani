@@ -46,7 +46,10 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-8">
           {/* Explore */}
           <div>
-            <h3 className="text-lg font-semibold mb-4" data-testid="heading-explore">
+            <h3
+              className="text-lg font-semibold mb-4"
+              data-testid="heading-explore"
+            >
               Explore
             </h3>
             <ul className="space-y-3">
@@ -91,7 +94,10 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-lg font-semibold mb-4" data-testid="heading-company">
+            <h3
+              className="text-lg font-semibold mb-4"
+              data-testid="heading-company"
+            >
               Company
             </h3>
             <ul className="space-y-3">
@@ -128,7 +134,10 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h3 className="text-lg font-semibold mb-4" data-testid="heading-legal">
+            <h3
+              className="text-lg font-semibold mb-4"
+              data-testid="heading-legal"
+            >
               Legal
             </h3>
             <ul className="space-y-3">

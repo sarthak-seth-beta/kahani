@@ -187,7 +187,10 @@ async function retryWithBackoff<T>(
  * Templates ending with _hn use Hindi (hi - WhatsApp's ISO 639-1 code), _en use English (en), default to English
  * Returns: { baseName: string, languageCode: string }
  */
-function parseTemplateName(templateName: string): { baseName: string; languageCode: string } {
+function parseTemplateName(templateName: string): {
+  baseName: string;
+  languageCode: string;
+} {
   if (templateName.endsWith("_hn")) {
     return {
       baseName: templateName,
@@ -386,7 +389,10 @@ export async function sendTextMessageWithRetry(
     if (error.config?.url) errorInfo.requestUrl = error.config.url;
     if (error.config?.method) errorInfo.requestMethod = error.config.method;
 
-    console.error("Failed to send WhatsApp text message after retries:", errorInfo);
+    console.error(
+      "Failed to send WhatsApp text message after retries:",
+      errorInfo,
+    );
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
@@ -401,7 +407,10 @@ export async function sendTextMessageWithRetry(
       });
     } else if (error.response?.data) {
       // Log the full response data if it's not in the standard error format
-      console.error("WhatsApp API Response Data:", JSON.stringify(error.response.data, null, 2));
+      console.error(
+        "WhatsApp API Response Data:",
+        JSON.stringify(error.response.data, null, 2),
+      );
     }
 
     return false;
@@ -495,7 +504,10 @@ export async function sendInteractiveMessageWithCTA(
     if (error.config?.url) errorInfo.requestUrl = error.config.url;
     if (error.config?.method) errorInfo.requestMethod = error.config.method;
 
-    console.error("Failed to send WhatsApp interactive message after retries:", errorInfo);
+    console.error(
+      "Failed to send WhatsApp interactive message after retries:",
+      errorInfo,
+    );
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
@@ -510,7 +522,10 @@ export async function sendInteractiveMessageWithCTA(
       });
     } else if (error.response?.data) {
       // Log the full response data if it's not in the standard error format
-      console.error("WhatsApp API Response Data:", JSON.stringify(error.response.data, null, 2));
+      console.error(
+        "WhatsApp API Response Data:",
+        JSON.stringify(error.response.data, null, 2),
+      );
     }
 
     return false;
@@ -537,7 +552,7 @@ export function getLocalizedMessage(
   params?: Record<string, string>,
 ): string {
   const isHindi = language === "hn";
-  
+
   // Message translations map
   type MessageConfig =
     | { en: string; hn: string }
@@ -564,28 +579,40 @@ export function getLocalizedMessage(
       hn: "कृपया प्रश्न का उत्तर देने के लिए एक वॉइस नोट भेजें। मैं आपकी कहानी सुनने का इंतज़ार कर रही हूँ!",
     },
     completedAllQuestions: {
-      en: (name: string) => `Thank you ${name}! You've completed all the questions. Your stories will be compiled into a beautiful book for your family.`,
-      hn: (name: string) => `धन्यवाद ${name}! आपने सभी प्रश्न पूरे कर लिए हैं। आपकी कहानियाँ आपके परिवार के लिए एक सुंदर पुस्तक में संकलित की जाएंगी।`,
+      en: (name: string) =>
+        `Thank you ${name}! You've completed all the questions. Your stories will be compiled into a beautiful book for your family.`,
+      hn: (name: string) =>
+        `धन्यवाद ${name}! आपने सभी प्रश्न पूरे कर लिए हैं। आपकी कहानियाँ आपके परिवार के लिए एक सुंदर पुस्तक में संकलित की जाएंगी।`,
     },
     albumReady: {
-      en: (name: string) => `Hello ${name}, your Kahani album is ready 🌼\n\nIt holds the stories you shared, in your own voice, for your family to listen to whenever they miss you.\n\nThank you for trusting me with your memories.`,
-      hn: (name: string) => `नमस्ते ${name}, आपका कहानी एल्बम तैयार है 🌼\n\nइसमें आपकी साझा की गई कहानियाँ हैं, आपकी अपनी आवाज़ में, ताकि आपका परिवार जब भी आपको याद करे तो सुन सके।\n\nअपनी यादों पर भरोसा करने के लिए धन्यवाद।`,
+      en: (name: string) =>
+        `Hello ${name}, your Kahani album is ready 🌼\n\nIt holds the stories you shared, in your own voice, for your family to listen to whenever they miss you.\n\nThank you for trusting me with your memories.`,
+      hn: (name: string) =>
+        `नमस्ते ${name}, आपका कहानी एल्बम तैयार है 🌼\n\nइसमें आपकी साझा की गई कहानियाँ हैं, आपकी अपनी आवाज़ में, ताकि आपका परिवार जब भी आपको याद करे तो सुन सके।\n\nअपनी यादों पर भरोसा करने के लिए धन्यवाद।`,
     },
     notRightTime: {
-      en: (name: string) => `Hi ${name}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
-      hn: (name: string) => `नमस्ते ${name}, ऐसा लगता है कि यह सही समय नहीं हो सकता है। जब भी आप तैयार हों, हम यहाँ हैं। कभी भी संपर्क करने के लिए स्वतंत्र महसूस करें!`,
+      en: (name: string) =>
+        `Hi ${name}, it seems this might not be the right time. We're here whenever you're ready. Feel free to reach out anytime!`,
+      hn: (name: string) =>
+        `नमस्ते ${name}, ऐसा लगता है कि यह सही समय नहीं हो सकता है। जब भी आप तैयार हों, हम यहाँ हैं। कभी भी संपर्क करने के लिए स्वतंत्र महसूस करें!`,
     },
     questionMessage: {
-      en: (name: string, question?: string) => `Thank you, ${name}.\n\nTake a moment, sit back, and think about this:\n\n*${question || ""}*\n\nWhenever you are ready to share, please send me a voice note 🎙️`,
-      hn: (name: string, question?: string) => `धन्यवाद ${name}!\n\nज़रा आराम से बैठिए और इस बात को याद कीजिए:\n\n*${question || ""}*\n\nजब भी आप बताने के लिए तैयार हों, कृपया मुझे एक वॉइस नोट भेजें 🎙️`,
+      en: (name: string, question?: string) =>
+        `Thank you, ${name}.\n\nTake a moment, sit back, and think about this:\n\n*${question || ""}*\n\nWhenever you are ready to share, please send me a voice note 🎙️`,
+      hn: (name: string, question?: string) =>
+        `धन्यवाद ${name}!\n\nज़रा आराम से बैठिए और इस बात को याद कीजिए:\n\n*${question || ""}*\n\nजब भी आप बताने के लिए तैयार हों, कृपया मुझे एक वॉइस नोट भेजें 🎙️`,
     },
     reminderMessage: {
-      en: (name: string, question?: string) => `Hi ${name}, just a gentle reminder about the question I sent earlier:\n\n*${question || ""}*\n\nWhenever you're ready, please share your story with a voice note. Take your time.`,
-      hn: (name: string, question?: string) => `नमस्ते ${name}, मैंने पहले भेजे गए प्रश्न के बारे में एक कोमल अनुस्मारक:\n\n*${question || ""}*\n\nजब भी आप तैयार हों, कृपया एक वॉइस नोट के साथ अपनी कहानी साझा करें। अपना समय लें।`,
+      en: (name: string, question?: string) =>
+        `Hi ${name}, just a gentle reminder about the question I sent earlier:\n\n*${question || ""}*\n\nWhenever you're ready, please share your story with a voice note. Take your time.`,
+      hn: (name: string, question?: string) =>
+        `नमस्ते ${name}, मैंने पहले भेजे गए प्रश्न के बारे में एक कोमल अनुस्मारक:\n\n*${question || ""}*\n\nजब भी आप तैयार हों, कृपया एक वॉइस नोट के साथ अपनी कहानी साझा करें। अपना समय लें।`,
     },
     buyerCompletionMessage: {
-      en: (buyerName: string, storytellerName: string) => `Hello ${buyerName} 👋\n\nHere is ${storytellerName}'s Kahani album — their stories in their own voice 🎧📖\n\nWhen you have a quiet moment, please do listen!\n\nThese are the memories you can carry with you, always ❤️`,
-      hn: (buyerName: string, storytellerName: string) => `नमस्ते ${buyerName} 👋\n\nयह ${storytellerName} का कहानी एल्बम है — उनकी अपनी आवाज़ में उनकी कहानियाँ 🎧📖\n\nजब आपके पास एक शांत क्षण हो, कृपया ज़रूर सुनें!\n\nये वो यादें हैं जिन्हें आप हमेशा अपने साथ रख सकते हैं ❤️`,
+      en: (buyerName: string, storytellerName: string) =>
+        `Hello ${buyerName} 👋\n\nHere is ${storytellerName}'s Kahani album — their stories in their own voice 🎧📖\n\nWhen you have a quiet moment, please do listen!\n\nThese are the memories you can carry with you, always ❤️`,
+      hn: (buyerName: string, storytellerName: string) =>
+        `नमस्ते ${buyerName} 👋\n\nयह ${storytellerName} का कहानी एल्बम है — उनकी अपनी आवाज़ में उनकी कहानियाँ 🎧📖\n\nजब आपके पास एक शांत क्षण हो, कृपया ज़रूर सुनें!\n\nये वो यादें हैं जिन्हें आप हमेशा अपने साथ रख सकते हैं ❤️`,
     },
   };
 
@@ -600,30 +627,38 @@ export function getLocalizedMessage(
     // Check if this is a buyerCompletionMessage (takes buyerName and storytellerName)
     if (messageKey === "buyerCompletionMessage") {
       const func = isHindi
-        ? (messageConfig as {
-            en: (buyerName: string, storytellerName: string) => string;
-            hn: (buyerName: string, storytellerName: string) => string;
-          }).hn
-        : (messageConfig as {
-            en: (buyerName: string, storytellerName: string) => string;
-            hn: (buyerName: string, storytellerName: string) => string;
-          }).en;
+        ? (
+            messageConfig as {
+              en: (buyerName: string, storytellerName: string) => string;
+              hn: (buyerName: string, storytellerName: string) => string;
+            }
+          ).hn
+        : (
+            messageConfig as {
+              en: (buyerName: string, storytellerName: string) => string;
+              hn: (buyerName: string, storytellerName: string) => string;
+            }
+          ).en;
       if (params) {
         return func(params.buyerName || "", params.storytellerName || "");
       }
       return func("", "");
     }
-    
+
     // Handle other parameterized messages (name and question)
     const func = isHindi
-      ? (messageConfig as {
-          en: (name: string, question?: string) => string;
-          hn: (name: string, question?: string) => string;
-        }).hn
-      : (messageConfig as {
-          en: (name: string, question?: string) => string;
-          hn: (name: string, question?: string) => string;
-        }).en;
+      ? (
+          messageConfig as {
+            en: (name: string, question?: string) => string;
+            hn: (name: string, question?: string) => string;
+          }
+        ).hn
+      : (
+          messageConfig as {
+            en: (name: string, question?: string) => string;
+            hn: (name: string, question?: string) => string;
+          }
+        ).en;
     if (params) {
       return func(params.name || "", params.question || "");
     }
@@ -663,7 +698,7 @@ export async function sendFreeTrialConfirmation(
   albumName: string,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {
@@ -692,7 +727,7 @@ export async function sendStorytellerOnboarding(
   languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
   // const isProduction = false;
   if (isProduction) {
     const templateParams = [
@@ -722,7 +757,7 @@ export async function sendShareableLink(
   orderId: string,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
   // const isProduction = false;
   const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
 
@@ -756,7 +791,7 @@ export async function sendReadinessCheck(
   languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
 
   if (isProduction) {
     const templateParams = [{ type: "text", text: relation }];
@@ -782,16 +817,18 @@ export async function sendVoiceNoteAcknowledgment(
   languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {
-    const templateParams = [
-      { type: "text", text: storytellerName },
-    ];
+    const templateParams = [{ type: "text", text: storytellerName }];
     const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
     const templateName = `thanks_vaani${languageSuffix}`;
-    return sendTemplateMessageWithRetry(recipientNumber, templateName, templateParams);
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      templateName,
+      templateParams,
+    );
   } else {
     const message = `Thank you for sharing your story! It's been saved and recorded safely. We will send you the next question very soon.`;
 
@@ -810,7 +847,7 @@ export async function sendAlbumCompletionMessage(
   languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
   // const isProduction = false;
 
   if (isProduction) {
@@ -822,36 +859,38 @@ const isProduction = true;
       : `albumlinkstoryteller_vaani${languageSuffix}`;
     const localeQuery = languagePreference === "hn" ? "?locale=hn" : "";
     const buttonParams = {
-    type: "button",
-    sub_type: "url",
-    index: "0",
-    parameters: [
-      { type: "text", text: `/playlist-albums/${albumId}${!isCustomer ? localeQuery : ""}` }
-    ]
-  }
-    const templateParams = isCustomer ? [
-  {
-    type: "body",
-    parameters: [
-      { type: "text", text: customerName },
-      { type: "text", text: storytellerName }
-    ]
-  },
-  buttonParams
-]
- : [
-  {
-    type: "body",
-    parameters: [
-      { type: "text", text: storytellerName },
-    ]
-  },
-  buttonParams
-];
+      type: "button",
+      sub_type: "url",
+      index: "0",
+      parameters: [
+        {
+          type: "text",
+          text: `/playlist-albums/${albumId}${!isCustomer ? localeQuery : ""}`,
+        },
+      ],
+    };
+    const templateParams = isCustomer
+      ? [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: customerName },
+              { type: "text", text: storytellerName },
+            ],
+          },
+          buttonParams,
+        ]
+      : [
+          {
+            type: "body",
+            parameters: [{ type: "text", text: storytellerName }],
+          },
+          buttonParams,
+        ];
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-     templateName,
+      templateName,
       templateParams,
     );
   } else {
@@ -873,10 +912,16 @@ export async function sendStorytellerCompletionMessages(
     languagePreference,
     { name: storytellerName },
   );
-  
-  const firstMessageSent = await sendTextMessageWithRetry(recipientNumber, firstMessage);
+
+  const firstMessageSent = await sendTextMessageWithRetry(
+    recipientNumber,
+    firstMessage,
+  );
   if (!firstMessageSent) {
-    console.error("Failed to send first completion message to storyteller:", recipientNumber);
+    console.error(
+      "Failed to send first completion message to storyteller:",
+      recipientNumber,
+    );
     return false;
   }
 
@@ -884,11 +929,9 @@ export async function sendStorytellerCompletionMessages(
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Send second message: interactive message with CTA button
-  const secondMessage = getLocalizedMessage(
-    "albumReady",
-    languagePreference,
-    { name: storytellerName },
-  );
+  const secondMessage = getLocalizedMessage("albumReady", languagePreference, {
+    name: storytellerName,
+  });
   const buttonTitle = "Open Website";
   const localeQuery = languagePreference === "hn" ? "?locale=hn" : "";
   const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}${localeQuery}`;
@@ -901,7 +944,10 @@ export async function sendStorytellerCompletionMessages(
   );
 
   if (!secondMessageSent) {
-    console.error("Failed to send second completion message to storyteller:", recipientNumber);
+    console.error(
+      "Failed to send second completion message to storyteller:",
+      recipientNumber,
+    );
     return false;
   }
 
@@ -1038,7 +1084,9 @@ export async function downloadMediaFile(
       // For arraybuffer responses, try to convert to string if possible
       if (error.response.data instanceof ArrayBuffer) {
         try {
-          errorDetails.responseData = Buffer.from(error.response.data).toString('utf-8').substring(0, 500);
+          errorDetails.responseData = Buffer.from(error.response.data)
+            .toString("utf-8")
+            .substring(0, 500);
         } catch {
           errorDetails.responseData = `[ArrayBuffer of size ${error.response.data.byteLength}]`;
         }

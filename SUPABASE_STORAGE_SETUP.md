@@ -139,11 +139,13 @@ downloadAndStoreVoiceNote() [async]
 ### File Naming
 
 **Voice Notes:**
+
 - Format: `{voiceNoteId}.{extension}`
 - Example: `550e8400-e29b-41d4-a716-446655440000.ogg`
 - Extension is determined from MIME type (ogg, mp3, or m4a)
 
 **Album Cover Images:**
+
 - Format: `{trialId}.{extension}`
 - Example: `ba7897b5-419c-4842-9040-8f50d7f37fc4.jpg`
 - Extension is determined from MIME type (jpg, png, gif, or webp)

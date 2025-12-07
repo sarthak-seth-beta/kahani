@@ -36,9 +36,7 @@ export interface IStorage {
   getFreeTrialByStorytellerPhone(
     phone: string,
   ): Promise<FreeTrialRow | undefined>;
-  getFreeTrialByBuyerPhone(
-    phone: string,
-  ): Promise<FreeTrialRow | undefined>;
+  getFreeTrialByBuyerPhone(phone: string): Promise<FreeTrialRow | undefined>;
   getActiveTrialByStorytellerPhone(
     phone: string,
   ): Promise<FreeTrialRow | undefined>;
@@ -329,7 +327,7 @@ export class DatabaseStorage implements IStorage {
       .select(getTableColumns(freeTrials))
       .from(freeTrials)
       .where(eq(freeTrials.id, id));
-    
+
     // Debug logging to verify customCoverImageUrl is retrieved
     if (trial) {
       console.log("Retrieved trial from database:", {
@@ -341,14 +339,17 @@ export class DatabaseStorage implements IStorage {
         // Log all keys to see if field exists with different name
         trialKeys: Object.keys(trial),
       });
-      
+
       // Also check if it exists as snake_case (in case Drizzle didn't map it)
       const trialAny = trial as any;
       if (trialAny.custom_cover_image_url) {
-        console.warn("Found custom_cover_image_url in snake_case format:", trialAny.custom_cover_image_url);
+        console.warn(
+          "Found custom_cover_image_url in snake_case format:",
+          trialAny.custom_cover_image_url,
+        );
       }
     }
-    
+
     return trial;
   }
 
@@ -405,7 +406,7 @@ export class DatabaseStorage implements IStorage {
         newValue: updates.customCoverImageUrl,
       });
     }
-    
+
     const [updatedTrial] = await db
       .update(freeTrials)
       .set(updates)
@@ -421,7 +422,8 @@ export class DatabaseStorage implements IStorage {
       console.log("Updated trial customCoverImageUrl:", {
         trialId: id,
         customCoverImageUrl: updatedTrial.customCoverImageUrl,
-        updateSuccessful: updatedTrial.customCoverImageUrl === updates.customCoverImageUrl,
+        updateSuccessful:
+          updatedTrial.customCoverImageUrl === updates.customCoverImageUrl,
       });
     }
 
@@ -662,7 +664,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Use Hindi questions if preference is 'hn' and questions_hn exists and is not null
-    if (languagePreference === "hn" && album.questionsHn && album.questionsHn.length > 0) {
+    if (
+      languagePreference === "hn" &&
+      album.questionsHn &&
+      album.questionsHn.length > 0
+    ) {
       if (index < album.questionsHn.length) {
         return album.questionsHn[index];
       }
@@ -690,7 +696,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     // If Hindi preferred and questions_hn available, use that length
-    if (languagePreference === "hn" && album.questionsHn && album.questionsHn.length > 0) {
+    if (
+      languagePreference === "hn" &&
+      album.questionsHn &&
+      album.questionsHn.length > 0
+    ) {
       return album.questionsHn.length;
     }
 

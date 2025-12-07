@@ -17,15 +17,12 @@ export default function SimpleHeader({
     <header className="sticky top-0 z-40 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
       <div className="flex items-center justify-between px-4 py-0 md:px-8 gap-4">
         {/* Logo - Adjusted to be compact but visible */}
-        <div
-          onClick={() => setLocation("/")}
-          className="cursor-pointer"
-        >
+        <div onClick={() => setLocation("/")} className="cursor-pointer">
           <img
             src={logoSrc}
             alt="Kahani Logo"
             className="h-16 md:h-20 w-auto object-contain"
-            style={{ minHeight: '60px' }}
+            style={{ minHeight: "60px" }}
           />
         </div>
 

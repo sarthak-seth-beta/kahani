@@ -1,9 +1,6 @@
 import cron from "node-cron";
 import { storage } from "./storage";
-import {
-  sendTextMessageWithRetry,
-  getLocalizedMessage,
-} from "./whatsapp";
+import { sendTextMessageWithRetry, getLocalizedMessage } from "./whatsapp";
 import { processRetryReminders, askReadiness } from "./conversationHandler";
 
 let isProcessing = false;
@@ -14,7 +11,7 @@ export async function sendScheduledQuestions(): Promise<void> {
   console.log(`Found ${trials.length} trials with questions due`);
 
   // const isProduction = process.env.NODE_ENV === "production";
-const isProduction = true;
+  const isProduction = true;
 
   for (const trial of trials) {
     if (!trial.storytellerPhone) {

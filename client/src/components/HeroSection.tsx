@@ -50,7 +50,10 @@ export default function HeroSection({
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-8 sm:mb-12 font-['Outfit'] max-w-4xl"
           data-testid="text-hero-headline"
         >
-          <span key={currentTextIndex} className="inline-block animate-fade-in text-[#FFB162]">
+          <span
+            key={currentTextIndex}
+            className="inline-block animate-fade-in text-[#FFB162]"
+          >
             {storyTexts[currentTextIndex]}
           </span>
           <br />

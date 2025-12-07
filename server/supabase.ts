@@ -39,15 +39,16 @@ export async function ensureBucketExists(
 
   try {
     // First, check if bucket already exists
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
+    const { data: buckets, error: listError } =
+      await supabase.storage.listBuckets();
+
     if (listError) {
       console.error("Error listing buckets:", listError);
       return false;
     }
 
     const bucketExists = buckets?.some((bucket) => bucket.name === bucketName);
-    
+
     if (bucketExists) {
       console.log(`Bucket ${bucketName} already exists`);
       return true;
@@ -58,9 +59,10 @@ export async function ensureBucketExists(
     const { data, error } = await supabase.storage.createBucket(bucketName, {
       public: isPublic,
       fileSizeLimit: bucketName === VOICE_NOTES_BUCKET ? 10485760 : 5242880, // 10MB for voice notes, 5MB for images
-      allowedMimeTypes: bucketName === VOICE_NOTES_BUCKET
-        ? ["audio/ogg", "audio/mp3", "audio/m4a"]
-        : ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      allowedMimeTypes:
+        bucketName === VOICE_NOTES_BUCKET
+          ? ["audio/ogg", "audio/mp3", "audio/m4a"]
+          : ["image/jpeg", "image/png", "image/gif", "image/webp"],
     });
 
     if (error) {
@@ -160,21 +162,24 @@ export async function uploadImageToStorage(
   // Ensure bucket exists before uploading
   const bucketExists = await ensureBucketExists(ALBUM_COVERS_BUCKET, true);
   if (!bucketExists) {
-    console.error(`Bucket ${ALBUM_COVERS_BUCKET} does not exist and could not be created`);
+    console.error(
+      `Bucket ${ALBUM_COVERS_BUCKET} does not exist and could not be created`,
+    );
     return null;
   }
 
   try {
     // Determine file extension from mimeType
-    const extension = mimeType.includes("jpeg") || mimeType.includes("jpg")
-      ? "jpg"
-      : mimeType.includes("png")
-        ? "png"
-        : mimeType.includes("gif")
-          ? "gif"
-          : mimeType.includes("webp")
-            ? "webp"
-            : "jpg"; // default
+    const extension =
+      mimeType.includes("jpeg") || mimeType.includes("jpg")
+        ? "jpg"
+        : mimeType.includes("png")
+          ? "png"
+          : mimeType.includes("gif")
+            ? "gif"
+            : mimeType.includes("webp")
+              ? "webp"
+              : "jpg"; // default
 
     const fullFileName = `${fileName}.${extension}`;
     const filePath = `${fullFileName}`;

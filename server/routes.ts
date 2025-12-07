@@ -164,7 +164,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/albums/:trialId", async (req, res) => {
     try {
       const { trialId } = req.params;
-      const localeParam = (req.query.locale as string | undefined)?.toLowerCase();
+      const localeParam = (
+        req.query.locale as string | undefined
+      )?.toLowerCase();
       const languagePreference =
         localeParam === "hn" || localeParam === "hi"
           ? "hn"
@@ -216,17 +218,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Album:", album);
 
       // Fallback values if album metadata is missing
-      const albumDescription = album?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+      const albumDescription =
+        album?.description ||
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
       // Use custom cover image if available, otherwise use album cover image
       // Check for both null/undefined and empty string
       // Also check snake_case version in case Drizzle didn't map it (fallback)
       const trialAny = trial as any;
-      const customCoverImageUrlValue = trial.customCoverImageUrl || trialAny.custom_cover_image_url;
-      const customCoverImage = customCoverImageUrlValue && String(customCoverImageUrlValue).trim() !== "" 
-        ? String(customCoverImageUrlValue).trim()
-        : null;
-      const albumCoverImage = customCoverImage || album?.coverImage || "/attached_assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
-      
+      const customCoverImageUrlValue =
+        trial.customCoverImageUrl || trialAny.custom_cover_image_url;
+      const customCoverImage =
+        customCoverImageUrlValue &&
+        String(customCoverImageUrlValue).trim() !== ""
+          ? String(customCoverImageUrlValue).trim()
+          : null;
+      const albumCoverImage =
+        customCoverImage ||
+        album?.coverImage ||
+        "/attached_assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
+
       // Debug logging
       console.log("Album cover image selection:", {
         trialId: trial.id,
@@ -262,9 +272,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertOrderSchema.parse(req.body);
       const order = await storage.createOrder(validatedData);
 
-      const { sendTemplateMessage, normalizePhoneNumber } = await import(
-        "./whatsapp"
-      );
+      const { sendTemplateMessage, normalizePhoneNumber } =
+        await import("./whatsapp");
       const normalizedPhone = normalizePhoneNumber(validatedData.customerPhone);
       const whatsappSent = await sendTemplateMessage(
         normalizedPhone,
@@ -705,7 +714,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { handleIncomingMessage } = await import("./conversationHandler");
       try {
         await handleIncomingMessage(fromNumber, message, messageType);
-        console.log("handleIncomingMessage completed successfully for:", fromNumber);
+        console.log(
+          "handleIncomingMessage completed successfully for:",
+          fromNumber,
+        );
         await storage.markWebhookProcessed(messageIdempotencyKey);
       } catch (error: any) {
         console.error("Error in handleIncomingMessage:", {

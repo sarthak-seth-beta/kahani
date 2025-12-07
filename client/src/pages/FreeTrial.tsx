@@ -39,7 +39,9 @@ export default function FreeTrial() {
   const albumTitleFromUrl = urlParams.get("album") || ""; // Backward compatibility
 
   // Fetch albums to get title and image from ID
-  const { data: albums } = useQuery<Array<{ id: string; title: string; cover_image: string }>>({
+  const { data: albums } = useQuery<
+    Array<{ id: string; title: string; cover_image: string }>
+  >({
     queryKey: ["/api/albums"],
   });
 
@@ -52,7 +54,8 @@ export default function FreeTrial() {
     // Fallback to title from URL (backward compatibility) or default
     return {
       title: albumTitleFromUrl || "Our Family History",
-      cover_image: "https://images.unsplash.com/photo-1542038784456-1ea8c935640e?q=80&w=2670&auto=format&fit=crop" // Default image
+      cover_image:
+        "https://images.unsplash.com/photo-1542038784456-1ea8c935640e?q=80&w=2670&auto=format&fit=crop", // Default image
     };
   }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
@@ -112,8 +115,6 @@ export default function FreeTrial() {
           </h1>
         </div>
 
-
-
         {/* Selected Album Summary */}
         <div className="bg-white rounded-xl shadow-sm border p-4 mb-8 flex items-center gap-4">
           <div className="h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
@@ -132,7 +133,9 @@ export default function FreeTrial() {
             </h3>
           </div>
           <div className="flex items-center gap-2 bg-[#A35139]/10 px-4 py-2 rounded-full flex-shrink-0">
-            <span className="text-sm font-medium text-[#A35139]">Quantity:</span>
+            <span className="text-sm font-medium text-[#A35139]">
+              Quantity:
+            </span>
             <span className="text-lg font-bold text-[#A35139]">1</span>
           </div>
         </div>
@@ -141,7 +144,10 @@ export default function FreeTrial() {
         <div className="space-y-4 mb-8">
           <Accordion type="single" collapsible className="w-full">
             {/* What's Included */}
-            <AccordionItem value="included" className="border rounded-xl px-6 bg-white shadow-sm">
+            <AccordionItem
+              value="included"
+              className="border rounded-xl px-6 bg-white shadow-sm"
+            >
               <AccordionTrigger className="text-lg font-semibold text-[#1B2632] hover:no-underline hover:text-[#A35139]">
                 What's Included in this
               </AccordionTrigger>
@@ -166,7 +172,10 @@ export default function FreeTrial() {
             </AccordionItem>
 
             {/* How It Works */}
-            <AccordionItem value="how-it-works" className="border rounded-xl px-6 bg-white shadow-sm mt-4">
+            <AccordionItem
+              value="how-it-works"
+              className="border rounded-xl px-6 bg-white shadow-sm mt-4"
+            >
               <AccordionTrigger className="text-lg font-semibold text-[#1B2632] hover:no-underline hover:text-[#A35139]">
                 How It Works
               </AccordionTrigger>
@@ -190,7 +199,9 @@ export default function FreeTrial() {
                       2
                     </div>
                     <div>
-                      <p className="font-semibold text-[#1B2632] mb-1">Enter your details</p>
+                      <p className="font-semibold text-[#1B2632] mb-1">
+                        Enter your details
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         We just need your name and number
                       </p>
@@ -201,7 +212,9 @@ export default function FreeTrial() {
                       3
                     </div>
                     <div>
-                      <p className="font-semibold text-[#1B2632] mb-1">We message you on Whatsapp to start!</p>
+                      <p className="font-semibold text-[#1B2632] mb-1">
+                        We message you on Whatsapp to start!
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Look out for a message from us
                       </p>
@@ -216,7 +229,9 @@ export default function FreeTrial() {
         {/* Form Section */}
         <div className="bg-white rounded-xl p-6 sm:p-8 border shadow-sm mb-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[#1B2632]">Ready to Begin?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[#1B2632]">
+              Ready to Begin?
+            </h2>
             <p className="text-muted-foreground">
               Enter your WhatsApp number and we'll send you your first question
             </p>
@@ -274,7 +289,8 @@ export default function FreeTrial() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-semibold text-[#1B2632]">
-                      Who's Kahani do you want to record? (what do you call them?)
+                      Who's Kahani do you want to record? (what do you call
+                      them?)
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -315,8 +331,6 @@ export default function FreeTrial() {
                   )}
                 </Button>
               </div>
-
-
             </form>
           </Form>
         </div>
