@@ -69,24 +69,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerName: validatedData.buyerName,
         storytellerName: validatedData.storytellerName,
         selectedAlbum: validatedData.selectedAlbum,
+        storytellerLanguagePreference:
+          validatedData.storytellerLanguagePreference,
       });
 
       // Send response immediately - don't wait for WhatsApp messages
       res.json({
         ...trial,
         confirmationSent: false, // Will be updated asynchronously
-        languageSelectionSent: false,
-        shareableLinkSent: false, // Will be sent after language selection
+        shareableLinkSent: false, // Will be sent after confirmation
       });
 
       // Handle WhatsApp messages asynchronously (don't await)
       (async () => {
         try {
-          const {
-            sendFreeTrialConfirmation,
-            sendShareableLink,
-            sendLanguageSelectionMessage,
-          } = await import("./whatsapp");
+          const { sendFreeTrialConfirmation, sendShareableLink } =
+            await import("./whatsapp");
 
           const confirmationSent = await sendFreeTrialConfirmation(
             normalizedPhone,
@@ -102,25 +100,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
           }
 
-          // Send language selection template after buyer confirmation (2 second delay)
-          let languageSelectionSent = false;
+          // Send shareable link after buyer confirmation (2 second delay)
+          let shareableLinkSent = false;
           if (confirmationSent) {
             await new Promise((resolve) => setTimeout(resolve, 2000));
-            languageSelectionSent = await sendLanguageSelectionMessage(
+            shareableLinkSent = await sendShareableLink(
               normalizedPhone,
               validatedData.storytellerName,
+              validatedData.buyerName,
+              trial.id,
             );
 
-            if (!languageSelectionSent) {
+            if (!shareableLinkSent) {
               console.warn(
-                "WhatsApp language selection message failed for trial:",
+                "WhatsApp shareable link message failed for trial:",
                 trial.id,
               );
             }
           }
-
-          // Note: Shareable link will be sent after buyer selects language via button
-          // See conversationHandler.ts for the implementation
 
           console.log("Free trial WhatsApp messages sent:", {
             id: trial.id,
@@ -129,8 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             selectedAlbum: trial.selectedAlbum,
             customerPhone: normalizedPhone,
             confirmationSent,
-            languageSelectionSent,
-            shareableLinkSent: false, // Will be sent after language selection
+            shareableLinkSent,
           });
         } catch (error) {
           console.error(

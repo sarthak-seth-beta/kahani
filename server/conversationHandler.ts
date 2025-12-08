@@ -213,52 +213,6 @@ export async function handleIncomingMessage(
     }
   }
 
-  // Check if message is from buyer and is a language selection button response
-  if (
-    (messageType === "interactive" || messageType === "button") &&
-    interactiveText
-  ) {
-    const buyerTrial = await storage.getFreeTrialByBuyerPhone(fromNumber);
-    if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
-      // Check if this is a language selection response
-      const normalizedText = interactiveText.toLowerCase().trim();
-      if (normalizedText === "english" || normalizedText === "हिंदी") {
-        const languagePreference = normalizedText === "english" ? "en" : "hn";
-        await storage.updateFreeTrialDb(buyerTrial.id, {
-          storytellerLanguagePreference: languagePreference,
-        });
-        console.log("Language preference set:", {
-          trialId: buyerTrial.id,
-          preference: languagePreference,
-          buttonText: interactiveText,
-        });
-
-        // Send shareable link after language selection
-        const { sendShareableLink } = await import("./whatsapp");
-        const shareableLinkSent = await sendShareableLink(
-          fromNumber,
-          buyerTrial.storytellerName,
-          buyerTrial.buyerName,
-          buyerTrial.id,
-        );
-
-        if (!shareableLinkSent) {
-          console.warn(
-            "WhatsApp shareable link message failed for trial:",
-            buyerTrial.id,
-          );
-        } else {
-          console.log("Shareable link sent after language selection:", {
-            trialId: buyerTrial.id,
-            languagePreference,
-          });
-        }
-
-        return;
-      }
-    }
-  }
-
   // Resolve which trial to use (normal flow)
   const trial = await resolveTrial(messageText || interactiveText, fromNumber);
 

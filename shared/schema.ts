@@ -90,6 +90,7 @@ export const insertFreeTrialSchema = z.object({
     .string()
     .min(2, "Storyteller name must be at least 2 characters"),
   selectedAlbum: z.string().min(2, "Album selection is required"),
+  storytellerLanguagePreference: z.enum(["en", "hn"]).default("en"),
 });
 
 export type InsertFreeTrial = z.infer<typeof insertFreeTrialSchema>;

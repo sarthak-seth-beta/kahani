@@ -26,6 +26,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Check, Heart } from "lucide-react";
 import { PhoneInput } from "@/components/PhoneInput";
 
@@ -67,6 +74,7 @@ export default function FreeTrial() {
       buyerName: "",
       storytellerName: "",
       selectedAlbum: selectedAlbum.title,
+      storytellerLanguagePreference: "en",
     },
   });
 
@@ -301,6 +309,34 @@ export default function FreeTrial() {
                         data-testid="input-storyteller-name"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="storytellerLanguagePreference"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold text-[#1B2632]">
+                      Preferred Language for Storytelling
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue="en"
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-12 text-base">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="hn">हिंदी (Hindi)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
