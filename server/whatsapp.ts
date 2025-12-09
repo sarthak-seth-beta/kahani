@@ -1015,7 +1015,7 @@ export async function sendPhotoRequestToBuyer(
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "photo_request_en",
+      "pic_request_en",
       templateParams,
     );
   } else {
