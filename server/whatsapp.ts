@@ -984,20 +984,38 @@ export async function sendPhotoRequestToBuyer(
   recipientNumber: string,
   buyerName: string,
   storytellerName: string,
+  trialId: string,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
   const isProduction = true;
 
   if (isProduction) {
+    const buttonParams = {
+      type: "button",
+      sub_type: "url",
+      index: "0",
+      parameters: [
+        {
+          type: "text",
+          text: `custom-album-cover/${trialId}`,
+        },
+      ],
+    };
     const templateParams = [
-      { type: "text", text: buyerName },
-      { type: "text", text: storytellerName },
-      { type: "text", text: storytellerName },
+      {
+        type: "body",
+        parameters: [
+          { type: "text", text: buyerName },
+          { type: "text", text: storytellerName },
+          { type: "text", text: storytellerName },
+        ],
+      },
+      buttonParams,
     ];
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "photorequest_vaani_en",
+      "photo_request_en",
       templateParams,
     );
   } else {

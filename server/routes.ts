@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
 import { storage } from "./storage";
 import {
   insertOrderSchema,
@@ -8,6 +9,29 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure multer for file uploads (memory storage)
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      // Accept only image files
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Invalid file type. Only images are allowed."));
+      }
+    },
+  });
+
   app.get("/api/products", async (req, res) => {
     try {
       const products = await storage.getAllProducts();
@@ -262,6 +286,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch album" });
     }
   });
+
+  app.post(
+    "/api/free-trial/:trialId/upload-cover",
+    upload.single("image"),
+    async (req, res) => {
+      try {
+        const { trialId } = req.params;
+
+        // Validate trialId exists
+        const trial = await storage.getFreeTrialDb(trialId);
+        if (!trial) {
+          return res.status(404).json({ error: "Trial not found" });
+        }
+
+        // Check if file was uploaded
+        if (!req.file) {
+          return res.status(400).json({ error: "No image file provided" });
+        }
+
+        // Validate file type (multer should have caught this, but double-check)
+        const allowedMimeTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
+        if (!allowedMimeTypes.includes(req.file.mimetype)) {
+          return res.status(400).json({
+            error: "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
+          });
+        }
+
+        // Validate file size (multer should have caught this, but double-check)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (req.file.size > maxSize) {
+          return res.status(400).json({
+            error: "File size exceeds 5MB limit",
+          });
+        }
+
+        // Upload to Supabase Storage
+        const { uploadImageToStorage } = await import("./supabase");
+        const fileBuffer = Buffer.from(req.file.buffer);
+        const supabaseUrl = await uploadImageToStorage(
+          fileBuffer,
+          trialId,
+          req.file.mimetype,
+        );
+
+        if (!supabaseUrl) {
+          console.error("Failed to upload image to Supabase Storage:", trialId);
+          return res.status(500).json({
+            error: "Failed to upload image. Please try again later.",
+          });
+        }
+
+        // Update database with Supabase URL
+        await storage.updateFreeTrialDb(trialId, {
+          customCoverImageUrl: supabaseUrl,
+        });
+
+        console.log("Custom cover image uploaded successfully:", {
+          trialId,
+          supabaseUrl,
+        });
+
+        res.json({
+          success: true,
+          imageUrl: supabaseUrl,
+          message: "Image uploaded successfully",
+        });
+      } catch (error: any) {
+        console.error("Error uploading cover image:", error);
+        if (error.message === "Invalid file type. Only images are allowed.") {
+          return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({
+          error: "Failed to upload image",
+          message: error.message || "Internal server error",
+        });
+      }
+    },
+  );
 
   app.post("/api/orders", async (req, res) => {
     try {

@@ -559,11 +559,13 @@ async function sendQuestion(
       buyerName: trial.buyerName,
       storytellerName: trial.storytellerName,
       questionIndex: targetQuestionIndex,
+      trialId: trial.id,
     });
     await sendPhotoRequestToBuyer(
       trial.customerPhone,
       trial.buyerName,
       trial.storytellerName,
+      trial.id,
     ).catch((error) => {
       console.error("Failed to send photo request to buyer:", error);
     });
