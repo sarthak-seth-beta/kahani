@@ -41,6 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: album.description,
         cover_image: album.coverImage,
         questions: album.questions,
+        best_fit_for: album.bestFitFor || null,
       }));
       res.json(albumsResponse);
     } catch (error: any) {

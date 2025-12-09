@@ -10,6 +10,7 @@ export interface AlbumCard {
   description: string;
   cover_image: string;
   questions: string[];
+  best_fit_for?: string[] | null;
 }
 
 export interface SectionFourAlbumsProps {
@@ -72,7 +73,7 @@ export default function SectionFourAlbums({
 
         {/* Albums Slider */}
         <div
-          className="overflow-x-auto scrollbar-hide -mx-6 px-6 pb-8"
+          className="overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 pl-6 pr-4 sm:pl-6 sm:pr-6 pb-8"
           role="region"
           aria-label="Albums carousel"
           aria-roledescription="carousel"
@@ -82,12 +83,11 @@ export default function SectionFourAlbums({
           }}
         >
           <div className="flex gap-6 pb-4" style={{ width: "max-content" }}>
-            {albums.map((album) => (
+            {albums.map((album, index) => (
               <AlbumCard
                 key={album.id}
                 album={album}
                 questionsToShow={3}
-                imageFirst={false}
                 className="flex-shrink-0 w-[85vw] max-w-[500px]"
                 style={{ scrollSnapAlign: "start" }}
                 aria-roledescription="carousel item"

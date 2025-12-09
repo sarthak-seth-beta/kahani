@@ -338,6 +338,7 @@ export const albums = pgTable(
     questions: jsonb("questions").$type<string[]>().notNull(),
     questionsHn: jsonb("questions_hn").$type<string[]>(),
     coverImage: text("cover_image").notNull(),
+    bestFitFor: jsonb("best_fit_for").$type<string[]>(),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -361,6 +362,7 @@ export const albumSchema = z.object({
   description: z.string(),
   questions: z.array(z.string()),
   coverImage: z.string(),
+  bestFitFor: z.array(z.string()).nullable().optional(),
   isActive: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
