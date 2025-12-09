@@ -990,38 +990,142 @@ export async function sendPhotoRequestToBuyer(
   const isProduction = true;
 
   if (isProduction) {
-    const buttonParams = {
-      type: "button",
-      sub_type: "url",
-      index: "0",
-      parameters: [
-        {
-          type: "text",
-          text: `custom-album-cover/${trialId}`,
-        },
-      ],
-    };
-    const templateParams = [
-      {
-        type: "body",
-        parameters: [
-          { type: "text", text: buyerName },
-          { type: "text", text: storytellerName },
-          { type: "text", text: storytellerName },
-        ],
-      },
-      buttonParams,
-    ];
-
-    return sendTemplateMessageWithRetry(
+    return sendWhatsappButtonTemplate(
       recipientNumber,
       "pic_request_en",
-      templateParams,
+      "en",
+      [buyerName, storytellerName, storytellerName],
+      `custom-album-cover/${trialId}`,
+      "0",
     );
   } else {
     const message = `Hi ${buyerName} 😊\n\n${storytellerName}'s first few stories are now saved beautifully.\n\nCould you please send *one nice photo of ${storytellerName} for the album cover, along with their full name* as you would like it to appear?`;
 
     return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
+
+/**
+ * Sends a WhatsApp button template message with body parameters and a button component
+ * @param recipientNumber - Phone number in E.164 format
+ * @param templateName - Name of the template (e.g., "pic_request_en")
+ * @param languageCode - Language code (e.g., "en")
+ * @param bodyParameters - Array of text parameters for the body component
+ * @param buttonText - Text parameter for the button URL
+ * @param buttonIndex - Index of the button (default: "0")
+ * @returns Promise<boolean> - true if message sent successfully, false otherwise
+ */
+export async function sendWhatsappButtonTemplate(
+  recipientNumber: string,
+  templateName: string,
+  languageCode: string = "en",
+  bodyParameters: string[] = [],
+  buttonText: string,
+  buttonIndex: string = "0",
+): Promise<boolean> {
+  const config = getConfig();
+  if (!config) return false;
+
+  if (!validateE164(recipientNumber)) {
+    console.error("Invalid E.164 phone number:", recipientNumber);
+    return false;
+  }
+
+  const { phoneNumberId, accessToken } = config;
+  const url = `${WHATSAPP_BASE_URL}/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`;
+
+  const components: any[] = [];
+
+  // Add body component if there are body parameters
+  if (bodyParameters.length > 0) {
+    components.push({
+      type: "body",
+      parameters: bodyParameters.map((text) => ({
+        type: "text",
+        text,
+      })),
+    });
+  }
+
+  // Add button component
+  components.push({
+    type: "button",
+    sub_type: "url",
+    index: buttonIndex,
+    parameters: [
+      {
+        type: "text",
+        text: buttonText,
+      },
+    ],
+  });
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: recipientNumber,
+    type: "template",
+    template: {
+      name: templateName,
+      language: {
+        code: languageCode,
+      },
+      components,
+    },
+  };
+
+  try {
+    const response = await retryWithBackoff(async () => {
+      return await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    });
+
+    const messageId = response.data.messages?.[0]?.id;
+    const responseStatus = response.data.messages?.[0]?.message_status;
+
+    console.log("WhatsApp button template message sent:", {
+      to: recipientNumber,
+      messageId,
+      status: responseStatus,
+      template: templateName,
+      fullResponse: response.data,
+    });
+
+    // Check for warnings or errors in the response
+    if (response.data.errors) {
+      console.warn("WhatsApp API returned errors:", response.data.errors);
+    }
+    if (response.data.meta) {
+      console.log("WhatsApp API meta:", response.data.meta);
+    }
+
+    return true;
+  } catch (error: any) {
+    const errorDetails = error.response?.data || error.message;
+    console.error("Failed to send WhatsApp button template message after retries:", {
+      error: errorDetails,
+      to: recipientNumber,
+      template: templateName,
+      statusCode: error.response?.status,
+      statusText: error.response?.statusText,
+    });
+
+    // Log specific WhatsApp API error codes
+    if (error.response?.data?.error) {
+      const whatsappError = error.response.data.error;
+      console.error("WhatsApp API Error Details:", {
+        code: whatsappError.code,
+        message: whatsappError.message,
+        type: whatsappError.type,
+        error_subcode: whatsappError.error_subcode,
+        fbtrace_id: whatsappError.fbtrace_id,
+      });
+    }
+
+    return false;
   }
 }
 
