@@ -89,17 +89,19 @@ async function resolveTrial(
     }
   }
 
-  // Priority 2: Look for active trial (in_progress or awaiting_readiness), oldest first
-  const activeTrial =
-    await storage.getActiveTrialByStorytellerPhone(fromNumber);
-  if (activeTrial) {
+  // Priority 2: Look for active trials (in_progress or awaiting_readiness), oldest first
+  const activeTrials =
+    await storage.getAllActiveTrialsByStorytellerPhone(fromNumber);
+  if (activeTrials.length > 0) {
+    const oldestTrial = activeTrials[0];
     console.log("Resolved active trial by phone number:", {
-      trialId: activeTrial.id,
-      conversationState: activeTrial.conversationState,
-      createdAt: activeTrial.createdAt,
+      trialId: oldestTrial.id,
+      conversationState: oldestTrial.conversationState,
+      createdAt: oldestTrial.createdAt,
       fromNumber,
+      totalActiveTrials: activeTrials.length,
     });
-    return activeTrial;
+    return oldestTrial;
   }
 
   // Priority 3: Fall back to any trial (for edge cases)
@@ -131,6 +133,63 @@ async function handleNoTrialFound(
   // Default to English for unknown users
   const message = getLocalizedMessage("noTrialFound", null);
   await sendTextMessageWithRetry(fromNumber, message);
+}
+
+/**
+ * Handles multiple active trials scenario
+ * Sends a message about active Kahani and then sends the next unanswered question
+ */
+async function handleMultipleActiveTrials(
+  trial: any,
+  fromNumber: string,
+): Promise<void> {
+  console.log("Handling multiple active trials:", {
+    trialId: trial.id,
+    storytellerName: trial.storytellerName,
+    buyerName: trial.buyerName,
+    fromNumber,
+  });
+
+  // Send first message about active Kahani
+  const activeKahaniMessage = getLocalizedMessage(
+    "activeKahaniMessage",
+    trial.storytellerLanguagePreference,
+    {
+      storytellerName: trial.storytellerName,
+      buyerName: trial.buyerName,
+    },
+  );
+
+  await sendTextMessageWithRetry(fromNumber, activeKahaniMessage);
+
+  // Wait 2 seconds before sending the next message
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  // Find the next unanswered question
+  const nextQuestionIndex = await getNextUnansweredQuestion(trial);
+
+  if (nextQuestionIndex !== null) {
+    console.log("Sending next unanswered question:", {
+      trialId: trial.id,
+      questionIndex: nextQuestionIndex,
+    });
+    // Send the question
+    await sendQuestion(trial, fromNumber, nextQuestionIndex);
+  } else {
+    // All questions are answered - this shouldn't happen if trial is in_progress
+    // but handle it gracefully
+    console.log("All questions answered for trial:", trial.id);
+    const totalQuestions = await storage.getTotalQuestionsForAlbum(
+      trial.selectedAlbum,
+      trial.storytellerLanguagePreference,
+    );
+    if (trial.currentQuestionIndex >= totalQuestions - 1) {
+      // All questions completed, update state
+      await storage.updateFreeTrialDb(trial.id, {
+        conversationState: "completed",
+      });
+    }
+  }
 }
 
 /**
@@ -232,6 +291,27 @@ export async function handleIncomingMessage(
     isBuyer: trial.customerPhone === fromNumber,
   });
 
+  // Check for multiple active trials scenario
+  // Only check if no order ID was provided (order ID takes priority)
+  const orderId = extractOrderId(messageText || interactiveText);
+  if (!orderId) {
+    const allActiveTrials =
+      await storage.getAllActiveTrialsByStorytellerPhone(fromNumber);
+    if (
+      allActiveTrials.length > 1 &&
+      trial.conversationState === "in_progress" &&
+      trial.id === allActiveTrials[0].id
+    ) {
+      console.log("Multiple active trials detected, handling special case:", {
+        totalTrials: allActiveTrials.length,
+        oldestTrialId: trial.id,
+        oldestTrialState: trial.conversationState,
+      });
+      await handleMultipleActiveTrials(trial, fromNumber);
+      return;
+    }
+  }
+
   // Route to appropriate handler based on conversation state
   switch (trial.conversationState) {
     case "awaiting_initial_contact":
@@ -269,6 +349,32 @@ export async function handleIncomingMessage(
         await handleVoiceNote(trial, fromNumber, message);
       } else if (messageType === "text") {
         await handleInProgressTextMessage(trial, fromNumber, messageText);
+      } else if (messageType === "button" || messageType === "interactive") {
+        // Handle button clicks during in_progress - treat as text message
+        // This can happen if user clicks a button after state has changed
+        console.log(
+          "Received button/interactive message in in_progress state, treating as text:",
+          {
+            trialId: trial.id,
+            messageType,
+            interactiveText,
+            currentQuestionIndex: trial.currentQuestionIndex,
+          },
+        );
+        const responseText =
+          messageType === "button" || messageType === "interactive"
+            ? interactiveText
+            : messageText;
+        await handleInProgressTextMessage(trial, fromNumber, responseText);
+      } else {
+        console.log(
+          "Unhandled message type in in_progress state:",
+          messageType,
+          {
+            trialId: trial.id,
+            fromNumber,
+          },
+        );
       }
       break;
 
@@ -401,10 +507,12 @@ async function handleReadinessResponse(
     "हाँ",
     "हां",
     "ठीक",
-    "तैयार", // Hindi keywords
+    "तैयार",
+    "हाँ, शुरू करते हैं", // Hindi keywords
   ];
   const maybePatterns = [
     "not sure",
+    "maybe later",
     "later",
     "wait",
     "देर",
@@ -476,6 +584,45 @@ async function handleReadinessResponse(
       );
     }
   }
+}
+
+async function getNextUnansweredQuestion(trial: any): Promise<number | null> {
+  console.log("getNextUnansweredQuestion called:", {
+    trialId: trial.id,
+    currentQuestionIndex: trial.currentQuestionIndex,
+  });
+
+  // Get all voice notes for this trial
+  const voiceNotes = await storage.getVoiceNotesByTrialId(trial.id);
+  const answeredQuestionIndices = new Set(
+    voiceNotes.map((note) => note.questionIndex),
+  );
+
+  console.log(
+    "Answered question indices:",
+    Array.from(answeredQuestionIndices),
+  );
+
+  // Get total questions count
+  const totalQuestions = await storage.getTotalQuestionsForAlbum(
+    trial.selectedAlbum,
+    trial.storytellerLanguagePreference,
+  );
+
+  console.log("Total questions:", totalQuestions);
+
+  // Starting from currentQuestionIndex, find the first unanswered question
+  const startIndex = trial.currentQuestionIndex ?? 0;
+  for (let i = startIndex; i < totalQuestions; i++) {
+    if (!answeredQuestionIndices.has(i)) {
+      console.log("Found unanswered question at index:", i);
+      return i;
+    }
+  }
+
+  // All questions from currentQuestionIndex onwards are answered
+  console.log("All questions from index", startIndex, "are answered");
+  return null;
 }
 
 async function sendFirstQuestion(

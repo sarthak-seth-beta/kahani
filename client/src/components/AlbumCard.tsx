@@ -7,7 +7,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Share2, Copy, Mail, MessageCircle, ChevronDown, ChevronUp, Heart, Users } from "lucide-react";
+import {
+  Share2,
+  Copy,
+  Mail,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  Users,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AlbumCard as AlbumCardType } from "@/components/SectionFourAlbums";
 
@@ -186,7 +195,7 @@ export function AlbumCard({
           <h3 className="text-2xl sm:text-3xl font-bold text-[#1B2632] font-['Outfit'] leading-tight mb-3">
             {album.title}
           </h3>
-          
+
           {/* One-line explainer - emotionally clear purpose */}
           {album.description && (
             <p className="text-[#1B2632]/80 leading-relaxed text-base sm:text-lg mb-4">
@@ -226,7 +235,7 @@ export function AlbumCard({
                 {album.questions.length} total
               </span>
             </div>
-            
+
             {/* Questions list - improved spacing and readability */}
             <ul className="space-y-3">
               {displayedQuestions.map((question, index) => (
@@ -238,13 +247,17 @@ export function AlbumCard({
                 </li>
               ))}
             </ul>
-            
+
             {/* Expand/Collapse - clearer, more accessible */}
             {remainingQuestions > 0 && (
               <button
                 onClick={() => setShowAllQuestions(!showAllQuestions)}
                 className="flex items-center gap-2 text-[#A35139] text-base font-semibold hover:text-[#8B4229] transition-colors mt-1 pl-5 py-2"
-                aria-label={showAllQuestions ? "Show fewer questions" : `Show ${remainingQuestions} more questions`}
+                aria-label={
+                  showAllQuestions
+                    ? "Show fewer questions"
+                    : `Show ${remainingQuestions} more questions`
+                }
               >
                 {showAllQuestions ? (
                   <>

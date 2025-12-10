@@ -315,7 +315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ];
         if (!allowedMimeTypes.includes(req.file.mimetype)) {
           return res.status(400).json({
-            error: "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
+            error:
+              "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
           });
         }
 

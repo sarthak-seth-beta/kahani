@@ -40,6 +40,7 @@ export interface IStorage {
   getActiveTrialByStorytellerPhone(
     phone: string,
   ): Promise<FreeTrialRow | undefined>;
+  getAllActiveTrialsByStorytellerPhone(phone: string): Promise<FreeTrialRow[]>;
   updateFreeTrialDb(
     id: string,
     updates: Partial<FreeTrialRow>,
@@ -393,6 +394,25 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(freeTrials.createdAt))
       .limit(1);
     return trial;
+  }
+
+  async getAllActiveTrialsByStorytellerPhone(
+    phone: string,
+  ): Promise<FreeTrialRow[]> {
+    const trials = await db
+      .select()
+      .from(freeTrials)
+      .where(
+        and(
+          eq(freeTrials.storytellerPhone, phone),
+          inArray(freeTrials.conversationState, [
+            "in_progress",
+            "awaiting_readiness",
+          ]),
+        ),
+      )
+      .orderBy(asc(freeTrials.createdAt));
+    return trials;
   }
 
   async updateFreeTrialDb(

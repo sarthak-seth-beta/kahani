@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import SimpleHeader from "@/components/SimpleHeader";
 import { Footer } from "@/components/Footer";
-import { Loader2, Upload, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  Upload,
+  Image as ImageIcon,
+  CheckCircle2,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export default function CustomAlbumCover() {
@@ -40,7 +45,13 @@ export default function CustomAlbumCover() {
     if (!file) return;
 
     // Validate file type
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
@@ -110,7 +121,8 @@ export default function CustomAlbumCover() {
       console.error("Error uploading image:", error);
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image. Please try again.",
+        description:
+          error.message || "Failed to upload image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -174,7 +186,8 @@ export default function CustomAlbumCover() {
           </h1>
           {trialData?.trial && (
             <p className="text-muted-foreground">
-              For {trialData.trial.storytellerName}'s album - {trialData.trial.selectedAlbum}
+              For {trialData.trial.storytellerName}'s album -{" "}
+              {trialData.trial.selectedAlbum}
             </p>
           )}
         </div>
@@ -189,7 +202,8 @@ export default function CustomAlbumCover() {
                   Upload Successful!
                 </h3>
                 <p className="text-sm text-green-700">
-                  Your custom album cover has been saved and will be used for the album.
+                  Your custom album cover has been saved and will be used for
+                  the album.
                 </p>
               </div>
             </div>
@@ -267,7 +281,9 @@ export default function CustomAlbumCover() {
                   </div>
                   <div className="text-xs text-muted-foreground">
                     <p>File: {selectedFile.name}</p>
-                    <p>Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p>
+                      Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
                   </div>
                 </div>
               )}
@@ -312,4 +328,3 @@ export default function CustomAlbumCover() {
     </div>
   );
 }
-

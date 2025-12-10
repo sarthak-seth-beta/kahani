@@ -563,6 +563,10 @@ export function getLocalizedMessage(
     | {
         en: (buyerName: string, storytellerName: string) => string;
         hn: (buyerName: string, storytellerName: string) => string;
+      }
+    | {
+        en: (storytellerName: string, buyerName: string) => string;
+        hn: (storytellerName: string, buyerName: string) => string;
       };
 
   const messages: Record<string, MessageConfig> = {
@@ -614,6 +618,12 @@ export function getLocalizedMessage(
       hn: (buyerName: string, storytellerName: string) =>
         `नमस्ते ${buyerName} 👋\n\nयह ${storytellerName} का कहानी एल्बम है — उनकी अपनी आवाज़ में उनकी कहानियाँ 🎧📖\n\nजब आपके पास एक शांत क्षण हो, कृपया ज़रूर सुनें!\n\nये वो यादें हैं जिन्हें आप हमेशा अपने साथ रख सकते हैं ❤️`,
     },
+    activeKahaniMessage: {
+      en: (storytellerName: string, buyerName: string) =>
+        `Hi ${storytellerName}! 👋\n\nYou have an active Kahani with ${buyerName}. We will begin a new Kahani once ${buyerName}'s Kahani is complete! 🌸`,
+      hn: (storytellerName: string, buyerName: string) =>
+        `नमस्ते ${storytellerName}! 👋\n\nआपके पास ${buyerName} के साथ एक सक्रिय कहानी है। जब ${buyerName} का कहानी पूरा हो जाएगा तो हम एक नया कहानी शुरू करेंगे! 🌸`,
+    },
   };
 
   const messageConfig = messages[messageKey];
@@ -641,6 +651,27 @@ export function getLocalizedMessage(
           ).en;
       if (params) {
         return func(params.buyerName || "", params.storytellerName || "");
+      }
+      return func("", "");
+    }
+
+    // Check if this is an activeKahaniMessage (takes storytellerName and buyerName)
+    if (messageKey === "activeKahaniMessage") {
+      const func = isHindi
+        ? (
+            messageConfig as {
+              en: (storytellerName: string, buyerName: string) => string;
+              hn: (storytellerName: string, buyerName: string) => string;
+            }
+          ).hn
+        : (
+            messageConfig as {
+              en: (storytellerName: string, buyerName: string) => string;
+              hn: (storytellerName: string, buyerName: string) => string;
+            }
+          ).en;
+      if (params) {
+        return func(params.storytellerName || "", params.buyerName || "");
       }
       return func("", "");
     }
@@ -1105,13 +1136,16 @@ export async function sendWhatsappButtonTemplate(
     return true;
   } catch (error: any) {
     const errorDetails = error.response?.data || error.message;
-    console.error("Failed to send WhatsApp button template message after retries:", {
-      error: errorDetails,
-      to: recipientNumber,
-      template: templateName,
-      statusCode: error.response?.status,
-      statusText: error.response?.statusText,
-    });
+    console.error(
+      "Failed to send WhatsApp button template message after retries:",
+      {
+        error: errorDetails,
+        to: recipientNumber,
+        template: templateName,
+        statusCode: error.response?.status,
+        statusText: error.response?.statusText,
+      },
+    );
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
