@@ -125,7 +125,7 @@ export default function SectionFourAlbums({
                 </div>
               </div>
             )}
-            
+
             {/* Spacer for centering last card on mobile */}
             <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
           </div>

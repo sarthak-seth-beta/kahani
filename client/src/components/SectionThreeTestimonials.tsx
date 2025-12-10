@@ -74,7 +74,11 @@ export default function SectionThreeTestimonials({
   const lastScrollLeftRef = useRef<number>(0);
 
   // Create infinite loop by duplicating testimonials (3 sets for seamless loop)
-  const duplicatedTestimonials = [...testimonials, ...testimonials, ...testimonials];
+  const duplicatedTestimonials = [
+    ...testimonials,
+    ...testimonials,
+    ...testimonials,
+  ];
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -87,8 +91,12 @@ export default function SectionThreeTestimonials({
     let isUserInteracting = false;
 
     const calcOneSetWidth = () => {
-      const firstCard = content.querySelector('[data-testid^="testimonial-"]') as HTMLElement;
-      const firstSpacer = content.querySelector('.flex-shrink-0:first-child') as HTMLElement;
+      const firstCard = content.querySelector(
+        '[data-testid^="testimonial-"]',
+      ) as HTMLElement;
+      const firstSpacer = content.querySelector(
+        ".flex-shrink-0:first-child",
+      ) as HTMLElement;
       if (!firstCard) return 0;
       const cardWidth = firstCard.offsetWidth;
       const gap = 24;
@@ -97,7 +105,9 @@ export default function SectionThreeTestimonials({
     };
 
     const getCardWidth = () => {
-      const firstCard = content.querySelector('[data-testid^="testimonial-"]') as HTMLElement;
+      const firstCard = content.querySelector(
+        '[data-testid^="testimonial-"]',
+      ) as HTMLElement;
       return firstCard ? firstCard.offsetWidth + 24 : 0;
     };
 
@@ -108,23 +118,26 @@ export default function SectionThreeTestimonials({
     };
 
     const handleTouchEnd = () => {
-      setTimeout(() => { isUserInteracting = false; }, 500);
+      setTimeout(() => {
+        isUserInteracting = false;
+      }, 500);
     };
 
     const handleScroll = () => {
       clearTimeout(scrollTimeout);
       lastScrollTime = Date.now();
       isUserInteracting = true;
-      
+
       if (!isScrolling) {
         const currentScroll = container.scrollLeft;
         const scrollDelta = Math.abs(currentScroll - scrollStartRef.current);
         const cardWidth = getCardWidth();
         const maxScrollDistance = cardWidth * 2;
-        
+
         if (scrollDelta > maxScrollDistance) {
           const direction = currentScroll > lastScrollLeftRef.current ? 1 : -1;
-          const targetScroll = scrollStartRef.current + (direction * maxScrollDistance);
+          const targetScroll =
+            scrollStartRef.current + direction * maxScrollDistance;
           setIsScrolling(true);
           container.style.scrollBehavior = "auto";
           container.scrollLeft = targetScroll;
@@ -134,13 +147,13 @@ export default function SectionThreeTestimonials({
           });
         }
       }
-      
+
       lastScrollLeftRef.current = container.scrollLeft;
-      
+
       scrollTimeout = setTimeout(() => {
         scrollStartRef.current = container.scrollLeft;
         if (isScrolling || isUserInteracting) return;
-        
+
         const scrollLeft = container.scrollLeft;
         const oneSetWidth = calcOneSetWidth();
         if (oneSetWidth === 0) return;
@@ -168,19 +181,23 @@ export default function SectionThreeTestimonials({
       }, 300);
     };
 
-    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
     container.addEventListener("touchend", handleTouchEnd, { passive: true });
     container.addEventListener("scroll", handleScroll, { passive: true });
-    
+
     const initScroll = () => {
       const oneSetWidth = calcOneSetWidth();
       if (oneSetWidth > 0) {
         container.style.scrollBehavior = "auto";
         container.scrollLeft = oneSetWidth;
-        setTimeout(() => { container.style.scrollBehavior = "smooth"; }, 0);
+        setTimeout(() => {
+          container.style.scrollBehavior = "smooth";
+        }, 0);
       }
     };
-    
+
     const initTimeout = setTimeout(initScroll, 100);
     window.addEventListener("resize", initScroll);
 
@@ -210,10 +227,10 @@ export default function SectionThreeTestimonials({
         <div className="relative -mx-4 sm:-mx-6 md:-mx-8">
           {/* Left gradient fade - only for medium and large devices */}
           <div className="hidden md:block absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white via-white to-transparent z-10 pointer-events-none" />
-          
+
           {/* Right gradient fade - only for medium and large devices */}
           <div className="hidden md:block absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white via-white to-transparent z-10 pointer-events-none" />
-          
+
           <div
             ref={scrollContainerRef}
             className="overflow-x-auto scrollbar-hide px-4 sm:px-6 pb-8"
@@ -228,47 +245,51 @@ export default function SectionThreeTestimonials({
               scrollPaddingRight: "0px",
             }}
           >
-          <div ref={contentRef} className="flex gap-6 pb-4" style={{ width: "max-content" }}>
-            {/* Spacer for centering first card on mobile */}
-            <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
-            
-            {duplicatedTestimonials.map((testimonial, index) => (
-              <div
-                key={`${testimonial.id}-${index}`}
-                className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg p-5 sm:p-6 space-y-3 sm:space-y-4"
-                style={{ 
-                  scrollSnapAlign: "center",
-                  scrollSnapStop: "always",
-                }}
-                aria-roledescription="slide"
-                aria-label={`Testimonial ${(index % testimonials.length) + 1} of ${testimonials.length}`}
-                data-testid={`testimonial-${testimonial.id}-${index}`}
-              >
-                {/* Avatar */}
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <img
-                    src={testimonial.photoSrc}
-                    alt={testimonial.photoAlt}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover"
-                  />
+            <div
+              ref={contentRef}
+              className="flex gap-6 pb-4"
+              style={{ width: "max-content" }}
+            >
+              {/* Spacer for centering first card on mobile */}
+              <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
+
+              {duplicatedTestimonials.map((testimonial, index) => (
+                <div
+                  key={`${testimonial.id}-${index}`}
+                  className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg p-5 sm:p-6 space-y-3 sm:space-y-4"
+                  style={{
+                    scrollSnapAlign: "center",
+                    scrollSnapStop: "always",
+                  }}
+                  aria-roledescription="slide"
+                  aria-label={`Testimonial ${(index % testimonials.length) + 1} of ${testimonials.length}`}
+                  data-testid={`testimonial-${testimonial.id}-${index}`}
+                >
+                  {/* Avatar */}
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <img
+                      src={testimonial.photoSrc}
+                      alt={testimonial.photoAlt}
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover"
+                    />
+                  </div>
+
+                  {/* Quote */}
+                  <p className="text-[#1B2632] leading-relaxed text-sm sm:text-base">
+                    "{testimonial.quote}"
+                  </p>
+
+                  {/* Attribution */}
+                  <p className="text-[#1B2632]/60 italic text-xs sm:text-sm">
+                    {testimonial.author}
+                  </p>
                 </div>
+              ))}
 
-                {/* Quote */}
-                <p className="text-[#1B2632] leading-relaxed text-sm sm:text-base">
-                  "{testimonial.quote}"
-                </p>
-
-                {/* Attribution */}
-                <p className="text-[#1B2632]/60 italic text-xs sm:text-sm">
-                  {testimonial.author}
-                </p>
-              </div>
-            ))}
-            
-            {/* Spacer for centering last card on mobile */}
-            <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
+              {/* Spacer for centering last card on mobile */}
+              <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
+            </div>
           </div>
-        </div>
         </div>
 
         {/* Scroll Indicator Dots */}
