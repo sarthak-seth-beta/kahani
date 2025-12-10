@@ -30,13 +30,13 @@ export default function HeroSection({
     return () => clearInterval(interval);
   }, []);
   return (
-    <section className="relative w-full min-h-screen flex flex-col">
+    <section className="relative w-full h-screen flex flex-col overflow-hidden">
       {/* Full Screen Background Image */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 w-full h-full">
         <img
           src={imageSrc}
           alt="Kahani storytelling experience"
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-center"
         />
 
         {/* Dark gradient overlay for text readability */}

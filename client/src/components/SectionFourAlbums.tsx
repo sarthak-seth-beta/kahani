@@ -89,7 +89,7 @@ export default function SectionFourAlbums({
                 album={album}
                 questionsToShow={3}
                 className="flex-shrink-0 w-[85vw] max-w-[500px]"
-                style={{ scrollSnapAlign: "start" }}
+                style={{ scrollSnapAlign: "center" }}
                 aria-roledescription="carousel item"
               />
             ))}
@@ -98,7 +98,7 @@ export default function SectionFourAlbums({
             {allAlbums && allAlbums.length > 0 && (
               <div
                 className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg overflow-hidden relative"
-                style={{ scrollSnapAlign: "start" }}
+                style={{ scrollSnapAlign: "center" }}
                 data-testid="cta-view-all-albums"
               >
                 <div className="p-5 sm:p-6 h-full min-h-[600px] flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-center">
@@ -125,6 +125,9 @@ export default function SectionFourAlbums({
                 </div>
               </div>
             )}
+            
+            {/* Spacer for centering last card on mobile */}
+            <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
           </div>
         </div>
 
