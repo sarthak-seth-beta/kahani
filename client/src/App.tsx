@@ -50,7 +50,7 @@ function HomePage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#EEE9DF]">
+    <div className="w-full min-h-screen bg-[#EEE9DF] overflow-x-hidden">
       {/* Simple Header - Sticky at top */}
       <SimpleHeader onRecordClick={handleRecordClick} />
 
