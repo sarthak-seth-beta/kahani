@@ -72,7 +72,7 @@ export default function SectionFourAlbums({
 
         {/* Albums Slider */}
         <div
-          className="overflow-x-auto scrollbar-hide -mx-6 px-6 pb-8"
+          className="overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6 pb-8"
           role="region"
           aria-label="Albums carousel"
           aria-roledescription="carousel"
@@ -82,6 +82,9 @@ export default function SectionFourAlbums({
           }}
         >
           <div className="flex gap-6 pb-4" style={{ width: "max-content" }}>
+            {/* Spacer for centering first card on mobile */}
+            <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
+            
             {albums.map((album) => (
               <AlbumCard
                 key={album.id}
@@ -89,7 +92,7 @@ export default function SectionFourAlbums({
                 questionsToShow={3}
                 imageFirst={false}
                 className="flex-shrink-0 w-[85vw] max-w-[500px]"
-                style={{ scrollSnapAlign: "start" }}
+                style={{ scrollSnapAlign: "center" }}
                 aria-roledescription="carousel item"
               />
             ))}
@@ -98,7 +101,7 @@ export default function SectionFourAlbums({
             {allAlbums && allAlbums.length > 0 && (
               <div
                 className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg overflow-hidden relative"
-                style={{ scrollSnapAlign: "start" }}
+                style={{ scrollSnapAlign: "center" }}
                 data-testid="cta-view-all-albums"
               >
                 <div className="p-5 sm:p-6 h-full min-h-[600px] flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-center">
@@ -125,6 +128,9 @@ export default function SectionFourAlbums({
                 </div>
               </div>
             )}
+            
+            {/* Spacer for centering last card on mobile */}
+            <div className="flex-shrink-0 w-[calc((100vw-85vw-2rem)/2)] sm:w-0" />
           </div>
         </div>
 
