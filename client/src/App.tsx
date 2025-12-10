@@ -28,6 +28,7 @@ import AlbumsGallery from "@/pages/AlbumsGallery";
 import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
+import CustomAlbumCover from "@/pages/CustomAlbumCover";
 import NotFound from "@/pages/not-found";
 
 function HomePage() {
@@ -106,6 +107,10 @@ function App() {
           />
           <Route path="/all-albums" component={AllAlbums} />
           <Route path="/vinyl-gallery" component={VinylGallery} />
+          <Route
+            path="/custom-album-cover/:trialId"
+            component={CustomAlbumCover}
+          />
           <Route component={NotFound} />
         </Switch>
         <Toaster />

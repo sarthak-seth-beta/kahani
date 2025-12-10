@@ -65,8 +65,7 @@ export default function AllAlbums() {
                 <AlbumCardComponent
                   key={album.id}
                   album={album}
-                  questionsToShow={2}
-                  imageFirst={true}
+                  questionsToShow={3}
                   className="hover:shadow-xl transition-shadow duration-300"
                 />
               ))}

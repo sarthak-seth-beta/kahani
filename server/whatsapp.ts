@@ -563,6 +563,10 @@ export function getLocalizedMessage(
     | {
         en: (buyerName: string, storytellerName: string) => string;
         hn: (buyerName: string, storytellerName: string) => string;
+      }
+    | {
+        en: (storytellerName: string, buyerName: string) => string;
+        hn: (storytellerName: string, buyerName: string) => string;
       };
 
   const messages: Record<string, MessageConfig> = {
@@ -614,6 +618,12 @@ export function getLocalizedMessage(
       hn: (buyerName: string, storytellerName: string) =>
         `नमस्ते ${buyerName} 👋\n\nयह ${storytellerName} का कहानी एल्बम है — उनकी अपनी आवाज़ में उनकी कहानियाँ 🎧📖\n\nजब आपके पास एक शांत क्षण हो, कृपया ज़रूर सुनें!\n\nये वो यादें हैं जिन्हें आप हमेशा अपने साथ रख सकते हैं ❤️`,
     },
+    activeKahaniMessage: {
+      en: (storytellerName: string, buyerName: string) =>
+        `Hi ${storytellerName}! 👋\n\nYou have an active Kahani with ${buyerName}. We will begin a new Kahani once ${buyerName}'s Kahani is complete! 🌸`,
+      hn: (storytellerName: string, buyerName: string) =>
+        `नमस्ते ${storytellerName}! 👋\n\nआपके पास ${buyerName} के साथ एक सक्रिय कहानी है। जब ${buyerName} का कहानी पूरा हो जाएगा तो हम एक नया कहानी शुरू करेंगे! 🌸`,
+    },
   };
 
   const messageConfig = messages[messageKey];
@@ -641,6 +651,27 @@ export function getLocalizedMessage(
           ).en;
       if (params) {
         return func(params.buyerName || "", params.storytellerName || "");
+      }
+      return func("", "");
+    }
+
+    // Check if this is an activeKahaniMessage (takes storytellerName and buyerName)
+    if (messageKey === "activeKahaniMessage") {
+      const func = isHindi
+        ? (
+            messageConfig as {
+              en: (storytellerName: string, buyerName: string) => string;
+              hn: (storytellerName: string, buyerName: string) => string;
+            }
+          ).hn
+        : (
+            messageConfig as {
+              en: (storytellerName: string, buyerName: string) => string;
+              hn: (storytellerName: string, buyerName: string) => string;
+            }
+          ).en;
+      if (params) {
+        return func(params.storytellerName || "", params.buyerName || "");
       }
       return func("", "");
     }
@@ -984,26 +1015,151 @@ export async function sendPhotoRequestToBuyer(
   recipientNumber: string,
   buyerName: string,
   storytellerName: string,
+  trialId: string,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
   const isProduction = true;
 
   if (isProduction) {
-    const templateParams = [
-      { type: "text", text: buyerName },
-      { type: "text", text: storytellerName },
-      { type: "text", text: storytellerName },
-    ];
-
-    return sendTemplateMessageWithRetry(
+    return sendWhatsappButtonTemplate(
       recipientNumber,
-      "photorequest_vaani_en",
-      templateParams,
+      "pic_request_en",
+      "en",
+      [buyerName, storytellerName, storytellerName],
+      `custom-album-cover/${trialId}`,
+      "0",
     );
   } else {
     const message = `Hi ${buyerName} 😊\n\n${storytellerName}'s first few stories are now saved beautifully.\n\nCould you please send *one nice photo of ${storytellerName} for the album cover, along with their full name* as you would like it to appear?`;
 
     return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
+
+/**
+ * Sends a WhatsApp button template message with body parameters and a button component
+ * @param recipientNumber - Phone number in E.164 format
+ * @param templateName - Name of the template (e.g., "pic_request_en")
+ * @param languageCode - Language code (e.g., "en")
+ * @param bodyParameters - Array of text parameters for the body component
+ * @param buttonText - Text parameter for the button URL
+ * @param buttonIndex - Index of the button (default: "0")
+ * @returns Promise<boolean> - true if message sent successfully, false otherwise
+ */
+export async function sendWhatsappButtonTemplate(
+  recipientNumber: string,
+  templateName: string,
+  languageCode: string = "en",
+  bodyParameters: string[] = [],
+  buttonText: string,
+  buttonIndex: string = "0",
+): Promise<boolean> {
+  const config = getConfig();
+  if (!config) return false;
+
+  if (!validateE164(recipientNumber)) {
+    console.error("Invalid E.164 phone number:", recipientNumber);
+    return false;
+  }
+
+  const { phoneNumberId, accessToken } = config;
+  const url = `${WHATSAPP_BASE_URL}/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`;
+
+  const components: any[] = [];
+
+  // Add body component if there are body parameters
+  if (bodyParameters.length > 0) {
+    components.push({
+      type: "body",
+      parameters: bodyParameters.map((text) => ({
+        type: "text",
+        text,
+      })),
+    });
+  }
+
+  // Add button component
+  components.push({
+    type: "button",
+    sub_type: "url",
+    index: buttonIndex,
+    parameters: [
+      {
+        type: "text",
+        text: buttonText,
+      },
+    ],
+  });
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: recipientNumber,
+    type: "template",
+    template: {
+      name: templateName,
+      language: {
+        code: languageCode,
+      },
+      components,
+    },
+  };
+
+  try {
+    const response = await retryWithBackoff(async () => {
+      return await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    });
+
+    const messageId = response.data.messages?.[0]?.id;
+    const responseStatus = response.data.messages?.[0]?.message_status;
+
+    console.log("WhatsApp button template message sent:", {
+      to: recipientNumber,
+      messageId,
+      status: responseStatus,
+      template: templateName,
+      fullResponse: response.data,
+    });
+
+    // Check for warnings or errors in the response
+    if (response.data.errors) {
+      console.warn("WhatsApp API returned errors:", response.data.errors);
+    }
+    if (response.data.meta) {
+      console.log("WhatsApp API meta:", response.data.meta);
+    }
+
+    return true;
+  } catch (error: any) {
+    const errorDetails = error.response?.data || error.message;
+    console.error(
+      "Failed to send WhatsApp button template message after retries:",
+      {
+        error: errorDetails,
+        to: recipientNumber,
+        template: templateName,
+        statusCode: error.response?.status,
+        statusText: error.response?.statusText,
+      },
+    );
+
+    // Log specific WhatsApp API error codes
+    if (error.response?.data?.error) {
+      const whatsappError = error.response.data.error;
+      console.error("WhatsApp API Error Details:", {
+        code: whatsappError.code,
+        message: whatsappError.message,
+        type: whatsappError.type,
+        error_subcode: whatsappError.error_subcode,
+        fbtrace_id: whatsappError.fbtrace_id,
+      });
+    }
+
+    return false;
   }
 }
 
