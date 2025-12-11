@@ -69,16 +69,16 @@ export default function FreeTrialCheckout() {
           </div>
         )}
         {albums && albums.length > 0 && (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8">
             {albums.map((album) => (
               <Card
                 key={album.id}
-                className="overflow-hidden shadow-lg transition-all hover-elevate"
+                className="overflow-hidden shadow-lg transition-all hover-elevate h-full flex flex-col"
                 data-testid={`album-card-${album.id}`}
               >
-                <CardContent className="p-0">
+                <CardContent className="p-0 flex flex-col h-full">
                   {/* Album Image */}
-                  <div className="relative h-48 sm:h-64 w-full overflow-hidden">
+                  <div className="relative h-44 sm:h-44 md:h-40 lg:h-44 w-full overflow-hidden">
                     <img
                       src={album.cover_image}
                       alt={album.title}
@@ -88,42 +88,28 @@ export default function FreeTrialCheckout() {
                   </div>
 
                   {/* Album Content */}
-                  <div className="p-6 sm:p-8 space-y-6">
+                  <div className="p-5 sm:p-6 lg:p-6 xl:p-6 space-y-4 flex-1 flex flex-col">
                     {/* Title and Description */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h2
-                          className="text-2xl sm:text-3xl font-bold text-[#1B2632] mb-3"
-                          data-testid={`album-title-${album.id}`}
-                        >
-                          {album.title}
-                        </h2>
-                        <p
-                          className="text-[#1B2632]/70 text-base sm:text-lg leading-relaxed"
-                          data-testid={`album-description-${album.id}`}
-                        >
-                          {album.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Quantity Display (Fixed at 1) */}
-                    <div className="flex items-center gap-2 text-[#1B2632]/70">
-                      <span className="font-medium">Quantity:</span>
-                      <span
-                        className="text-xl font-bold text-[#1B2632]"
-                        data-testid={`quantity-${album.id}`}
+                    <div className="flex-1">
+                      <h2
+                        className="text-2xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-[#1B2632] mb-2"
+                        data-testid={`album-title-${album.id}`}
                       >
-                        1
-                      </span>
-                      <span className="text-sm">(Free Trial)</span>
+                        {album.title}
+                      </h2>
+                      <p
+                        className="text-[#1B2632]/70 text-base sm:text-base lg:text-base xl:text-lg leading-relaxed line-clamp-3"
+                        data-testid={`album-description-${album.id}`}
+                      >
+                        {album.description}
+                      </p>
                     </div>
 
                     {/* Direct Detail Button */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="pt-1 flex">
                       <Button
                         variant="outline"
-                        className="w-full sm:w-auto border-2 border-[#A35139] text-[#A35139] rounded-2xl"
+                        className="w-full border-2 border-[#A35139] text-[#A35139] rounded-2xl"
                         onClick={() =>
                           setLocation(
                             `/free-trial?albumId=${encodeURIComponent(album.id)}`,

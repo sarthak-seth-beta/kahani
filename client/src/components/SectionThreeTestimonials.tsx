@@ -290,7 +290,6 @@ export default function SectionThreeTestimonials({
             </div>
           </div>
         </div>
-        </div>
 
         {/* Scroll Indicator Dots */}
         <div className="flex justify-center gap-3 pt-4">
