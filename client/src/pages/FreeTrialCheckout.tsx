@@ -3,14 +3,20 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Footer } from "@/components/Footer";
+import { Input } from "@/components/ui/input";
+import { Filter } from "lucide-react";
+import { FilterDialog } from "@/components/filter/FilterDialog";
+import { useAlbumFilters } from "@/components/filter/useAlbumFilters";
 
 interface Album {
   id: string;
   title: string;
   description: string;
   cover_image: string;
+  best_fit_for?: string[] | null;
+  keywords?: string[];
 }
 
 export default function FreeTrialCheckout() {
@@ -22,6 +28,19 @@ export default function FreeTrialCheckout() {
   } = useQuery<Album[]>({
     queryKey: ["/api/albums"],
   });
+
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+
+  const {
+    searchInput,
+    setSearchInput,
+    filterType,
+    setFilterType,
+    filterBestFitFor,
+    setFilterBestFitFor,
+    uniqueBestFitFor,
+    filteredAlbums,
+  } = useAlbumFilters(albums);
 
   return (
     <div className="min-h-screen bg-white">
@@ -47,6 +66,44 @@ export default function FreeTrialCheckout() {
 
       {/* Album Selection */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-8 sm:py-12">
+        {/* Filters */}
+        <div className="flex flex-row items-center gap-3 mb-6">
+          <div className="flex-1">
+            <Input
+              placeholder="Search albums..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-11"
+            />
+          </div>
+          <div className="flex-shrink-0">
+            <Button
+              variant="outline"
+              className="h-11 border-2 border-[#A35139]/30 text-[#A35139] hover:bg-[#A35139]/5 px-3 sm:px-4"
+              onClick={() => setIsFilterDialogOpen(true)}
+            >
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Filter</span>
+              {(filterType !== "all" || filterBestFitFor) && (
+                <span className="ml-1.5 sm:ml-2 bg-[#A35139] text-white rounded-full px-1.5 sm:px-2 py-0.5 text-xs">
+                  {[filterType !== "all" ? "1" : "", filterBestFitFor ? "1" : ""].filter(Boolean).length}
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Filter Dialog */}
+        <FilterDialog
+          isOpen={isFilterDialogOpen}
+          onOpenChange={setIsFilterDialogOpen}
+          filterType={filterType}
+          onFilterTypeChange={setFilterType}
+          filterBestFitFor={filterBestFitFor}
+          onFilterBestFitForChange={setFilterBestFitFor}
+          uniqueBestFitFor={uniqueBestFitFor}
+        />
+
         {/* Trial Info Banner */}
         <div className="mb-8 p-6 bg-[#A35139]/5 rounded-2xl border border-[#A35139]/20">
           <p className="text-[#1B2632] text-lg sm:text-xl font-medium text-center font-['Outfit']">
@@ -68,9 +125,9 @@ export default function FreeTrialCheckout() {
             <p className="text-[#1B2632]/70">Failed to load albums</p>
           </div>
         )}
-        {albums && albums.length > 0 && (
+        {filteredAlbums && filteredAlbums.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8">
-            {albums.map((album) => (
+            {filteredAlbums.map((album) => (
               <Card
                 key={album.id}
                 className="overflow-hidden shadow-lg transition-all hover-elevate h-full flex flex-col"
