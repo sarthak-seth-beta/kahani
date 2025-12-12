@@ -1109,23 +1109,26 @@ export async function sendBuyerCompletionMessage(
   albumId: string,
   languagePreference?: string | null,
 ): Promise<boolean> {
-  const message = getLocalizedMessage(
-    "buyerCompletionMessage",
-    languagePreference,
-    {
-      buyerName,
-      storytellerName,
-    },
-  );
-  const buttonTitle = "Open Website";
-  const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
 
-  return await sendInteractiveMessageWithCTA(
-    recipientNumber,
-    message,
-    buttonTitle,
-    buttonUrl,
-  );
+  const buyerCompletionMessage = await sendWhatsappButtonTemplate(recipientNumber, "albumlink_vaani_en", "en", [buyerName,storytellerName], `/custom-album-cover/${albumId}`, "0");
+  return buyerCompletionMessage;
+  // const message = getLocalizedMessage(
+  //   "buyerCompletionMessage",
+  //   languagePreference,
+  //   {
+  //     buyerName,
+  //     storytellerName,
+  //   },
+  // );
+  // const buttonTitle = "Open Website";
+  // const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
+
+  // return await sendInteractiveMessageWithCTA(
+  //   recipientNumber,
+  //   message,
+  //   buttonTitle,
+  //   buttonUrl,
+  // );
 }
 
 export async function sendPhotoRequestToBuyer(

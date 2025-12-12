@@ -183,15 +183,15 @@ export function AlbumCard({
       {/* Content Structure: Title → Explainer → Audience → Image → Questions → CTA */}
       <div className="flex flex-col h-full">
         {/* Title Section - Fixed height for consistent image positioning */}
-        <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2 h-[120px] sm:h-[130px] flex flex-col">
-          <div className="flex-1 flex flex-col justify-start min-h-0 overflow-hidden">
+        <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2 min-h-[120px] sm:min-h-[130px] flex flex-col">
+          <div className="flex-1 flex flex-col justify-start min-h-0">
             <h3 className="text-lg sm:text-xl font-bold text-[#1B2632] font-['Outfit'] leading-tight mb-1.5 line-clamp-2 flex-shrink-0">
               {album.title}
             </h3>
 
             {/* One-line explainer - emotionally clear purpose */}
             {album.description ? (
-              <p className="text-[#1B2632]/80 leading-relaxed text-xs sm:text-sm mb-2 line-clamp-2 flex-shrink-0">
+              <p className="text-[#1B2632]/80 leading-relaxed text-xs sm:text-sm mb-2 line-clamp-3 flex-shrink-0">
                 {album.description}
               </p>
             ) : (
@@ -254,11 +254,7 @@ export function AlbumCard({
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="text-[#1B2632]/60 text-xs sm:text-sm font-medium mt-2 pl-3 hover:text-[#A35139] transition-colors duration-200 cursor-pointer text-left"
               >
-                {isExpanded ? (
-                  "Show less"
-                ) : (
-                  `+${remainingCount} more`
-                )}
+                {isExpanded ? "Show less" : `+${remainingCount} more`}
               </button>
             )}
           </div>

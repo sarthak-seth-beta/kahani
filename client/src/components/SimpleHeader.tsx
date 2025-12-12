@@ -14,7 +14,7 @@ export default function SimpleHeader({
   const [, setLocation] = useLocation();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30 shadow-sm">
       <div className="flex items-center justify-between px-4 py-0 md:px-8 gap-4">
         {/* Logo - Adjusted to be compact but visible */}
         <div onClick={() => setLocation("/")} className="cursor-pointer">

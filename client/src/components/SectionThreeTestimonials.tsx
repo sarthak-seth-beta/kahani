@@ -48,7 +48,7 @@ const defaultTestimonials: Testimonial[] = [
       "पापा के पास फौज की ढेरों कहानियाँ हैं। खुशी है कि अब मैं उन्हें रिकॉर्ड कर सकता हूँ - वे हमेशा हमारी रगों में दौड़ती रहेंगी।",
     author: "— Vikram Singh, 38",
     photoSrc:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/vikaram_singh.heic",
     photoAlt: "Pita Rajiv S.",
   },
   {

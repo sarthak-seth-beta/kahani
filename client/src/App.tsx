@@ -53,8 +53,10 @@ function HomePage() {
 
   return (
     <div className="w-full min-h-screen bg-[#EEE9DF] overflow-x-hidden">
-      {/* Simple Header - Sticky at top */}
+      {/* Simple Header - Fixed at top */}
       <SimpleHeader onRecordClick={handleRecordClick} />
+      {/* Spacer to account for fixed header height (approximately 80px on desktop, 64px on mobile) */}
+      <div className="h-16 md:h-20" />
 
       {/* Hero Section - Full Screen with Button */}
       <HeroSection onStartTrialClick={handleStartTrialClick} />

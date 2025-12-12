@@ -44,7 +44,7 @@ export default function HeroSection({
       </div>
 
       {/* Content - Centered with More Space */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-8 sm:pb-12 pt-24 sm:pt-32">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start px-4 sm:px-6 pb-8 sm:pb-12 pt-24 sm:pt-24">
         {/* Text Overlay - Three Lines */}
         <h1
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-8 sm:mb-12 font-['Outfit'] max-w-4xl"
