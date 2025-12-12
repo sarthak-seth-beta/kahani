@@ -170,20 +170,13 @@ export async function processScheduledTasks(): Promise<void> {
   }
 }
 
-export function startScheduler(): void {
-  console.log("Starting background scheduler");
-  console.log("Scheduled tasks run every 5 minutes");
-  console.log(
-    "NOTE: For production, consider using Render Cron Jobs for better reliability",
-  );
-
-  // Run every 5 minutes
-  // Cron format: minute hour day month weekday
-  // '*/5 * * * *' = every 5 minutes
-  cron.schedule("*/1 * * * *", async () => {
-    await processScheduledTasks().catch(console.error);
-  });
-
-  // Run immediately on startup to catch any overdue messages
+export function startScheduler(): NodeJS.Timeout {
+  console.log('Starting background scheduler (runs every 10 seconds)');
+  console.log('NOTE: For production, use external cron job or task scheduler instead of setInterval');
+  
+  const intervalId = setInterval(() => {
+    processScheduledTasks().catch(console.error);
+  }, 10 * 1000); // Run every 10 seconds to catch messages scheduled for short intervals
+  
   processScheduledTasks().catch(console.error);
 }

@@ -786,6 +786,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
+      // Handle status updates (message delivery status)
+      const statuses = value.statuses;
+      if (statuses && statuses.length > 0) {
+        const status = statuses[0];
+        console.log("📊 WhatsApp Message Status Update:", {
+          messageId: status.id,
+          status: status.status,
+          recipientId: status.recipient_id,
+          timestamp: status.timestamp,
+          conversation: status.conversation,
+          pricing: status.pricing,
+        });
+        // Status can be: sent, delivered, read, failed
+        return;
+      }
+
+      // Handle incoming messages
       const messages = value.messages;
       if (!messages || messages.length === 0) {
         console.log("No messages in webhook payload");

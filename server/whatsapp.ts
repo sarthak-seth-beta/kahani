@@ -278,7 +278,7 @@ export async function sendTemplateMessageWithRetry(
       messageId,
       status: responseStatus,
       template: templateName,
-      fullResponse: response.data,
+      fullResponse: JSON.stringify(response.data),
     });
 
     // Check for warnings or errors in the response

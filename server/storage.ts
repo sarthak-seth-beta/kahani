@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, lte, inArray, asc, getTableColumns } from "drizzle-orm";
+import { eq, and, lte, inArray, asc, getTableColumns, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   getAllProducts(): Promise<Product[]>;
@@ -472,8 +472,9 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(freeTrials.conversationState, "in_progress"),
-          lte(freeTrials.nextQuestionScheduledFor, now),
-        ),
+          isNotNull(freeTrials.nextQuestionScheduledFor),
+          lte(freeTrials.nextQuestionScheduledFor, now)
+        )
       );
     return trials;
   }
