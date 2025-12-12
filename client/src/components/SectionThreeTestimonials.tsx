@@ -18,8 +18,8 @@ const defaultTestimonials: Testimonial[] = [
   {
     id: 1,
     quote:
-      "We never imagined how easy it would be for Dad to share his stories, no writing, just speaking. And now our children can hear his voice, laugh with him, and feel closer than ever. Kahani has given our family a legacy,",
-    author: "— Aarav & Family",
+      "I never thought hearing how my Nanu bought his first car would be so interesting and emotional.. It made me realise how many stories I never asked, but always needed.",
+    author: "— Yajur, 24",
     photoSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/arnav_family.jpg",
     photoAlt: "Aarav & Family",
@@ -27,26 +27,26 @@ const defaultTestimonials: Testimonial[] = [
   {
     id: 2,
     quote:
-      "मैंने कभी नहीं सोचा था कि बचपन की मेरी छोटी-छोटी कहानियाँ या सीखे हुए सबक इतना मायने रखेंगे। Kahani पर अपनी कहानियाँ रिकॉर्ड करना ऐसा था जैसे मेरी ज़िन्दगी फिर से जी रही हूँ, हँसी, चुनौतियाँ, सब कुछ। और अब मेरे पोते-पोतियाँ मुझे सुन सकते हैं, मुझे समझ सकते हैं,",
-    author: "— दादी, Meena B.",
+      "Papa keeps giving me life lessons I forget the next week. Now, listening to them in his own voice whenever I want to… it just hits differently. It feels like future-me will thank Kahani for this.",
+    author: "— Angel, 18",
     photoSrc:
-      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/meena_dadi.jpg",
-    photoAlt: "Dadi Meena B.",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/riya_s.jpg",
+    photoAlt: "Angel",
   },
   {
     id: 3,
     quote:
-      "What Kahani did was unlock stories we had never heard before. My grandmother's childhood in a small village, her friendships, the festivals she celebrated, all captured, preserved, and now part of our family's history. It truly brought the past alive,",
-    author: "— Riya S.",
+      "My son is too young to understand who his Nani really is. But someday, when he listens to her stories in her voice, he will know the warmth he comes from.",
+    author: "— Rashmi, 45",
     photoSrc:
-      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/riya_s.jpg",
-    photoAlt: "Ria S.",
+      "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/rashmi.jpg",
+    photoAlt: "Rashmi",
   },
   {
     id: 4,
     quote:
-      "शुरुआत में, मुझे अपनी यादें रिकॉर्ड करने को लेकर थोड़ी घबराहट थी, मुझे लगा कोई इनमे रुचि नहीं लेगा। लेकिन जैसे-जैसे मैंने बोलना शुरू किया, मुझे एहसास हुआ कि ये कहानियाँ कितनी महत्वपूर्ण हैं। मेरे बच्चे अब मेरी आवाज़ में मेरी ज़िन्दगी को जानते हैं,",
-    author: "— पिता, Rajiv S.",
+      "पापा के पास फौज की ढेरों कहानियाँ हैं। खुशी है कि अब मैं उन्हें रिकॉर्ड कर सकता हूँ - वे हमेशा हमारी रगों में दौड़ती रहेंगी।",
+    author: "— Vikram Singh, 38",
     photoSrc:
       "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
     photoAlt: "Pita Rajiv S.",
@@ -54,8 +54,8 @@ const defaultTestimonials: Testimonial[] = [
   {
     id: 5,
     quote:
-      "The best part is seeing how the album brings us together. My cousins, my niece and nephew, they all want to listen to the recordings now. It's more than a book, it's our story, our voices, our memories. Thank you, Kahani,",
-    author: "— Sonal & Amit P",
+      "We discovered things about our father we never knew. This does not just preserve memories - it starts conversations.",
+    author: "— Radhika, 32",
     photoSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/sonal_amit_p.jpg",
     photoAlt: "Sonal & Amit P",
@@ -127,7 +127,6 @@ export default function SectionThreeTestimonials({
       clearTimeout(scrollTimeout);
       lastScrollTime = Date.now();
       isUserInteracting = true;
-      
 
       if (!isScrolling) {
         const currentScroll = container.scrollLeft;
@@ -182,10 +181,12 @@ export default function SectionThreeTestimonials({
       }, 300);
     };
 
-    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
     container.addEventListener("touchend", handleTouchEnd, { passive: true });
     container.addEventListener("scroll", handleScroll, { passive: true });
-    
+
     const initScroll = () => {
       const oneSetWidth = calcOneSetWidth();
       if (oneSetWidth > 0) {

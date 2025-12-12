@@ -14,7 +14,8 @@ export default function ContactUs() {
   const email = "vaani@kahani.xyz";
   const whatsappNumber = "+91 85108 89286"; // Update with actual WhatsApp number
   const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/\s/g, "").replace(/\+/g, "")}`;
-  const instagramUrl = "https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2";
+  const instagramUrl =
+    "https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2";
 
   const handleCopyEmail = async () => {
     try {
@@ -78,8 +79,8 @@ export default function ContactUs() {
             </p>
 
             <p>
-              Whether you have questions, ideas, or just want to share a
-              story, feel free to reach out to us:
+              Whether you have questions, ideas, or just want to share a story,
+              feel free to reach out to us:
             </p>
 
             {/* Simple Contact List */}
@@ -146,8 +147,8 @@ export default function ContactUs() {
             </div>
 
             <p className="text-foreground pt-2">
-              Our team at Kahani is always happy to listen, help, and
-              celebrate your stories with you.
+              Our team at Kahani is always happy to listen, help, and celebrate
+              your stories with you.
             </p>
           </div>
         </div>

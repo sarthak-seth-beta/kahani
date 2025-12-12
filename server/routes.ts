@@ -732,9 +732,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/webhook/whatsapp", async (req, res) => {
-    console.log("WhatsApp webhook verification received:", JSON.stringify(req.query, null, 2));
+    console.log(
+      "WhatsApp webhook verification received:",
+      JSON.stringify(req.query, null, 2),
+    );
     try {
-      
       const mode = req.query["hub.mode"];
       const token = req.query["hub.verify_token"];
       const challenge = req.query["hub.challenge"];
@@ -760,7 +762,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/webhook/whatsapp", async (req, res) => {
-    console.log("WhatsApp webhook received:", JSON.stringify(req.body, null, 2));
+    console.log(
+      "WhatsApp webhook received:",
+      JSON.stringify(req.body, null, 2),
+    );
     try {
       res.status(200).json({ status: "received" });
 

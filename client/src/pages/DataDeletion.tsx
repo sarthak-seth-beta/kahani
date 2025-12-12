@@ -1,6 +1,14 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, AlertTriangle, Clock, Shield, Trash2, HelpCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  AlertTriangle,
+  Clock,
+  Shield,
+  Trash2,
+  HelpCircle,
+} from "lucide-react";
 import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
 import { Footer } from "@/components/Footer";
 
@@ -46,7 +54,11 @@ export default function DataDeletion() {
           </p>
 
           <p className="text-lg mb-8 text-foreground">
-            At <strong>Kahani</strong>, we respect your privacy and give every user the right to request deletion of their personal data at any time. This page explains how you can submit a data deletion request for any information associated with your Kahani orders or WhatsApp interactions.
+            At <strong>Kahani</strong>, we respect your privacy and give every
+            user the right to request deletion of their personal data at any
+            time. This page explains how you can submit a data deletion request
+            for any information associated with your Kahani orders or WhatsApp
+            interactions.
           </p>
 
           <section className="mb-8">
@@ -60,15 +72,39 @@ export default function DataDeletion() {
               You may request deletion of:
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2 text-muted-foreground">
-              <li>Your <strong className="text-foreground">phone number</strong> associated with a Kahani order</li>
-              <li>Your <strong className="text-foreground">trial ID / order ID</strong></li>
-              <li>All <strong className="text-foreground">Kahani stories</strong> created for you</li>
-              <li>Any <strong className="text-foreground">messages or content</strong> generated as part of the Kahani storytelling experience</li>
-              <li>Any <strong className="text-foreground">metadata</strong> used to deliver your story</li>
-              <li>Any <strong className="text-foreground">logs or workflow data</strong> linked to your order</li>
+              <li>
+                Your <strong className="text-foreground">phone number</strong>{" "}
+                associated with a Kahani order
+              </li>
+              <li>
+                Your{" "}
+                <strong className="text-foreground">trial ID / order ID</strong>
+              </li>
+              <li>
+                All <strong className="text-foreground">Kahani stories</strong>{" "}
+                created for you
+              </li>
+              <li>
+                Any{" "}
+                <strong className="text-foreground">messages or content</strong>{" "}
+                generated as part of the Kahani storytelling experience
+              </li>
+              <li>
+                Any <strong className="text-foreground">metadata</strong> used
+                to deliver your story
+              </li>
+              <li>
+                Any{" "}
+                <strong className="text-foreground">
+                  logs or workflow data
+                </strong>{" "}
+                linked to your order
+              </li>
             </ul>
             <p className="text-muted-foreground">
-              We will permanently remove these from our systems unless we are required to retain certain information for legal or compliance reasons.
+              We will permanently remove these from our systems unless we are
+              required to retain certain information for legal or compliance
+              reasons.
             </p>
           </section>
 
@@ -84,13 +120,28 @@ export default function DataDeletion() {
                 When you request data deletion:
               </p>
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li><strong className="text-foreground">All your Kahani stories and related content will be permanently deleted.</strong></li>
-                <li>You will <strong className="text-foreground">no longer be able to access, retrieve, or restore</strong> your stories after deletion.</li>
-                <li>This action is <strong className="text-foreground">irreversible</strong>.</li>
+                <li>
+                  <strong className="text-foreground">
+                    All your Kahani stories and related content will be
+                    permanently deleted.
+                  </strong>
+                </li>
+                <li>
+                  You will{" "}
+                  <strong className="text-foreground">
+                    no longer be able to access, retrieve, or restore
+                  </strong>{" "}
+                  your stories after deletion.
+                </li>
+                <li>
+                  This action is{" "}
+                  <strong className="text-foreground">irreversible</strong>.
+                </li>
               </ul>
             </div>
             <p className="text-muted-foreground">
-              Please request deletion only if you are sure you no longer need access to your content.
+              Please request deletion only if you are sure you no longer need
+              access to your content.
             </p>
           </section>
 
@@ -114,14 +165,22 @@ export default function DataDeletion() {
               </a>
             </div>
             <p className="mb-2 text-muted-foreground">
-              Please include <strong className="text-foreground">either</strong> of the following in your email so we can identify your data:
+              Please include <strong className="text-foreground">either</strong>{" "}
+              of the following in your email so we can identify your data:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>Your <strong className="text-foreground">Order ID</strong> (preferred), <strong className="text-foreground">OR</strong></li>
-              <li>The <strong className="text-foreground">mobile number</strong> used to place the order (e.g., +91XXXXXXXXXX)</li>
+              <li>
+                Your <strong className="text-foreground">Order ID</strong>{" "}
+                (preferred), <strong className="text-foreground">OR</strong>
+              </li>
+              <li>
+                The <strong className="text-foreground">mobile number</strong>{" "}
+                used to place the order (e.g., +91XXXXXXXXXX)
+              </li>
             </ul>
             <p className="mt-4 text-muted-foreground">
-              This helps us locate your record and process your request securely.
+              This helps us locate your record and process your request
+              securely.
             </p>
           </section>
 
@@ -142,7 +201,8 @@ export default function DataDeletion() {
             </ul>
             <div className="bg-[#F5E6D3]/30 rounded-lg p-4 inline-block">
               <p className="text-foreground font-semibold">
-                ⏱️ Data deletion will be completed within <strong className="text-[#2C5282]">48–72 hours</strong>.
+                ⏱️ Data deletion will be completed within{" "}
+                <strong className="text-[#2C5282]">48–72 hours</strong>.
               </p>
             </div>
           </section>
@@ -155,7 +215,8 @@ export default function DataDeletion() {
               </h2>
             </div>
             <p className="mb-4 text-muted-foreground">
-              If you have any questions about how your data is stored or how deletion works, feel free to reach us at:
+              If you have any questions about how your data is stored or how
+              deletion works, feel free to reach us at:
             </p>
             <div className="bg-white border-2 border-[#E2E8F0] rounded-lg p-6 hover:border-[#2C5282] transition-colors">
               <a
@@ -166,14 +227,13 @@ export default function DataDeletion() {
                 vaani@kahani.xyz
               </a>
             </div>
-            <p className="mt-4 text-muted-foreground">
-              We're here to help.
-            </p>
+            <p className="mt-4 text-muted-foreground">We're here to help.</p>
           </section>
 
           <div className="mt-12 p-6 bg-muted/30 rounded-lg">
             <p className="text-center text-muted-foreground italic">
-              Kahani is committed to respecting your privacy and ensuring your data deletion requests are processed promptly and securely.
+              Kahani is committed to respecting your privacy and ensuring your
+              data deletion requests are processed promptly and securely.
             </p>
           </div>
         </div>
@@ -184,4 +244,3 @@ export default function DataDeletion() {
     </div>
   );
 }
-

@@ -6,14 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import {
-  Share2,
-  Copy,
-  Mail,
-  MessageCircle,
-  Heart,
-  Users,
-} from "lucide-react";
+import { Share2, Copy, Mail, MessageCircle, Heart, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AlbumCard as AlbumCardType } from "@/components/SectionFourAlbums";
 

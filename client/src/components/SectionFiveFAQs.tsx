@@ -12,52 +12,54 @@ interface SectionFiveFAQsProps {
 
 const defaultFAQs: FAQItem[] = [
   {
-    question: "What is Kahani?",
+    question: "Why can't I just record my parents myself?",
     answer:
-      "A simple way to save your loved ones' voices and stories — forever.",
+      "You absolutely can… but you never will. Life gets busy, parents get shy, recordings stay unfinished. Kahani makes it effortless - we ask the right questions, at the right pace, and turn everything into a real album your family can keep forever.",
   },
   {
-    question: "How does it work?",
+    question: "So… what exactly is Kahani?",
     answer:
-      "We send story questions on WhatsApp. They reply with voice notes. We turn those into a beautiful memory book.",
+      "Kahani captures your loved ones' stories and voice through simple WhatsApp messages and turns them into a private audio album your whole family can listen to forever.",
   },
   {
-    question: "Who is it for?",
+    question: "What do I receive at the end?",
     answer:
-      "Anyone who wants to keep their parents', grandparents', or loved ones' stories alive.",
+      "A beautiful Spotify-style album with 5–20 short stories, custom cover, and a private link you can share with your entire family. No app needed - just press play.",
   },
   {
-    question: "Is it private?",
+    question: "How does Kahani talk to my parents/grandparents?",
     answer:
-      "Completely. Your chats and voice notes stay encrypted and safe — always.",
+      "Exactly like family. Warm WhatsApp questions, gentle pacing, no pressure. They tap the mic, speak in their own way, and we do everything else.",
   },
   {
-    question: "Can I redo or delete a story?",
+    question: "Will they understand how to use this? They're not tech-savvy.",
     answer:
-      "Yes. You can re-record or ask us to remove any message before your book is made.",
+      "If they can send a WhatsApp voice note, they can create a Kahani. No app. No login. No password. Just open, talk, done.",
   },
   {
-    question: "What do I get in the end?",
+    question: "What language can they speak in?",
     answer:
-      "A keepsake book with their stories, photos, and QR codes to hear their voices.",
+      "Any language they live in - Hindi, English, Tamil, Bengali, Kannada, Gujarati, Punjabi… everything works. Their natural voice is the point.",
   },
   {
-    question: "Do I need an app?",
-    answer: "No app, no login. Everything happens on WhatsApp.",
-  },
-  {
-    question: "Can they speak in Hindi or another language?",
+    question: "Is everything private?",
     answer:
-      "Yes. Any Indian language works — the book keeps their voice just as it is.",
+      "Completely. Your album has no public page, no search, no listing. Only people with your private link can hear it. You can delete everything anytime.",
   },
   {
-    question: "How long does it take?",
-    answer: "Usually 2–4 weeks after the stories are sent.",
-  },
-  {
-    question: "Can I gift this?",
+    question: "What if they stop halfway or skip days?",
     answer:
-      "Absolutely. You can gift a Kahani to anyone you love — one link starts their journey.",
+      "We pause gently. Continue whenever they want. This is not a course - it's a conversation.",
+  },
+  {
+    question: "Will this be too emotional or heavy for them?",
+    answer:
+      "Not unless they want it to be. Most Kahani albums are sweet, funny, nostalgic - the kind of stories that come out over chai, not therapy sessions.",
+  },
+  {
+    question: "Why should I pay for this?",
+    answer:
+      "Because one day, these stories will be the only way to hear them again - their laugh, their pauses, their way of telling a moment. You are not buying an album. You are preserving a piece of your family.",
   },
 ];
 

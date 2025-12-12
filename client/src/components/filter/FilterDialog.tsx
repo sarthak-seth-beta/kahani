@@ -17,7 +17,9 @@ interface FilterDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   filterType: "all" | "family" | "wisdom" | "love" | "career";
-  onFilterTypeChange: (type: "all" | "family" | "wisdom" | "love" | "career") => void;
+  onFilterTypeChange: (
+    type: "all" | "family" | "wisdom" | "love" | "career",
+  ) => void;
   filterBestFitFor: string | null;
   onFilterBestFitForChange: (bestFit: string | null) => void;
   uniqueBestFitFor: string[];
@@ -43,7 +45,7 @@ export function FilterDialog({
             Filter albums by type or best fit category
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-y-auto scrollbar-hide py-4">
           <Accordion type="single" collapsible className="w-full">
             {/* Filter by Type */}
@@ -170,4 +172,3 @@ export function FilterDialog({
     </Dialog>
   );
 }
-

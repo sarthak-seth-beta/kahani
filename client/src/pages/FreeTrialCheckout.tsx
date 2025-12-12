@@ -86,7 +86,12 @@ export default function FreeTrialCheckout() {
               <span className="hidden sm:inline">Filter</span>
               {(filterType !== "all" || filterBestFitFor) && (
                 <span className="ml-1.5 sm:ml-2 bg-[#A35139] text-white rounded-full px-1.5 sm:px-2 py-0.5 text-xs">
-                  {[filterType !== "all" ? "1" : "", filterBestFitFor ? "1" : ""].filter(Boolean).length}
+                  {
+                    [
+                      filterType !== "all" ? "1" : "",
+                      filterBestFitFor ? "1" : "",
+                    ].filter(Boolean).length
+                  }
                 </span>
               )}
             </Button>

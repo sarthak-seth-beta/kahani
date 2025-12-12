@@ -171,12 +171,14 @@ export async function processScheduledTasks(): Promise<void> {
 }
 
 export function startScheduler(): NodeJS.Timeout {
-  console.log('Starting background scheduler (runs every 10 seconds)');
-  console.log('NOTE: For production, use external cron job or task scheduler instead of setInterval');
-  
+  console.log("Starting background scheduler (runs every 10 seconds)");
+  console.log(
+    "NOTE: For production, use external cron job or task scheduler instead of setInterval",
+  );
+
   const intervalId = setInterval(() => {
     processScheduledTasks().catch(console.error);
   }, 10 * 1000); // Run every 10 seconds to catch messages scheduled for short intervals
-  
+
   processScheduledTasks().catch(console.error);
 }

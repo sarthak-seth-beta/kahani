@@ -664,7 +664,7 @@ export default function PlaylistAlbumsGallery() {
               }}
             />
           </div>
-          
+
           {/* Circular Profile Image - Overlapping on Left */}
           <div
             style={{
@@ -714,234 +714,235 @@ export default function PlaylistAlbumsGallery() {
             {trial.selectedAlbum}
           </h1>
 
-        {/* Storyteller Tag and Description */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            marginBottom: "0.5rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <span
+          {/* Storyteller Tag and Description */}
+          <div
             style={{
-              fontFamily: "Outfit, sans-serif",
-              fontSize: "0.75rem",
-              fontWeight: "500",
-              color: "#A35139",
-              background: "rgba(163, 81, 57, 0.1)",
-              padding: "0.25rem 0.75rem",
-              borderRadius: "12px",
-            }}
-          >
-            {trial.storytellerName}
-          </span>
-          <span
-            style={{
-              fontFamily: "Outfit, sans-serif",
-              fontSize: "0.8125rem",
-              color: "rgba(0, 0, 0, 0.6)",
-            }}
-          >
-            Recorded with love for {trial.buyerName} by {trial.storytellerName}.
-          </span>
-        </div>
-
-        {/* Duration and Count */}
-        <p
-          style={{
-            fontFamily: "Outfit, sans-serif",
-            fontSize: "0.875rem",
-            color: "rgba(0, 0, 0, 0.6)",
-            margin: "0 0 1.5rem",
-            textAlign: "left",
-          }}
-        >
-          {totalDuration > 0
-            ? `${formatTotalDuration(totalDuration)} • ${trackCount} stories`
-            : `${trackCount} stories`}
-        </p>
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            gap: "1rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <button
-            onClick={handlePlay}
-            style={{
-              flex: 1,
-              padding: "0.875rem 1.5rem",
-              background: "#A35139",
-              color: "#FFF",
-              border: "none",
-              borderRadius: "50px",
-              fontSize: "1rem",
-              fontWeight: "600",
-              fontFamily: "Outfit, sans-serif",
-              cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
               gap: "0.5rem",
-              transition: "all 0.2s ease",
-              minHeight: "48px",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#8B4229";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#A35139";
+              marginBottom: "0.5rem",
+              flexWrap: "wrap",
             }}
           >
-            <Play size={20} fill="currentColor" />
-            Play
-          </button>
-          <button
-            onClick={handleShuffle}
-            style={{
-              padding: "0.875rem 1.5rem",
-              background: "#FFF",
-              color: "#000",
-              border: "1px solid rgba(0, 0, 0, 0.2)",
-              borderRadius: "50px",
-              fontSize: "1rem",
-              fontWeight: "600",
-              fontFamily: "Outfit, sans-serif",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-              transition: "all 0.2s ease",
-              minHeight: "48px",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#F5F5F5";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#FFF";
-            }}
-          >
-            <Shuffle size={20} />
-            Shuffle
-          </button>
-        </div>
+            <span
+              style={{
+                fontFamily: "Outfit, sans-serif",
+                fontSize: "0.75rem",
+                fontWeight: "500",
+                color: "#A35139",
+                background: "rgba(163, 81, 57, 0.1)",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "12px",
+              }}
+            >
+              {trial.storytellerName}
+            </span>
+            <span
+              style={{
+                fontFamily: "Outfit, sans-serif",
+                fontSize: "0.8125rem",
+                color: "rgba(0, 0, 0, 0.6)",
+              }}
+            >
+              Recorded with love for {trial.buyerName} by{" "}
+              {trial.storytellerName}.
+            </span>
+          </div>
 
-        {/* Album Description Box */}
-        <div
-          style={{
-            background: "rgba(255, 255, 255, 0.5)",
-            borderRadius: "12px",
-            padding: "1rem",
-            marginBottom: "1.5rem",
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-          }}
-        >
+          {/* Duration and Count */}
           <p
             style={{
               fontFamily: "Outfit, sans-serif",
               fontSize: "0.875rem",
-              color: "rgba(0, 0, 0, 0.7)",
-              margin: 0,
-              lineHeight: "1.6",
+              color: "rgba(0, 0, 0, 0.6)",
+              margin: "0 0 1.5rem",
+              textAlign: "left",
             }}
           >
-            {album.description}
+            {totalDuration > 0
+              ? `${formatTotalDuration(totalDuration)} • ${trackCount} stories`
+              : `${trackCount} stories`}
           </p>
-        </div>
 
-        {/* Track List */}
-        <div>
-          {tracks.map((track: any, index: number) => {
-            const duration = durations.get(index) || 0;
-            const isCurrentTrack = playingTrackIndex === index;
+          {/* Action Buttons */}
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <button
+              onClick={handlePlay}
+              style={{
+                flex: 1,
+                padding: "0.875rem 1.5rem",
+                background: "#A35139",
+                color: "#FFF",
+                border: "none",
+                borderRadius: "50px",
+                fontSize: "1rem",
+                fontWeight: "600",
+                fontFamily: "Outfit, sans-serif",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                transition: "all 0.2s ease",
+                minHeight: "48px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#8B4229";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#A35139";
+              }}
+            >
+              <Play size={20} fill="currentColor" />
+              Play
+            </button>
+            <button
+              onClick={handleShuffle}
+              style={{
+                padding: "0.875rem 1.5rem",
+                background: "#FFF",
+                color: "#000",
+                border: "1px solid rgba(0, 0, 0, 0.2)",
+                borderRadius: "50px",
+                fontSize: "1rem",
+                fontWeight: "600",
+                fontFamily: "Outfit, sans-serif",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                transition: "all 0.2s ease",
+                minHeight: "48px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#F5F5F5";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#FFF";
+              }}
+            >
+              <Shuffle size={20} />
+              Shuffle
+            </button>
+          </div>
 
-            return (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "0.75rem 0",
-                  borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-                  cursor: "pointer",
-                }}
-                onClick={() => handlePlayPause(index)}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p
-                    style={{
-                      fontFamily: "Outfit, sans-serif",
-                      fontSize: "0.9375rem",
-                      fontWeight: isCurrentTrack ? "600" : "400",
-                      color: "#000",
-                      margin: 0,
-                      marginBottom: "0.25rem",
-                    }}
-                  >
-                    {track.questionText}
-                  </p>
-                  {duration > 0 && (
+          {/* Album Description Box */}
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.5)",
+              borderRadius: "12px",
+              padding: "1rem",
+              marginBottom: "1.5rem",
+              border: "1px solid rgba(0, 0, 0, 0.05)",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "Outfit, sans-serif",
+                fontSize: "0.875rem",
+                color: "rgba(0, 0, 0, 0.7)",
+                margin: 0,
+                lineHeight: "1.6",
+              }}
+            >
+              {album.description}
+            </p>
+          </div>
+
+          {/* Track List */}
+          <div>
+            {tracks.map((track: any, index: number) => {
+              const duration = durations.get(index) || 0;
+              const isCurrentTrack = playingTrackIndex === index;
+
+              return (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0.75rem 0",
+                    borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handlePlayPause(index)}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <p
                       style={{
                         fontFamily: "Outfit, sans-serif",
-                        fontSize: "0.8125rem",
-                        color: "rgba(0, 0, 0, 0.6)",
+                        fontSize: "0.9375rem",
+                        fontWeight: isCurrentTrack ? "600" : "400",
+                        color: "#000",
                         margin: 0,
+                        marginBottom: "0.25rem",
                       }}
                     >
-                      {formatDuration(duration)}
+                      {track.questionText}
                     </p>
-                  )}
+                    {duration > 0 && (
+                      <p
+                        style={{
+                          fontFamily: "Outfit, sans-serif",
+                          fontSize: "0.8125rem",
+                          color: "rgba(0, 0, 0, 0.6)",
+                          margin: 0,
+                        }}
+                      >
+                        {formatDuration(duration)}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlayPause(index);
+                    }}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      background: isCurrentTrack
+                        ? "#A35139"
+                        : "rgba(0, 0, 0, 0.1)",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      color: isCurrentTrack ? "#FFF" : "#000",
+                      transition: "all 0.2s ease",
+                      marginLeft: "1rem",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isCurrentTrack) {
+                        e.currentTarget.style.background = "rgba(0, 0, 0, 0.2)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isCurrentTrack) {
+                        e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
+                      }
+                    }}
+                    aria-label={`Play ${track.questionText}`}
+                  >
+                    {isCurrentTrack && isPlaying ? (
+                      <Pause size={16} fill="currentColor" />
+                    ) : (
+                      <Play size={16} fill="currentColor" />
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePlayPause(index);
-                  }}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    background: isCurrentTrack
-                      ? "#A35139"
-                      : "rgba(0, 0, 0, 0.1)",
-                    border: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    color: isCurrentTrack ? "#FFF" : "#000",
-                    transition: "all 0.2s ease",
-                    marginLeft: "1rem",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isCurrentTrack) {
-                      e.currentTarget.style.background = "rgba(0, 0, 0, 0.2)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isCurrentTrack) {
-                      e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
-                    }
-                  }}
-                  aria-label={`Play ${track.questionText}`}
-                >
-                  {isCurrentTrack && isPlaying ? (
-                    <Pause size={16} fill="currentColor" />
-                  ) : (
-                    <Play size={16} fill="currentColor" />
-                  )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

@@ -145,34 +145,54 @@ export default function Landing() {
 
   const faqs = [
     {
-      question: "How does the WhatsApp conversation work?",
+      question: "Why can't I just record my parents myself?",
       answer:
-        "Once you purchase, we'll send the first question to your loved one's WhatsApp. Each day (or your chosen frequency), they'll receive a new question to answer via voice message or text. It's simple, familiar, and comfortable.",
+        "You absolutely can… but you never will. Life gets busy, parents get shy, recordings stay unfinished. Kahani makes it effortless - we ask the right questions, at the right pace, and turn everything into a real album your family can keep forever.",
     },
     {
-      question: "What if my elder isn't tech-savvy?",
+      question: "So… what exactly is Kahani?",
       answer:
-        "WhatsApp is one of the most user-friendly apps. If they can use WhatsApp to chat with family, they can use LegacyScribe. We also provide simple instructions and support to help them get started.",
+        "Kahani captures your loved ones' stories and voice through simple WhatsApp messages and turns them into a private audio album your whole family can listen to forever.",
     },
     {
-      question: "Can I customize the questions?",
+      question: "What do I receive at the end?",
       answer:
-        "Our question packs are professionally curated for different life experiences. While we don't offer customization in our standard packs, the variety of questions ensures comprehensive life story coverage.",
+        "A beautiful Spotify-style album with 5–20 short stories, custom cover, and a private link you can share with your entire family. No app needed - just press play.",
     },
     {
-      question: "What format is the final digital memoir?",
+      question: "How does Kahani talk to my parents/grandparents?",
       answer:
-        "You'll receive a beautifully formatted PDF document with all responses organized chronologically. It includes the questions, text transcriptions, and embedded audio files for voice responses.",
+        "Exactly like family. Warm WhatsApp questions, gentle pacing, no pressure. They tap the mic, speak in their own way, and we do everything else.",
     },
     {
-      question: "Can multiple family members access the stories?",
+      question: "Will they understand how to use this? They're not tech-savvy.",
       answer:
-        "Yes! You'll receive a unique link that can be shared with family members to view the collected stories as they're being created.",
+        "If they can send a WhatsApp voice note, they can create a Kahani. No app. No login. No password. Just open, talk, done.",
     },
     {
-      question: "What languages are supported?",
+      question: "What language can they speak in?",
       answer:
-        "Currently, we support English, Hindi, and regional Indian languages. The elder can respond in their preferred language, and we'll preserve it authentically.",
+        "Any language they live in - Hindi, English, Tamil, Bengali, Kannada, Gujarati, Punjabi… everything works. Their natural voice is the point.",
+    },
+    {
+      question: "Is everything private?",
+      answer:
+        "Completely. Your album has no public page, no search, no listing. Only people with your private link can hear it. You can delete everything anytime.",
+    },
+    {
+      question: "What if they stop halfway or skip days?",
+      answer:
+        "We pause gently. Continue whenever they want. This is not a course - it's a conversation.",
+    },
+    {
+      question: "Will this be too emotional or heavy for them?",
+      answer:
+        "Not unless they want it to be. Most Kahani albums are sweet, funny, nostalgic - the kind of stories that come out over chai, not therapy sessions.",
+    },
+    {
+      question: "Why should I pay for this?",
+      answer:
+        "Because one day, these stories will be the only way to hear them again - their laugh, their pauses, their way of telling a moment. You are not buying an album. You are preserving a piece of your family.",
     },
   ];
 

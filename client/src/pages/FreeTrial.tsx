@@ -48,7 +48,12 @@ export default function FreeTrial() {
 
   // Fetch albums to get full album data including questions
   const { data: albums } = useQuery<
-    Array<{ id: string; title: string; cover_image: string; questions: string[] }>
+    Array<{
+      id: string;
+      title: string;
+      cover_image: string;
+      questions: string[];
+    }>
   >({
     queryKey: ["/api/albums"],
   });
@@ -57,18 +62,19 @@ export default function FreeTrial() {
   const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albums) {
       const album = albums.find((a) => a.id === albumIdFromUrl);
-      if (album) return { 
-        title: album.title, 
-        cover_image: album.cover_image,
-        questions: album.questions || []
-      };
+      if (album)
+        return {
+          title: album.title,
+          cover_image: album.cover_image,
+          questions: album.questions || [],
+        };
     }
     // Fallback to title from URL (backward compatibility) or default
     return {
       title: albumTitleFromUrl || "Our Family History",
       cover_image:
         "https://images.unsplash.com/photo-1542038784456-1ea8c935640e?q=80&w=2670&auto=format&fit=crop", // Default image
-      questions: []
+      questions: [],
     };
   }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
@@ -152,10 +158,12 @@ export default function FreeTrial() {
                 <span className="hidden sm:inline">Quantity:</span>
                 <span className="sm:hidden">Qty:</span>
               </span>
-              <span className="text-sm sm:text-lg font-bold text-[#A35139]">1</span>
+              <span className="text-sm sm:text-lg font-bold text-[#A35139]">
+                1
+              </span>
             </div>
           </div>
-          
+
           {/* Questions Dropdown */}
           {selectedAlbum.questions && selectedAlbum.questions.length > 0 && (
             <>
