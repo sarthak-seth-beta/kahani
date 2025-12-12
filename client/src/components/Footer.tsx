@@ -165,6 +165,13 @@ export function Footer() {
                   </span>
                 </Link>
               </li>
+              <li>
+                <Link href="/data-deletion">
+                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
+                    Data Deletion
+                  </span>
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

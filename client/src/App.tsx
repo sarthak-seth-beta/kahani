@@ -20,6 +20,7 @@ import HowToUse from "@/pages/HowToUse";
 import ThankYou from "@/pages/ThankYou";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
+import DataDeletion from "@/pages/DataDeletion";
 import Affiliate from "@/pages/Affiliate";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
@@ -96,6 +97,7 @@ function App() {
           <Route path="/thank-you" component={ThankYou} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
+          <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/about-us" component={AboutUs} />
           <Route path="/affiliate" component={Affiliate} />
           <Route path="/contact-us" component={ContactUs} />
