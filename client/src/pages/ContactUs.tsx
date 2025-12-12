@@ -11,7 +11,7 @@ export default function ContactUs() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
 
-  const email = "info.kahani.xyz@gmail.com";
+  const email = "vaani@kahani.xyz";
   const whatsappNumber = "+91 85108 89286"; // Update with actual WhatsApp number
   const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/\s/g, "").replace(/\+/g, "")}`;
   const instagramUrl = "https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2";
