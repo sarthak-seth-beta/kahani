@@ -83,12 +83,12 @@ export default function SectionFourAlbums({
           }}
         >
           <div className="flex gap-6 pb-4" style={{ width: "max-content" }}>
-            {albums.map((album, index) => (
+            {albums.map((album) => (
               <AlbumCard
                 key={album.id}
                 album={album}
                 questionsToShow={3}
-                className="flex-shrink-0 w-[85vw] max-w-[500px]"
+                className="flex-shrink-0 w-[70vw] max-w-[320px]"
                 style={{ scrollSnapAlign: "center" }}
                 aria-roledescription="carousel item"
               />
@@ -97,11 +97,11 @@ export default function SectionFourAlbums({
             {/* View All Albums CTA - Right side of 4th album */}
             {allAlbums && allAlbums.length > 0 && (
               <div
-                className="flex-shrink-0 w-[85vw] max-w-[500px] bg-white rounded-2xl shadow-lg overflow-hidden relative"
+                className="flex-shrink-0 w-[70vw] max-w-[320px] bg-white rounded-2xl shadow-lg overflow-hidden relative"
                 style={{ scrollSnapAlign: "center" }}
                 data-testid="cta-view-all-albums"
               >
-                <div className="p-5 sm:p-6 h-full min-h-[600px] flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-center">
+                <div className="p-4 sm:p-5 h-full min-h-[350px] flex flex-col items-center justify-center space-y-3 sm:space-y-4 text-center">
                   <div className="w-full aspect-video bg-gradient-to-br from-[#A35139]/10 to-[#C9C1B1]/30 rounded-xl flex items-center justify-center mb-4">
                     <ArrowRight className="h-16 w-16 text-[#A35139]/40" />
                   </div>
@@ -115,12 +115,12 @@ export default function SectionFourAlbums({
                   </p>
                   <Button
                     onClick={() => setLocation("/all-albums")}
-                    className="px-8 py-3 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-base shadow-xl hover:bg-[#1B2632]/90 transition-colors mt-4"
+                    className="px-4 sm:px-8 py-2.5 sm:py-3 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-xs sm:text-base shadow-xl hover:bg-[#1B2632]/90 transition-colors mt-4 flex items-center justify-center gap-1.5"
                     size="lg"
                     data-testid="button-view-all-albums"
                   >
-                    View All Albums
-                    <ArrowRight className="h-5 w-5 ml-2" />
+                    <span className="truncate">View All Albums</span>
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                   </Button>
                 </div>
               </div>
