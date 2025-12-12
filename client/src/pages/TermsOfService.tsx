@@ -216,10 +216,10 @@ export default function TermsOfService() {
             <p className="mb-4 text-muted-foreground">
               For questions or concerns about these Terms, please contact us at{" "}
               <a
-                href="mailto:info.kahani.xyz@gmail.com"
+                href="mailto:vaani@kahani.xyz"
                 className="text-primary hover:underline"
               >
-                info.kahani.xyz@gmail.com
+                vaani@kahani.xyz
               </a>
             </p>
           </section>

@@ -240,7 +240,7 @@ export default function PrivacyPolicy() {
               6.5 Contact
             </h3>
             <p className="mb-4 text-muted-foreground">
-              To exercise these rights, contact us at info.kahani.xyz@gmail.com.
+              To exercise these rights, contact us at vaani@kahani.xyz
             </p>
           </section>
 
@@ -305,10 +305,10 @@ export default function PrivacyPolicy() {
               For questions, concerns, or requests related to this Privacy
               Policy, contact us at:{" "}
               <a
-                href="mailto:info.kahani.xyz@gmail.com"
+                href="mailto:vaani@kahani.xyz"
                 className="text-primary hover:underline"
               >
-                info.kahani.xyz@gmail.com
+                vaani@kahani.xyz
               </a>
             </p>
           </section>
