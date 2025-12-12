@@ -127,6 +127,7 @@ export default function SectionThreeTestimonials({
       clearTimeout(scrollTimeout);
       lastScrollTime = Date.now();
       isUserInteracting = true;
+      
 
       if (!isScrolling) {
         const currentScroll = container.scrollLeft;
@@ -181,12 +182,10 @@ export default function SectionThreeTestimonials({
       }, 300);
     };
 
-    container.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
+    container.addEventListener("touchstart", handleTouchStart, { passive: true });
     container.addEventListener("touchend", handleTouchEnd, { passive: true });
     container.addEventListener("scroll", handleScroll, { passive: true });
-
+    
     const initScroll = () => {
       const oneSetWidth = calcOneSetWidth();
       if (oneSetWidth > 0) {
