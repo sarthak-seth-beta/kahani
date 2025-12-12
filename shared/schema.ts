@@ -379,3 +379,108 @@ export const insertAlbumSchema = z.object({
 });
 
 export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
+
+// WhatsApp Logging Tables
+
+export const whatsappMessages = pgTable(
+  "whatsapp_messages",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    messageId: varchar("message_id", { length: 255 }),
+    from: varchar("from", { length: 50 }).notNull(),
+    to: varchar("to", { length: 50 }).notNull(),
+    orderId: varchar("order_id", { length: 255 }),
+    messageTemplate: varchar("message_template", { length: 255 }),
+    messageType: varchar("message_type", { length: 100 }).notNull(),
+    messageCategory: varchar("message_category", { length: 50 }).notNull(),
+    messagePayload: jsonb("message_payload").notNull().$type<Record<string, any>>(),
+    status: varchar("status", { length: 50 })
+      .notNull()
+      .default("sent"),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    messageIdIdx: index("whatsapp_messages_message_id_idx").on(table.messageId),
+    orderIdIdx: index("whatsapp_messages_order_id_idx").on(table.orderId),
+    createdAtIdx: index("whatsapp_messages_created_at_idx").on(table.createdAt),
+    fromToIdx: index("whatsapp_messages_from_to_idx").on(table.from, table.to),
+  }),
+);
+
+export type WhatsAppMessageRow = typeof whatsappMessages.$inferSelect;
+export type InsertWhatsAppMessageRow = typeof whatsappMessages.$inferInsert;
+
+export const whatsappWebhookEvents = pgTable(
+  "whatsapp_webhook_events",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    messageId: varchar("message_id", { length: 255 }),
+    from: varchar("from", { length: 50 }),
+    to: varchar("to", { length: 50 }),
+    eventType: varchar("event_type", { length: 50 }).notNull(),
+    responsePayload: jsonb("response_payload").notNull().$type<Record<string, any>>(),
+    mediaUrl: text("media_url"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    messageIdIdx: index("whatsapp_webhook_events_message_id_idx").on(
+      table.messageId,
+    ),
+    eventTypeIdx: index("whatsapp_webhook_events_event_type_idx").on(
+      table.eventType,
+    ),
+    createdAtIdx: index("whatsapp_webhook_events_created_at_idx").on(
+      table.createdAt,
+    ),
+    responsePayloadGinIdx: index("whatsapp_webhook_events_response_payload_gin_idx")
+      .using("gin")
+      .on(table.responsePayload),
+  }),
+);
+
+export type WhatsAppWebhookEventRow = typeof whatsappWebhookEvents.$inferSelect;
+export type InsertWhatsAppWebhookEventRow =
+  typeof whatsappWebhookEvents.$inferInsert;
+
+// Zod schemas for validation
+export const insertWhatsAppMessageSchema = z.object({
+  messageId: z.string().optional(),
+  from: z.string().min(1),
+  to: z.string().min(1),
+  orderId: z.string().optional(),
+  messageTemplate: z.string().optional(),
+  messageType: z.string().min(1),
+  messageCategory: z.enum(["text", "template", "media", "interactive"]),
+  messagePayload: z.record(z.any()),
+  status: z
+    .enum(["queued", "sent", "delivered", "read", "failed", "dropped", "unknown"])
+    .default("sent"),
+  error: z.string().optional(),
+});
+
+export type InsertWhatsAppMessage = z.infer<typeof insertWhatsAppMessageSchema>;
+
+export const insertWhatsAppWebhookEventSchema = z.object({
+  messageId: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  eventType: z.string().min(1),
+  responsePayload: z.record(z.any()),
+  mediaUrl: z.string().url().optional(),
+});
+
+export type InsertWhatsAppWebhookEvent = z.infer<
+  typeof insertWhatsAppWebhookEventSchema
+>;

@@ -1,4 +1,8 @@
 import axios from "axios";
+import {
+  logOutgoingMessage,
+  updateMessageWithResponse,
+} from "./whatsappLogger";
 
 const WHATSAPP_API_VERSION = "v22.0";
 const WHATSAPP_BASE_URL = "https://graph.facebook.com";
@@ -20,6 +24,17 @@ function getConfig(): WhatsAppConfig | null {
   }
 
   return { phoneNumberId, accessToken };
+}
+
+/**
+ * Get the WhatsApp business phone number (from field)
+ */
+function getBusinessPhoneNumber(): string {
+  return (
+    process.env.WHATSAPP_BUSINESS_NUMBER_E164 ||
+    process.env.WHATSAPP_PHONE_NUMBER_ID ||
+    "unknown"
+  );
 }
 
 export async function sendTemplateMessage(
@@ -214,6 +229,10 @@ export async function sendTemplateMessageWithRetry(
   recipientNumber: string,
   templateName: string,
   templateParams: any[] = [],
+  options?: {
+    messageType?: string;
+    orderId?: string;
+  },
 ): Promise<boolean> {
   const config = getConfig();
   if (!config) return false;
@@ -260,6 +279,18 @@ export async function sendTemplateMessageWithRetry(
     ];
   }
 
+  // Log outgoing message before API call
+  const logId = await logOutgoingMessage({
+    from: getBusinessPhoneNumber(),
+    to: recipientNumber,
+    orderId: options?.orderId || null,
+    messageTemplate: templateName,
+    messageType: options?.messageType || "template",
+    messageCategory: "template",
+    messagePayload: payload,
+    status: "queued",
+  });
+
   try {
     const response = await retryWithBackoff(async () => {
       return await axios.post(url, payload, {
@@ -281,6 +312,15 @@ export async function sendTemplateMessageWithRetry(
       fullResponse: JSON.stringify(response.data),
     });
 
+    // Update log with message_id and status
+    if (logId) {
+      await updateMessageWithResponse(
+        logId,
+        messageId || null,
+        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+      );
+    }
+
     // Check for warnings or errors in the response
     if (response.data.errors) {
       console.warn("WhatsApp API returned errors:", response.data.errors);
@@ -299,6 +339,15 @@ export async function sendTemplateMessageWithRetry(
       statusCode: error.response?.status,
       statusText: error.response?.statusText,
     });
+
+    // Update log with error status
+    if (logId) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.message ||
+        "Unknown error";
+      await updateMessageWithResponse(logId, null, "failed", errorMessage);
+    }
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
@@ -319,6 +368,10 @@ export async function sendTemplateMessageWithRetry(
 export async function sendTextMessageWithRetry(
   recipientNumber: string,
   messageText: string,
+  options?: {
+    messageType?: string;
+    orderId?: string;
+  },
 ): Promise<boolean> {
   const config = getConfig();
   if (!config) return false;
@@ -341,6 +394,18 @@ export async function sendTextMessageWithRetry(
     },
   };
 
+  // Log outgoing message before API call
+  const logId = await logOutgoingMessage({
+    from: getBusinessPhoneNumber(),
+    to: recipientNumber,
+    orderId: options?.orderId || null,
+    messageTemplate: null,
+    messageType: options?.messageType || "text",
+    messageCategory: "text",
+    messagePayload: payload,
+    status: "queued",
+  });
+
   try {
     const response = await retryWithBackoff(async () => {
       return await axios.post(url, payload, {
@@ -361,6 +426,15 @@ export async function sendTextMessageWithRetry(
       status: responseStatus,
       fullResponse: response.data,
     });
+
+    // Update log with message_id and status
+    if (logId) {
+      await updateMessageWithResponse(
+        logId,
+        messageId || null,
+        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+      );
+    }
 
     // Check for warnings or errors in the response
     if (response.data.errors) {
@@ -394,6 +468,15 @@ export async function sendTextMessageWithRetry(
       errorInfo,
     );
 
+    // Update log with error status
+    if (logId) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.message ||
+        "Unknown error";
+      await updateMessageWithResponse(logId, null, "failed", errorMessage);
+    }
+
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
       const whatsappError = error.response.data.error;
@@ -422,6 +505,10 @@ export async function sendInteractiveMessageWithCTA(
   messageText: string,
   buttonTitle: string,
   buttonUrl: string,
+  options?: {
+    messageType?: string;
+    orderId?: string;
+  },
 ): Promise<boolean> {
   const config = getConfig();
   if (!config) return false;
@@ -453,6 +540,18 @@ export async function sendInteractiveMessageWithCTA(
     },
   };
 
+  // Log outgoing message before API call
+  const logId = await logOutgoingMessage({
+    from: getBusinessPhoneNumber(),
+    to: recipientNumber,
+    orderId: options?.orderId || null,
+    messageTemplate: null,
+    messageType: options?.messageType || "interactive",
+    messageCategory: "interactive",
+    messagePayload: payload,
+    status: "queued",
+  });
+
   try {
     const response = await retryWithBackoff(async () => {
       return await axios.post(url, payload, {
@@ -474,6 +573,15 @@ export async function sendInteractiveMessageWithCTA(
       buttonUrl,
       fullResponse: response.data,
     });
+
+    // Update log with message_id and status
+    if (logId) {
+      await updateMessageWithResponse(
+        logId,
+        messageId || null,
+        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+      );
+    }
 
     // Check for warnings or errors in the response
     if (response.data.errors) {
@@ -508,6 +616,15 @@ export async function sendInteractiveMessageWithCTA(
       "Failed to send WhatsApp interactive message after retries:",
       errorInfo,
     );
+
+    // Update log with error status
+    if (logId) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.message ||
+        "Unknown error";
+      await updateMessageWithResponse(logId, null, "failed", errorMessage);
+    }
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {
@@ -1053,6 +1170,10 @@ export async function sendWhatsappButtonTemplate(
   bodyParameters: string[] = [],
   buttonText: string,
   buttonIndex: string = "0",
+  options?: {
+    messageType?: string;
+    orderId?: string;
+  },
 ): Promise<boolean> {
   const config = getConfig();
   if (!config) return false;
@@ -1104,6 +1225,18 @@ export async function sendWhatsappButtonTemplate(
     },
   };
 
+  // Log outgoing message before API call
+  const logId = await logOutgoingMessage({
+    from: getBusinessPhoneNumber(),
+    to: recipientNumber,
+    orderId: options?.orderId || null,
+    messageTemplate: templateName,
+    messageType: options?.messageType || "button_template",
+    messageCategory: "template",
+    messagePayload: payload,
+    status: "queued",
+  });
+
   try {
     const response = await retryWithBackoff(async () => {
       return await axios.post(url, payload, {
@@ -1124,6 +1257,15 @@ export async function sendWhatsappButtonTemplate(
       template: templateName,
       fullResponse: response.data,
     });
+
+    // Update log with message_id and status
+    if (logId) {
+      await updateMessageWithResponse(
+        logId,
+        messageId || null,
+        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+      );
+    }
 
     // Check for warnings or errors in the response
     if (response.data.errors) {
@@ -1146,6 +1288,15 @@ export async function sendWhatsappButtonTemplate(
         statusText: error.response?.statusText,
       },
     );
+
+    // Update log with error status
+    if (logId) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.message ||
+        "Unknown error";
+      await updateMessageWithResponse(logId, null, "failed", errorMessage);
+    }
 
     // Log specific WhatsApp API error codes
     if (error.response?.data?.error) {

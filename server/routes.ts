@@ -7,6 +7,10 @@ import {
   insertFreeTrialSchema,
   insertFeedbackSchema,
 } from "@shared/schema";
+import {
+  logWebhookEvent,
+  correlateWebhookToMessage,
+} from "./whatsappLogger";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for file uploads (memory storage)
@@ -806,6 +810,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           conversation: status.conversation,
           pricing: status.pricing,
         });
+
+        // Log webhook event and correlate with outgoing message
+        const statusMapping: Record<string, "sent" | "delivered" | "read" | "failed" | "dropped" | "unknown"> = {
+          sent: "sent",
+          delivered: "delivered",
+          read: "read",
+          failed: "failed",
+          deleted: "dropped",
+        };
+
+        const mappedStatus =
+          statusMapping[status.status] || "unknown";
+        const errorMessage = status.errors?.[0]?.message;
+
+        await correlateWebhookToMessage(
+          {
+            messageId: status.id,
+            from: null,
+            to: status.recipient_id || null,
+            eventType: "status_update",
+            responsePayload: status,
+            mediaUrl: null,
+          },
+          mappedStatus,
+          errorMessage,
+        );
+
         // Status can be: sent, delivered, read, failed
         return;
       }
@@ -827,6 +858,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log("WhatsApp message:", JSON.stringify(message, null, 2));
+
+      // Log incoming message webhook event (skip media per requirements)
+      await logWebhookEvent({
+        messageId: message.id || null,
+        from: fromNumber || null,
+        to: value.metadata?.phone_number_id || null,
+        eventType: "incoming_message",
+        responsePayload: {
+          ...value,
+          messages: [message],
+        },
+        mediaUrl: null, // Skip storing incoming message media per requirements
+      });
 
       const messageIdempotencyKey = `whatsapp_msg_${message.id}`;
       const alreadyProcessed = await storage.isWebhookProcessed(
