@@ -91,6 +91,16 @@ export default function PlaylistAlbumsGallery() {
 
   // State for language dropdown
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  // Handle window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Handle language change
   const handleLanguageChange = useCallback((language: "en" | "hi") => {
@@ -626,35 +636,83 @@ export default function PlaylistAlbumsGallery() {
       </div>
 
       {/* Content */}
-      <div style={{ padding: "0 1rem 1rem" }}>
-        {/* Album Cover */}
-        <img
-          src={album.coverImage}
-          alt={trial.selectedAlbum}
+      <div style={{ padding: 0 }}>
+        {/* Cover Image Section - Full Width */}
+        <div
           style={{
+            position: "relative",
             width: "100%",
-            maxWidth: "280px",
-            height: "auto",
-            borderRadius: "12px",
-            margin: "0.75rem auto 0.5rem",
-            display: "block",
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
-          }}
-        />
-
-        {/* Album Title */}
-        <h1
-          style={{
-            fontFamily: "Outfit, sans-serif",
-            fontSize: "1.75rem",
-            fontWeight: "700",
-            color: "#000",
-            margin: "1rem 0 0.75rem",
-            textAlign: "left",
+            height: isMobile ? "180px" : "220px",
+            overflow: "visible",
+            backgroundColor: "#C9C1B1",
           }}
         >
-          {trial.selectedAlbum}
-        </h1>
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src="https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/coverImage.jpg"
+              alt="Cover"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+          
+          {/* Circular Profile Image - Overlapping on Left */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: isMobile ? "-60px" : "-70px",
+              left: isMobile ? "1rem" : "1.5rem",
+              width: isMobile ? "120px" : "140px",
+              height: isMobile ? "120px" : "140px",
+              borderRadius: "50%",
+              border: "4px solid white",
+              backgroundColor: "white",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+              overflow: "hidden",
+              zIndex: 10,
+            }}
+          >
+            <img
+              src={album.coverImage}
+              alt={trial.selectedAlbum}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Content Below Cover */}
+        <div
+          style={{
+            padding: "0 1rem 1rem",
+            paddingTop: isMobile ? "3.5rem" : "4.5rem",
+          }}
+        >
+          {/* Album Title */}
+          <h1
+            style={{
+              fontFamily: "Outfit, sans-serif",
+              fontSize: isMobile ? "1.25rem" : "1.5rem",
+              fontWeight: "700",
+              color: "#000",
+              margin: "0 0 0.75rem",
+              textAlign: "left",
+            }}
+          >
+            {trial.selectedAlbum}
+          </h1>
 
         {/* Storyteller Tag and Description */}
         <div
@@ -883,6 +941,7 @@ export default function PlaylistAlbumsGallery() {
               </div>
             );
           })}
+        </div>
         </div>
       </div>
 
