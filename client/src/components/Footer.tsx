@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { SiFacebook, SiInstagram } from "react-icons/si";
+import { SiFacebook, SiInstagram, SiWhatsapp } from "react-icons/si";
 
 export function Footer() {
   const [, setLocation] = useLocation();
@@ -29,6 +29,16 @@ export function Footer() {
         {/* Social Media Icons - Top Right */}
         <div className="flex justify-end mb-8">
           <div className="flex gap-4">
+            <a
+              href="https://wa.me/918510889286"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-[#EEE9DF]/10 hover:bg-[#FFB162]/20 flex items-center justify-center transition-colors"
+              data-testid="link-whatsapp"
+              aria-label="WhatsApp"
+            >
+              <SiWhatsapp className="w-5 h-5 text-[#EEE9DF]" />
+            </a>
             <a
               href="https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2"
               target="_blank"
