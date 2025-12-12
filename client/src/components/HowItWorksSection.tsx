@@ -12,25 +12,25 @@ interface HowItWorksSectionProps {
 const defaultSteps: Step[] = [
   {
     number: "1",
-    title: "Pick your album",
+    title: "Choose an Album",
     description:
-      "Choose the story album you want to create — the one that will capture your family's heart.",
+      "Pick the kind of stories you want to preserve - childhood, love, wisdom, family moments.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_1.jpg",
   },
   {
     number: "2",
-    title: "Record your stories",
+    title: "They Share Their Stories on WhatsApp",
     description:
-      "Share your memories, moments, and wisdom — just speak naturally, and let your stories come alive.",
+      "Your loved one receives prompts and replies in their own voice, at their own pace.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_2.jpg",
   },
   {
     number: "3",
-    title: "Make your Kahani eternal",
+    title: "Their Kahani Becomes Forever",
     description:
-      "Your stories are now safely preserved, ready to be cherished for generations.",
+      "You get a beautiful audio album that can be accessed anytime, anywhere - even after 100 years.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_3.jpg",
   },
