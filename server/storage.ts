@@ -489,7 +489,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingReminders(): Promise<FreeTrialRow[]> {
     const now = new Date();
-    const reminderThreshold = new Date(now.getTime() - 36 * 60 * 60 * 1000);
+    const reminderThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000);
     const trials = await db
       .select()
       .from(freeTrials)
