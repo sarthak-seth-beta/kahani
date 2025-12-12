@@ -15,6 +15,7 @@ interface Album {
   title: string;
   description: string;
   cover_image: string;
+  questions?: string[];
   best_fit_for?: string[] | null;
   keywords?: string[];
 }
@@ -30,6 +31,7 @@ export default function FreeTrialCheckout() {
   });
 
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [expandedAlbums, setExpandedAlbums] = useState<Set<string>>(new Set());
 
   const {
     searchInput,
@@ -41,6 +43,18 @@ export default function FreeTrialCheckout() {
     uniqueBestFitFor,
     filteredAlbums,
   } = useAlbumFilters(albums);
+
+  const toggleQuestions = (albumId: string) => {
+    setExpandedAlbums((prev) => {
+      const next = new Set(prev);
+      if (next.has(albumId)) {
+        next.delete(albumId);
+      } else {
+        next.add(albumId);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -166,6 +180,36 @@ export default function FreeTrialCheckout() {
                         {album.description}
                       </p>
                     </div>
+
+                    {/* Show Questions Button */}
+                    {album.questions && album.questions.length > 0 && (
+                      <div className="pt-1">
+                        <Button
+                          variant="ghost"
+                          className="w-full text-[#A35139] hover:text-[#A35139]/80 hover:bg-[#A35139]/5 text-sm font-medium"
+                          onClick={() => toggleQuestions(album.id)}
+                          data-testid={`button-show-questions-${album.id}`}
+                        >
+                          {expandedAlbums.has(album.id)
+                            ? "Hide Questions"
+                            : `Show Questions (${album.questions.length})`}
+                        </Button>
+                        {expandedAlbums.has(album.id) && (
+                          <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+                            <ul className="space-y-2">
+                              {album.questions.map((question, index) => (
+                                <li
+                                  key={index}
+                                  className="text-[#1B2632]/80 text-sm leading-relaxed pl-3 border-l-2 border-[#A35139]/40"
+                                >
+                                  {question}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Direct Detail Button */}
                     <div className="pt-1 flex">

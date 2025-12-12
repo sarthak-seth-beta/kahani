@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import {
   DropdownMenu,
@@ -45,6 +46,7 @@ export function AlbumCard({
 }: AlbumCardProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const getShareUrl = (albumId: string) => {
     return `${window.location.origin}/free-trial?albumId=${encodeURIComponent(
@@ -110,7 +112,11 @@ export function AlbumCard({
     setLocation(`/free-trial?albumId=${encodeURIComponent(album.id)}`);
   };
 
-  const displayedQuestions = album.questions.slice(0, questionsToShow);
+  const displayedQuestions = isExpanded
+    ? album.questions
+    : album.questions.slice(0, questionsToShow);
+  
+  const remainingCount = album.questions.length - questionsToShow;
 
   // Format audience tag for display - more human and warm
   const formatAudience = () => {
@@ -244,9 +250,16 @@ export function AlbumCard({
 
             {/* Show remaining questions count if there are more */}
             {album.questions.length > questionsToShow && (
-              <p className="text-[#1B2632]/60 text-xs sm:text-sm font-medium mt-2 pl-3">
-                +{album.questions.length - questionsToShow} more
-              </p>
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-[#1B2632]/60 text-xs sm:text-sm font-medium mt-2 pl-3 hover:text-[#A35139] transition-colors duration-200 cursor-pointer text-left"
+              >
+                {isExpanded ? (
+                  "Show less"
+                ) : (
+                  `+${remainingCount} more`
+                )}
+              </button>
             )}
           </div>
 
