@@ -444,9 +444,9 @@ export const whatsappWebhookEvents = pgTable(
     createdAtIdx: index("whatsapp_webhook_events_created_at_idx").on(
       table.createdAt,
     ),
-    responsePayloadGinIdx: index("whatsapp_webhook_events_response_payload_gin_idx")
-      .using("gin")
-      .on(table.responsePayload),
+    responsePayloadGinIdx: index("whatsapp_webhook_events_response_payload_gin_idx").on(
+      table.responsePayload,
+    ),
   }),
 );
 
