@@ -22,8 +22,6 @@ export default function ThankYou() {
     setTrialId(id);
   }, [location]);
 
-  console.log(trialId, businessPhone);
-
   const handleWhatsAppClick = () => {
     if (!businessPhone || !trialId) return;
 
@@ -37,7 +35,7 @@ export default function ThankYou() {
       <SimpleHeader />
       {/* Spacer to account for fixed header height */}
       <div className="h-16 md:h-20" />
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
+      <div className="flex-1 flex items-center justify-center px-4 py-16 pt-8">
         <div className="max-w-2xl w-full text-center space-y-8">
           {/* Thank You Message */}
           <div className="space-y-6">

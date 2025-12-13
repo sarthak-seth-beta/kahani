@@ -366,12 +366,15 @@ export async function handleIncomingMessage(
       // even if phone number doesn't match (buyer might be using different number)
       const phoneMatches = trial.customerPhone === fromNumber;
       if (!phoneMatches) {
-        console.warn("Buyer message with by_ prefix but phone number mismatch:", {
-          trialId: trial.id,
-          fromNumber,
-          expectedCustomerPhone: trial.customerPhone,
-          orderId: orderIdResult.orderId,
-        });
+        console.warn(
+          "Buyer message with by_ prefix but phone number mismatch:",
+          {
+            trialId: trial.id,
+            fromNumber,
+            expectedCustomerPhone: trial.customerPhone,
+            orderId: orderIdResult.orderId,
+          },
+        );
       }
       // Resend buyer onboarding templates regardless of phone match
       // The by_ prefix is explicit enough to trust the sender is the buyer

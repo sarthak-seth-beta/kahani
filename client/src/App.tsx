@@ -48,7 +48,7 @@ function HomePage() {
   };
 
   const handleTryDemo = () => {
-    setLocation("/vinyl-gallery");
+    setLocation("/playlist-albums/demo-album-id");
   };
 
   return (

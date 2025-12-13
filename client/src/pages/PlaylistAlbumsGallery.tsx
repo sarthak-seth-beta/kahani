@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe } from "lucide-react";
 import { MiniPlayer } from "@/components/playlist/MiniPlayer";
 
-const FALLBACK_AUDIO_URL = "/audio/fallback-voice-note.mp3";
+const FALLBACK_AUDIO_URL =
+  "https://bvkaurviswhrjldeuabx.supabase.co/storage/v1/object/public/voice-notes/demo_audio.m4a";
 
 interface Track {
   questionIndex: number;
