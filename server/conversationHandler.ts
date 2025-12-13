@@ -361,12 +361,25 @@ export async function handleIncomingMessage(
   const orderIdResult = extractOrderId(messageText || interactiveText);
   if (orderIdResult.source === "buyer" && orderIdResult.orderId) {
     const trial = await storage.getFreeTrialDb(orderIdResult.orderId);
-    if (trial && trial.customerPhone === fromNumber) {
-      // Confirmed as buyer message - resend onboarding templates
+    if (trial) {
+      // If by_ prefix is explicitly used, trust it and resend buyer templates
+      // even if phone number doesn't match (buyer might be using different number)
+      const phoneMatches = trial.customerPhone === fromNumber;
+      if (!phoneMatches) {
+        console.warn("Buyer message with by_ prefix but phone number mismatch:", {
+          trialId: trial.id,
+          fromNumber,
+          expectedCustomerPhone: trial.customerPhone,
+          orderId: orderIdResult.orderId,
+        });
+      }
+      // Resend buyer onboarding templates regardless of phone match
+      // The by_ prefix is explicit enough to trust the sender is the buyer
       console.log("Detected buyer message requesting confirmation resend:", {
         trialId: trial.id,
         fromNumber,
         orderId: orderIdResult.orderId,
+        phoneMatches,
       });
       await resendBuyerOnboardingTemplates(trial, fromNumber);
       return;
