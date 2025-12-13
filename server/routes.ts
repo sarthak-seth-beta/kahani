@@ -733,6 +733,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/whatsapp-business-number", async (req, res) => {
+    try {
+      const businessNumber = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
+      if (!businessNumber) {
+        return res
+          .status(500)
+          .json({ error: "WhatsApp business number not configured" });
+      }
+      res.json({ businessNumber });
+    } catch (error: any) {
+      console.error("Error fetching WhatsApp business number:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/webhook/whatsapp", async (req, res) => {
     console.log(
       "WhatsApp webhook verification received:",

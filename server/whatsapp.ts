@@ -909,7 +909,7 @@ export async function sendShareableLink(
   // const isProduction = false;
   const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
 
-  const prefilledMessage = `Hi, ${buyerName} has placed an order ${orderId} for me.`;
+  const prefilledMessage = `Hi, ${buyerName} has placed an order st_${orderId} for me.`;
 
   const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
 

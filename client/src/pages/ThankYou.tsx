@@ -1,10 +1,36 @@
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
 import SimpleHeader from "@/components/SimpleHeader";
+import { MessageCircle } from "lucide-react";
 
 export default function ThankYou() {
+  const [location] = useLocation();
   const [, setLocation] = useLocation();
+  // setup another env when have time to test
+  // const businessPhone = import.meta.env.VITE_WHATSAPP_BUSINESS_NUMBER_E164;
+  const businessPhone = +918700242804;
+  const [trialId, setTrialId] = useState<string | null>(null);
+  let trialId1 = null;
+  useEffect(() => {
+    // Extract trialId from URL query parameters
+    const params = new URLSearchParams(window.location.search);
+    console.log(params);
+
+    const id = params.get("trialId");
+    setTrialId(id);
+  }, [location]);
+
+  console.log(trialId, businessPhone);
+
+  const handleWhatsAppClick = () => {
+    if (!businessPhone || !trialId) return;
+
+    const prefilledMessage = `Hi Vaani, I have placed an order by_${trialId} but didn't get any confirmation yet. Can you please help?`;
+    const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
+    window.open(whatsappLink, "_blank");
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-['Outfit']">
@@ -19,7 +45,7 @@ export default function ThankYou() {
 
             <div className="space-y-6 text-lg sm:text-lg text-[#1B2632]/80 leading-relaxed max-w-xl mx-auto">
               <p>
-                I am Vaani — and from today, I hold your family’s stories close.
+                I am Vaani — and from today, I hold your family's stories close.
                 In the days ahead, your loved one will speak and their memories
                 will find a home that lasts beyond all of us.
               </p>
@@ -31,9 +57,24 @@ export default function ThankYou() {
               </p>
             </div>
           </div>
-
-          {/* Return Home Button */}
-          <div className="pt-4">
+          {/* WhatsApp Support Button */}
+          {trialId && businessPhone && (
+            <div>
+              <p className="text-sm text-[#1B2632]/70">
+                Didn't receive my message on WhatsApp?
+              </p>
+              <Button
+                size="lg"
+                onClick={handleWhatsAppClick}
+                className="w-auto px-8 text-lg h-14 bg-[#A35139] text-white rounded-2xl shadow-xl border border-[#A35139] hover:bg-[#A35139]/90 transition-all duration-300 flex items-center gap-2"
+                data-testid="button-whatsapp-support"
+              >
+                <MessageCircle className="h-5 w-5" />
+                Contact me on WhatsApp
+              </Button>
+            </div>
+          )}
+          <div>
             <Button
               size="lg"
               onClick={() => setLocation("/")}

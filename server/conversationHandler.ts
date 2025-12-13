@@ -8,6 +8,8 @@ import {
   downloadMediaFile,
   sendPhotoRequestToBuyer,
   getLocalizedMessage,
+  sendFreeTrialConfirmation,
+  sendShareableLink,
 } from "./whatsapp";
 import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
 
@@ -30,13 +32,32 @@ interface WhatsAppMessage {
 }
 
 const ORDER_ID_PATTERN = /([a-f0-9-]{36})/i;
+const BUYER_PREFIX_PATTERN = /by_([a-f0-9-]{36})/i;
+const STORYTELLER_PREFIX_PATTERN = /st_([a-f0-9-]{36})/i;
 
 /**
  * Extracts order ID (trial ID) from message text
+ * Returns the orderId and source (buyer/storyteller/null)
  */
-function extractOrderId(messageText: string): string | null {
+function extractOrderId(messageText: string): {
+  orderId: string | null;
+  source: "buyer" | "storyteller" | null;
+} {
+  // Check for buyer prefix first
+  const buyerMatch = messageText.match(BUYER_PREFIX_PATTERN);
+  if (buyerMatch) {
+    return { orderId: buyerMatch[1], source: "buyer" };
+  }
+
+  // Check for storyteller prefix
+  const storytellerMatch = messageText.match(STORYTELLER_PREFIX_PATTERN);
+  if (storytellerMatch) {
+    return { orderId: storytellerMatch[1], source: "storyteller" };
+  }
+
+  // Fall back to regular order ID pattern (no prefix)
   const match = messageText.match(ORDER_ID_PATTERN);
-  return match ? match[1] : null;
+  return { orderId: match ? match[1] : null, source: null };
 }
 
 /**
@@ -76,7 +97,7 @@ async function resolveTrial(
   fromNumber: string,
 ): Promise<any | null> {
   // Priority 1: Check for order ID in message
-  const orderId = extractOrderId(messageText);
+  const { orderId } = extractOrderId(messageText);
   if (orderId) {
     const trial = await findTrialByOrderId(orderId, fromNumber);
     if (trial) {
@@ -133,6 +154,70 @@ async function handleNoTrialFound(
   // Default to English for unknown users
   const message = getLocalizedMessage("noTrialFound", null);
   await sendTextMessageWithRetry(fromNumber, message);
+}
+
+/**
+ * Resends buyer onboarding templates (buyerconfirmation_vaani_en and forward_vaani_en)
+ * This is used when a buyer reaches out because they didn't receive the initial confirmation
+ */
+async function resendBuyerOnboardingTemplates(
+  trial: any,
+  recipientNumber: string,
+): Promise<void> {
+  try {
+    console.log("Resending buyer onboarding templates:", {
+      trialId: trial.id,
+      buyerName: trial.buyerName,
+      storytellerName: trial.storytellerName,
+      recipientNumber,
+    });
+
+    // Send buyer confirmation template
+    const confirmationSent = await sendFreeTrialConfirmation(
+      recipientNumber,
+      trial.buyerName,
+      trial.storytellerName,
+      trial.selectedAlbum,
+    );
+
+    if (!confirmationSent) {
+      console.warn(
+        "Failed to resend buyer confirmation template for trial:",
+        trial.id,
+      );
+    }
+
+    // Wait 2 seconds before sending shareable link (similar to existing flow)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Send shareable link template
+    const shareableLinkSent = await sendShareableLink(
+      recipientNumber,
+      trial.storytellerName,
+      trial.buyerName,
+      trial.id,
+    );
+
+    if (!shareableLinkSent) {
+      console.warn(
+        "Failed to resend shareable link template for trial:",
+        trial.id,
+      );
+    }
+
+    console.log("Buyer onboarding templates resent:", {
+      trialId: trial.id,
+      confirmationSent,
+      shareableLinkSent,
+    });
+  } catch (error) {
+    console.error(
+      "Error resending buyer onboarding templates:",
+      error,
+      "Trial ID:",
+      trial.id,
+    );
+  }
 }
 
 /**
@@ -200,7 +285,7 @@ async function handleInProgressTextMessage(
   fromNumber: string,
   messageText: string,
 ): Promise<void> {
-  const orderId = extractOrderId(messageText);
+  const { orderId } = extractOrderId(messageText);
 
   if (orderId && orderId === trial.id) {
     // User explicitly referenced this trial
@@ -227,7 +312,7 @@ async function handleCompletedTrial(
   fromNumber: string,
   messageText: string,
 ): Promise<void> {
-  const orderId = extractOrderId(messageText);
+  const { orderId } = extractOrderId(messageText);
   const isExplicitReference = orderId === trial.id;
 
   // Only send completion message if:
@@ -272,6 +357,22 @@ export async function handleIncomingMessage(
     }
   }
 
+  // Check for buyer message with by_ prefix - handle separately
+  const orderIdResult = extractOrderId(messageText || interactiveText);
+  if (orderIdResult.source === "buyer" && orderIdResult.orderId) {
+    const trial = await storage.getFreeTrialDb(orderIdResult.orderId);
+    if (trial && trial.customerPhone === fromNumber) {
+      // Confirmed as buyer message - resend onboarding templates
+      console.log("Detected buyer message requesting confirmation resend:", {
+        trialId: trial.id,
+        fromNumber,
+        orderId: orderIdResult.orderId,
+      });
+      await resendBuyerOnboardingTemplates(trial, fromNumber);
+      return;
+    }
+  }
+
   // Resolve which trial to use (normal flow)
   const trial = await resolveTrial(messageText || interactiveText, fromNumber);
 
@@ -279,13 +380,13 @@ export async function handleIncomingMessage(
     await handleNoTrialFound(fromNumber, messageText || interactiveText);
     return;
   }
-
   console.log("Processing message for trial:", {
     trialId: trial.id,
     storytellerName: trial.storytellerName,
     conversationState: trial.conversationState,
     messageType,
-    hasOrderId: !!extractOrderId(messageText || interactiveText),
+    hasOrderId: !!orderIdResult.orderId,
+    orderIdSource: orderIdResult.source,
     interactiveText,
     fromNumber,
     isBuyer: trial.customerPhone === fromNumber,
@@ -293,7 +394,7 @@ export async function handleIncomingMessage(
 
   // Check for multiple active trials scenario
   // Only check if no order ID was provided (order ID takes priority)
-  const orderId = extractOrderId(messageText || interactiveText);
+  const orderId = orderIdResult.orderId;
   if (!orderId) {
     const allActiveTrials =
       await storage.getAllActiveTrialsByStorytellerPhone(fromNumber);

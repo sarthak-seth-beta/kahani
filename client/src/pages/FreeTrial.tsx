@@ -109,7 +109,7 @@ export default function FreeTrial() {
       queryClient.invalidateQueries({ queryKey: ["/api/free-trial"] });
 
       form.reset();
-      setLocation("/thank-you");
+      setLocation(`/thank-you?trialId=${trial.id}`);
     },
     onError: (error: Error) => {
       toast({
