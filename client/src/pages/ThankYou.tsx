@@ -35,6 +35,8 @@ export default function ThankYou() {
   return (
     <div className="min-h-screen bg-background flex flex-col font-['Outfit']">
       <SimpleHeader />
+      {/* Spacer to account for fixed header height */}
+      <div className="h-16 md:h-20" />
       <div className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-2xl w-full text-center space-y-8">
           {/* Thank You Message */}
@@ -59,7 +61,7 @@ export default function ThankYou() {
           </div>
           {/* WhatsApp Support Button */}
           {trialId && businessPhone && (
-            <div>
+            <div className="flex flex-col items-center">
               <p className="text-sm text-[#1B2632]/70">
                 Didn't receive my message on WhatsApp?
               </p>
@@ -74,7 +76,7 @@ export default function ThankYou() {
               </Button>
             </div>
           )}
-          <div>
+          <div className="flex justify-center">
             <Button
               size="lg"
               onClick={() => setLocation("/")}
