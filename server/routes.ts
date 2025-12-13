@@ -7,10 +7,8 @@ import {
   insertFreeTrialSchema,
   insertFeedbackSchema,
 } from "@shared/schema";
-import {
-  logWebhookEvent,
-  correlateWebhookToMessage,
-} from "./whatsappLogger";
+import { logWebhookEvent, correlateWebhookToMessage } from "./whatsappLogger";
+import { sendErrorAlertEmail } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for file uploads (memory storage)
@@ -765,6 +763,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Error codes that should trigger email alerts
+  const ERROR_CODES_TO_ALERT = [131049];
+  const ERROR_CODE_MAP: Record<number, string> = {
+    131049: "Message dropped by Meta",
+  };
+
   app.post("/webhook/whatsapp", async (req, res) => {
     console.log(
       "WhatsApp webhook received:",
@@ -812,7 +816,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         // Log webhook event and correlate with outgoing message
-        const statusMapping: Record<string, "sent" | "delivered" | "read" | "failed" | "dropped" | "unknown"> = {
+        const statusMapping: Record<
+          string,
+          "sent" | "delivered" | "read" | "failed" | "dropped" | "unknown"
+        > = {
           sent: "sent",
           delivered: "delivered",
           read: "read",
@@ -820,9 +827,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           deleted: "dropped",
         };
 
-        const mappedStatus =
-          statusMapping[status.status] || "unknown";
+        const mappedStatus = statusMapping[status.status] || "unknown";
         const errorMessage = status.errors?.[0]?.message;
+
+        // Check for error codes that require email alerts
+        const errorCode = status.errors?.[0]?.code;
+        if (
+          errorCode &&
+          ERROR_CODES_TO_ALERT.includes(errorCode) &&
+          status.recipient_id
+        ) {
+          const errorReason =
+            status.errors?.[0]?.message ||
+            status.errors?.[0]?.title ||
+            "Unknown error";
+          await sendErrorAlertEmail(
+            errorCode,
+            status.recipient_id,
+            errorReason,
+            req.body,
+          );
+        }
 
         await correlateWebhookToMessage(
           {

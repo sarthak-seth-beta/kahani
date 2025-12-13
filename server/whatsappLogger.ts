@@ -114,4 +114,3 @@ export async function correlateWebhookToMessage(
     await updateMessageStatus(webhookData.messageId, status, error);
   }
 }
-

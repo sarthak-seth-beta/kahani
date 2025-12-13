@@ -62,11 +62,11 @@ export async function ensureBucketExists(
 
     // Create the bucket
     console.log(`Creating bucket ${bucketName}...`);
-    
+
     // Determine file size limit and allowed MIME types based on bucket
     let fileSizeLimit = 5242880; // 5MB default
     let allowedMimeTypes: string[] = [];
-    
+
     if (bucketName === VOICE_NOTES_BUCKET) {
       fileSizeLimit = 10485760; // 10MB for voice notes
       allowedMimeTypes = ["audio/ogg", "audio/mp3", "audio/m4a"];
@@ -75,7 +75,13 @@ export async function ensureBucketExists(
       allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     } else if (bucketName === WEBHOOK_AUDIO_BUCKET) {
       fileSizeLimit = 10485760; // 10MB for audio
-      allowedMimeTypes = ["audio/ogg", "audio/mp3", "audio/m4a", "audio/aac", "audio/amr"];
+      allowedMimeTypes = [
+        "audio/ogg",
+        "audio/mp3",
+        "audio/m4a",
+        "audio/aac",
+        "audio/amr",
+      ];
     } else if (bucketName === WEBHOOK_VIDEO_BUCKET) {
       fileSizeLimit = 52428800; // 50MB for video
       allowedMimeTypes = ["video/mp4", "video/3gpp", "video/quicktime"];
@@ -94,11 +100,12 @@ export async function ensureBucketExists(
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       ];
     }
-    
+
     const { data, error } = await supabase.storage.createBucket(bucketName, {
       public: isPublic,
       fileSizeLimit,
-      allowedMimeTypes: allowedMimeTypes.length > 0 ? allowedMimeTypes : undefined,
+      allowedMimeTypes:
+        allowedMimeTypes.length > 0 ? allowedMimeTypes : undefined,
     });
 
     if (error) {
@@ -269,7 +276,9 @@ export async function uploadWebhookMediaToStorage(
   mediaType: "audio" | "video" | "image" | "document",
 ): Promise<string | null> {
   if (!supabase) {
-    console.error("Supabase client not initialized. Cannot upload webhook media.");
+    console.error(
+      "Supabase client not initialized. Cannot upload webhook media.",
+    );
     return null;
   }
 
@@ -313,14 +322,21 @@ export async function uploadWebhookMediaToStorage(
     else if (mimeType.includes("mp4")) extension = "mp4";
     else if (mimeType.includes("3gpp")) extension = "3gp";
     else if (mimeType.includes("quicktime")) extension = "mov";
-    else if (mimeType.includes("jpeg") || mimeType.includes("jpg")) extension = "jpg";
+    else if (mimeType.includes("jpeg") || mimeType.includes("jpg"))
+      extension = "jpg";
     else if (mimeType.includes("png")) extension = "png";
     else if (mimeType.includes("gif")) extension = "gif";
     else if (mimeType.includes("webp")) extension = "webp";
     else if (mimeType.includes("pdf")) extension = "pdf";
-    else if (mimeType.includes("powerpoint") || mimeType.includes("presentation")) extension = "pptx";
-    else if (mimeType.includes("word") || mimeType.includes("document")) extension = "docx";
-    else if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) extension = "xlsx";
+    else if (
+      mimeType.includes("powerpoint") ||
+      mimeType.includes("presentation")
+    )
+      extension = "pptx";
+    else if (mimeType.includes("word") || mimeType.includes("document"))
+      extension = "docx";
+    else if (mimeType.includes("excel") || mimeType.includes("spreadsheet"))
+      extension = "xlsx";
 
     const fullFileName = `${fileName}.${extension}`;
     const filePath = `${fullFileName}`;
@@ -343,7 +359,9 @@ export async function uploadWebhookMediaToStorage(
       .getPublicUrl(filePath);
 
     if (!urlData?.publicUrl) {
-      console.error(`Failed to get public URL for uploaded webhook media in ${bucketName}`);
+      console.error(
+        `Failed to get public URL for uploaded webhook media in ${bucketName}`,
+      );
       return null;
     }
 

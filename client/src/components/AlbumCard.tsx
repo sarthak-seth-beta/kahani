@@ -115,7 +115,7 @@ export function AlbumCard({
   const displayedQuestions = isExpanded
     ? album.questions
     : album.questions.slice(0, questionsToShow);
-  
+
   const remainingCount = album.questions.length - questionsToShow;
 
   // Format audience tag for display - more human and warm

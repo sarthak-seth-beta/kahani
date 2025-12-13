@@ -395,10 +395,10 @@ export const whatsappMessages = pgTable(
     messageTemplate: varchar("message_template", { length: 255 }),
     messageType: varchar("message_type", { length: 100 }).notNull(),
     messageCategory: varchar("message_category", { length: 50 }).notNull(),
-    messagePayload: jsonb("message_payload").notNull().$type<Record<string, any>>(),
-    status: varchar("status", { length: 50 })
+    messagePayload: jsonb("message_payload")
       .notNull()
-      .default("sent"),
+      .$type<Record<string, any>>(),
+    status: varchar("status", { length: 50 }).notNull().default("sent"),
     error: text("error"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -428,7 +428,9 @@ export const whatsappWebhookEvents = pgTable(
     from: varchar("from", { length: 50 }),
     to: varchar("to", { length: 50 }),
     eventType: varchar("event_type", { length: 50 }).notNull(),
-    responsePayload: jsonb("response_payload").notNull().$type<Record<string, any>>(),
+    responsePayload: jsonb("response_payload")
+      .notNull()
+      .$type<Record<string, any>>(),
     mediaUrl: text("media_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -444,9 +446,9 @@ export const whatsappWebhookEvents = pgTable(
     createdAtIdx: index("whatsapp_webhook_events_created_at_idx").on(
       table.createdAt,
     ),
-    responsePayloadGinIdx: index("whatsapp_webhook_events_response_payload_gin_idx").on(
-      table.responsePayload,
-    ),
+    responsePayloadGinIdx: index(
+      "whatsapp_webhook_events_response_payload_gin_idx",
+    ).on(table.responsePayload),
   }),
 );
 
@@ -465,7 +467,15 @@ export const insertWhatsAppMessageSchema = z.object({
   messageCategory: z.enum(["text", "template", "media", "interactive"]),
   messagePayload: z.record(z.any()),
   status: z
-    .enum(["queued", "sent", "delivered", "read", "failed", "dropped", "unknown"])
+    .enum([
+      "queued",
+      "sent",
+      "delivered",
+      "read",
+      "failed",
+      "dropped",
+      "unknown",
+    ])
     .default("sent"),
   error: z.string().optional(),
 });

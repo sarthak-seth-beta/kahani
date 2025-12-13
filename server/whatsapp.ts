@@ -1109,8 +1109,14 @@ export async function sendBuyerCompletionMessage(
   albumId: string,
   languagePreference?: string | null,
 ): Promise<boolean> {
-
-  const buyerCompletionMessage = await sendWhatsappButtonTemplate(recipientNumber, "albumlink_vaani_en", "en", [buyerName,storytellerName], `/custom-album-cover/${albumId}`, "0");
+  const buyerCompletionMessage = await sendWhatsappButtonTemplate(
+    recipientNumber,
+    "albumlink_vaani_en",
+    "en",
+    [buyerName, storytellerName],
+    `/custom-album-cover/${albumId}`,
+    "0",
+  );
   return buyerCompletionMessage;
   // const message = getLocalizedMessage(
   //   "buyerCompletionMessage",
