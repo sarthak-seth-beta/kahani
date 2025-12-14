@@ -952,14 +952,25 @@ async function handleVoiceNote(
     const isProduction = true;
 
     if (isProduction) {
-      // In production: ask readiness before next question
+      // In production: schedule readiness check for 23 hours from now
+      const now = new Date();
+      const nextQuestionScheduledFor = new Date(
+        now.getTime() + 23 * 60 * 60 * 1000,
+      ); // 23 hours from now
+
       await storage.updateFreeTrialDb(trial.id, {
         currentQuestionIndex: nextQuestionIndex,
-        conversationState: "awaiting_readiness",
+        conversationState: "in_progress", // Keep as in_progress so scheduler picks it up
+        nextQuestionScheduledFor,
         reminderSentAt: null,
       });
 
-      await askReadiness(trial, fromNumber);
+      console.log(
+        "Scheduled readiness check for 23 hours from now:",
+        nextQuestionScheduledFor,
+        "for trial:",
+        trial.id,
+      );
     } else {
       // In non-production: schedule next question immediately (2 seconds)
       const now = new Date();
