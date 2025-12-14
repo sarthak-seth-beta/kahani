@@ -131,15 +131,17 @@ export async function sendTextMessage(
 export function normalizePhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, "");
 
-  if (cleaned.startsWith("91") && cleaned.length === 12) {
+  // If number already has country code (length >= 11), return as-is
+  // E.164 format: country code (1-3 digits) + subscriber number (up to 12 digits)
+  // Minimum valid international number is 11 digits (1-digit country + 10-digit number)
+  if (cleaned.length >= 11) {
     return cleaned;
   }
 
-  if (cleaned.length === 10) {
-    return "91" + cleaned;
-  }
-
-  return cleaned;
+  // For numbers without country code, we can't safely assume the country
+  // Return as-is and let validation catch invalid numbers
+  // Note: This might break existing code that relies on Indian number assumption
+  return "91" + cleaned;
 }
 
 export function validateE164(phone: string): boolean {

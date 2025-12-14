@@ -10,6 +10,7 @@ import {
   getLocalizedMessage,
   sendFreeTrialConfirmation,
   sendShareableLink,
+  normalizePhoneNumber,
 } from "./whatsapp";
 import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
 
@@ -329,6 +330,39 @@ async function handleCompletedTrial(
   }
 }
 
+/**
+ * Handles case when buyer accidentally sends the storyteller prefilled message
+ * Sends a polite message explaining they should forward the link to the storyteller
+ */
+async function handleBuyerSendingStorytellerMessage(
+  trial: any,
+  fromNumber: string,
+  orderId: string,
+): Promise<void> {
+  console.log("Detected buyer sending storyteller prefilled message:", {
+    trialId: trial.id,
+    buyerName: trial.buyerName,
+    storytellerName: trial.storytellerName,
+    fromNumber,
+    orderId,
+  });
+
+  // Generate the shareable link (same format as sendShareableLink)
+  const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
+  if (!businessPhone) {
+    console.error("WHATSAPP_BUSINESS_NUMBER_E164 not configured");
+    return;
+  }
+
+  const prefilledMessage = `Hi, ${trial.buyerName} has placed an order st_${orderId} for me.`;
+  const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
+
+  // Send polite message with emojis
+  const message = `Hi ${trial.buyerName}! 👋\n\nLooks like you clicked on the link that was meant for ${trial.storytellerName}. 😊\n\nNo worries! Please *copy this link and send it to ${trial.storytellerName}*:\n\n${whatsappLink}\n\nThey just need to click the link and send the pre-filled message - that's it! ✨\n\nHope to hear from them soon! ❤️`;
+
+  await sendTextMessageWithRetry(fromNumber, message);
+}
+
 export async function handleIncomingMessage(
   fromNumber: string,
   message: WhatsAppMessage,
@@ -349,17 +383,47 @@ export async function handleIncomingMessage(
     interactiveText = message.button.text || message.button.payload || "";
   }
 
+  // Check if buyer is sending the storyteller prefilled message (st_ prefix)
+  // This happens when buyer clicks the link meant for storyteller
+  const combinedText = messageText || interactiveText;
+  const orderIdResult = extractOrderId(combinedText);
+  if (orderIdResult.source === "storyteller" && orderIdResult.orderId) {
+    // Normalize phone number for comparison
+    const normalizedFromNumber = normalizePhoneNumber(fromNumber);
+
+    // Check if this phone number matches a buyer's customerPhone
+    // ToDo: figure out logic for multiple buyers on the same phone number
+    const buyerTrial =
+      await storage.getFreeTrialByBuyerPhone(normalizedFromNumber);
+
+    if (buyerTrial) {
+      // Verify the orderId matches the trial
+      const trial = await storage.getFreeTrialDb(orderIdResult.orderId);
+      if (trial && trial.id === buyerTrial.id) {
+        // Buyer is sending the storyteller prefilled message
+        await handleBuyerSendingStorytellerMessage(
+          trial,
+          normalizedFromNumber,
+          orderIdResult.orderId,
+        );
+        return;
+      }
+    }
+  }
+
   // Check if message is from buyer and is an image - handle separately
   if (messageType === "image") {
-    const buyerTrial = await storage.getFreeTrialByBuyerPhone(fromNumber);
-    if (buyerTrial && buyerTrial.customerPhone === fromNumber) {
-      await handleBuyerImageMessage(buyerTrial, fromNumber, message);
+    const normalizedFromNumber = normalizePhoneNumber(fromNumber);
+    const buyerTrial =
+      await storage.getFreeTrialByBuyerPhone(normalizedFromNumber);
+    if (buyerTrial && buyerTrial.customerPhone === normalizedFromNumber) {
+      await handleBuyerImageMessage(buyerTrial, normalizedFromNumber, message);
       return;
     }
   }
 
   // Check for buyer message with by_ prefix - handle separately
-  const orderIdResult = extractOrderId(messageText || interactiveText);
+  // Note: orderIdResult was already extracted above for the st_ check
   if (orderIdResult.source === "buyer" && orderIdResult.orderId) {
     const trial = await storage.getFreeTrialDb(orderIdResult.orderId);
     if (trial) {
