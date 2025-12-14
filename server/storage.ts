@@ -24,10 +24,12 @@ import {
   eq,
   and,
   lte,
+  lt,
   inArray,
   asc,
   getTableColumns,
   isNotNull,
+  sql,
 } from "drizzle-orm";
 
 export interface IStorage {
@@ -489,7 +491,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingReminders(): Promise<FreeTrialRow[]> {
     const now = new Date();
-    const reminderThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+    const reminderThreshold = new Date(now.getTime() - 8 * 60 * 60 * 1000); // 8 hours
     const trials = await db
       .select()
       .from(freeTrials)
@@ -497,6 +499,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(freeTrials.conversationState, "in_progress"),
           lte(freeTrials.lastQuestionSentAt, reminderThreshold),
+          sql`${freeTrials.questionReminderCount} < 3`,
         ),
       );
     return trials.filter((trial) => {

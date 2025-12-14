@@ -262,6 +262,9 @@ export const freeTrials = pgTable(
       withTimezone: true,
     }),
     reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+    questionReminderCount: integer("question_reminder_count")
+      .notNull()
+      .default(0),
     nextQuestionScheduledFor: timestamp("next_question_scheduled_for", {
       withTimezone: true,
     }),

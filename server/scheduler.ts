@@ -1,7 +1,11 @@
 import cron from "node-cron";
 import { storage } from "./storage";
 import { sendTextMessageWithRetry, getLocalizedMessage } from "./whatsapp";
-import { processRetryReminders, askReadiness } from "./conversationHandler";
+import {
+  processRetryReminders,
+  askReadiness,
+  sendQuestion,
+} from "./conversationHandler";
 
 let isProcessing = false;
 
@@ -106,41 +110,28 @@ export async function sendPendingReminders(): Promise<void> {
       continue;
     }
 
-    const question = await storage.getQuestionByIndex(
-      trial.selectedAlbum,
-      trial.currentQuestionIndex,
-      trial.storytellerLanguagePreference,
-    );
-
-    if (!question) {
-      console.error(
-        "No question found for trial:",
-        trial.id,
-        "index:",
-        trial.currentQuestionIndex,
-      );
-      continue;
-    }
-
-    const reminderMessage = getLocalizedMessage(
-      "reminderMessage",
-      trial.storytellerLanguagePreference,
-      {
-        name: trial.storytellerName,
-        question: question || "",
-      },
-    );
-
     try {
-      await sendTextMessageWithRetry(trial.storytellerPhone, reminderMessage);
+      // Resend the full question instead of just a reminder
+      await sendQuestion(trial, trial.storytellerPhone);
 
+      // Increment reminder count and update timestamps
+      const currentCount = trial.questionReminderCount || 0;
       await storage.updateFreeTrialDb(trial.id, {
+        questionReminderCount: currentCount + 1,
+        lastQuestionSentAt: new Date(),
         reminderSentAt: new Date(),
       });
 
-      console.log("Sent reminder to trial:", trial.id);
+      console.log("Resent question as reminder to trial:", {
+        trialId: trial.id,
+        reminderCount: currentCount + 1,
+      });
     } catch (error) {
-      console.error("Error sending reminder to trial:", trial.id, error);
+      console.error(
+        "Error sending question reminder to trial:",
+        trial.id,
+        error,
+      );
     }
   }
 }

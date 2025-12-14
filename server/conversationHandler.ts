@@ -750,7 +750,7 @@ async function sendFirstQuestion(
   await sendQuestion(trial, fromNumber, questionIndex);
 }
 
-async function sendQuestion(
+export async function sendQuestion(
   trial: any,
   fromNumber: string,
   questionIndex?: number,
@@ -839,6 +839,7 @@ async function sendQuestion(
     currentQuestionIndex: targetQuestionIndex,
     lastQuestionSentAt: new Date(),
     nextQuestionScheduledFor: null,
+    questionReminderCount: 0, // Reset reminder count for new question
   });
   console.log("Trial updated with question sent timestamp");
 }
@@ -924,6 +925,7 @@ async function handleVoiceNote(
       conversationState: "completed",
       nextQuestionScheduledFor: null,
       reminderSentAt: null,
+      questionReminderCount: 0, // Reset reminder count
     });
 
     const { sendStorytellerCompletionMessages, sendBuyerCompletionMessage } =
@@ -963,6 +965,7 @@ async function handleVoiceNote(
         conversationState: "in_progress", // Keep as in_progress so scheduler picks it up
         nextQuestionScheduledFor,
         reminderSentAt: null,
+        questionReminderCount: 0, // Reset reminder count since question was answered
       });
 
       console.log(
@@ -980,6 +983,7 @@ async function handleVoiceNote(
         currentQuestionIndex: nextQuestionIndex,
         nextQuestionScheduledFor,
         reminderSentAt: null,
+        questionReminderCount: 0, // Reset reminder count since question was answered
       });
     }
   }

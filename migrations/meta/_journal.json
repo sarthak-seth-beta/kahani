@@ -15,6 +15,13 @@
       "when": 1762701351537,
       "tag": "0001_add_albums",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762701351538,
+      "tag": "0002_add_question_reminder_count",
+      "breakpoints": true
     }
   ]
 }
