@@ -24,7 +24,8 @@ export async function sendErrorAlertEmail(
   }
 
   try {
-    const emailBody = `recipient_id: ${recipientId}
+    const emailBody = `
+    recipient_id: ${recipientId}
 error code: ${errorCode}
 error reason: ${errorReason}
 
@@ -33,10 +34,14 @@ ${JSON.stringify(webhookPayload, null, 2)}
 
 `;
 
+    // Make subject unique to prevent email threading
+
+    const uniqueSubject = `Message dropped by Meta fir ${recipientId}`;
+
     const response = await resend.emails.send({
       from: "Kahani Alerts <onboarding@resend.dev>",
       to: "sarthakseth021@gmail.com",
-      subject: "Message dropped by Meta",
+      subject: uniqueSubject,
       text: emailBody,
     });
 

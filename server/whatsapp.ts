@@ -903,6 +903,7 @@ export async function sendShareableLink(
   storytellerName: string,
   buyerName: string,
   orderId: string,
+  languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
   const isProduction = true;
@@ -919,9 +920,12 @@ export async function sendShareableLink(
       { type: "text", text: whatsappLink },
     ];
 
+    const templateName =
+      `forward_vaani` + getStorytellerLanguageSuffix(languagePreference);
+
     return sendTemplateMessageWithRetry(
       recipientNumber,
-      "forward_vaani_en",
+      templateName,
       templateParams,
     );
   } else {

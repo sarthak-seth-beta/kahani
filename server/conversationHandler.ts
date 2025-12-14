@@ -196,6 +196,7 @@ async function resendBuyerOnboardingTemplates(
       trial.storytellerName,
       trial.buyerName,
       trial.id,
+      trial.storytellerLanguagePreference,
     );
 
     if (!shareableLinkSent) {

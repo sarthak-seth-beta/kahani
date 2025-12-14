@@ -136,6 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               validatedData.storytellerName,
               validatedData.buyerName,
               trial.id,
+              validatedData.storytellerLanguagePreference,
             );
 
             if (!shareableLinkSent) {
