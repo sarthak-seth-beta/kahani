@@ -30,6 +30,7 @@ import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
 import CustomAlbumCover from "@/pages/CustomAlbumCover";
+import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import NotFound from "@/pages/not-found";
 
 function HomePage() {
@@ -115,6 +116,7 @@ function App() {
             path="/custom-album-cover/:trialId"
             component={CustomAlbumCover}
           />
+          <Route path="/yl-personal-support" component={YlPersonalSupport} />
           <Route component={NotFound} />
         </Switch>
         <Toaster />
