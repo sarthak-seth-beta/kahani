@@ -11,6 +11,8 @@ import {
   sendFreeTrialConfirmation,
   sendShareableLink,
   normalizePhoneNumber,
+  sendTemplateMessageWithRetry,
+  sendInteractiveMessageWithCTA,
 } from "./whatsapp";
 import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
 
@@ -144,14 +146,38 @@ async function resolveTrial(
 async function handleNoTrialFound(
   fromNumber: string,
   messageText: string,
+  messageType?: string,
 ): Promise<void> {
   console.log(
     "No free trial found for phone:",
     fromNumber,
     "Message:",
     messageText,
+    "MessageType:",
+    messageType,
   );
 
+  // Check if this is a support query (text message with no order ID)
+  const orderIdResult = extractOrderId(messageText);
+  const isSupportQuery = messageType === "text" && !orderIdResult.orderId;
+
+  if (isSupportQuery) {
+    console.log("Detected support query, sending support response:", {
+      fromNumber,
+      messageText,
+    });
+
+    // Send template message
+    await sendTemplateMessageWithRetry(
+      fromNumber,
+      "fallbackbuyer_vaani_en",
+      [], // No parameters
+    );
+
+    return;
+  }
+
+  // Default behavior for non-support queries
   // Default to English for unknown users
   const message = getLocalizedMessage("noTrialFound", null);
   await sendTextMessageWithRetry(fromNumber, message);
@@ -458,7 +484,11 @@ export async function handleIncomingMessage(
   const trial = await resolveTrial(messageText || interactiveText, fromNumber);
 
   if (!trial) {
-    await handleNoTrialFound(fromNumber, messageText || interactiveText);
+    await handleNoTrialFound(
+      fromNumber,
+      messageText || interactiveText,
+      messageType,
+    );
     return;
   }
   console.log("Processing message for trial:", {

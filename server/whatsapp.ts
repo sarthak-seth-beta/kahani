@@ -319,7 +319,7 @@ export async function sendTemplateMessageWithRetry(
       await updateMessageWithResponse(
         logId,
         messageId || null,
-        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+        responseStatus === "ACCEPTED" ? "sent" : "failed",
       );
     }
 
@@ -434,7 +434,7 @@ export async function sendTextMessageWithRetry(
       await updateMessageWithResponse(
         logId,
         messageId || null,
-        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+        responseStatus === "ACCEPTED" ? "sent" : "failed",
       );
     }
 
@@ -581,7 +581,7 @@ export async function sendInteractiveMessageWithCTA(
       await updateMessageWithResponse(
         logId,
         messageId || null,
-        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+        responseStatus === "ACCEPTED" ? "sent" : "failed",
       );
     }
 
@@ -1278,7 +1278,7 @@ export async function sendWhatsappButtonTemplate(
       await updateMessageWithResponse(
         logId,
         messageId || null,
-        responseStatus === "ACCEPTED" ? "sent" : "unknown",
+        responseStatus === "ACCEPTED" ? "sent" : "failed",
       );
     }
 
