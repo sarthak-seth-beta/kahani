@@ -738,7 +738,7 @@ async function handleReadinessResponse(
       throw error;
     }
   } else if (isMaybe) {
-    const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000); // 4 hours
+    const retryAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
 
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
@@ -1299,33 +1299,7 @@ export async function processRetryReminders(): Promise<void> {
 
     await askReadiness(trial, trial.storytellerPhone);
 
-    if (nextRetryCount >= 3) {
-      await storage.updateFreeTrialDb(trial.id, {
-        conversationState: "completed",
-        retryReadinessAt: null,
-        retryCount: nextRetryCount,
-        readinessAskedAt: new Date(),
-      });
-
-      console.log("Sent 3rd retry - closing flow:", trial.id);
-
-      // const isProduction = process.env.NODE_ENV === "production";
-      const isProduction = true;
-      if (!isProduction) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        const message = getLocalizedMessage(
-          "notRightTime",
-          trial.storytellerLanguagePreference,
-          { name: trial.storytellerName },
-        );
-        await sendTextMessageWithRetry(trial.storytellerPhone, message);
-      }
-
-      continue;
-    }
-
-    const nextRetryAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+    const nextRetryAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
 
     await storage.updateFreeTrialDb(trial.id, {
       readinessAskedAt: new Date(),
