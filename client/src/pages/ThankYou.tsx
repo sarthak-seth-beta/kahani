@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
@@ -12,7 +12,11 @@ export default function ThankYou() {
   // const businessPhone = import.meta.env.VITE_WHATSAPP_BUSINESS_NUMBER_E164;
   const businessPhone = +918700242804;
   const [trialId, setTrialId] = useState<string | null>(null);
-  let trialId1 = null;
+  const [buttonText, setButtonText] = useState<string>(
+    "Redirecting to WhatsApp...",
+  );
+  const [hasRedirected, setHasRedirected] = useState<boolean>(false);
+
   useEffect(() => {
     // Extract trialId from URL query parameters
     const params = new URLSearchParams(window.location.search);
@@ -22,12 +26,40 @@ export default function ThankYou() {
     setTrialId(id);
   }, [location]);
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppRedirect = useCallback(() => {
     if (!businessPhone || !trialId) return;
 
     const prefilledMessage = `Hi Vaani, I have placed an order by_${trialId} but didn't get any confirmation yet. Can you please help?`;
     const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
     window.open(whatsappLink, "_blank");
+  }, [businessPhone, trialId]);
+
+  useEffect(() => {
+    // Auto-redirect after 3 seconds if trialId and businessPhone are available
+    if (trialId && businessPhone && !hasRedirected) {
+      const timer = setTimeout(() => {
+        setButtonText("Contact me on WhatsApp");
+        handleWhatsAppRedirect();
+        setHasRedirected(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [trialId, businessPhone, hasRedirected, handleWhatsAppRedirect]);
+
+  const handleWhatsAppClick = () => {
+    if (!businessPhone || !trialId) return;
+
+    // If already redirected, just open again
+    if (hasRedirected) {
+      handleWhatsAppRedirect();
+      return;
+    }
+
+    // Otherwise, redirect immediately
+    setButtonText("Contact me on WhatsApp");
+    setHasRedirected(true);
+    handleWhatsAppRedirect();
   };
 
   return (
@@ -53,7 +85,7 @@ export default function ThankYou() {
               <p>Thank you for choosing Kahani. It means more than you know.</p>
 
               <p className="font-medium text-[#A35139]">
-                I shall reach out to you on Whatsapp shortly!
+                You will be readirected to Whatsapp shortly!
               </p>
             </div>
           </div>
@@ -61,7 +93,8 @@ export default function ThankYou() {
           {trialId && businessPhone && (
             <div className="flex flex-col items-center">
               <p className="text-sm text-[#1B2632]/70">
-                Didn't receive my message on WhatsApp?
+                Please click the button below if you are not redirected to
+                Whatsapp.
               </p>
               <Button
                 size="lg"
@@ -70,7 +103,7 @@ export default function ThankYou() {
                 data-testid="button-whatsapp-support"
               >
                 <MessageCircle className="h-5 w-5" />
-                Contact me on WhatsApp
+                {buttonText}
               </Button>
             </div>
           )}

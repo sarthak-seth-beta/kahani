@@ -100,70 +100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validatedData.storytellerLanguagePreference,
       });
 
-      // Send response immediately - don't wait for WhatsApp messages
+      // Send response immediately
       res.json({
         ...trial,
-        confirmationSent: false, // Will be updated asynchronously
-        shareableLinkSent: false, // Will be sent after confirmation
       });
-
-      // Handle WhatsApp messages asynchronously (don't await)
-      (async () => {
-        try {
-          const { sendFreeTrialConfirmation, sendShareableLink } =
-            await import("./whatsapp");
-
-          const confirmationSent = await sendFreeTrialConfirmation(
-            normalizedPhone,
-            validatedData.buyerName,
-            validatedData.storytellerName,
-            validatedData.selectedAlbum,
-          );
-
-          if (!confirmationSent) {
-            console.warn(
-              "WhatsApp confirmation message failed for trial:",
-              trial.id,
-            );
-          }
-
-          // Send shareable link after buyer confirmation (2 second delay)
-          let shareableLinkSent = false;
-          if (confirmationSent) {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            shareableLinkSent = await sendShareableLink(
-              normalizedPhone,
-              validatedData.storytellerName,
-              validatedData.buyerName,
-              trial.id,
-              validatedData.storytellerLanguagePreference,
-            );
-
-            if (!shareableLinkSent) {
-              console.warn(
-                "WhatsApp shareable link message failed for trial:",
-                trial.id,
-              );
-            }
-          }
-
-          console.log("Free trial WhatsApp messages sent:", {
-            id: trial.id,
-            buyerName: trial.buyerName,
-            storytellerName: trial.storytellerName,
-            selectedAlbum: trial.selectedAlbum,
-            customerPhone: normalizedPhone,
-            confirmationSent,
-            shareableLinkSent,
-          });
-        } catch (error) {
-          console.error(
-            "Error sending WhatsApp messages for trial:",
-            trial.id,
-            error,
-          );
-        }
-      })();
     } catch (error: any) {
       console.error("Error creating free trial:", error);
       if (error.name === "ZodError") {
