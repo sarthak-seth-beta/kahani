@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Check, Heart } from "lucide-react";
 import { PhoneInput } from "@/components/PhoneInput";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 type FreeTrialFormData = z.infer<typeof insertFreeTrialSchema>;
 
@@ -98,15 +99,29 @@ export default function FreeTrial() {
 
   const freeTrialMutation = useMutation({
     mutationFn: async (data: FreeTrialFormData) => {
+      trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_STARTED, {
+        album_title: data.selectedAlbum,
+        language_preference: data.storytellerLanguagePreference,
+      });
       const response = await apiRequest("POST", "/api/free-trial", data);
       if (!response.ok) {
         const errorData = await response.json();
+        trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_ERROR, {
+          error_message: errorData.error || "Failed to sign up",
+          album_title: data.selectedAlbum,
+        });
         throw new Error(errorData.error || "Failed to sign up");
       }
       return response.json();
     },
     onSuccess: (trial) => {
       queryClient.invalidateQueries({ queryKey: ["/api/free-trial"] });
+
+      trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
+        trial_id: trial.id,
+        album_title: form.getValues("selectedAlbum"),
+        language_preference: form.getValues("storytellerLanguagePreference"),
+      });
 
       form.reset();
       setLocation(`/thank-you?trialId=${trial.id}`);

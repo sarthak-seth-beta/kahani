@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface FilterDialogProps {
   isOpen: boolean;
@@ -56,7 +57,13 @@ export function FilterDialog({
               <AccordionContent>
                 <div className="space-y-2 pt-2">
                   <button
-                    onClick={() => onFilterTypeChange("all")}
+                    onClick={() => {
+                      onFilterTypeChange("all");
+                      trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                        filter_type: "all",
+                        filter_category: "type",
+                      });
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                       filterType === "all"
                         ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -66,7 +73,13 @@ export function FilterDialog({
                     All Albums
                   </button>
                   <button
-                    onClick={() => onFilterTypeChange("family")}
+                    onClick={() => {
+                      onFilterTypeChange("family");
+                      trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                        filter_type: "family",
+                        filter_category: "type",
+                      });
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                       filterType === "family"
                         ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -76,7 +89,13 @@ export function FilterDialog({
                     Family & Childhood
                   </button>
                   <button
-                    onClick={() => onFilterTypeChange("wisdom")}
+                    onClick={() => {
+                      onFilterTypeChange("wisdom");
+                      trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                        filter_type: "wisdom",
+                        filter_category: "type",
+                      });
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                       filterType === "wisdom"
                         ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -86,7 +105,13 @@ export function FilterDialog({
                     Wisdom & Life Lessons
                   </button>
                   <button
-                    onClick={() => onFilterTypeChange("love")}
+                    onClick={() => {
+                      onFilterTypeChange("love");
+                      trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                        filter_type: "love",
+                        filter_category: "type",
+                      });
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                       filterType === "love"
                         ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -96,7 +121,13 @@ export function FilterDialog({
                     Love & Home
                   </button>
                   <button
-                    onClick={() => onFilterTypeChange("career")}
+                    onClick={() => {
+                      onFilterTypeChange("career");
+                      trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                        filter_type: "career",
+                        filter_category: "type",
+                      });
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                       filterType === "career"
                         ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -118,7 +149,13 @@ export function FilterDialog({
                 <AccordionContent>
                   <div className="space-y-2 pt-2">
                     <button
-                      onClick={() => onFilterBestFitForChange(null)}
+                      onClick={() => {
+                        onFilterBestFitForChange(null);
+                        trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                          filter_type: "all",
+                          filter_category: "best_fit_for",
+                        });
+                      }}
                       className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                         !filterBestFitFor
                           ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -130,11 +167,16 @@ export function FilterDialog({
                     {uniqueBestFitFor.map((bestFit) => (
                       <button
                         key={bestFit}
-                        onClick={() =>
-                          onFilterBestFitForChange(
-                            filterBestFitFor === bestFit ? null : bestFit,
-                          )
-                        }
+                        onClick={() => {
+                          const newValue =
+                            filterBestFitFor === bestFit ? null : bestFit;
+                          onFilterBestFitForChange(newValue);
+                          trackEvent(AnalyticsEvents.FILTER_APPLIED, {
+                            filter_type: newValue || "all",
+                            filter_category: "best_fit_for",
+                            filter_value: bestFit,
+                          });
+                        }}
                         className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
                           filterBestFitFor === bestFit
                             ? "border-[#A35139] bg-[#A35139]/5 text-[#A35139] font-semibold"
@@ -157,6 +199,7 @@ export function FilterDialog({
             onClick={() => {
               onFilterTypeChange("all");
               onFilterBestFitForChange(null);
+              trackEvent(AnalyticsEvents.FILTER_CLEARED);
             }}
           >
             Clear All

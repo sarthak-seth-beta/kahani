@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Minus, Plus, ArrowLeft, Loader2 } from "lucide-react";
 import { Footer } from "@/components/Footer";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface Album {
   id: string;
@@ -36,16 +37,40 @@ export default function Checkout() {
     }
   }, [albums]);
 
+  // Track page view
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.CHECKOUT_PAGE_VIEWED, {
+      albums_count: albums?.length || 0,
+    });
+  }, [albums?.length]);
+
   const handleQuantityChange = (albumId: string, delta: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [albumId]: Math.max(1, (prev[albumId] || 1) + delta),
-    }));
+    setQuantities((prev) => {
+      const newQuantity = Math.max(1, (prev[albumId] || 1) + delta);
+      trackEvent(AnalyticsEvents.QUANTITY_CHANGED, {
+        album_id: albumId,
+        old_quantity: prev[albumId] || 1,
+        new_quantity: newQuantity,
+        delta: delta,
+      });
+      return {
+        ...prev,
+        [albumId]: newQuantity,
+      };
+    });
   };
 
   const handleBuyNow = () => {
     if (!albums) return;
     const selectedAlbums = albums.filter((album) => quantities[album.id] > 0);
+    trackEvent(AnalyticsEvents.BUY_NOW_CLICKED, {
+      albums_count: selectedAlbums.length,
+      total_quantity: selectedAlbums.reduce(
+        (sum, album) => sum + quantities[album.id],
+        0,
+      ),
+      album_ids: selectedAlbums.map((album) => album.id),
+    });
     console.log(
       "Buy Now - Selected Albums:",
       selectedAlbums.map((album) => ({
@@ -57,6 +82,9 @@ export default function Checkout() {
   };
 
   const handleFreeTrial = () => {
+    trackEvent(AnalyticsEvents.FREE_TRIAL_BUTTON_CLICKED, {
+      source: "checkout_page",
+    });
     console.log("Navigating to Free Trial Album Selection");
     setLocation("/free-trial-checkout");
   };
@@ -68,7 +96,12 @@ export default function Checkout() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           <div className="flex items-center justify-between h-16">
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => {
+                trackEvent(AnalyticsEvents.BACK_BUTTON_CLICKED, {
+                  source_page: "checkout",
+                });
+                setLocation("/");
+              }}
               className="flex items-center gap-2 text-[#1B2632] hover-elevate active-elevate-2 px-3 py-2 rounded-lg"
               data-testid="button-back"
             >

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Share2, Copy, Mail, MessageCircle, Heart, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AlbumCard as AlbumCardType } from "@/components/SectionFourAlbums";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 export interface AlbumCardProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -58,6 +59,11 @@ export function AlbumCard({
     const url = getShareUrl(albumId);
     try {
       await navigator.clipboard.writeText(url);
+      trackEvent(AnalyticsEvents.ALBUM_CARD_SHARE, {
+        album_id: albumId,
+        album_title: albumTitle,
+        share_method: "copy_link",
+      });
       toast({
         title: "Link copied!",
         description: `${albumTitle} link copied to clipboard.`,
@@ -74,6 +80,11 @@ export function AlbumCard({
   const handleShareWhatsApp = (albumId: string, albumTitle: string) => {
     const url = getShareUrl(albumId);
     const message = `Check out this Kahani album: ${albumTitle}\n\n${url}`;
+    trackEvent(AnalyticsEvents.ALBUM_CARD_SHARE, {
+      album_id: albumId,
+      album_title: albumTitle,
+      share_method: "whatsapp",
+    });
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   };
 
@@ -81,6 +92,11 @@ export function AlbumCard({
     const url = getShareUrl(albumId);
     const subject = `Check out this Kahani album: ${albumTitle}`;
     const body = `I found this interesting Kahani album that you might like:\n\n${albumTitle}\n\n${url}`;
+    trackEvent(AnalyticsEvents.ALBUM_CARD_SHARE, {
+      album_id: albumId,
+      album_title: albumTitle,
+      share_method: "email",
+    });
     window.location.href = `mailto:?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(body)}`;
@@ -94,6 +110,11 @@ export function AlbumCard({
           title: `Kahani Album: ${albumTitle}`,
           text: `Check out this Kahani album: ${albumTitle}`,
           url: url,
+        });
+        trackEvent(AnalyticsEvents.ALBUM_CARD_SHARE, {
+          album_id: albumId,
+          album_title: albumTitle,
+          share_method: "native",
         });
       } catch (err) {
         // User cancelled or error occurred
@@ -109,6 +130,11 @@ export function AlbumCard({
   };
 
   const handleStartRecording = () => {
+    trackEvent(AnalyticsEvents.START_RECORDING_CLICKED, {
+      album_id: album.id,
+      album_title: album.title,
+      source: "album_card",
+    });
     setLocation(`/free-trial?albumId=${encodeURIComponent(album.id)}`);
   };
 
@@ -251,7 +277,20 @@ export function AlbumCard({
             {/* Show remaining questions count if there are more */}
             {album.questions.length > questionsToShow && (
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => {
+                  const wasExpanded = isExpanded;
+                  setIsExpanded(!isExpanded);
+                  trackEvent(
+                    wasExpanded
+                      ? AnalyticsEvents.ALBUM_QUESTIONS_EXPANDED
+                      : AnalyticsEvents.ALBUM_QUESTIONS_EXPANDED,
+                    {
+                      album_id: album.id,
+                      action: wasExpanded ? "collapsed" : "expanded",
+                      total_questions: album.questions.length,
+                    },
+                  );
+                }}
                 className="text-[#1B2632]/60 text-xs sm:text-sm font-medium mt-2 pl-3 hover:text-[#A35139] transition-colors duration-200 cursor-pointer text-left"
               >
                 {isExpanded ? "Show less" : `+${remainingCount} more`}

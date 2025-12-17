@@ -3,6 +3,7 @@ import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe } from "lucide-react";
 import { MiniPlayer } from "@/components/playlist/MiniPlayer";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 const FALLBACK_AUDIO_URL =
   "https://bvkaurviswhrjldeuabx.supabase.co/storage/v1/object/public/voice-notes/demo_audio.m4a";
@@ -105,6 +106,11 @@ export default function PlaylistAlbumsGallery() {
 
   // Handle language change
   const handleLanguageChange = useCallback((language: "en" | "hi") => {
+    trackEvent(AnalyticsEvents.LANGUAGE_CHANGED, {
+      from_language: selectedLanguage,
+      to_language: language,
+      trial_id: trialId,
+    });
     setSelectedLanguage(language);
     setIsLanguageDropdownOpen(false);
 
@@ -112,7 +118,7 @@ export default function PlaylistAlbumsGallery() {
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set("locale", language);
     window.history.pushState({}, "", currentUrl.toString());
-  }, []);
+  }, [selectedLanguage, trialId]);
 
   // Register audio element refs
   const handleAudioRef = useCallback(
@@ -197,6 +203,15 @@ export default function PlaylistAlbumsGallery() {
       setPlayingTrackIndex(trackIndex);
       setIsPlaying(true);
 
+      // Track play event
+      trackEvent(AnalyticsEvents.TRACK_PLAYED, {
+        track_index: trackIndex,
+        track_question: track.questionText,
+        trial_id: albumData?.trial.id,
+        album_title: albumData?.trial.selectedAlbum,
+        is_shuffle: isShufflePlay || isShuffleMode,
+      });
+
       // Track this track as played in shuffle mode (only when starting to play)
       if (
         (isShuffleMode || isShufflePlay) &&
@@ -259,6 +274,12 @@ export default function PlaylistAlbumsGallery() {
 
       const handlePause = () => {
         setIsPlaying(false);
+        trackEvent(AnalyticsEvents.TRACK_PAUSED, {
+          track_index: trackIndex,
+          track_question: track.questionText,
+          trial_id: albumData?.trial.id,
+          album_title: albumData?.trial.selectedAlbum,
+        });
       };
 
       const handlePlay = () => {
@@ -288,6 +309,11 @@ export default function PlaylistAlbumsGallery() {
   // Handle play button (first track)
   const handlePlay = useCallback(() => {
     if (albumData?.tracks && albumData.tracks.length > 0) {
+      trackEvent(AnalyticsEvents.PLAYLIST_PLAY_CLICKED, {
+        trial_id: albumData.trial.id,
+        album_title: albumData.trial.selectedAlbum,
+        total_tracks: albumData.tracks.length,
+      });
       setIsShuffleMode(false);
       setPlayedTracksInShuffle(new Set());
       handlePlayPause(0, false);
@@ -297,6 +323,11 @@ export default function PlaylistAlbumsGallery() {
   // Handle shuffle button
   const handleShuffle = useCallback(() => {
     if (albumData?.tracks && albumData.tracks.length > 0) {
+      trackEvent(AnalyticsEvents.PLAYLIST_SHUFFLE_CLICKED, {
+        trial_id: albumData.trial.id,
+        album_title: albumData.trial.selectedAlbum,
+        total_tracks: albumData.tracks.length,
+      });
       setIsShuffleMode(true);
 
       // Get unplayed tracks
@@ -593,6 +624,11 @@ export default function PlaylistAlbumsGallery() {
                     text: `Check out this Kahani album: ${albumData.trial.selectedAlbum}`,
                     url: url,
                   });
+                  trackEvent(AnalyticsEvents.ALBUM_SHARED, {
+                    trial_id: albumData.trial.id,
+                    album_title: albumData.trial.selectedAlbum,
+                    share_method: "native",
+                  });
                 } catch (error) {
                   // User cancelled or error occurred
                   if (error instanceof Error && error.name !== "AbortError") {
@@ -603,6 +639,11 @@ export default function PlaylistAlbumsGallery() {
                 // Fallback: copy to clipboard
                 try {
                   await navigator.clipboard.writeText(url);
+                  trackEvent(AnalyticsEvents.ALBUM_SHARED, {
+                    trial_id: albumData.trial.id,
+                    album_title: albumData.trial.selectedAlbum,
+                    share_method: "copy_link",
+                  });
                   // You could show a toast notification here
                   alert("Link copied to clipboard!");
                 } catch (error) {
@@ -873,7 +914,15 @@ export default function PlaylistAlbumsGallery() {
                     borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
                     cursor: "pointer",
                   }}
-                  onClick={() => handlePlayPause(index)}
+                  onClick={() => {
+                    trackEvent(AnalyticsEvents.TRACK_CLICKED, {
+                      track_index: index,
+                      track_question: track.questionText,
+                      trial_id: albumData?.trial.id,
+                      album_title: albumData?.trial.selectedAlbum,
+                    });
+                    handlePlayPause(index);
+                  }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p

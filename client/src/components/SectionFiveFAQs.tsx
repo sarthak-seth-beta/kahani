@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface FAQItem {
   question: string;
@@ -69,7 +70,21 @@ export default function SectionFiveFAQs({
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+    const wasOpen = openIndex === index;
+    const newIndex = wasOpen ? null : index;
+    setOpenIndex(newIndex);
+
+    if (wasOpen) {
+      trackEvent(AnalyticsEvents.FAQ_COLLAPSED, {
+        faq_index: index + 1,
+        faq_question: faqs[index]?.question,
+      });
+    } else {
+      trackEvent(AnalyticsEvents.FAQ_EXPANDED, {
+        faq_index: index + 1,
+        faq_question: faqs[index]?.question,
+      });
+    }
   };
 
   return (

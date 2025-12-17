@@ -57,8 +57,19 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    // Don't crash on database connection errors - just return error response
+    if (err.code === "XX000" || err.message?.includes("db_termination")) {
+      console.error("[Database] Connection error:", err.message);
+      return res.status(503).json({ 
+        message: "Database temporarily unavailable. Please try again." 
+      });
+    }
+
     res.status(status).json({ message });
-    throw err;
+    // Only throw non-database errors
+    if (status >= 500 && !err.code) {
+      throw err;
+    }
   });
 
   // importantly only setup vite in development and after
