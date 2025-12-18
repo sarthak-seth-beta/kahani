@@ -1,4 +1,5 @@
 import { Play, Pause } from "lucide-react";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface MiniPlayerProps {
   isVisible: boolean;
@@ -91,7 +92,14 @@ export function MiniPlayer({
         </p>
       </div>
       <button
-        onClick={onPlayPause}
+        onClick={() => {
+          trackEvent(AnalyticsEvents.MINI_PLAYER_PLAY_PAUSE, {
+            is_playing: isPlaying,
+            track_title: trackTitle,
+            album_title: albumTitle,
+          });
+          onPlayPause();
+        }}
         style={{
           width: "48px",
           height: "48px",

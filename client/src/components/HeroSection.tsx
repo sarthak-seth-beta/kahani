@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import heroImage from "@assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
 import { Button } from "@/components/ui/button";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface HeroSectionProps {
   imageSrc?: string;

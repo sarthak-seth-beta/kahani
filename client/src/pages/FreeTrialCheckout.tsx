@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Filter } from "lucide-react";
 import { FilterDialog } from "@/components/filter/FilterDialog";
 import { useAlbumFilters } from "@/components/filter/useAlbumFilters";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface Album {
   id: string;
@@ -32,6 +33,13 @@ export default function FreeTrialCheckout() {
 
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [expandedAlbums, setExpandedAlbums] = useState<Set<string>>(new Set());
+
+  // Track page view
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.FREE_TRIAL_CHECKOUT_PAGE_VIEWED, {
+      albums_count: albums?.length || 0,
+    });
+  }, [albums?.length]);
 
   const {
     searchInput,
@@ -63,7 +71,12 @@ export default function FreeTrialCheckout() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           <div className="flex items-center justify-between h-16">
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => {
+                trackEvent(AnalyticsEvents.BACK_BUTTON_CLICKED, {
+                  source_page: "free_trial_checkout",
+                });
+                setLocation("/");
+              }}
               className="flex items-center gap-2 text-[#1B2632] hover-elevate active-elevate-2 px-3 py-2 rounded-lg"
               data-testid="button-back"
             >
@@ -86,7 +99,15 @@ export default function FreeTrialCheckout() {
             <Input
               placeholder="Search albums..."
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                if (e.target.value.length > 0) {
+                  trackEvent(AnalyticsEvents.SEARCH_PERFORMED, {
+                    search_query: e.target.value,
+                    search_length: e.target.value.length,
+                  });
+                }
+              }}
               className="h-11"
             />
           </div>
@@ -94,7 +115,15 @@ export default function FreeTrialCheckout() {
             <Button
               variant="outline"
               className="h-11 border-2 border-[#A35139]/30 text-[#A35139] hover:bg-[#A35139]/5 px-3 sm:px-4"
-              onClick={() => setIsFilterDialogOpen(true)}
+              onClick={() => {
+                trackEvent(AnalyticsEvents.FILTER_DIALOG_OPENED, {
+                  current_filters: {
+                    filter_type: filterType,
+                    filter_best_fit_for: filterBestFitFor,
+                  },
+                });
+                setIsFilterDialogOpen(true);
+              }}
             >
               <Filter className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Filter</span>
@@ -216,11 +245,20 @@ export default function FreeTrialCheckout() {
                       <Button
                         variant="outline"
                         className="w-full border-2 border-[#A35139] text-[#A35139] rounded-2xl"
-                        onClick={() =>
+                        onClick={() => {
+                          trackEvent(AnalyticsEvents.ALBUM_SELECTED, {
+                            album_id: album.id,
+                            album_title: album.title,
+                            source: "free_trial_checkout",
+                          });
+                          trackEvent(AnalyticsEvents.ALBUM_VIEW_DETAILS, {
+                            album_id: album.id,
+                            album_title: album.title,
+                          });
                           setLocation(
                             `/free-trial?albumId=${encodeURIComponent(album.id)}`,
-                          )
-                        }
+                          );
+                        }}
                         data-testid={`button-select-album-${album.id}`}
                       >
                         View Details &amp; Start Free Trial

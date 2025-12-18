@@ -25,6 +25,24 @@ export const pool = new Pool({
   ssl: {
     rejectUnauthorized: false,
   },
+  // Connection pool settings to handle Supabase connection terminations
+  max: 10, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 10000, // Return an error after 10 seconds if connection cannot be established
+});
+
+// Handle pool errors gracefully - don't crash the server
+pool.on("error", (err) => {
+  console.error("[Database] Unexpected error on idle client:", err);
+  // Don't throw - just log the error
+  // The pool will automatically create a new client if needed
+});
+
+// Handle connection errors
+pool.on("connect", () => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[Database] New client connected to pool");
+  }
 });
 
 export const db = drizzle(pool, { schema });

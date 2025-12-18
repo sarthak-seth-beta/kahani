@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Music, Loader2, ArrowRight } from "lucide-react";
 import { AlbumCard } from "@/components/AlbumCard";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 export interface AlbumCard {
   id: string;
@@ -114,7 +115,12 @@ export default function SectionFourAlbums({
                       : "View all albums in our collection"}
                   </p>
                   <Button
-                    onClick={() => setLocation("/all-albums")}
+                    onClick={() => {
+                      trackEvent(AnalyticsEvents.VIEW_ALL_ALBUMS_CLICKED, {
+                        total_albums: allAlbums?.length || 0,
+                      });
+                      setLocation("/all-albums");
+                    }}
                     className="px-4 sm:px-8 py-2.5 sm:py-3 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-xs sm:text-base shadow-xl hover:bg-[#1B2632]/90 transition-colors mt-4 flex items-center justify-center gap-1.5"
                     size="lg"
                     data-testid="button-view-all-albums"
@@ -145,7 +151,12 @@ export default function SectionFourAlbums({
         {onTryDemo && (
           <div className="text-center pt-8">
             <Button
-              onClick={onTryDemo}
+              onClick={() => {
+                trackEvent(AnalyticsEvents.TRY_DEMO_CLICKED, {
+                  demo_album_id: "demo-album-id",
+                });
+                onTryDemo();
+              }}
               className="px-8 py-4 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-2xl font-semibold text-lg shadow-xl"
               size="lg"
               data-testid="button-try-demo"

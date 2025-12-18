@@ -9,8 +9,12 @@ import {
 } from "@shared/schema";
 import { logWebhookEvent, correlateWebhookToMessage } from "./whatsappLogger";
 import { sendErrorAlertEmail } from "./email";
+import { trackServerEvent, initPostHog } from "./posthog";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize PostHog for server-side tracking
+  initPostHog();
+
   // Configure multer for file uploads (memory storage)
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -98,6 +102,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedAlbum: validatedData.selectedAlbum,
         storytellerLanguagePreference:
           validatedData.storytellerLanguagePreference,
+      });
+
+      // Track free trial creation on server side
+      // Use trial ID as distinct ID (no PII)
+      trackServerEvent(trial.id, "free_trial_created", {
+        trial_id: trial.id,
+        album_title: validatedData.selectedAlbum,
+        language_preference: validatedData.storytellerLanguagePreference,
+        // Don't include phone, names, or other PII
       });
 
       // Send response immediately
