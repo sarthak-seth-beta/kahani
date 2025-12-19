@@ -105,20 +105,23 @@ export default function PlaylistAlbumsGallery() {
   }, []);
 
   // Handle language change
-  const handleLanguageChange = useCallback((language: "en" | "hi") => {
-    trackEvent(AnalyticsEvents.LANGUAGE_CHANGED, {
-      from_language: selectedLanguage,
-      to_language: language,
-      trial_id: trialId,
-    });
-    setSelectedLanguage(language);
-    setIsLanguageDropdownOpen(false);
+  const handleLanguageChange = useCallback(
+    (language: "en" | "hi") => {
+      trackEvent(AnalyticsEvents.LANGUAGE_CHANGED, {
+        from_language: selectedLanguage,
+        to_language: language,
+        trial_id: trialId,
+      });
+      setSelectedLanguage(language);
+      setIsLanguageDropdownOpen(false);
 
-    // Update URL with new locale
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("locale", language);
-    window.history.pushState({}, "", currentUrl.toString());
-  }, [selectedLanguage, trialId]);
+      // Update URL with new locale
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set("locale", language);
+      window.history.pushState({}, "", currentUrl.toString());
+    },
+    [selectedLanguage, trialId],
+  );
 
   // Register audio element refs
   const handleAudioRef = useCallback(

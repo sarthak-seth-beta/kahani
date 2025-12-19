@@ -6,7 +6,9 @@ import posthog from "posthog-js";
 function isPostHogReady(): boolean {
   try {
     // Check if PostHog is loaded
-    return typeof posthog !== "undefined" && (posthog as any).__loaded !== false;
+    return (
+      typeof posthog !== "undefined" && (posthog as any).__loaded !== false
+    );
   } catch {
     return false;
   }
@@ -19,10 +21,10 @@ function isPostHogReady(): boolean {
 export const AnalyticsEvents = {
   // Page navigation
   PAGE_VIEW: "page_view",
-  
+
   // Hero section
   HERO_CTA_CLICKED: "hero_cta_clicked",
-  
+
   // Album interactions
   ALBUM_CARD_CLICKED: "album_card_clicked",
   ALBUM_CARD_SHARE: "album_card_share",
@@ -30,25 +32,25 @@ export const AnalyticsEvents = {
   ALBUM_VIEW_DETAILS: "album_view_details",
   ALBUM_QUESTIONS_EXPANDED: "album_questions_expanded",
   VIEW_ALL_ALBUMS_CLICKED: "view_all_albums_clicked",
-  
+
   // Checkout flow
   CHECKOUT_PAGE_VIEWED: "checkout_page_viewed",
   FREE_TRIAL_CHECKOUT_PAGE_VIEWED: "free_trial_checkout_page_viewed",
   BUY_NOW_CLICKED: "buy_now_clicked",
   FREE_TRIAL_BUTTON_CLICKED: "free_trial_button_clicked",
   QUANTITY_CHANGED: "quantity_changed",
-  
+
   // Free trial flow
   FREE_TRIAL_FORM_STARTED: "free_trial_form_started",
   FREE_TRIAL_FORM_SUBMITTED: "free_trial_form_submitted",
   FREE_TRIAL_FORM_ERROR: "free_trial_form_error",
-  
+
   // Filter and search
   FILTER_DIALOG_OPENED: "filter_dialog_opened",
   FILTER_APPLIED: "filter_applied",
   FILTER_CLEARED: "filter_cleared",
   SEARCH_PERFORMED: "search_performed",
-  
+
   // Playlist/Audio interactions
   PLAYLIST_PLAY_CLICKED: "playlist_play_clicked",
   PLAYLIST_PAUSE_CLICKED: "playlist_pause_clicked",
@@ -59,26 +61,27 @@ export const AnalyticsEvents = {
   MINI_PLAYER_PLAY_PAUSE: "mini_player_play_pause",
   LANGUAGE_CHANGED: "language_changed",
   ALBUM_SHARED: "album_shared",
-  
+
   // FAQ interactions
   FAQ_EXPANDED: "faq_expanded",
   FAQ_COLLAPSED: "faq_collapsed",
-  
+
   // Form interactions (non-PII)
   PHONE_INPUT_FOCUSED: "phone_input_focused",
   PHONE_INPUT_BLURRED: "phone_input_blurred",
   FORM_FIELD_FOCUSED: "form_field_focused",
-  
+
   // Navigation
   BACK_BUTTON_CLICKED: "back_button_clicked",
   NAVIGATION_CLICKED: "navigation_clicked",
-  
+
   // Demo/Trial
   TRY_DEMO_CLICKED: "try_demo_clicked",
   START_RECORDING_CLICKED: "start_recording_clicked",
 } as const;
 
-export type AnalyticsEventName = typeof AnalyticsEvents[keyof typeof AnalyticsEvents];
+export type AnalyticsEventName =
+  (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents];
 
 /**
  * Base properties that should be included with every event
@@ -87,11 +90,11 @@ interface BaseEventProperties {
   // Page/route information
   page_path?: string;
   page_title?: string;
-  
+
   // User agent info (non-PII)
   device_type?: "mobile" | "tablet" | "desktop";
   browser?: string;
-  
+
   // Timestamp
   timestamp?: number;
 }
@@ -174,7 +177,10 @@ export function trackPageView(path?: string, title?: string): void {
  * Identify a user (without PII)
  * Use a hashed/anonymous identifier
  */
-export function identifyUser(userId: string, properties?: Record<string, any>): void {
+export function identifyUser(
+  userId: string,
+  properties?: Record<string, any>,
+): void {
   if (!isPostHogReady()) {
     return;
   }
@@ -281,7 +287,7 @@ function sanitizeProperties(
 
   for (const [key, value] of Object.entries(properties)) {
     const lowerKey = key.toLowerCase();
-    
+
     // Skip sensitive keys
     if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
       continue;
@@ -304,4 +310,3 @@ function sanitizeProperties(
 
   return sanitized;
 }
-

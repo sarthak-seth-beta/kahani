@@ -6,7 +6,8 @@ import { PostHogProvider } from "posthog-js/react";
 
 // PostHog configuration
 const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY;
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
+const POSTHOG_HOST =
+  import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
 const POSTHOG_ENABLED = import.meta.env.VITE_POSTHOG_ENABLED !== "false";
 
 const posthogOptions = {

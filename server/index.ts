@@ -60,8 +60,8 @@ app.use((req, res, next) => {
     // Don't crash on database connection errors - just return error response
     if (err.code === "XX000" || err.message?.includes("db_termination")) {
       console.error("[Database] Connection error:", err.message);
-      return res.status(503).json({ 
-        message: "Database temporarily unavailable. Please try again." 
+      return res.status(503).json({
+        message: "Database temporarily unavailable. Please try again.",
       });
     }
 

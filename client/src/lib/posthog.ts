@@ -3,7 +3,8 @@ import posthog from "posthog-js";
 // PostHog configuration
 // Using VITE_ prefix for Vite environment variables
 const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY;
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
+const POSTHOG_HOST =
+  import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
 const POSTHOG_ENABLED = import.meta.env.VITE_POSTHOG_ENABLED !== "false"; // Enabled by default, can be disabled
 
 let isInitialized = false;
@@ -98,4 +99,3 @@ export function getPostHog() {
 export function isPostHogReady(): boolean {
   return isInitialized && POSTHOG_ENABLED && !!POSTHOG_API_KEY;
 }
-

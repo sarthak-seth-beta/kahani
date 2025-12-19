@@ -1120,7 +1120,7 @@ export async function sendBuyerCompletionMessage(
     "albumlink_vaani_en",
     "en",
     [buyerName, storytellerName],
-    `/custom-album-cover/${albumId}`,
+    `playlist-albums/${albumId}`,
     "0",
   );
   return buyerCompletionMessage;
