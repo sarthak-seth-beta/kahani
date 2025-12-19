@@ -81,6 +81,9 @@ export default function PlaylistAlbumsGallery() {
     null,
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
+  const [lastTrackIndex, setLastTrackIndex] = useState<number | null>(null);
   const [durations, setDurations] = useState<Map<number, number>>(new Map());
   const audioRefs = useRef<Map<number, HTMLAudioElement>>(new Map());
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -204,6 +207,7 @@ export default function PlaylistAlbumsGallery() {
       const audio = new Audio(audioUrl);
       currentAudioRef.current = audio;
       setPlayingTrackIndex(trackIndex);
+      setLastTrackIndex(trackIndex);
       setIsPlaying(true);
 
       // Track play event
@@ -262,13 +266,13 @@ export default function PlaylistAlbumsGallery() {
           }
         }
 
-        if (nextIndex !== null) {
-          // Autoplay next track
+        if (nextIndex !== null && autoplay) {
+          // Autoplay next track (only if autoplay is enabled)
           setTimeout(() => {
             handlePlayPause(nextIndex!, currentShuffleMode);
           }, 100);
         } else {
-          // No more tracks to play
+          // No more tracks to play or autoplay disabled
           setIsPlaying(false);
           setPlayingTrackIndex(null);
           currentAudioRef.current = null;
@@ -289,9 +293,26 @@ export default function PlaylistAlbumsGallery() {
         setIsPlaying(true);
       };
 
+      const handleTimeUpdate = () => {
+        if (audio) {
+          setCurrentTime(audio.currentTime);
+        }
+      };
+
+      const handleLoadedMetadata = () => {
+        if (audio) {
+          setDurations((prev) => new Map(prev).set(trackIndex, audio.duration));
+        }
+      };
+
       audio.addEventListener("ended", handleEnded);
       audio.addEventListener("pause", handlePause);
       audio.addEventListener("play", handlePlay);
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+
+      // Load metadata immediately
+      audio.load();
 
       audio.play().catch((error) => {
         console.error("Error playing audio:", error);
@@ -306,8 +327,77 @@ export default function PlaylistAlbumsGallery() {
       isPlaying,
       isShuffleMode,
       playedTracksInShuffle,
+      autoplay,
     ],
   );
+
+  // Audio control handlers
+  const handleSeek = useCallback((time: number) => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  }, []);
+
+  const handleSkipForward = useCallback(() => {
+    if (currentAudioRef.current && playingTrackIndex !== null) {
+      const duration = durations.get(playingTrackIndex) || 0;
+      const newTime = Math.min(
+        currentAudioRef.current.currentTime + 10,
+        duration,
+      );
+      currentAudioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  }, [playingTrackIndex, durations]);
+
+  const handleSkipBackward = useCallback(() => {
+    if (currentAudioRef.current) {
+      const newTime = Math.max(currentAudioRef.current.currentTime - 10, 0);
+      currentAudioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  }, []);
+
+  const handleNextTrack = useCallback(() => {
+    if (playingTrackIndex === null || !albumData?.tracks) return;
+    const nextIndex = playingTrackIndex + 1;
+    if (nextIndex < albumData.tracks.length) {
+      handlePlayPause(nextIndex);
+    }
+  }, [playingTrackIndex, albumData, handlePlayPause]);
+
+  const handlePreviousTrack = useCallback(() => {
+    if (playingTrackIndex === null || !albumData?.tracks) return;
+    const prevIndex = playingTrackIndex - 1;
+    if (prevIndex >= 0) {
+      handlePlayPause(prevIndex);
+    }
+  }, [playingTrackIndex, albumData, handlePlayPause]);
+
+  const handleAutoplayChange = useCallback((enabled: boolean) => {
+    setAutoplay(enabled);
+  }, []);
+
+  // Update currentTime when audio is playing
+  useEffect(() => {
+    if (!currentAudioRef.current) return;
+
+    const audio = currentAudioRef.current;
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, [isPlaying, playingTrackIndex]);
+
+  // Reset currentTime when track changes
+  useEffect(() => {
+    setCurrentTime(0);
+  }, [playingTrackIndex]);
 
   // Handle play button (first track)
   const handlePlay = useCallback(() => {
@@ -437,8 +527,11 @@ export default function PlaylistAlbumsGallery() {
 
   const { trial, album, tracks } = albumData;
   const trackCount = tracks.length;
+  // Use lastTrackIndex to keep track info during transitions
+  const displayTrackIndex =
+    playingTrackIndex !== null ? playingTrackIndex : lastTrackIndex;
   const currentTrack =
-    playingTrackIndex !== null ? tracks[playingTrackIndex] : null;
+    displayTrackIndex !== null ? tracks[displayTrackIndex] : null;
 
   return (
     <div
@@ -1012,6 +1105,22 @@ export default function PlaylistAlbumsGallery() {
               handlePlayPause(playingTrackIndex);
             }
           }}
+          audioUrl={currentTrack.mediaUrl || FALLBACK_AUDIO_URL}
+          currentTime={currentTime}
+          duration={durations.get(displayTrackIndex || 0) || 0}
+          onSeek={handleSeek}
+          onSkipForward={handleSkipForward}
+          onSkipBackward={handleSkipBackward}
+          onNextTrack={handleNextTrack}
+          onPreviousTrack={handlePreviousTrack}
+          hasNextTrack={
+            playingTrackIndex !== null && albumData?.tracks
+              ? playingTrackIndex < albumData.tracks.length - 1
+              : false
+          }
+          hasPreviousTrack={playingTrackIndex !== null && playingTrackIndex > 0}
+          autoplay={autoplay}
+          onAutoplayChange={handleAutoplayChange}
         />
       )}
     </div>

@@ -120,7 +120,7 @@ function App() {
             component={PlaylistAlbumsGallery}
           />
           <Route path="/all-albums" component={AllAlbums} />
-          <Route path="/vinyl-gallery" component={VinylGallery} />
+          <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
           <Route
             path="/custom-album-cover/:trialId"
             component={CustomAlbumCover}
