@@ -244,11 +244,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Upload album cover image (temporary)
+  app.post(
+    "/api/admin/albums/upload-image",
+    upload.single("image"),
+    async (req, res) => {
+      try {
+        // Check if file was uploaded
+        if (!req.file) {
+          return res.status(400).json({ error: "No image file provided" });
+        }
+
+        // Validate file type
+        const allowedMimeTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
+        if (!allowedMimeTypes.includes(req.file.mimetype)) {
+          return res.status(400).json({
+            error: "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
+          });
+        }
+
+        // Validate file size
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (req.file.size > maxSize) {
+          return res.status(400).json({
+            error: "File size exceeds 5MB limit",
+          });
+        }
+
+        // Generate unique temporary filename
+        const { randomUUID } = await import("crypto");
+        const tempFileName = `temp-${randomUUID()}`;
+
+        // Upload to Supabase Storage
+        const { uploadImageToStorage } = await import("./supabase");
+        const fileBuffer = Buffer.from(req.file.buffer);
+        const supabaseUrl = await uploadImageToStorage(
+          fileBuffer,
+          tempFileName,
+          req.file.mimetype,
+        );
+
+        if (!supabaseUrl) {
+          console.error("Failed to upload image to Supabase Storage");
+          return res.status(500).json({
+            error: "Failed to upload image. Please try again later.",
+          });
+        }
+
+        // Extract filename from URL for later deletion if needed
+        const urlParts = supabaseUrl.split("/");
+        const fileName = urlParts[urlParts.length - 1];
+
+        res.json({
+          success: true,
+          imageUrl: supabaseUrl,
+          fileName: fileName, // Return filename for cleanup if album save fails
+          message: "Image uploaded successfully",
+        });
+      } catch (error: any) {
+        console.error("Error uploading album cover image:", error);
+        if (error.message === "Invalid file type. Only images are allowed.") {
+          return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({
+          error: "Failed to upload image",
+          message: error.message || "Internal server error",
+        });
+      }
+    },
+  );
+
+  // Admin endpoint: Delete album cover image
+  app.delete("/api/admin/albums/delete-image", async (req, res) => {
+    try {
+      const { fileName } = req.body;
+
+      if (!fileName) {
+        return res.status(400).json({ error: "File name is required" });
+      }
+
+      const { deleteImageFromStorage } = await import("./supabase");
+      const deleted = await deleteImageFromStorage(fileName);
+
+      if (!deleted) {
+        return res.status(500).json({
+          error: "Failed to delete image",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Image deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting album cover image:", error);
+      res.status(500).json({
+        error: "Failed to delete image",
+        message: error.message || "Internal server error",
+      });
+    }
+  });
+
   // Admin endpoint: Create new album
   app.post("/api/admin/albums", async (req, res) => {
+    let uploadedImageFileName: string | null = null;
+    
     try {
       const { insertAlbumSchema } = await import("@shared/schema");
       const validatedData = insertAlbumSchema.parse(req.body);
+
+      // Extract uploaded image filename if provided (for cleanup on failure)
+      uploadedImageFileName = req.body.uploadedImageFileName || null;
 
       // Transform to database format
       const albumData = {
@@ -278,6 +390,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error creating album:", error);
+      
+      // Cleanup uploaded image if album creation failed
+      if (uploadedImageFileName) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          await deleteImageFromStorage(uploadedImageFileName);
+          console.log("Cleaned up uploaded image after album creation failure");
+        } catch (cleanupError) {
+          console.error("Failed to cleanup uploaded image:", cleanupError);
+        }
+      }
+
       if (error.name === "ZodError") {
         res.status(400).json({ 
           error: "Validation error",
@@ -294,12 +418,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin endpoint: Update album
   app.put("/api/admin/albums/:id", async (req, res) => {
+    let uploadedImageFileName: string | null = null;
+    let oldImageUrl: string | null = null;
+    
     try {
       const { id } = req.params;
       const { insertAlbumSchema } = await import("@shared/schema");
       
+      // Get existing album to check for old image (get all albums and find by id)
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      const existingAlbum = allAlbums.find((a) => a.id === id);
+      if (!existingAlbum) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+      oldImageUrl = existingAlbum.coverImage;
+      
       // Validate the data (all fields optional for update)
       const updateData = insertAlbumSchema.partial().parse(req.body);
+
+      // Extract uploaded image filename if provided (for cleanup on failure)
+      uploadedImageFileName = req.body.uploadedImageFileName || null;
 
       // Transform to database format
       const albumData: any = {};
@@ -323,6 +461,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedAlbum = await storage.updateAlbum(id, albumData);
 
+      // Delete old image if a new one was uploaded
+      if (uploadedImageFileName && oldImageUrl && oldImageUrl !== updatedAlbum.coverImage) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          // Extract filename from old URL
+          const oldUrlParts = oldImageUrl.split("/");
+          const oldFileName = oldUrlParts[oldUrlParts.length - 1];
+          await deleteImageFromStorage(oldFileName);
+          console.log("Deleted old album cover image");
+        } catch (cleanupError) {
+          console.error("Failed to delete old image:", cleanupError);
+          // Don't fail the request if old image deletion fails
+        }
+      }
+
       // Transform response
       res.json({
         id: updatedAlbum.id,
@@ -338,6 +491,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error updating album:", error);
+      
+      // Cleanup uploaded image if album update failed
+      if (uploadedImageFileName) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          await deleteImageFromStorage(uploadedImageFileName);
+          console.log("Cleaned up uploaded image after album update failure");
+        } catch (cleanupError) {
+          console.error("Failed to cleanup uploaded image:", cleanupError);
+        }
+      }
+
       if (error.name === "ZodError") {
         res.status(400).json({ 
           error: "Validation error",
@@ -350,6 +515,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ 
           error: "Failed to update album",
+          message: error.message 
+        });
+      }
+    }
+  });
+
+  // Admin endpoint: Delete album
+  app.delete("/api/admin/albums/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get album to check for cover image before deletion
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      const albumToDelete = allAlbums.find((a) => a.id === id);
+      
+      if (!albumToDelete) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+
+      // Delete the album
+      await storage.deleteAlbum(id);
+
+      // Delete associated cover image from storage if it exists and is a temp file
+      if (albumToDelete.coverImage) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          // Extract filename from URL
+          const urlParts = albumToDelete.coverImage.split("/");
+          const fileName = urlParts[urlParts.length - 1];
+          // Only delete if it's a temp file (starts with "temp-")
+          if (fileName.startsWith("temp-")) {
+            await deleteImageFromStorage(fileName);
+            console.log("Deleted album cover image from storage");
+          }
+        } catch (cleanupError) {
+          console.error("Failed to delete album cover image:", cleanupError);
+          // Don't fail the request if image deletion fails
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Album deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting album:", error);
+      if (error.message === "Album not found") {
+        res.status(404).json({ 
+          error: "Album not found"
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to delete album",
           message: error.message 
         });
       }

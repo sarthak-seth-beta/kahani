@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,8 +21,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, RotateCcw, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertAlbumSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -51,10 +61,17 @@ export default function ManageAlbums() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null);
+  const [shouldLoadAlbums, setShouldLoadAlbums] = useState(false);
+  const [uploadedImageFileName, setUploadedImageFileName] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [albumToDelete, setAlbumToDelete] = useState<Album | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Fetch all albums
+  // Fetch all albums - only when shouldLoadAlbums is true
   const { data: albums, isLoading } = useQuery<Album[]>({
     queryKey: ["/api/admin/albums"],
+    enabled: shouldLoadAlbums, // Only fetch when shouldLoadAlbums is true
   });
 
   const form = useForm<AlbumFormData>({
@@ -97,7 +114,7 @@ export default function ManageAlbums() {
     name: "bestFitFor",
   });
 
-  // Load album data for editing
+  // Load album data for editing and scroll to top
   useEffect(() => {
     if (editingAlbumId && albums) {
       const album = albums.find((a) => a.id === editingAlbumId);
@@ -111,6 +128,9 @@ export default function ManageAlbums() {
           bestFitFor: album.best_fit_for || [],
           isActive: album.is_active,
         });
+        setUploadedImageFileName(null); // Reset uploaded image filename when editing
+        // Scroll to top when editing
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } else {
       form.reset({
@@ -122,11 +142,12 @@ export default function ManageAlbums() {
         bestFitFor: [],
         isActive: true,
       });
+      setUploadedImageFileName(null);
     }
   }, [editingAlbumId, albums, form]);
 
   const createMutation = useMutation({
-    mutationFn: (data: AlbumFormData) =>
+    mutationFn: (data: AlbumFormData & { uploadedImageFileName?: string }) =>
       apiRequest("POST", "/api/admin/albums", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
@@ -137,6 +158,7 @@ export default function ManageAlbums() {
       });
       form.reset();
       setEditingAlbumId(null);
+      setUploadedImageFileName(null);
     },
     onError: (error: Error) => {
       toast({
@@ -148,7 +170,7 @@ export default function ManageAlbums() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AlbumFormData }) =>
+    mutationFn: ({ id, data }: { id: string; data: AlbumFormData & { uploadedImageFileName?: string } }) =>
       apiRequest("PUT", `/api/admin/albums/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
@@ -159,11 +181,39 @@ export default function ManageAlbums() {
       });
       form.reset();
       setEditingAlbumId(null);
+      setUploadedImageFileName(null);
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update album",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/albums/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
+      toast({
+        title: "Success",
+        description: "Album deleted successfully!",
+      });
+      setIsDeleteDialogOpen(false);
+      setAlbumToDelete(null);
+      // If we were editing the deleted album, reset the form
+      if (editingAlbumId === albumToDelete?.id) {
+        form.reset();
+        setEditingAlbumId(null);
+        setUploadedImageFileName(null);
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete album",
         variant: "destructive",
       });
     },
@@ -176,6 +226,7 @@ export default function ManageAlbums() {
       questions: data.questions.filter((q) => q.trim() !== ""),
       questionsHn: data.questionsHn?.filter((q) => q.trim() !== "") || [],
       bestFitFor: data.bestFitFor?.filter((b) => b.trim() !== "") || [],
+      uploadedImageFileName: uploadedImageFileName || undefined, // Include filename for cleanup on failure
     };
 
     if (editingAlbumId) {
@@ -185,13 +236,53 @@ export default function ManageAlbums() {
     }
   };
 
-  const handleEdit = (album: Album) => {
+  const handleEdit = (album: Album, e?: React.MouseEvent) => {
+    e?.stopPropagation(); // Prevent triggering delete dialog
     setEditingAlbumId(album.id);
+  };
+
+  const handleDeleteClick = (album: Album, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering edit
+    setAlbumToDelete(album);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (albumToDelete) {
+      deleteMutation.mutate(albumToDelete.id);
+    }
   };
 
   const handleCancel = () => {
     setEditingAlbumId(null);
     form.reset();
+  };
+
+  const handleReset = async () => {
+    // Delete uploaded image if exists
+    if (uploadedImageFileName) {
+      try {
+        await fetch("/api/admin/albums/delete-image", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileName: uploadedImageFileName }),
+        });
+      } catch (error) {
+        console.error("Failed to delete uploaded image:", error);
+      }
+    }
+
+    form.reset({
+      title: "",
+      description: "",
+      questions: [""],
+      questionsHn: [],
+      coverImage: "",
+      bestFitFor: [],
+      isActive: true,
+    });
+    setEditingAlbumId(null);
+    setUploadedImageFileName(null);
   };
 
   return (
@@ -208,14 +299,28 @@ export default function ManageAlbums() {
 
         <Card className="mb-4">
           <CardHeader className="p-4">
-            <CardTitle className="text-xl font-bold">
-              {editingAlbumId ? "Update Album" : "Create New Album"}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {editingAlbumId
-                ? "Update the album details below"
-                : "Fill in the details to create a new album"}
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl font-bold">
+                  {editingAlbumId ? "Update Album" : "Create New Album"}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {editingAlbumId
+                    ? "Update the album details below"
+                    : "Fill in the details to create a new album"}
+                </CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="text-xs"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-4">
             <Form {...form}>
@@ -223,6 +328,25 @@ export default function ManageAlbums() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
+                {/* Is Active - Moved to top */}
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2 border-b pb-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm">
+                        Album is active (visible to users)
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+
                 {/* Title */}
                 <FormField
                   control={form.control}
@@ -268,13 +392,117 @@ export default function ManageAlbums() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm">Cover Image URL *</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="https://images.unsplash.com/..."
-                          className="text-sm"
-                        />
-                      </FormControl>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://images.unsplash.com/... or upload image"
+                              className="text-sm flex-1"
+                            />
+                          </FormControl>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+
+                              // Validate file size (5MB)
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast({
+                                  title: "Error",
+                                  description: "File size exceeds 5MB limit",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+
+                              setIsUploadingImage(true);
+                              try {
+                                const formData = new FormData();
+                                formData.append("image", file);
+
+                                const response = await fetch("/api/admin/albums/upload-image", {
+                                  method: "POST",
+                                  body: formData,
+                                });
+
+                                if (!response.ok) {
+                                  const errorData = await response.json();
+                                  throw new Error(errorData.error || "Failed to upload image");
+                                }
+
+                                const data = await response.json();
+                                field.onChange(data.imageUrl);
+                                setUploadedImageFileName(data.fileName);
+                                toast({
+                                  title: "Success",
+                                  description: "Image uploaded successfully",
+                                });
+                              } catch (error: any) {
+                                toast({
+                                  title: "Error",
+                                  description: error.message || "Failed to upload image",
+                                  variant: "destructive",
+                                });
+                              } finally {
+                                setIsUploadingImage(false);
+                                // Reset file input
+                                if (fileInputRef.current) {
+                                  fileInputRef.current.value = "";
+                                }
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              fileInputRef.current?.click();
+                            }}
+                            disabled={isUploadingImage}
+                          >
+                            {isUploadingImage ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4" />
+                            )}
+                          </Button>
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                field.onChange("");
+                                setUploadedImageFileName(null);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {field.value && (
+                          <div className="mt-2">
+                            <img
+                              src={field.value}
+                              alt="Cover preview"
+                              className="max-w-xs max-h-48 object-cover rounded border"
+                              onError={() => {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to load image preview",
+                                  variant: "destructive",
+                                });
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -445,25 +673,6 @@ export default function ManageAlbums() {
                   )}
                 </div>
 
-                {/* Is Active */}
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="text-sm">
-                        Album is active (visible to users)
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-
                 {/* Submit Buttons */}
                 <div className="flex gap-2 pt-4">
                   <Button
@@ -497,13 +706,31 @@ export default function ManageAlbums() {
         {/* Existing Albums List */}
         <Card>
           <CardHeader className="p-4">
-            <CardTitle className="text-lg">Existing Albums</CardTitle>
-            <CardDescription className="text-xs">
-              Click on an album to edit it
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Existing Albums</CardTitle>
+                <CardDescription className="text-xs">
+                  {shouldLoadAlbums
+                    ? "Click on an album to edit it"
+                    : "Click the button below to load existing albums"}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-4">
-            {isLoading ? (
+            {!shouldLoadAlbums ? (
+              <div className="text-center py-8">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShouldLoadAlbums(true)}
+                  className="text-sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Load Existing Albums
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="text-center py-8 text-sm text-gray-500">
                 Loading albums...
               </div>
@@ -536,6 +763,15 @@ export default function ManageAlbums() {
                           </span>
                         </div>
                       </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={(e) => handleDeleteClick(album, e)}
+                        className="ml-2"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -547,6 +783,36 @@ export default function ManageAlbums() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the album
+                {albumToDelete && ` "${albumToDelete.title}"`} and remove all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                disabled={deleteMutation.isPending}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

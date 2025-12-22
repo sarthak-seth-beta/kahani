@@ -84,6 +84,7 @@ export interface IStorage {
   getAlbumById(id: string): Promise<AlbumRow | undefined>;
   createAlbum(album: InsertAlbumRow): Promise<AlbumRow>;
   updateAlbum(id: string, album: Partial<InsertAlbumRow>): Promise<AlbumRow>;
+  deleteAlbum(id: string): Promise<void>;
   getQuestionByIndex(
     albumId: string,
     index: number,
@@ -729,6 +730,13 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Album not found");
     }
     return updatedAlbum;
+  }
+
+  async deleteAlbum(id: string): Promise<void> {
+    const result = await db.delete(albums).where(eq(albums.id, id));
+    if (result.rowCount === 0) {
+      throw new Error("Album not found");
+    }
   }
 
   async getQuestionByIndex(
