@@ -1127,7 +1127,7 @@ export async function convertToMp3(
     const command = ffmpeg(inputStream)
       .inputFormat(inputFormat)
       .audioCodec("libmp3lame")
-      .audioBitrate(48)
+      .audioBitrate(16)
       .format("mp3")
       .on("error", (err) => {
         console.error("Error converting audio to MP3:", err);
