@@ -32,6 +32,8 @@ import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
 import CustomAlbumCover from "@/pages/CustomAlbumCover";
 import YlPersonalSupport from "@/pages/YlPersonalSupport";
+import Admin from "@/pages/Admin";
+import ManageAlbums from "@/pages/ManageAlbums";
 import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 
@@ -126,6 +128,8 @@ function App() {
             component={CustomAlbumCover}
           />
           <Route path="/yl-personal-support" component={YlPersonalSupport} />
+          <Route path="/enzo-xyz" component={Admin} />
+          <Route path="/enzo-xyz/albums" component={ManageAlbums} />
           <Route component={NotFound} />
         </Switch>
         <Toaster />

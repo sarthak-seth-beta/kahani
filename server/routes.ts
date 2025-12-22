@@ -61,6 +61,301 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Get daily free trial counts
+  app.get("/api/admin/daily-free-trials", async (req, res) => {
+    try {
+      // Disable caching for admin endpoints to ensure fresh data
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      });
+
+      const { pool } = await import("./db");
+
+      // Get date range from query params (if no dates provided, fetch all data)
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      
+      let dateFilter = "1=1"; // Fetch all data if no date range provided
+      if (startDate && endDate) {
+        dateFilter = `created_at >= '${startDate}'::date AND created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      } else if (startDate) {
+        dateFilter = `created_at >= '${startDate}'::date`;
+      } else if (endDate) {
+        dateFilter = `created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      }
+
+      // Query to get daily counts - simple and straightforward
+      const query = `
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*)::int as count
+        FROM free_trials
+        WHERE ${dateFilter}
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+      `;
+
+      const result = await pool.query(query);
+
+      // Format the data for the chart
+      const dailyData = result.rows.map((row: any) => {
+        const dateObj = row.date instanceof Date ? row.date : new Date(row.date);
+        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        return {
+          date: dateObj.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          count: Number(row.count),
+          fullDate: dateStr,
+        };
+      });
+
+      res.json(dailyData);
+    } catch (error: any) {
+      console.error("Error fetching daily free trials:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch daily free trials",
+        message: error.message 
+      });
+    }
+  });
+
+  // Admin endpoint: Get daily WhatsApp messages (outgoing and incoming)
+  app.get("/api/admin/daily-whatsapp-messages", async (req, res) => {
+    try {
+      // Disable caching for admin endpoints to ensure fresh data
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      });
+
+      const { pool } = await import("./db");
+
+      // Get date range from query params (if no dates provided, fetch all data)
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      
+      let dateFilter = "1=1"; // Fetch all data if no date range provided
+      if (startDate && endDate) {
+        dateFilter = `created_at >= '${startDate}'::date AND created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      } else if (startDate) {
+        dateFilter = `created_at >= '${startDate}'::date`;
+      } else if (endDate) {
+        dateFilter = `created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      }
+
+      // Query to get daily counts from both tables
+      const query = `
+        WITH outgoing AS (
+          SELECT 
+            DATE(created_at) as date,
+            COUNT(*)::int as count
+          FROM whatsapp_messages
+          WHERE ${dateFilter}
+          GROUP BY DATE(created_at)
+        ),
+        incoming AS (
+          SELECT 
+            DATE(created_at) as date,
+            COUNT(*)::int as count
+          FROM whatsapp_webhook_events
+          WHERE ${dateFilter}
+          GROUP BY DATE(created_at)
+        ),
+        all_dates AS (
+          SELECT date FROM outgoing
+          UNION
+          SELECT date FROM incoming
+        )
+        SELECT 
+          ad.date,
+          COALESCE(o.count, 0)::int as outgoing_count,
+          COALESCE(i.count, 0)::int as incoming_count
+        FROM all_dates ad
+        LEFT JOIN outgoing o ON ad.date = o.date
+        LEFT JOIN incoming i ON ad.date = i.date
+        ORDER BY ad.date ASC
+      `;
+
+      const result = await pool.query(query);
+
+      // Format the data for the chart
+      const dailyData = result.rows.map((row: any) => {
+        const dateObj = row.date instanceof Date ? row.date : new Date(row.date);
+        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        return {
+          date: dateObj.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          outgoing: Number(row.outgoing_count),
+          incoming: Number(row.incoming_count),
+          fullDate: dateStr,
+        };
+      });
+
+      res.json(dailyData);
+    } catch (error: any) {
+      console.error("Error fetching daily WhatsApp messages:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch daily WhatsApp messages",
+        message: error.message 
+      });
+    }
+  });
+
+  // Admin endpoint: Get all albums (including inactive)
+  app.get("/api/admin/albums", async (req, res) => {
+    try {
+      // Disable caching for admin endpoints to ensure fresh data
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      });
+
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      // Transform to match frontend expectations
+      const albumsResponse = allAlbums.map((album) => ({
+        id: album.id,
+        title: album.title,
+        description: album.description,
+        questions: album.questions || [],
+        questions_hn: album.questionsHn || null,
+        cover_image: album.coverImage,
+        best_fit_for: album.bestFitFor || null,
+        is_active: album.isActive,
+        created_at: album.createdAt?.toISOString() || "",
+        updated_at: album.updatedAt?.toISOString() || "",
+      }));
+      res.json(albumsResponse);
+    } catch (error: any) {
+      console.error("Error fetching albums:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch albums",
+        message: error.message 
+      });
+    }
+  });
+
+  // Admin endpoint: Create new album
+  app.post("/api/admin/albums", async (req, res) => {
+    try {
+      const { insertAlbumSchema } = await import("@shared/schema");
+      const validatedData = insertAlbumSchema.parse(req.body);
+
+      // Transform to database format
+      const albumData = {
+        title: validatedData.title,
+        description: validatedData.description,
+        questions: validatedData.questions,
+        questionsHn: (req.body.questionsHn as string[]) || null,
+        coverImage: validatedData.coverImage,
+        bestFitFor: (req.body.bestFitFor as string[]) || null,
+        isActive: validatedData.isActive ?? true,
+      };
+
+      const newAlbum = await storage.createAlbum(albumData);
+
+      // Transform response
+      res.status(201).json({
+        id: newAlbum.id,
+        title: newAlbum.title,
+        description: newAlbum.description,
+        questions: newAlbum.questions || [],
+        questions_hn: newAlbum.questionsHn || null,
+        cover_image: newAlbum.coverImage,
+        best_fit_for: newAlbum.bestFitFor || null,
+        is_active: newAlbum.isActive,
+        created_at: newAlbum.createdAt?.toISOString() || "",
+        updated_at: newAlbum.updatedAt?.toISOString() || "",
+      });
+    } catch (error: any) {
+      console.error("Error creating album:", error);
+      if (error.name === "ZodError") {
+        res.status(400).json({ 
+          error: "Validation error",
+          details: error.errors 
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to create album",
+          message: error.message 
+        });
+      }
+    }
+  });
+
+  // Admin endpoint: Update album
+  app.put("/api/admin/albums/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { insertAlbumSchema } = await import("@shared/schema");
+      
+      // Validate the data (all fields optional for update)
+      const updateData = insertAlbumSchema.partial().parse(req.body);
+
+      // Transform to database format
+      const albumData: any = {};
+      if (updateData.title !== undefined) albumData.title = updateData.title;
+      if (updateData.description !== undefined) albumData.description = updateData.description;
+      if (updateData.questions !== undefined) albumData.questions = updateData.questions;
+      if (updateData.coverImage !== undefined) albumData.coverImage = updateData.coverImage;
+      if (updateData.isActive !== undefined) albumData.isActive = updateData.isActive;
+      
+      // Handle optional fields
+      if (req.body.questionsHn !== undefined) {
+        albumData.questionsHn = (req.body.questionsHn as string[]).length > 0 
+          ? req.body.questionsHn 
+          : null;
+      }
+      if (req.body.bestFitFor !== undefined) {
+        albumData.bestFitFor = (req.body.bestFitFor as string[]).length > 0 
+          ? req.body.bestFitFor 
+          : null;
+      }
+
+      const updatedAlbum = await storage.updateAlbum(id, albumData);
+
+      // Transform response
+      res.json({
+        id: updatedAlbum.id,
+        title: updatedAlbum.title,
+        description: updatedAlbum.description,
+        questions: updatedAlbum.questions || [],
+        questions_hn: updatedAlbum.questionsHn || null,
+        cover_image: updatedAlbum.coverImage,
+        best_fit_for: updatedAlbum.bestFitFor || null,
+        is_active: updatedAlbum.isActive,
+        created_at: updatedAlbum.createdAt?.toISOString() || "",
+        updated_at: updatedAlbum.updatedAt?.toISOString() || "",
+      });
+    } catch (error: any) {
+      console.error("Error updating album:", error);
+      if (error.name === "ZodError") {
+        res.status(400).json({ 
+          error: "Validation error",
+          details: error.errors 
+        });
+      } else if (error.message === "Album not found") {
+        res.status(404).json({ 
+          error: "Album not found"
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to update album",
+          message: error.message 
+        });
+      }
+    }
+  });
+
   app.get("/api/albums", async (req, res) => {
     try {
       const allAlbums = await storage.getAllAlbums();

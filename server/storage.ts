@@ -14,6 +14,7 @@ import {
   type VoiceNoteRow,
   type InsertVoiceNoteRow,
   type AlbumRow,
+  type InsertAlbumRow,
   freeTrials,
   voiceNotes,
   albums,
@@ -78,8 +79,11 @@ export interface IStorage {
   markWebhookProcessed(idempotencyKey: string): Promise<WebhookEvent>;
 
   getAllAlbums(): Promise<AlbumRow[]>;
+  getAllAlbumsAdmin(): Promise<AlbumRow[]>; // Get all albums including inactive
   getAlbumByTitle(title: string): Promise<AlbumRow | undefined>;
   getAlbumById(id: string): Promise<AlbumRow | undefined>;
+  createAlbum(album: InsertAlbumRow): Promise<AlbumRow>;
+  updateAlbum(id: string, album: Partial<InsertAlbumRow>): Promise<AlbumRow>;
   getQuestionByIndex(
     albumId: string,
     index: number,
@@ -679,6 +683,52 @@ export class DatabaseStorage implements IStorage {
       .from(albums)
       .where(and(eq(albums.id, id), eq(albums.isActive, true)));
     return album;
+  }
+
+  async getAllAlbumsAdmin(): Promise<AlbumRow[]> {
+    try {
+      const allAlbums = await db.select().from(albums).orderBy(albums.createdAt);
+      return allAlbums;
+    } catch (error: any) {
+      if (
+        error?.message?.includes("does not exist") ||
+        error?.code === "42P01"
+      ) {
+        console.error(
+          "Albums table does not exist. Please run the migration: npm run db:push or apply migrations/0001_add_albums.sql manually",
+        );
+        throw new Error(
+          "Albums table not found. Please run database migration first.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async createAlbum(albumData: InsertAlbumRow): Promise<AlbumRow> {
+    const [newAlbum] = await db
+      .insert(albums)
+      .values(albumData)
+      .returning();
+    return newAlbum;
+  }
+
+  async updateAlbum(
+    id: string,
+    albumData: Partial<InsertAlbumRow>,
+  ): Promise<AlbumRow> {
+    const [updatedAlbum] = await db
+      .update(albums)
+      .set({
+        ...albumData,
+        updatedAt: new Date(),
+      })
+      .where(eq(albums.id, id))
+      .returning();
+    if (!updatedAlbum) {
+      throw new Error("Album not found");
+    }
+    return updatedAlbum;
   }
 
   async getQuestionByIndex(
