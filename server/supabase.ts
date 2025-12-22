@@ -262,6 +262,45 @@ export async function uploadImageToStorage(
 }
 
 /**
+ * Delete an image file from Supabase Storage
+ * @param filePath - The file path/name in the bucket (e.g., "filename.jpg" or full URL)
+ * @returns true if deletion was successful, false otherwise
+ */
+export async function deleteImageFromStorage(
+  filePath: string,
+): Promise<boolean> {
+  if (!supabase) {
+    console.error("Supabase client not initialized. Cannot delete image.");
+    return false;
+  }
+
+  try {
+    // Extract filename from full URL if provided
+    let fileName = filePath;
+    if (filePath.includes("/")) {
+      // If it's a full URL, extract the filename
+      const urlParts = filePath.split("/");
+      fileName = urlParts[urlParts.length - 1];
+    }
+
+    const { error } = await supabase.storage
+      .from(ALBUM_COVERS_BUCKET)
+      .remove([fileName]);
+
+    if (error) {
+      console.error("Error deleting image from Supabase Storage:", error);
+      return false;
+    }
+
+    console.log("Image deleted from Supabase Storage:", fileName);
+    return true;
+  } catch (error) {
+    console.error("Exception deleting image from Supabase Storage:", error);
+    return false;
+  }
+}
+
+/**
  * Upload webhook media file to appropriate Supabase Storage bucket
  * @param fileBuffer - The file buffer to upload
  * @param fileName - The file name (should be unique, e.g., mediaId)

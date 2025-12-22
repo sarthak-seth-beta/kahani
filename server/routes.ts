@@ -61,6 +61,519 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Get daily free trial counts
+  app.get("/api/admin/daily-free-trials", async (req, res) => {
+    try {
+      // Disable caching for admin endpoints to ensure fresh data
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      });
+
+      const { pool } = await import("./db");
+
+      // Get date range from query params (if no dates provided, fetch all data)
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      
+      let dateFilter = "1=1"; // Fetch all data if no date range provided
+      if (startDate && endDate) {
+        dateFilter = `created_at >= '${startDate}'::date AND created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      } else if (startDate) {
+        dateFilter = `created_at >= '${startDate}'::date`;
+      } else if (endDate) {
+        dateFilter = `created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      }
+
+      // Query to get daily counts - simple and straightforward
+      const query = `
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*)::int as count
+        FROM free_trials
+        WHERE ${dateFilter}
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+      `;
+
+      const result = await pool.query(query);
+
+      // Format the data for the chart
+      const dailyData = result.rows.map((row: any) => {
+        const dateObj = row.date instanceof Date ? row.date : new Date(row.date);
+        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        return {
+          date: dateObj.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          count: Number(row.count),
+          fullDate: dateStr,
+        };
+      });
+
+      res.json(dailyData);
+    } catch (error: any) {
+      console.error("Error fetching daily free trials:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch daily free trials",
+        message: error.message 
+      });
+    }
+  });
+
+  // Admin endpoint: Get daily WhatsApp messages (outgoing and incoming)
+  app.get("/api/admin/daily-whatsapp-messages", async (req, res) => {
+    try {
+      // Disable caching for admin endpoints to ensure fresh data
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      });
+
+      const { pool } = await import("./db");
+
+      // Get date range from query params (if no dates provided, fetch all data)
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      
+      let dateFilter = "1=1"; // Fetch all data if no date range provided
+      if (startDate && endDate) {
+        dateFilter = `created_at >= '${startDate}'::date AND created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      } else if (startDate) {
+        dateFilter = `created_at >= '${startDate}'::date`;
+      } else if (endDate) {
+        dateFilter = `created_at < ('${endDate}'::date + INTERVAL '1 day')`;
+      }
+
+      // Query to get daily counts from both tables
+      const query = `
+        WITH outgoing AS (
+          SELECT 
+            DATE(created_at) as date,
+            COUNT(*)::int as count
+          FROM whatsapp_messages
+          WHERE ${dateFilter}
+          GROUP BY DATE(created_at)
+        ),
+        incoming AS (
+          SELECT 
+            DATE(created_at) as date,
+            COUNT(*)::int as count
+          FROM whatsapp_webhook_events
+          WHERE ${dateFilter}
+          GROUP BY DATE(created_at)
+        ),
+        all_dates AS (
+          SELECT date FROM outgoing
+          UNION
+          SELECT date FROM incoming
+        )
+        SELECT 
+          ad.date,
+          COALESCE(o.count, 0)::int as outgoing_count,
+          COALESCE(i.count, 0)::int as incoming_count
+        FROM all_dates ad
+        LEFT JOIN outgoing o ON ad.date = o.date
+        LEFT JOIN incoming i ON ad.date = i.date
+        ORDER BY ad.date ASC
+      `;
+
+      const result = await pool.query(query);
+
+      // Format the data for the chart
+      const dailyData = result.rows.map((row: any) => {
+        const dateObj = row.date instanceof Date ? row.date : new Date(row.date);
+        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        return {
+          date: dateObj.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          outgoing: Number(row.outgoing_count),
+          incoming: Number(row.incoming_count),
+          fullDate: dateStr,
+        };
+      });
+
+      res.json(dailyData);
+    } catch (error: any) {
+      console.error("Error fetching daily WhatsApp messages:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch daily WhatsApp messages",
+        message: error.message 
+      });
+    }
+  });
+
+  // Admin endpoint: Get all albums (including inactive)
+  app.get("/api/admin/albums", async (req, res) => {
+    try {
+      // Disable caching for admin endpoints to ensure fresh data
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      });
+
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      // Transform to match frontend expectations
+      const albumsResponse = allAlbums.map((album) => ({
+        id: album.id,
+        title: album.title,
+        description: album.description,
+        questions: album.questions || [],
+        questions_hn: album.questionsHn || null,
+        cover_image: album.coverImage,
+        best_fit_for: album.bestFitFor || null,
+        is_active: album.isActive,
+        created_at: album.createdAt?.toISOString() || "",
+        updated_at: album.updatedAt?.toISOString() || "",
+      }));
+      res.json(albumsResponse);
+    } catch (error: any) {
+      console.error("Error fetching albums:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch albums",
+        message: error.message 
+      });
+    }
+  });
+
+  // Admin endpoint: Upload album cover image (temporary)
+  app.post(
+    "/api/admin/albums/upload-image",
+    upload.single("image"),
+    async (req, res) => {
+      try {
+        // Check if file was uploaded
+        if (!req.file) {
+          return res.status(400).json({ error: "No image file provided" });
+        }
+
+        // Validate file type
+        const allowedMimeTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
+        if (!allowedMimeTypes.includes(req.file.mimetype)) {
+          return res.status(400).json({
+            error: "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
+          });
+        }
+
+        // Validate file size
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (req.file.size > maxSize) {
+          return res.status(400).json({
+            error: "File size exceeds 5MB limit",
+          });
+        }
+
+        // Generate unique temporary filename
+        const { randomUUID } = await import("crypto");
+        const tempFileName = `temp-${randomUUID()}`;
+
+        // Upload to Supabase Storage
+        const { uploadImageToStorage } = await import("./supabase");
+        const fileBuffer = Buffer.from(req.file.buffer);
+        const supabaseUrl = await uploadImageToStorage(
+          fileBuffer,
+          tempFileName,
+          req.file.mimetype,
+        );
+
+        if (!supabaseUrl) {
+          console.error("Failed to upload image to Supabase Storage");
+          return res.status(500).json({
+            error: "Failed to upload image. Please try again later.",
+          });
+        }
+
+        // Extract filename from URL for later deletion if needed
+        const urlParts = supabaseUrl.split("/");
+        const fileName = urlParts[urlParts.length - 1];
+
+        res.json({
+          success: true,
+          imageUrl: supabaseUrl,
+          fileName: fileName, // Return filename for cleanup if album save fails
+          message: "Image uploaded successfully",
+        });
+      } catch (error: any) {
+        console.error("Error uploading album cover image:", error);
+        if (error.message === "Invalid file type. Only images are allowed.") {
+          return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({
+          error: "Failed to upload image",
+          message: error.message || "Internal server error",
+        });
+      }
+    },
+  );
+
+  // Admin endpoint: Delete album cover image
+  app.delete("/api/admin/albums/delete-image", async (req, res) => {
+    try {
+      const { fileName } = req.body;
+
+      if (!fileName) {
+        return res.status(400).json({ error: "File name is required" });
+      }
+
+      const { deleteImageFromStorage } = await import("./supabase");
+      const deleted = await deleteImageFromStorage(fileName);
+
+      if (!deleted) {
+        return res.status(500).json({
+          error: "Failed to delete image",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Image deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting album cover image:", error);
+      res.status(500).json({
+        error: "Failed to delete image",
+        message: error.message || "Internal server error",
+      });
+    }
+  });
+
+  // Admin endpoint: Create new album
+  app.post("/api/admin/albums", async (req, res) => {
+    let uploadedImageFileName: string | null = null;
+    
+    try {
+      const { insertAlbumSchema } = await import("@shared/schema");
+      const validatedData = insertAlbumSchema.parse(req.body);
+
+      // Extract uploaded image filename if provided (for cleanup on failure)
+      uploadedImageFileName = req.body.uploadedImageFileName || null;
+
+      // Transform to database format
+      const albumData = {
+        title: validatedData.title,
+        description: validatedData.description,
+        questions: validatedData.questions,
+        questionsHn: (req.body.questionsHn as string[]) || null,
+        coverImage: validatedData.coverImage,
+        bestFitFor: (req.body.bestFitFor as string[]) || null,
+        isActive: validatedData.isActive ?? true,
+      };
+
+      const newAlbum = await storage.createAlbum(albumData);
+
+      // Transform response
+      res.status(201).json({
+        id: newAlbum.id,
+        title: newAlbum.title,
+        description: newAlbum.description,
+        questions: newAlbum.questions || [],
+        questions_hn: newAlbum.questionsHn || null,
+        cover_image: newAlbum.coverImage,
+        best_fit_for: newAlbum.bestFitFor || null,
+        is_active: newAlbum.isActive,
+        created_at: newAlbum.createdAt?.toISOString() || "",
+        updated_at: newAlbum.updatedAt?.toISOString() || "",
+      });
+    } catch (error: any) {
+      console.error("Error creating album:", error);
+      
+      // Cleanup uploaded image if album creation failed
+      if (uploadedImageFileName) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          await deleteImageFromStorage(uploadedImageFileName);
+          console.log("Cleaned up uploaded image after album creation failure");
+        } catch (cleanupError) {
+          console.error("Failed to cleanup uploaded image:", cleanupError);
+        }
+      }
+
+      if (error.name === "ZodError") {
+        res.status(400).json({ 
+          error: "Validation error",
+          details: error.errors 
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to create album",
+          message: error.message 
+        });
+      }
+    }
+  });
+
+  // Admin endpoint: Update album
+  app.put("/api/admin/albums/:id", async (req, res) => {
+    let uploadedImageFileName: string | null = null;
+    let oldImageUrl: string | null = null;
+    
+    try {
+      const { id } = req.params;
+      const { insertAlbumSchema } = await import("@shared/schema");
+      
+      // Get existing album to check for old image (get all albums and find by id)
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      const existingAlbum = allAlbums.find((a) => a.id === id);
+      if (!existingAlbum) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+      oldImageUrl = existingAlbum.coverImage;
+      
+      // Validate the data (all fields optional for update)
+      const updateData = insertAlbumSchema.partial().parse(req.body);
+
+      // Extract uploaded image filename if provided (for cleanup on failure)
+      uploadedImageFileName = req.body.uploadedImageFileName || null;
+
+      // Transform to database format
+      const albumData: any = {};
+      if (updateData.title !== undefined) albumData.title = updateData.title;
+      if (updateData.description !== undefined) albumData.description = updateData.description;
+      if (updateData.questions !== undefined) albumData.questions = updateData.questions;
+      if (updateData.coverImage !== undefined) albumData.coverImage = updateData.coverImage;
+      if (updateData.isActive !== undefined) albumData.isActive = updateData.isActive;
+      
+      // Handle optional fields
+      if (req.body.questionsHn !== undefined) {
+        albumData.questionsHn = (req.body.questionsHn as string[]).length > 0 
+          ? req.body.questionsHn 
+          : null;
+      }
+      if (req.body.bestFitFor !== undefined) {
+        albumData.bestFitFor = (req.body.bestFitFor as string[]).length > 0 
+          ? req.body.bestFitFor 
+          : null;
+      }
+
+      const updatedAlbum = await storage.updateAlbum(id, albumData);
+
+      // Delete old image if a new one was uploaded
+      if (uploadedImageFileName && oldImageUrl && oldImageUrl !== updatedAlbum.coverImage) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          // Extract filename from old URL
+          const oldUrlParts = oldImageUrl.split("/");
+          const oldFileName = oldUrlParts[oldUrlParts.length - 1];
+          await deleteImageFromStorage(oldFileName);
+          console.log("Deleted old album cover image");
+        } catch (cleanupError) {
+          console.error("Failed to delete old image:", cleanupError);
+          // Don't fail the request if old image deletion fails
+        }
+      }
+
+      // Transform response
+      res.json({
+        id: updatedAlbum.id,
+        title: updatedAlbum.title,
+        description: updatedAlbum.description,
+        questions: updatedAlbum.questions || [],
+        questions_hn: updatedAlbum.questionsHn || null,
+        cover_image: updatedAlbum.coverImage,
+        best_fit_for: updatedAlbum.bestFitFor || null,
+        is_active: updatedAlbum.isActive,
+        created_at: updatedAlbum.createdAt?.toISOString() || "",
+        updated_at: updatedAlbum.updatedAt?.toISOString() || "",
+      });
+    } catch (error: any) {
+      console.error("Error updating album:", error);
+      
+      // Cleanup uploaded image if album update failed
+      if (uploadedImageFileName) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          await deleteImageFromStorage(uploadedImageFileName);
+          console.log("Cleaned up uploaded image after album update failure");
+        } catch (cleanupError) {
+          console.error("Failed to cleanup uploaded image:", cleanupError);
+        }
+      }
+
+      if (error.name === "ZodError") {
+        res.status(400).json({ 
+          error: "Validation error",
+          details: error.errors 
+        });
+      } else if (error.message === "Album not found") {
+        res.status(404).json({ 
+          error: "Album not found"
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to update album",
+          message: error.message 
+        });
+      }
+    }
+  });
+
+  // Admin endpoint: Delete album
+  app.delete("/api/admin/albums/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get album to check for cover image before deletion
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      const albumToDelete = allAlbums.find((a) => a.id === id);
+      
+      if (!albumToDelete) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+
+      // Delete the album
+      await storage.deleteAlbum(id);
+
+      // Delete associated cover image from storage if it exists and is a temp file
+      if (albumToDelete.coverImage) {
+        try {
+          const { deleteImageFromStorage } = await import("./supabase");
+          // Extract filename from URL
+          const urlParts = albumToDelete.coverImage.split("/");
+          const fileName = urlParts[urlParts.length - 1];
+          // Only delete if it's a temp file (starts with "temp-")
+          if (fileName.startsWith("temp-")) {
+            await deleteImageFromStorage(fileName);
+            console.log("Deleted album cover image from storage");
+          }
+        } catch (cleanupError) {
+          console.error("Failed to delete album cover image:", cleanupError);
+          // Don't fail the request if image deletion fails
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Album deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting album:", error);
+      if (error.message === "Album not found") {
+        res.status(404).json({ 
+          error: "Album not found"
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to delete album",
+          message: error.message 
+        });
+      }
+    }
+  });
+
   app.get("/api/albums", async (req, res) => {
     try {
       const allAlbums = await storage.getAllAlbums();
