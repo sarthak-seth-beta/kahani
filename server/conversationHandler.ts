@@ -15,6 +15,8 @@ import {
   sendInteractiveMessageWithCTA,
 } from "./whatsapp";
 import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
+import ffmpeg from "fluent-ffmpeg";
+import { Readable } from "stream";
 
 interface WhatsAppMessage {
   id: string;
@@ -1094,6 +1096,87 @@ async function handleVoiceNote(
   }
 }
 
+/**
+ * Converts an audio buffer to MP3 format with 96kbps compression
+ * @param buffer - The input audio buffer
+ * @param inputMimeType - The MIME type of the input audio
+ * @returns Promise<Buffer> - The converted MP3 buffer, or original buffer if conversion fails
+ */
+export async function convertToMp3(
+  buffer: Buffer,
+  inputMimeType: string,
+): Promise<Buffer> {
+  const originalSize = buffer.length;
+
+  return new Promise((resolve) => {
+    const chunks: Buffer[] = [];
+    const inputStream = Readable.from(buffer);
+
+    // Determine input format from MIME type
+    let inputFormat = "ogg"; // default
+    if (inputMimeType.includes("ogg")) {
+      inputFormat = "ogg";
+    } else if (inputMimeType.includes("m4a")) {
+      inputFormat = "m4a";
+    } else if (inputMimeType.includes("mp3")) {
+      inputFormat = "mp3";
+    } else if (inputMimeType.includes("aac")) {
+      inputFormat = "aac";
+    }
+
+    const command = ffmpeg(inputStream)
+      .inputFormat(inputFormat)
+      .audioCodec("libmp3lame")
+      .audioBitrate(96)
+      .format("mp3")
+      .on("error", (err) => {
+        console.error("Error converting audio to MP3:", err);
+        console.log("Falling back to original format");
+        resolve(buffer); // Fallback to original buffer
+      })
+      .on("end", () => {
+        if (chunks.length === 0) {
+          console.error(
+            "No data received from conversion, falling back to original",
+          );
+          resolve(buffer);
+          return;
+        }
+
+        const convertedBuffer = Buffer.concat(chunks);
+        const compressedSize = convertedBuffer.length;
+        const compressionRatio = (
+          ((originalSize - compressedSize) / originalSize) *
+          100
+        ).toFixed(2);
+
+        console.log("Audio conversion completed:", {
+          originalSize,
+          compressedSize,
+          compressionRatio: `${compressionRatio}%`,
+          inputFormat,
+        });
+
+        resolve(convertedBuffer);
+      });
+
+    const outputStream = command.pipe();
+
+    outputStream.on("data", (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+
+    outputStream.on("error", (err) => {
+      console.error("Error in conversion stream:", err);
+      resolve(buffer); // Fallback to original buffer
+    });
+
+    outputStream.on("end", () => {
+      // Stream ended, but we'll handle in command's 'end' event
+    });
+  });
+}
+
 async function downloadAndStoreVoiceNote(
   voiceNoteId: string,
   mediaId: string,
@@ -1137,11 +1220,21 @@ async function downloadAndStoreVoiceNote(
       return;
     }
 
-    // Step 4: Upload to Supabase Storage
-    const supabaseUrl = await uploadVoiceNoteToStorage(
-      fileBuffer,
+    // Step 4: Convert to MP3 format with compression
+    console.log("Converting voice note to MP3 format:", {
       voiceNoteId,
-      finalMimeType,
+      originalMimeType: finalMimeType,
+      originalSize: fileBuffer.length,
+    });
+
+    const mp3Buffer = await convertToMp3(fileBuffer, finalMimeType);
+    const finalMp3MimeType = "audio/mp3";
+
+    // Step 5: Upload to Supabase Storage
+    const supabaseUrl = await uploadVoiceNoteToStorage(
+      mp3Buffer,
+      voiceNoteId,
+      finalMp3MimeType,
     );
 
     if (!supabaseUrl) {
@@ -1159,30 +1252,29 @@ async function downloadAndStoreVoiceNote(
       return;
     }
 
-    // Step 5: Update database with Supabase URL and metadata
-    const fileExtension = finalMimeType.includes("ogg")
-      ? "ogg"
-      : finalMimeType.includes("mp3")
-        ? "mp3"
-        : finalMimeType.includes("m4a")
-          ? "m4a"
-          : "ogg";
+    // Step 6: Update database with Supabase URL and metadata
+    // All files are now converted to MP3 format
+    const fileExtension = "mp3";
 
     await storage.updateVoiceNote(voiceNoteId, {
       mediaUrl: supabaseUrl, // Store Supabase URL instead of temporary WhatsApp URL
       localFilePath: `${voiceNoteId}.${fileExtension}`, // Store file path
-      mimeType: finalMimeType, // Update with accurate mimeType from WhatsApp
+      mimeType: finalMp3MimeType, // Store MP3 MIME type
       mediaSha256: mediaInfo.sha256,
-      sizeBytes: mediaInfo.fileSize,
+      sizeBytes: mp3Buffer.length, // Store compressed file size
       downloadStatus: "completed",
     });
 
-    console.log("Voice note downloaded and uploaded to Supabase:", {
-      voiceNoteId,
-      mediaId,
-      supabaseUrl,
-      sizeBytes: mediaInfo.fileSize,
-    });
+    console.log(
+      "Voice note downloaded, converted to MP3, and uploaded to Supabase:",
+      {
+        voiceNoteId,
+        mediaId,
+        supabaseUrl,
+        originalSize: mediaInfo.fileSize,
+        compressedSize: mp3Buffer.length,
+      },
+    );
   } catch (error) {
     console.error("Error downloading and storing voice note:", error);
     await storage.updateVoiceNote(voiceNoteId, {
@@ -1266,12 +1358,19 @@ async function handleBuyerImageMessage(
       "bytes",
     );
 
-    // Step 3: Upload to Supabase Storage
-    console.log("Step 3: Uploading image to Supabase Storage...");
+    // Step 3: Compress image before upload
+    console.log("Step 3: Compressing image...");
+    const { compressImage } = await import("./supabase");
+    const finalMimeType = mediaInfo.mimeType || mimeType || "image/jpeg";
+    const { buffer: compressedBuffer, mimeType: compressedMimeType } =
+      await compressImage(fileBuffer, finalMimeType);
+
+    // Step 4: Upload compressed image to Supabase Storage
+    console.log("Step 4: Uploading compressed image to Supabase Storage...");
     const supabaseUrl = await uploadImageToStorage(
-      fileBuffer,
+      compressedBuffer,
       trial.id,
-      mimeType,
+      compressedMimeType,
     );
 
     if (!supabaseUrl) {
@@ -1285,8 +1384,8 @@ async function handleBuyerImageMessage(
 
     console.log("Image uploaded to Supabase successfully, URL:", supabaseUrl);
 
-    // Step 4: Update database with Supabase URL
-    console.log("Step 4: Updating database with image URL...");
+    // Step 5: Update database with Supabase URL
+    console.log("Step 5: Updating database with image URL...");
     await storage.updateFreeTrialDb(trial.id, {
       customCoverImageUrl: supabaseUrl,
     });
@@ -1297,8 +1396,8 @@ async function handleBuyerImageMessage(
       supabaseUrl,
     });
 
-    // Step 5: Send cute acknowledgment message with emojis
-    console.log("Step 5: Sending acknowledgment message to buyer...");
+    // Step 6: Send cute acknowledgment message with emojis
+    console.log("Step 6: Sending acknowledgment message to buyer...");
     const acknowledgmentMessage = `Perfect! Thank you so much for the beautiful photo! 📸✨\n\nI've saved it and it will be used as the cover for ${trial.storytellerName}'s album. It's going to look amazing! 🎨💫\n\nYour album is coming together beautifully! ❤️`;
 
     await sendTextMessageWithRetry(fromNumber, acknowledgmentMessage);

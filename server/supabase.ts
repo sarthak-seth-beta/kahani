@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -123,9 +124,10 @@ export async function ensureBucketExists(
 
 /**
  * Upload a voice note file to Supabase Storage
- * @param fileBuffer - The file buffer to upload
- * @param fileName - The file name (should be unique, e.g., voiceNoteId.ogg)
- * @param mimeType - The MIME type of the file
+ * All voice notes are now converted to MP3 format before upload
+ * @param fileBuffer - The file buffer to upload (should be MP3 format)
+ * @param fileName - The file name (should be unique, e.g., voiceNoteId)
+ * @param mimeType - The MIME type of the file (should be audio/mp3)
  * @returns The public URL of the uploaded file, or null if upload fails
  */
 export async function uploadVoiceNoteToStorage(
@@ -139,14 +141,9 @@ export async function uploadVoiceNoteToStorage(
   }
 
   try {
-    // Determine file extension from mimeType
-    const extension = mimeType.includes("ogg")
-      ? "ogg"
-      : mimeType.includes("mp3")
-        ? "mp3"
-        : mimeType.includes("m4a")
-          ? "m4a"
-          : "ogg";
+    // All voice notes are now converted to MP3 format
+    const extension = "mp3";
+    const finalMimeType = "audio/mp3";
 
     const fullFileName = `${fileName}.${extension}`;
     const filePath = `${fullFileName}`;
@@ -154,7 +151,7 @@ export async function uploadVoiceNoteToStorage(
     const { data, error } = await supabase.storage
       .from(VOICE_NOTES_BUCKET)
       .upload(filePath, fileBuffer, {
-        contentType: mimeType,
+        contentType: finalMimeType,
         upsert: false, // Don't overwrite existing files
       });
 
@@ -182,6 +179,73 @@ export async function uploadVoiceNoteToStorage(
   } catch (error) {
     console.error("Exception uploading voice note to Supabase Storage:", error);
     return null;
+  }
+}
+
+/**
+ * Compress an image with aggressive compression settings
+ * @param buffer - The image buffer to compress
+ * @param mimeType - The MIME type of the input image
+ * @returns Object with compressed buffer and updated mimeType, or original buffer if compression fails
+ */
+export async function compressImage(
+  buffer: Buffer,
+  mimeType: string,
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  const originalSize = buffer.length;
+
+  try {
+    let sharpInstance = sharp(buffer);
+
+    // Get image metadata to check dimensions
+    const metadata = await sharpInstance.metadata();
+    const needsResize = metadata.width && metadata.width > 1920;
+
+    // Resize if needed (max width 1920px, maintain aspect ratio)
+    if (needsResize) {
+      sharpInstance = sharpInstance.resize(1920, null, {
+        withoutEnlargement: true,
+        fit: "inside",
+      });
+    }
+
+    // Determine output format
+    // Convert to JPEG for better compression, but preserve WebP if original is WebP
+    const isWebP = mimeType.includes("webp");
+    const outputFormat = isWebP ? "webp" : "jpeg";
+    const outputMimeType = isWebP ? "image/webp" : "image/jpeg";
+
+    // Apply aggressive compression (45% quality)
+    const compressedBuffer = await sharpInstance
+      .toFormat(outputFormat, { quality: 45 })
+      .toBuffer();
+
+    const compressedSize = compressedBuffer.length;
+    const compressionRatio = (
+      ((originalSize - compressedSize) / originalSize) *
+      100
+    ).toFixed(2);
+
+    console.log("Image compression completed:", {
+      originalSize,
+      compressedSize,
+      compressionRatio: `${compressionRatio}%`,
+      originalMimeType: mimeType,
+      outputMimeType,
+      resized: needsResize,
+    });
+
+    return {
+      buffer: compressedBuffer,
+      mimeType: outputMimeType,
+    };
+  } catch (error) {
+    console.error("Error compressing image, falling back to original:", error);
+    // Fallback to original buffer if compression fails
+    return {
+      buffer,
+      mimeType,
+    };
   }
 }
 
@@ -258,45 +322,6 @@ export async function uploadImageToStorage(
   } catch (error) {
     console.error("Exception uploading image to Supabase Storage:", error);
     return null;
-  }
-}
-
-/**
- * Delete an image file from Supabase Storage
- * @param filePath - The file path/name in the bucket (e.g., "filename.jpg" or full URL)
- * @returns true if deletion was successful, false otherwise
- */
-export async function deleteImageFromStorage(
-  filePath: string,
-): Promise<boolean> {
-  if (!supabase) {
-    console.error("Supabase client not initialized. Cannot delete image.");
-    return false;
-  }
-
-  try {
-    // Extract filename from full URL if provided
-    let fileName = filePath;
-    if (filePath.includes("/")) {
-      // If it's a full URL, extract the filename
-      const urlParts = filePath.split("/");
-      fileName = urlParts[urlParts.length - 1];
-    }
-
-    const { error } = await supabase.storage
-      .from(ALBUM_COVERS_BUCKET)
-      .remove([fileName]);
-
-    if (error) {
-      console.error("Error deleting image from Supabase Storage:", error);
-      return false;
-    }
-
-    console.log("Image deleted from Supabase Storage:", fileName);
-    return true;
-  } catch (error) {
-    console.error("Exception deleting image from Supabase Storage:", error);
-    return false;
   }
 }
 

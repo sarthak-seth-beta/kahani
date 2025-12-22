@@ -67,8 +67,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Disable caching for admin endpoints to ensure fresh data
       res.set({
         "Cache-Control": "no-store, no-cache, must-revalidate, private",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       });
 
       const { pool } = await import("./db");
@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get date range from query params (if no dates provided, fetch all data)
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
-      
+
       let dateFilter = "1=1"; // Fetch all data if no date range provided
       if (startDate && endDate) {
         dateFilter = `created_at >= '${startDate}'::date AND created_at < ('${endDate}'::date + INTERVAL '1 day')`;
@@ -101,9 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Format the data for the chart
       const dailyData = result.rows.map((row: any) => {
-        const dateObj = row.date instanceof Date ? row.date : new Date(row.date);
-        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
-        
+        const dateObj =
+          row.date instanceof Date ? row.date : new Date(row.date);
+        const dateStr = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD format
+
         return {
           date: dateObj.toLocaleDateString("en-US", {
             month: "short",
@@ -117,9 +118,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(dailyData);
     } catch (error: any) {
       console.error("Error fetching daily free trials:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to fetch daily free trials",
-        message: error.message 
+        message: error.message,
       });
     }
   });
@@ -130,8 +131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Disable caching for admin endpoints to ensure fresh data
       res.set({
         "Cache-Control": "no-store, no-cache, must-revalidate, private",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       });
 
       const { pool } = await import("./db");
@@ -139,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get date range from query params (if no dates provided, fetch all data)
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
-      
+
       let dateFilter = "1=1"; // Fetch all data if no date range provided
       if (startDate && endDate) {
         dateFilter = `created_at >= '${startDate}'::date AND created_at < ('${endDate}'::date + INTERVAL '1 day')`;
@@ -186,9 +187,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Format the data for the chart
       const dailyData = result.rows.map((row: any) => {
-        const dateObj = row.date instanceof Date ? row.date : new Date(row.date);
-        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
-        
+        const dateObj =
+          row.date instanceof Date ? row.date : new Date(row.date);
+        const dateStr = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD format
+
         return {
           date: dateObj.toLocaleDateString("en-US", {
             month: "short",
@@ -203,9 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(dailyData);
     } catch (error: any) {
       console.error("Error fetching daily WhatsApp messages:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to fetch daily WhatsApp messages",
-        message: error.message 
+        message: error.message,
       });
     }
   });
@@ -216,8 +218,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Disable caching for admin endpoints to ensure fresh data
       res.set({
         "Cache-Control": "no-store, no-cache, must-revalidate, private",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       });
 
       const allAlbums = await storage.getAllAlbumsAdmin();
@@ -237,9 +239,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(albumsResponse);
     } catch (error: any) {
       console.error("Error fetching albums:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to fetch albums",
-        message: error.message 
+        message: error.message,
       });
     }
   });
@@ -265,7 +267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ];
         if (!allowedMimeTypes.includes(req.file.mimetype)) {
           return res.status(400).json({
-            error: "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
+            error:
+              "Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.",
           });
         }
 
@@ -281,13 +284,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { randomUUID } = await import("crypto");
         const tempFileName = `temp-${randomUUID()}`;
 
-        // Upload to Supabase Storage
-        const { uploadImageToStorage } = await import("./supabase");
-        const fileBuffer = Buffer.from(req.file.buffer);
+        // Compress image before upload
+        const { compressImage, uploadImageToStorage } =
+          await import("./supabase");
+        const originalBuffer = Buffer.from(req.file.buffer);
+        const { buffer: compressedBuffer, mimeType: compressedMimeType } =
+          await compressImage(originalBuffer, req.file.mimetype);
+
+        // Upload compressed image to Supabase Storage
         const supabaseUrl = await uploadImageToStorage(
-          fileBuffer,
+          compressedBuffer,
           tempFileName,
-          req.file.mimetype,
+          compressedMimeType,
         );
 
         if (!supabaseUrl) {
@@ -354,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin endpoint: Create new album
   app.post("/api/admin/albums", async (req, res) => {
     let uploadedImageFileName: string | null = null;
-    
+
     try {
       const { insertAlbumSchema } = await import("@shared/schema");
       const validatedData = insertAlbumSchema.parse(req.body);
@@ -390,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error creating album:", error);
-      
+
       // Cleanup uploaded image if album creation failed
       if (uploadedImageFileName) {
         try {
@@ -403,14 +411,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (error.name === "ZodError") {
-        res.status(400).json({ 
+        res.status(400).json({
           error: "Validation error",
-          details: error.errors 
+          details: error.errors,
         });
       } else {
-        res.status(500).json({ 
+        res.status(500).json({
           error: "Failed to create album",
-          message: error.message 
+          message: error.message,
         });
       }
     }
@@ -420,11 +428,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/albums/:id", async (req, res) => {
     let uploadedImageFileName: string | null = null;
     let oldImageUrl: string | null = null;
-    
+
     try {
       const { id } = req.params;
       const { insertAlbumSchema } = await import("@shared/schema");
-      
+
       // Get existing album to check for old image (get all albums and find by id)
       const allAlbums = await storage.getAllAlbumsAdmin();
       const existingAlbum = allAlbums.find((a) => a.id === id);
@@ -432,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Album not found" });
       }
       oldImageUrl = existingAlbum.coverImage;
-      
+
       // Validate the data (all fields optional for update)
       const updateData = insertAlbumSchema.partial().parse(req.body);
 
@@ -442,27 +450,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Transform to database format
       const albumData: any = {};
       if (updateData.title !== undefined) albumData.title = updateData.title;
-      if (updateData.description !== undefined) albumData.description = updateData.description;
-      if (updateData.questions !== undefined) albumData.questions = updateData.questions;
-      if (updateData.coverImage !== undefined) albumData.coverImage = updateData.coverImage;
-      if (updateData.isActive !== undefined) albumData.isActive = updateData.isActive;
-      
+      if (updateData.description !== undefined)
+        albumData.description = updateData.description;
+      if (updateData.questions !== undefined)
+        albumData.questions = updateData.questions;
+      if (updateData.coverImage !== undefined)
+        albumData.coverImage = updateData.coverImage;
+      if (updateData.isActive !== undefined)
+        albumData.isActive = updateData.isActive;
+
       // Handle optional fields
       if (req.body.questionsHn !== undefined) {
-        albumData.questionsHn = (req.body.questionsHn as string[]).length > 0 
-          ? req.body.questionsHn 
-          : null;
+        albumData.questionsHn =
+          (req.body.questionsHn as string[]).length > 0
+            ? req.body.questionsHn
+            : null;
       }
       if (req.body.bestFitFor !== undefined) {
-        albumData.bestFitFor = (req.body.bestFitFor as string[]).length > 0 
-          ? req.body.bestFitFor 
-          : null;
+        albumData.bestFitFor =
+          (req.body.bestFitFor as string[]).length > 0
+            ? req.body.bestFitFor
+            : null;
       }
 
       const updatedAlbum = await storage.updateAlbum(id, albumData);
 
       // Delete old image if a new one was uploaded
-      if (uploadedImageFileName && oldImageUrl && oldImageUrl !== updatedAlbum.coverImage) {
+      if (
+        uploadedImageFileName &&
+        oldImageUrl &&
+        oldImageUrl !== updatedAlbum.coverImage
+      ) {
         try {
           const { deleteImageFromStorage } = await import("./supabase");
           // Extract filename from old URL
@@ -491,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error updating album:", error);
-      
+
       // Cleanup uploaded image if album update failed
       if (uploadedImageFileName) {
         try {
@@ -504,18 +522,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (error.name === "ZodError") {
-        res.status(400).json({ 
+        res.status(400).json({
           error: "Validation error",
-          details: error.errors 
+          details: error.errors,
         });
       } else if (error.message === "Album not found") {
-        res.status(404).json({ 
-          error: "Album not found"
+        res.status(404).json({
+          error: "Album not found",
         });
       } else {
-        res.status(500).json({ 
+        res.status(500).json({
           error: "Failed to update album",
-          message: error.message 
+          message: error.message,
         });
       }
     }
@@ -529,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get album to check for cover image before deletion
       const allAlbums = await storage.getAllAlbumsAdmin();
       const albumToDelete = allAlbums.find((a) => a.id === id);
-      
+
       if (!albumToDelete) {
         return res.status(404).json({ error: "Album not found" });
       }
@@ -562,13 +580,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error deleting album:", error);
       if (error.message === "Album not found") {
-        res.status(404).json({ 
-          error: "Album not found"
+        res.status(404).json({
+          error: "Album not found",
         });
       } else {
-        res.status(500).json({ 
+        res.status(500).json({
           error: "Failed to delete album",
-          message: error.message 
+          message: error.message,
         });
       }
     }
@@ -797,13 +815,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Upload to Supabase Storage
-        const { uploadImageToStorage } = await import("./supabase");
-        const fileBuffer = Buffer.from(req.file.buffer);
+        // Compress image before upload
+        const { compressImage, uploadImageToStorage } =
+          await import("./supabase");
+        const originalBuffer = Buffer.from(req.file.buffer);
+        const { buffer: compressedBuffer, mimeType: compressedMimeType } =
+          await compressImage(originalBuffer, req.file.mimetype);
+
+        // Upload compressed image to Supabase Storage
         const supabaseUrl = await uploadImageToStorage(
-          fileBuffer,
+          compressedBuffer,
           trialId,
-          req.file.mimetype,
+          compressedMimeType,
         );
 
         if (!supabaseUrl) {

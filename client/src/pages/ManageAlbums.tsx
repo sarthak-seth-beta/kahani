@@ -32,7 +32,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Loader2, RotateCcw, Upload, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Loader2,
+  RotateCcw,
+  Upload,
+  X,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertAlbumSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -62,7 +70,9 @@ export default function ManageAlbums() {
   const { toast } = useToast();
   const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null);
   const [shouldLoadAlbums, setShouldLoadAlbums] = useState(false);
-  const [uploadedImageFileName, setUploadedImageFileName] = useState<string | null>(null);
+  const [uploadedImageFileName, setUploadedImageFileName] = useState<
+    string | null
+  >(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [albumToDelete, setAlbumToDelete] = useState<Album | null>(null);
@@ -170,8 +180,13 @@ export default function ManageAlbums() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AlbumFormData & { uploadedImageFileName?: string } }) =>
-      apiRequest("PUT", `/api/admin/albums/${id}`, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: AlbumFormData & { uploadedImageFileName?: string };
+    }) => apiRequest("PUT", `/api/admin/albums/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
       queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
@@ -391,7 +406,9 @@ export default function ManageAlbums() {
                   name="coverImage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm">Cover Image URL *</FormLabel>
+                      <FormLabel className="text-sm">
+                        Cover Image URL *
+                      </FormLabel>
                       <div className="space-y-2">
                         <div className="flex gap-2">
                           <FormControl>
@@ -425,14 +442,19 @@ export default function ManageAlbums() {
                                 const formData = new FormData();
                                 formData.append("image", file);
 
-                                const response = await fetch("/api/admin/albums/upload-image", {
-                                  method: "POST",
-                                  body: formData,
-                                });
+                                const response = await fetch(
+                                  "/api/admin/albums/upload-image",
+                                  {
+                                    method: "POST",
+                                    body: formData,
+                                  },
+                                );
 
                                 if (!response.ok) {
                                   const errorData = await response.json();
-                                  throw new Error(errorData.error || "Failed to upload image");
+                                  throw new Error(
+                                    errorData.error || "Failed to upload image",
+                                  );
                                 }
 
                                 const data = await response.json();
@@ -445,7 +467,8 @@ export default function ManageAlbums() {
                               } catch (error: any) {
                                 toast({
                                   title: "Error",
-                                  description: error.message || "Failed to upload image",
+                                  description:
+                                    error.message || "Failed to upload image",
                                   variant: "destructive",
                                 });
                               } finally {
@@ -682,8 +705,7 @@ export default function ManageAlbums() {
                     }
                     className="flex-1"
                   >
-                    {(createMutation.isPending ||
-                      updateMutation.isPending) && (
+                    {(createMutation.isPending || updateMutation.isPending) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     {editingAlbumId ? "Update Album" : "Create Album"}
@@ -785,13 +807,18 @@ export default function ManageAlbums() {
         </Card>
 
         {/* Delete Confirmation Dialog */}
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the album
-                {albumToDelete && ` "${albumToDelete.title}"`} and remove all associated data.
+                This action cannot be undone. This will permanently delete the
+                album
+                {albumToDelete && ` "${albumToDelete.title}"`} and remove all
+                associated data.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -817,4 +844,3 @@ export default function ManageAlbums() {
     </div>
   );
 }
-

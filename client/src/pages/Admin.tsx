@@ -1,5 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import {
   Card,
   CardContent,
@@ -13,7 +22,11 @@ import { Plus, Calendar as CalendarIcon, Check, RotateCcw } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO, isAfter, isBefore, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
@@ -32,30 +45,46 @@ interface DailyWhatsAppMessage {
 
 export default function Admin() {
   const [, setLocation] = useLocation();
-  
+
   // Fetch all data once on page load (no date filtering in API call)
-  const { data: allFreeTrialData, isLoading: isLoadingTrials, error: freeTrialError } = useQuery<DailyFreeTrial[]>({
+  const {
+    data: allFreeTrialData,
+    isLoading: isLoadingTrials,
+    error: freeTrialError,
+  } = useQuery<DailyFreeTrial[]>({
     queryKey: ["/api/admin/daily-free-trials"],
     retry: 1,
   });
 
-  const { data: allWhatsappData, isLoading: isLoadingWhatsapp, error: whatsappError } = useQuery<DailyWhatsAppMessage[]>({
+  const {
+    data: allWhatsappData,
+    isLoading: isLoadingWhatsapp,
+    error: whatsappError,
+  } = useQuery<DailyWhatsAppMessage[]>({
     queryKey: ["/api/admin/daily-whatsapp-messages"],
     retry: 1,
   });
 
   // Temporary date ranges for selection (not applied yet)
-  const [tempFreeTrialDateRange, setTempFreeTrialDateRange] = useState<DateRange | undefined>(undefined);
-  const [tempWhatsappDateRange, setTempWhatsappDateRange] = useState<DateRange | undefined>(undefined);
-  
+  const [tempFreeTrialDateRange, setTempFreeTrialDateRange] = useState<
+    DateRange | undefined
+  >(undefined);
+  const [tempWhatsappDateRange, setTempWhatsappDateRange] = useState<
+    DateRange | undefined
+  >(undefined);
+
   // Applied date ranges (what's actually used to filter)
-  const [appliedFreeTrialDateRange, setAppliedFreeTrialDateRange] = useState<DateRange | undefined>(() => {
+  const [appliedFreeTrialDateRange, setAppliedFreeTrialDateRange] = useState<
+    DateRange | undefined
+  >(() => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 30);
     return { from: start, to: end };
   });
-  const [appliedWhatsappDateRange, setAppliedWhatsappDateRange] = useState<DateRange | undefined>(() => {
+  const [appliedWhatsappDateRange, setAppliedWhatsappDateRange] = useState<
+    DateRange | undefined
+  >(() => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 30);
@@ -69,32 +98,34 @@ export default function Admin() {
   // Filter data client-side based on applied date ranges
   const filterDataByDateRange = <T extends { fullDate: string }>(
     data: T[] | undefined,
-    dateRange: DateRange | undefined
+    dateRange: DateRange | undefined,
   ): T[] => {
     if (!data || !dateRange?.from || !dateRange?.to) {
       return data || [];
     }
-    
+
     const startDate = startOfDay(dateRange.from);
     const endDate = startOfDay(dateRange.to);
-    
+
     return data.filter((item) => {
       const itemDate = startOfDay(parseISO(item.fullDate));
       return (
-        (isAfter(itemDate, startDate) || itemDate.getTime() === startDate.getTime()) &&
-        (isBefore(itemDate, endDate) || itemDate.getTime() === endDate.getTime())
+        (isAfter(itemDate, startDate) ||
+          itemDate.getTime() === startDate.getTime()) &&
+        (isBefore(itemDate, endDate) ||
+          itemDate.getTime() === endDate.getTime())
       );
     });
   };
 
   const freeTrialData = useMemo(
     () => filterDataByDateRange(allFreeTrialData, appliedFreeTrialDateRange),
-    [allFreeTrialData, appliedFreeTrialDateRange]
+    [allFreeTrialData, appliedFreeTrialDateRange],
   );
 
   const whatsappData = useMemo(
     () => filterDataByDateRange(allWhatsappData, appliedWhatsappDateRange),
-    [allWhatsappData, appliedWhatsappDateRange]
+    [allWhatsappData, appliedWhatsappDateRange],
   );
 
   // Apply date range handlers
@@ -161,8 +192,12 @@ export default function Admin() {
                 Failed to load data. Please try again later.
                 <br />
                 <span className="text-xs text-red-600 mt-2 block">
-                  {freeTrialError instanceof Error ? freeTrialError.message : String(freeTrialError || "")}
-                  {whatsappError instanceof Error ? whatsappError.message : String(whatsappError || "")}
+                  {freeTrialError instanceof Error
+                    ? freeTrialError.message
+                    : String(freeTrialError || "")}
+                  {whatsappError instanceof Error
+                    ? whatsappError.message
+                    : String(whatsappError || "")}
                 </span>
               </CardDescription>
             </CardHeader>
@@ -172,14 +207,20 @@ export default function Admin() {
     );
   }
 
-  const totalTrials = freeTrialData?.reduce((sum, item) => sum + item.count, 0) || 0;
-  const maxTrialCount = Math.max(...(freeTrialData?.map((item) => item.count) || [0]), 1);
-  
-  const totalOutgoing = whatsappData?.reduce((sum, item) => sum + item.outgoing, 0) || 0;
-  const totalIncoming = whatsappData?.reduce((sum, item) => sum + item.incoming, 0) || 0;
+  const totalTrials =
+    freeTrialData?.reduce((sum, item) => sum + item.count, 0) || 0;
+  const maxTrialCount = Math.max(
+    ...(freeTrialData?.map((item) => item.count) || [0]),
+    1,
+  );
+
+  const totalOutgoing =
+    whatsappData?.reduce((sum, item) => sum + item.outgoing, 0) || 0;
+  const totalIncoming =
+    whatsappData?.reduce((sum, item) => sum + item.incoming, 0) || 0;
   const maxWhatsappCount = Math.max(
     ...(whatsappData?.flatMap((item) => [item.outgoing, item.incoming]) || [0]),
-    1
+    1,
   );
 
   return (
@@ -189,7 +230,9 @@ export default function Admin() {
           <CardHeader className="p-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <CardTitle className="text-xl font-bold">Admin Dashboard</CardTitle>
+                <CardTitle className="text-xl font-bold">
+                  Admin Dashboard
+                </CardTitle>
                 <CardDescription className="text-xs">
                   Analytics Dashboard
                 </CardDescription>
@@ -207,7 +250,8 @@ export default function Admin() {
           <CardContent className="p-4 pt-0">
             <div>
               <p className="text-base font-semibold text-gray-700">
-                Total Free Trials: <span className="text-black text-lg">{totalTrials}</span>
+                Total Free Trials:{" "}
+                <span className="text-black text-lg">{totalTrials}</span>
               </p>
             </div>
           </CardContent>
@@ -217,18 +261,23 @@ export default function Admin() {
           <CardHeader className="p-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <CardTitle className="text-lg">Daily Free Trial Registrations</CardTitle>
+                <CardTitle className="text-lg">
+                  Daily Free Trial Registrations
+                </CardTitle>
                 <CardDescription className="text-xs">
                   Number of free trials registered per day
                 </CardDescription>
               </div>
-              <Popover open={freeTrialPopoverOpen} onOpenChange={setFreeTrialPopoverOpen}>
+              <Popover
+                open={freeTrialPopoverOpen}
+                onOpenChange={setFreeTrialPopoverOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-[240px] justify-start text-left font-normal text-xs",
-                      !appliedFreeTrialDateRange && "text-muted-foreground"
+                      !appliedFreeTrialDateRange && "text-muted-foreground",
                     )}
                     size="sm"
                     type="button"
@@ -237,8 +286,8 @@ export default function Admin() {
                     {appliedFreeTrialDateRange?.from ? (
                       appliedFreeTrialDateRange.to ? (
                         <>
-                          {format(appliedFreeTrialDateRange.from, "LLL dd, y")} -{" "}
-                          {format(appliedFreeTrialDateRange.to, "LLL dd, y")}
+                          {format(appliedFreeTrialDateRange.from, "LLL dd, y")}{" "}
+                          - {format(appliedFreeTrialDateRange.to, "LLL dd, y")}
                         </>
                       ) : (
                         format(appliedFreeTrialDateRange.from, "LLL dd, y")
@@ -248,13 +297,22 @@ export default function Admin() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end" onInteractOutside={(e) => e.preventDefault()}>
+                <PopoverContent
+                  className="w-auto p-0"
+                  align="end"
+                  onInteractOutside={(e) => e.preventDefault()}
+                >
                   <div className="p-3">
                     <Calendar
                       initialFocus
                       mode="range"
-                      defaultMonth={tempFreeTrialDateRange?.from || appliedFreeTrialDateRange?.from}
-                      selected={tempFreeTrialDateRange || appliedFreeTrialDateRange}
+                      defaultMonth={
+                        tempFreeTrialDateRange?.from ||
+                        appliedFreeTrialDateRange?.from
+                      }
+                      selected={
+                        tempFreeTrialDateRange || appliedFreeTrialDateRange
+                      }
                       onSelect={(range) => {
                         setTempFreeTrialDateRange(range);
                       }}
@@ -284,7 +342,10 @@ export default function Admin() {
                         <Button
                           size="sm"
                           onClick={handleApplyFreeTrialDateRange}
-                          disabled={!tempFreeTrialDateRange?.from || !tempFreeTrialDateRange?.to}
+                          disabled={
+                            !tempFreeTrialDateRange?.from ||
+                            !tempFreeTrialDateRange?.to
+                          }
                         >
                           <Check className="mr-2 h-4 w-4" />
                           Apply
@@ -330,7 +391,11 @@ export default function Admin() {
                       padding: "6px 10px",
                       fontSize: "12px",
                     }}
-                    labelStyle={{ color: "#374151", fontWeight: "bold", fontSize: "11px" }}
+                    labelStyle={{
+                      color: "#374151",
+                      fontWeight: "bold",
+                      fontSize: "11px",
+                    }}
                     formatter={(value: number) => [value, "Free Trials"]}
                   />
                   <Bar
@@ -353,18 +418,23 @@ export default function Admin() {
           <CardHeader className="p-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <CardTitle className="text-lg">Daily WhatsApp Messages</CardTitle>
+                <CardTitle className="text-lg">
+                  Daily WhatsApp Messages
+                </CardTitle>
                 <CardDescription className="text-xs">
                   Outgoing and incoming messages per day
                 </CardDescription>
               </div>
-              <Popover open={whatsappPopoverOpen} onOpenChange={setWhatsappPopoverOpen}>
+              <Popover
+                open={whatsappPopoverOpen}
+                onOpenChange={setWhatsappPopoverOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-[240px] justify-start text-left font-normal text-xs",
-                      !appliedWhatsappDateRange && "text-muted-foreground"
+                      !appliedWhatsappDateRange && "text-muted-foreground",
                     )}
                     size="sm"
                     type="button"
@@ -384,13 +454,22 @@ export default function Admin() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end" onInteractOutside={(e) => e.preventDefault()}>
+                <PopoverContent
+                  className="w-auto p-0"
+                  align="end"
+                  onInteractOutside={(e) => e.preventDefault()}
+                >
                   <div className="p-3">
                     <Calendar
                       initialFocus
                       mode="range"
-                      defaultMonth={tempWhatsappDateRange?.from || appliedWhatsappDateRange?.from}
-                      selected={tempWhatsappDateRange || appliedWhatsappDateRange}
+                      defaultMonth={
+                        tempWhatsappDateRange?.from ||
+                        appliedWhatsappDateRange?.from
+                      }
+                      selected={
+                        tempWhatsappDateRange || appliedWhatsappDateRange
+                      }
                       onSelect={(range) => {
                         setTempWhatsappDateRange(range);
                       }}
@@ -420,7 +499,10 @@ export default function Admin() {
                         <Button
                           size="sm"
                           onClick={handleApplyWhatsappDateRange}
-                          disabled={!tempWhatsappDateRange?.from || !tempWhatsappDateRange?.to}
+                          disabled={
+                            !tempWhatsappDateRange?.from ||
+                            !tempWhatsappDateRange?.to
+                          }
                         >
                           <Check className="mr-2 h-4 w-4" />
                           Apply
@@ -478,7 +560,11 @@ export default function Admin() {
                       padding: "6px 10px",
                       fontSize: "12px",
                     }}
-                    labelStyle={{ color: "#374151", fontWeight: "bold", fontSize: "11px" }}
+                    labelStyle={{
+                      color: "#374151",
+                      fontWeight: "bold",
+                      fontSize: "11px",
+                    }}
                   />
                   <Bar
                     dataKey="outgoing"

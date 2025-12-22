@@ -688,7 +688,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAlbumsAdmin(): Promise<AlbumRow[]> {
     try {
-      const allAlbums = await db.select().from(albums).orderBy(albums.createdAt);
+      const allAlbums = await db
+        .select()
+        .from(albums)
+        .orderBy(albums.createdAt);
       return allAlbums;
     } catch (error: any) {
       if (
@@ -707,10 +710,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAlbum(albumData: InsertAlbumRow): Promise<AlbumRow> {
-    const [newAlbum] = await db
-      .insert(albums)
-      .values(albumData)
-      .returning();
+    const [newAlbum] = await db.insert(albums).values(albumData).returning();
     return newAlbum;
   }
 
