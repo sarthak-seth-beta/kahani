@@ -468,6 +468,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(freeTrials.conversationState, "awaiting_readiness"),
+          isNotNull(freeTrials.retryReadinessAt),
           lte(freeTrials.retryReadinessAt, now),
         ),
       );

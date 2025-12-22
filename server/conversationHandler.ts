@@ -631,8 +631,18 @@ export async function askReadiness(
     trial.storytellerLanguagePreference,
   );
 
+  // Set retryReadinessAt if not already set (for initial readiness checks)
+  // This ensures ignored readiness checks get retried after 8 hours
+  const retryReadinessAt = trial.retryReadinessAt
+    ? undefined
+    : new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours from now
+
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
+    ...(retryReadinessAt && { retryReadinessAt }),
+    ...(trial.retryCount === null || trial.retryCount === undefined
+      ? { retryCount: 0 }
+      : {}),
   });
 }
 
@@ -768,11 +778,12 @@ async function handleReadinessResponse(
       throw error;
     }
   } else if (isMaybe) {
-    const retryAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
+    const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000); // 4 hours
 
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
       retryReadinessAt: retryAt,
+      retryCount: 0, // Reset retry count for new readiness check
       conversationState: "awaiting_readiness",
     });
 
