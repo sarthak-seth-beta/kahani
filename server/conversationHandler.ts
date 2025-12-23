@@ -14,7 +14,7 @@ import {
   sendTemplateMessageWithRetry,
   sendInteractiveMessageWithCTA,
 } from "./whatsapp";
-import { uploadVoiceNoteToStorage, uploadImageToStorage } from "./supabase";
+import { uploadVoiceNoteToR2, uploadImageToR2 } from "./r2";
 import ffmpeg from "fluent-ffmpeg";
 import { Readable } from "stream";
 
@@ -1230,16 +1230,16 @@ async function downloadAndStoreVoiceNote(
     const mp3Buffer = await convertToMp3(fileBuffer, finalMimeType);
     const finalMp3MimeType = "audio/mp3";
 
-    // Step 5: Upload to Supabase Storage
-    const supabaseUrl = await uploadVoiceNoteToStorage(
+    // Step 5: Upload to Cloudflare R2 Storage
+    const r2Url = await uploadVoiceNoteToR2(
       mp3Buffer,
       voiceNoteId,
       finalMp3MimeType,
     );
 
-    if (!supabaseUrl) {
+    if (!r2Url) {
       console.error(
-        "Failed to upload voice note to Supabase Storage:",
+        "Failed to upload voice note to Cloudflare R2 Storage:",
         voiceNoteId,
       );
       // Still save the WhatsApp URL as fallback
@@ -1252,12 +1252,12 @@ async function downloadAndStoreVoiceNote(
       return;
     }
 
-    // Step 6: Update database with Supabase URL and metadata
+    // Step 6: Update database with R2 URL and metadata
     // All files are now converted to MP3 format
     const fileExtension = "mp3";
 
     await storage.updateVoiceNote(voiceNoteId, {
-      mediaUrl: supabaseUrl, // Store Supabase URL instead of temporary WhatsApp URL
+      mediaUrl: r2Url, // Store R2 URL instead of temporary WhatsApp URL
       localFilePath: `${voiceNoteId}.${fileExtension}`, // Store file path
       mimeType: finalMp3MimeType, // Store MP3 MIME type
       mediaSha256: mediaInfo.sha256,
@@ -1265,16 +1265,13 @@ async function downloadAndStoreVoiceNote(
       downloadStatus: "completed",
     });
 
-    console.log(
-      "Voice note downloaded, converted to MP3, and uploaded to Supabase:",
-      {
-        voiceNoteId,
-        mediaId,
-        supabaseUrl,
-        originalSize: mediaInfo.fileSize,
-        compressedSize: mp3Buffer.length,
-      },
-    );
+    console.log("Voice note downloaded, converted to MP3, and uploaded to R2:", {
+      voiceNoteId,
+      mediaId,
+      r2Url,
+      originalSize: mediaInfo.fileSize,
+      compressedSize: mp3Buffer.length,
+    });
   } catch (error) {
     console.error("Error downloading and storing voice note:", error);
     await storage.updateVoiceNote(voiceNoteId, {
@@ -1365,16 +1362,16 @@ async function handleBuyerImageMessage(
     const { buffer: compressedBuffer, mimeType: compressedMimeType } =
       await compressImage(fileBuffer, finalMimeType);
 
-    // Step 4: Upload compressed image to Supabase Storage
-    console.log("Step 4: Uploading compressed image to Supabase Storage...");
-    const supabaseUrl = await uploadImageToStorage(
+    // Step 4: Upload compressed image to Cloudflare R2 Storage
+    console.log("Step 4: Uploading compressed image to Cloudflare R2 Storage...");
+    const r2Url = await uploadImageToR2(
       compressedBuffer,
       trial.id,
       compressedMimeType,
     );
 
-    if (!supabaseUrl) {
-      console.error("Failed to upload image to Supabase Storage:", trial.id);
+    if (!r2Url) {
+      console.error("Failed to upload image to Cloudflare R2 Storage:", trial.id);
       await sendTextMessageWithRetry(
         fromNumber,
         "Sorry, there was an issue saving your image. Please try again later. 📸",
@@ -1382,18 +1379,18 @@ async function handleBuyerImageMessage(
       return;
     }
 
-    console.log("Image uploaded to Supabase successfully, URL:", supabaseUrl);
+    console.log("Image uploaded to R2 successfully, URL:", r2Url);
 
-    // Step 5: Update database with Supabase URL
+    // Step 5: Update database with R2 URL
     console.log("Step 5: Updating database with image URL...");
     await storage.updateFreeTrialDb(trial.id, {
-      customCoverImageUrl: supabaseUrl,
+      customCoverImageUrl: r2Url,
     });
 
     console.log("Image uploaded and saved:", {
       trialId: trial.id,
       imageId,
-      supabaseUrl,
+      r2Url,
     });
 
     // Step 6: Send cute acknowledgment message with emojis
