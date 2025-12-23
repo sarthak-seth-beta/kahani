@@ -285,33 +285,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tempFileName = `temp-${randomUUID()}`;
 
         // Compress image before upload
-        const { compressImage, uploadImageToStorage } =
-          await import("./supabase");
+        const { compressImage } = await import("./supabase");
+        const { uploadImageToR2 } = await import("./r2");
         const originalBuffer = Buffer.from(req.file.buffer);
         const { buffer: compressedBuffer, mimeType: compressedMimeType } =
           await compressImage(originalBuffer, req.file.mimetype);
 
-        // Upload compressed image to Supabase Storage
-        const supabaseUrl = await uploadImageToStorage(
+        // Upload compressed image to Cloudflare R2 Storage
+        const r2Url = await uploadImageToR2(
           compressedBuffer,
           tempFileName,
           compressedMimeType,
         );
 
-        if (!supabaseUrl) {
-          console.error("Failed to upload image to Supabase Storage");
+        if (!r2Url) {
+          console.error("Failed to upload image to Cloudflare R2 Storage");
           return res.status(500).json({
             error: "Failed to upload image. Please try again later.",
           });
         }
 
         // Extract filename from URL for later deletion if needed
-        const urlParts = supabaseUrl.split("/");
+        const urlParts = r2Url.split("/");
         const fileName = urlParts[urlParts.length - 1];
 
         res.json({
           success: true,
-          imageUrl: supabaseUrl,
+          imageUrl: r2Url,
           fileName: fileName, // Return filename for cleanup if album save fails
           message: "Image uploaded successfully",
         });
@@ -337,8 +337,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "File name is required" });
       }
 
-      const { deleteImageFromStorage } = await import("./supabase");
-      const deleted = await deleteImageFromStorage(fileName);
+      const { deleteImageFromR2 } = await import("./r2");
+      const deleted = await deleteImageFromR2(fileName);
 
       if (!deleted) {
         return res.status(500).json({
@@ -402,8 +402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Cleanup uploaded image if album creation failed
       if (uploadedImageFileName) {
         try {
-          const { deleteImageFromStorage } = await import("./supabase");
-          await deleteImageFromStorage(uploadedImageFileName);
+          const { deleteImageFromR2 } = await import("./r2");
+          await deleteImageFromR2(uploadedImageFileName);
           console.log("Cleaned up uploaded image after album creation failure");
         } catch (cleanupError) {
           console.error("Failed to cleanup uploaded image:", cleanupError);
@@ -482,11 +482,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         oldImageUrl !== updatedAlbum.coverImage
       ) {
         try {
-          const { deleteImageFromStorage } = await import("./supabase");
+          const { deleteImageFromR2 } = await import("./r2");
           // Extract filename from old URL
           const oldUrlParts = oldImageUrl.split("/");
           const oldFileName = oldUrlParts[oldUrlParts.length - 1];
-          await deleteImageFromStorage(oldFileName);
+          await deleteImageFromR2(oldFileName);
           console.log("Deleted old album cover image");
         } catch (cleanupError) {
           console.error("Failed to delete old image:", cleanupError);
@@ -513,8 +513,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Cleanup uploaded image if album update failed
       if (uploadedImageFileName) {
         try {
-          const { deleteImageFromStorage } = await import("./supabase");
-          await deleteImageFromStorage(uploadedImageFileName);
+          const { deleteImageFromR2 } = await import("./r2");
+          await deleteImageFromR2(uploadedImageFileName);
           console.log("Cleaned up uploaded image after album update failure");
         } catch (cleanupError) {
           console.error("Failed to cleanup uploaded image:", cleanupError);
@@ -558,13 +558,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete associated cover image from storage if it exists and is a temp file
       if (albumToDelete.coverImage) {
         try {
-          const { deleteImageFromStorage } = await import("./supabase");
+          const { deleteImageFromR2 } = await import("./r2");
           // Extract filename from URL
           const urlParts = albumToDelete.coverImage.split("/");
           const fileName = urlParts[urlParts.length - 1];
           // Only delete if it's a temp file (starts with "temp-")
           if (fileName.startsWith("temp-")) {
-            await deleteImageFromStorage(fileName);
+            await deleteImageFromR2(fileName);
             console.log("Deleted album cover image from storage");
           }
         } catch (cleanupError) {
