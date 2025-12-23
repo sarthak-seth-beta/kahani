@@ -286,6 +286,20 @@ export const freeTrials = pgTable(
     nextQuestionScheduledIdx: index(
       "free_trials_next_question_scheduled_idx",
     ).on(table.nextQuestionScheduledFor),
+    customerPhoneIdx: index("free_trials_customer_phone_idx").on(
+      table.customerPhone,
+    ),
+    storytellerPhoneIdx: index("free_trials_storyteller_phone_idx").on(
+      table.storytellerPhone,
+    ),
+    createdAtIdx: index("free_trials_created_at_idx").on(table.createdAt),
+    storytellerPhoneStateIdx: index(
+      "free_trials_storyteller_phone_state_idx",
+    ).on(table.storytellerPhone, table.conversationState),
+    stateLastQuestionIdx: index("free_trials_state_last_question_idx").on(
+      table.conversationState,
+      table.lastQuestionSentAt,
+    ),
   }),
 );
 
