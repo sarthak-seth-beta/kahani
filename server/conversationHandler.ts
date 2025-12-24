@@ -4,6 +4,7 @@ import {
   sendStorytellerOnboarding,
   sendReadinessCheck,
   sendVoiceNoteAcknowledgment,
+  sendIntermediateAcknowledgment,
   downloadVoiceNoteMedia,
   downloadMediaFile,
   sendPhotoRequestToBuyer,
@@ -1015,19 +1016,31 @@ async function handleVoiceNote(
     }
   }
 
-  await sendVoiceNoteAcknowledgment(
-    fromNumber,
-    trial.storytellerName,
-    trial.storytellerLanguagePreference,
-  );
+  // Get album info to check if it's conversational
+  let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+  if (!album) {
+    album = await storage.getAlbumById(trial.selectedAlbum);
+  }
 
-  const totalQuestions = await storage.getTotalQuestionsForAlbum(
-    trial.selectedAlbum,
-    trial.storytellerLanguagePreference,
-  );
+  const isConversationalAlbum = album?.isConversationalAlbum === true;
+
+  let totalQuestions = 0;
+  if (album) {
+    if (
+      trial.storytellerLanguagePreference === "hn" &&
+      album.questionsHn &&
+      album.questionsHn.length > 0
+    ) {
+      totalQuestions = album.questionsHn.length;
+    } else if (album.questions) {
+      totalQuestions = album.questions.length;
+    }
+  }
+
   const nextQuestionIndex = trial.currentQuestionIndex + 1;
 
   if (nextQuestionIndex >= totalQuestions) {
+    // All questions completed
     await storage.updateFreeTrialDb(trial.id, {
       conversationState: "completed",
       nextQuestionScheduledFor: null,
@@ -1056,7 +1069,94 @@ async function handleVoiceNote(
         trial.storytellerLanguagePreference,
       );
     }
+  } else if (isConversationalAlbum) {
+    // Conversational album: handle batch flow
+    const batchPosition = trial.currentQuestionIndex % 3; // 0 = 1st in batch, 1 = 2nd in batch, 2 = 3rd in batch
+
+    if (batchPosition === 0 || batchPosition === 1) {
+      // 1st or 2nd question in batch: send intermediate ack and next question immediately
+      const questionNumber = batchPosition === 0 ? 1 : 2;
+      await sendIntermediateAcknowledgment(
+        fromNumber,
+        trial.storytellerName,
+        questionNumber as 1 | 2,
+        trial.storytellerLanguagePreference,
+      );
+
+      // Check if there are more questions before sending next one
+      if (nextQuestionIndex < totalQuestions) {
+        // Update currentQuestionIndex first, then send next question immediately
+        const updatedTrial = await storage.updateFreeTrialDb(trial.id, {
+          currentQuestionIndex: nextQuestionIndex,
+          reminderSentAt: null,
+          questionReminderCount: 0, // Reset reminder count
+          nextQuestionScheduledFor: null, // Don't schedule, send immediately
+        });
+
+        // Send next question immediately with updated trial
+        await sendQuestion(updatedTrial, fromNumber, nextQuestionIndex);
+      } else {
+        // No more questions - this shouldn't happen as we check above, but handle gracefully
+        console.warn(
+          "Attempted to send next question in batch but no more questions remaining:",
+          {
+            trialId: trial.id,
+            currentQuestionIndex: trial.currentQuestionIndex,
+            nextQuestionIndex,
+            totalQuestions,
+          },
+        );
+      }
+    } else {
+      // 3rd question in batch: send full ack and schedule next batch after 23 hours
+      await sendVoiceNoteAcknowledgment(
+        fromNumber,
+        trial.storytellerName,
+        trial.storytellerLanguagePreference,
+      );
+
+      const isProduction = true;
+      if (isProduction) {
+        const now = new Date();
+        const nextQuestionScheduledFor = new Date(
+          now.getTime() + 23 * 60 * 60 * 1000,
+        ); // 23 hours from now
+
+        await storage.updateFreeTrialDb(trial.id, {
+          currentQuestionIndex: nextQuestionIndex,
+          conversationState: "in_progress", // Keep as in_progress so scheduler picks it up
+          nextQuestionScheduledFor,
+          reminderSentAt: null,
+          questionReminderCount: 0, // Reset reminder count since question was answered
+        });
+
+        console.log(
+          "Scheduled next batch for conversational album after 23 hours:",
+          nextQuestionScheduledFor,
+          "for trial:",
+          trial.id,
+        );
+      } else {
+        // In non-production: schedule next question immediately (2 seconds)
+        const now = new Date();
+        const nextQuestionScheduledFor = new Date(now.getTime() + 2000);
+
+        await storage.updateFreeTrialDb(trial.id, {
+          currentQuestionIndex: nextQuestionIndex,
+          nextQuestionScheduledFor,
+          reminderSentAt: null,
+          questionReminderCount: 0, // Reset reminder count since question was answered
+        });
+      }
+    }
   } else {
+    // Non-conversational album: existing flow
+    await sendVoiceNoteAcknowledgment(
+      fromNumber,
+      trial.storytellerName,
+      trial.storytellerLanguagePreference,
+    );
+
     // const isProduction = process.env.NODE_ENV === "production";
     const isProduction = true;
 

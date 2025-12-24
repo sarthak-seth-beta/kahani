@@ -743,6 +743,14 @@ export function getLocalizedMessage(
       hn: (storytellerName: string, buyerName: string) =>
         `नमस्ते ${storytellerName}! 👋\n\nआपके पास ${buyerName} के साथ एक सक्रिय कहानी है। जब ${buyerName} का कहानी पूरा हो जाएगा तो हम एक नया कहानी शुरू करेंगे! 🌸`,
     },
+    intermediateAcknowledgment1: {
+      en: "Thank you for sharing that! 💫 Here's another question for you... 🎙️",
+      hn: "आपकी बात सुनकर अच्छा लगा! 💫 यहाँ आपके लिए एक और प्रश्न है... 🎙️",
+    },
+    intermediateAcknowledgment2: {
+      en: "Wonderful! I'm listening. Here's one more question... ✨🎙️",
+      hn: "बहुत बढ़िया! मैं सुन रही हूँ। यहाँ एक और प्रश्न है... ✨🎙️",
+    },
   };
 
   const messageConfig = messages[messageKey];
@@ -988,6 +996,21 @@ export async function sendVoiceNoteAcknowledgment(
 
     return sendTextMessageWithRetry(recipientNumber, message);
   }
+}
+
+export async function sendIntermediateAcknowledgment(
+  recipientNumber: string,
+  storytellerName: string,
+  questionNumber: 1 | 2,
+  languagePreference?: string | null,
+): Promise<boolean> {
+  const messageKey =
+    questionNumber === 1
+      ? "intermediateAcknowledgment1"
+      : "intermediateAcknowledgment2";
+  const message = getLocalizedMessage(messageKey, languagePreference);
+
+  return sendTextMessageWithRetry(recipientNumber, message);
 }
 
 export async function sendAlbumCompletionMessage(
