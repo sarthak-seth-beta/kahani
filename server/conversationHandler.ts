@@ -1265,13 +1265,16 @@ async function downloadAndStoreVoiceNote(
       downloadStatus: "completed",
     });
 
-    console.log("Voice note downloaded, converted to MP3, and uploaded to R2:", {
-      voiceNoteId,
-      mediaId,
-      r2Url,
-      originalSize: mediaInfo.fileSize,
-      compressedSize: mp3Buffer.length,
-    });
+    console.log(
+      "Voice note downloaded, converted to MP3, and uploaded to R2:",
+      {
+        voiceNoteId,
+        mediaId,
+        r2Url,
+        originalSize: mediaInfo.fileSize,
+        compressedSize: mp3Buffer.length,
+      },
+    );
   } catch (error) {
     console.error("Error downloading and storing voice note:", error);
     await storage.updateVoiceNote(voiceNoteId, {
@@ -1363,7 +1366,9 @@ async function handleBuyerImageMessage(
       await compressImage(fileBuffer, finalMimeType);
 
     // Step 4: Upload compressed image to Cloudflare R2 Storage
-    console.log("Step 4: Uploading compressed image to Cloudflare R2 Storage...");
+    console.log(
+      "Step 4: Uploading compressed image to Cloudflare R2 Storage...",
+    );
     const r2Url = await uploadImageToR2(
       compressedBuffer,
       trial.id,
@@ -1371,7 +1376,10 @@ async function handleBuyerImageMessage(
     );
 
     if (!r2Url) {
-      console.error("Failed to upload image to Cloudflare R2 Storage:", trial.id);
+      console.error(
+        "Failed to upload image to Cloudflare R2 Storage:",
+        trial.id,
+      );
       await sendTextMessageWithRetry(
         fromNumber,
         "Sorry, there was an issue saving your image. Please try again later. 📸",

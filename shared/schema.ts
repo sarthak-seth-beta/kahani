@@ -357,6 +357,9 @@ export const albums = pgTable(
     coverImage: text("cover_image").notNull(),
     bestFitFor: jsonb("best_fit_for").$type<string[]>(),
     isActive: boolean("is_active").notNull().default(true),
+    isConversationalAlbum: boolean("is_conversational_album")
+      .notNull()
+      .default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -381,6 +384,7 @@ export const albumSchema = z.object({
   coverImage: z.string(),
   bestFitFor: z.array(z.string()).nullable().optional(),
   isActive: z.boolean(),
+  isConversationalAlbum: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

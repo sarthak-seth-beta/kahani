@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
@@ -19,8 +23,7 @@ export const R2_WEBHOOK_IMAGE_BUCKET =
 export const R2_WEBHOOK_DOCUMENT_BUCKET =
   process.env.R2_WEBHOOK_DOCUMENT_BUCKET || "webhook_document";
 
-const R2_PUBLIC_BUCKET_BASE_URL =
-  process.env.R2_PUBLIC_BUCKET_BASE_URL || null;
+const R2_PUBLIC_BUCKET_BASE_URL = process.env.R2_PUBLIC_BUCKET_BASE_URL || null;
 
 let r2Client: S3Client | null = null;
 
@@ -208,10 +211,7 @@ export async function uploadWebhookMediaToR2(
   else if (mimeType.includes("gif")) extension = "gif";
   else if (mimeType.includes("webp")) extension = "webp";
   else if (mimeType.includes("pdf")) extension = "pdf";
-  else if (
-    mimeType.includes("powerpoint") ||
-    mimeType.includes("presentation")
-  )
+  else if (mimeType.includes("powerpoint") || mimeType.includes("presentation"))
     extension = "pptx";
   else if (mimeType.includes("word") || mimeType.includes("document"))
     extension = "docx";
@@ -232,5 +232,3 @@ export async function deleteImageFromR2(fileName: string): Promise<boolean> {
   const key = fileName;
   return deleteFromR2(R2_ALBUM_COVERS_BUCKET, key);
 }
-
-
