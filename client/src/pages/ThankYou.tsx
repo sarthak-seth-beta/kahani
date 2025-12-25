@@ -10,10 +10,10 @@ export default function ThankYou() {
   const [, setLocation] = useLocation();
   // setup another env when have time to test
   // const businessPhone = import.meta.env.VITE_WHATSAPP_BUSINESS_NUMBER_E164;
-  const businessPhone = +918700242804;
+  const businessPhone = "918700242804"; // E.164 format without + for URL
   const [trialId, setTrialId] = useState<string | null>(null);
   const [buttonText, setButtonText] = useState<string>(
-    "Redirecting to WhatsApp...",
+    "Redirecting to WhatsApp..."
   );
   const [hasRedirected, setHasRedirected] = useState<boolean>(false);
 
@@ -31,7 +31,9 @@ export default function ThankYou() {
 
     const prefilledMessage = `Hi Vaani, I have placed an order by_${trialId} but didn't get any confirmation yet. Can you please help?`;
     const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
-    window.open(whatsappLink, "_blank");
+    // Use window.location.href for better mobile compatibility
+    // This will open WhatsApp app on mobile devices and WhatsApp Web on desktop
+    window.location.href = whatsappLink;
   }, [businessPhone, trialId]);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function ThankYou() {
               <p>Thank you for choosing Kahani. It means more than you know.</p>
 
               <p className="font-medium text-[#A35139]">
-                You will be readirected to Whatsapp shortly!
+                You will be redirected to WhatsApp shortly!
               </p>
             </div>
           </div>
