@@ -23,7 +23,10 @@ export const R2_WEBHOOK_IMAGE_BUCKET =
 export const R2_WEBHOOK_DOCUMENT_BUCKET =
   process.env.R2_WEBHOOK_DOCUMENT_BUCKET || "webhook_document";
 
-const R2_PUBLIC_BUCKET_BASE_URL = process.env.R2_PUBLIC_BUCKET_BASE_URL || null;
+const R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL =
+  process.env.R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL || null;
+const R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL =
+  process.env.R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL || null;
 
 let r2Client: S3Client | null = null;
 
@@ -51,9 +54,9 @@ function getR2Client(): S3Client | null {
 
 function buildPublicUrl(key: string, contentType: string): string {
   if (contentType === "audio/mp3") {
-    return `${R2_PUBLIC_BUCKET_BASE_URL}${key}`;
+    return `${R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL}/${key}`;
   } else {
-    return `${R2_PUBLIC_BUCKET_BASE_URL}/${key}`;
+    return `${R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL}/${key}`;
   }
 }
 

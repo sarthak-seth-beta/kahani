@@ -29,8 +29,8 @@ console.log(
   process.env.R2_SECRET_ACCESS_KEY ? "✓ Set" : "✗ Missing",
 );
 console.log(
-  "  R2_PUBLIC_BUCKET_BASE_URL:",
-  process.env.R2_PUBLIC_BUCKET_BASE_URL || "Not set",
+  "  R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL:",
+  process.env.R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL || "Not set",
 );
 
 // Main upload function - wrapped in async IIFE to use dynamic import
