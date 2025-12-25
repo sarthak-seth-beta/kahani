@@ -246,8 +246,6 @@ export default function PlaylistAlbumsGallery() {
       const track = albumData?.tracks[trackIndex];
       if (!track) return;
 
-      console.log("track", track);
-
       const audioUrl = track.mediaUrl || FALLBACK_AUDIO_URL;
 
       // If clicking the same track, toggle play/pause
@@ -798,7 +796,7 @@ export default function PlaylistAlbumsGallery() {
                 try {
                   await navigator.share({
                     title: albumData.trial.selectedAlbum,
-                    text: `Check out this Kahani album: ${albumData.trial.selectedAlbum}`,
+
                     url: url,
                   });
                   trackEvent(AnalyticsEvents.ALBUM_SHARED, {

@@ -417,7 +417,6 @@ export async function sendTextMessageWithRetry(
         },
       });
     });
-    console.log("WhatsApp text message response:", response);
 
     const messageId = response.data.messages?.[0]?.id;
     const responseStatus = response.data.messages?.[0]?.message_status;
