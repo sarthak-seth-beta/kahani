@@ -765,6 +765,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         album: {
           description: albumDescription,
           coverImage: albumCoverImage,
+          isConversationalAlbum: album.isConversationalAlbum || false,
+          questionSetTitles: album.questionSetTitles || null,
         },
         tracks,
       });

@@ -9,7 +9,8 @@
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "tunnel": "ngrok http 3000"
+    "tunnel": "ngrok http 3000",
+    "upload-test-audio": "tsx server/scripts/upload-test-audio.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",

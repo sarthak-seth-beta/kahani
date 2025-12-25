@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe } from "lucide-react";
 import { MiniPlayer } from "@/components/playlist/MiniPlayer";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const FALLBACK_AUDIO_URL =
   "https://bvkaurviswhrjldeuabx.supabase.co/storage/v1/object/public/voice-notes/demo_audio.m4a";
@@ -13,6 +19,15 @@ interface Track {
   questionText: string;
   mediaUrl: string | null;
   duration?: number;
+}
+
+interface TrackBatch {
+  title: string;
+  tracks: Array<{
+    questionIndex: number;
+    questionText: string;
+    mediaUrl: string | null;
+  }>;
 }
 
 interface AlbumData {
@@ -25,6 +40,8 @@ interface AlbumData {
   album: {
     description: string;
     coverImage: string;
+    isConversationalAlbum: boolean;
+    questionSetTitles?: { en: string[]; hn: string[] } | null;
   };
   tracks: Array<{
     questionIndex: number;
@@ -42,6 +59,55 @@ function formatDuration(seconds: number): string {
 function formatTotalDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   return `${mins} min`;
+}
+
+function groupTracksIntoBatches(
+  tracks: Array<{
+    questionIndex: number;
+    questionText: string;
+    mediaUrl: string | null;
+  }>,
+  isConversational: boolean,
+  language: "en" | "hi",
+  questionSetTitles?: { en: string[]; hn: string[] } | null,
+):
+  | TrackBatch[]
+  | Array<{
+      questionIndex: number;
+      questionText: string;
+      mediaUrl: string | null;
+    }> {
+  if (!isConversational) {
+    return tracks;
+  }
+
+  const batches: TrackBatch[] = [];
+  const titleArray = questionSetTitles
+    ? language === "hi"
+      ? questionSetTitles.hn
+      : questionSetTitles.en
+    : null;
+
+  for (let i = 0; i < tracks.length; i += 3) {
+    const batchTracks = tracks.slice(i, i + 3);
+    const batchIndex = Math.floor(i / 3);
+
+    let title: string;
+    if (titleArray && titleArray[batchIndex]) {
+      title = titleArray[batchIndex];
+    } else {
+      const start = i + 1;
+      const end = Math.min(i + 3, tracks.length);
+      title = `Questions ${start}-${end}`;
+    }
+
+    batches.push({
+      title,
+      tracks: batchTracks,
+    });
+  }
+
+  return batches;
 }
 
 export default function PlaylistAlbumsGallery() {
@@ -179,6 +245,8 @@ export default function PlaylistAlbumsGallery() {
     (trackIndex: number, isShufflePlay: boolean = false) => {
       const track = albumData?.tracks[trackIndex];
       if (!track) return;
+
+      console.log("track", track);
 
       const audioUrl = track.mediaUrl || FALLBACK_AUDIO_URL;
 
@@ -532,6 +600,19 @@ export default function PlaylistAlbumsGallery() {
     playingTrackIndex !== null ? playingTrackIndex : lastTrackIndex;
   const currentTrack =
     displayTrackIndex !== null ? tracks[displayTrackIndex] : null;
+
+  // Group tracks into batches for conversational albums
+  const groupedTracks = groupTracksIntoBatches(
+    tracks,
+    album.isConversationalAlbum,
+    selectedLanguage,
+    album.questionSetTitles || undefined,
+  );
+  const isGrouped =
+    album.isConversationalAlbum &&
+    Array.isArray(groupedTracks) &&
+    groupedTracks.length > 0 &&
+    "title" in groupedTracks[0];
 
   return (
     <div
@@ -995,100 +1076,232 @@ export default function PlaylistAlbumsGallery() {
           </div>
 
           {/* Track List */}
-          <div>
-            {tracks.map((track: any, index: number) => {
-              const duration = durations.get(index) || 0;
-              const isCurrentTrack = playingTrackIndex === index;
+          {isGrouped ? (
+            <Accordion
+              type="multiple"
+              defaultValue={(groupedTracks as TrackBatch[]).map(
+                (_, index) => `batch-${index}`,
+              )}
+              className="font-['Outfit']"
+            >
+              {(groupedTracks as TrackBatch[]).map((batch, batchIndex) => {
+                // Calculate the starting index for tracks in this batch
+                const startIndex = batchIndex * 3;
 
-              return (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "0.75rem 0",
-                    borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    trackEvent(AnalyticsEvents.TRACK_CLICKED, {
-                      track_index: index,
-                      track_question: track.questionText,
-                      trial_id: albumData?.trial.id,
-                      album_title: albumData?.trial.selectedAlbum,
-                    });
-                    handlePlayPause(index);
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
+                return (
+                  <AccordionItem
+                    key={`batch-${batchIndex}`}
+                    value={`batch-${batchIndex}`}
+                    className="border-b-2 border-black/25 mb-3 last:mb-0"
+                  >
+                    <AccordionTrigger className="font-['Outfit'] text-base font-semibold text-black py-4 text-left hover:no-underline">
+                      {batch.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="py-2">
+                      {batch.tracks.map((track, trackIndexInBatch) => {
+                        const globalIndex = startIndex + trackIndexInBatch;
+                        const duration = durations.get(globalIndex) || 0;
+                        const isCurrentTrack =
+                          playingTrackIndex === globalIndex;
+
+                        return (
+                          <div
+                            key={globalIndex}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              padding: "0.75rem 0",
+                              borderBottom:
+                                trackIndexInBatch < batch.tracks.length - 1
+                                  ? "1px solid rgba(0, 0, 0, 0.05)"
+                                  : "none",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              trackEvent(AnalyticsEvents.TRACK_CLICKED, {
+                                track_index: globalIndex,
+                                track_question: track.questionText,
+                                trial_id: albumData?.trial.id,
+                                album_title: albumData?.trial.selectedAlbum,
+                              });
+                              handlePlayPause(globalIndex);
+                            }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p
+                                style={{
+                                  fontFamily: "Outfit, sans-serif",
+                                  fontSize: "0.9375rem",
+                                  fontWeight: isCurrentTrack ? "600" : "400",
+                                  color: "#000",
+                                  margin: 0,
+                                  marginBottom: "0.25rem",
+                                }}
+                              >
+                                {track.questionText}
+                              </p>
+                              {duration > 0 && (
+                                <p
+                                  style={{
+                                    fontFamily: "Outfit, sans-serif",
+                                    fontSize: "0.8125rem",
+                                    color: "rgba(0, 0, 0, 0.6)",
+                                    margin: 0,
+                                  }}
+                                >
+                                  {formatDuration(duration)}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePlayPause(globalIndex);
+                              }}
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "50%",
+                                background: isCurrentTrack
+                                  ? "#A35139"
+                                  : "rgba(0, 0, 0, 0.1)",
+                                border: "none",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                color: isCurrentTrack ? "#FFF" : "#000",
+                                transition: "all 0.2s ease",
+                                marginLeft: "1rem",
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isCurrentTrack) {
+                                  e.currentTarget.style.background =
+                                    "rgba(0, 0, 0, 0.2)";
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isCurrentTrack) {
+                                  e.currentTarget.style.background =
+                                    "rgba(0, 0, 0, 0.1)";
+                                }
+                              }}
+                              aria-label={`Play ${track.questionText}`}
+                            >
+                              {isCurrentTrack && isPlaying ? (
+                                <Pause size={16} fill="currentColor" />
+                              ) : (
+                                <Play size={16} fill="currentColor" />
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          ) : (
+            <div>
+              {(groupedTracks as typeof tracks).map(
+                (track: any, index: number) => {
+                  const duration = durations.get(index) || 0;
+                  const isCurrentTrack = playingTrackIndex === index;
+
+                  return (
+                    <div
+                      key={index}
                       style={{
-                        fontFamily: "Outfit, sans-serif",
-                        fontSize: "0.9375rem",
-                        fontWeight: isCurrentTrack ? "600" : "400",
-                        color: "#000",
-                        margin: 0,
-                        marginBottom: "0.25rem",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0.75rem 0",
+                        borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        trackEvent(AnalyticsEvents.TRACK_CLICKED, {
+                          track_index: index,
+                          track_question: track.questionText,
+                          trial_id: albumData?.trial.id,
+                          album_title: albumData?.trial.selectedAlbum,
+                        });
+                        handlePlayPause(index);
                       }}
                     >
-                      {track.questionText}
-                    </p>
-                    {duration > 0 && (
-                      <p
-                        style={{
-                          fontFamily: "Outfit, sans-serif",
-                          fontSize: "0.8125rem",
-                          color: "rgba(0, 0, 0, 0.6)",
-                          margin: 0,
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontFamily: "Outfit, sans-serif",
+                            fontSize: "0.9375rem",
+                            fontWeight: isCurrentTrack ? "600" : "400",
+                            color: "#000",
+                            margin: 0,
+                            marginBottom: "0.25rem",
+                          }}
+                        >
+                          {track.questionText}
+                        </p>
+                        {duration > 0 && (
+                          <p
+                            style={{
+                              fontFamily: "Outfit, sans-serif",
+                              fontSize: "0.8125rem",
+                              color: "rgba(0, 0, 0, 0.6)",
+                              margin: 0,
+                            }}
+                          >
+                            {formatDuration(duration)}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayPause(index);
                         }}
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: isCurrentTrack
+                            ? "#A35139"
+                            : "rgba(0, 0, 0, 0.1)",
+                          border: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          color: isCurrentTrack ? "#FFF" : "#000",
+                          transition: "all 0.2s ease",
+                          marginLeft: "1rem",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isCurrentTrack) {
+                            e.currentTarget.style.background =
+                              "rgba(0, 0, 0, 0.2)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isCurrentTrack) {
+                            e.currentTarget.style.background =
+                              "rgba(0, 0, 0, 0.1)";
+                          }
+                        }}
+                        aria-label={`Play ${track.questionText}`}
                       >
-                        {formatDuration(duration)}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePlayPause(index);
-                    }}
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      background: isCurrentTrack
-                        ? "#A35139"
-                        : "rgba(0, 0, 0, 0.1)",
-                      border: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      color: isCurrentTrack ? "#FFF" : "#000",
-                      transition: "all 0.2s ease",
-                      marginLeft: "1rem",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isCurrentTrack) {
-                        e.currentTarget.style.background = "rgba(0, 0, 0, 0.2)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isCurrentTrack) {
-                        e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
-                      }
-                    }}
-                    aria-label={`Play ${track.questionText}`}
-                  >
-                    {isCurrentTrack && isPlaying ? (
-                      <Pause size={16} fill="currentColor" />
-                    ) : (
-                      <Play size={16} fill="currentColor" />
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                        {isCurrentTrack && isPlaying ? (
+                          <Pause size={16} fill="currentColor" />
+                        ) : (
+                          <Play size={16} fill="currentColor" />
+                        )}
+                      </button>
+                    </div>
+                  );
+                },
+              )}
+            </div>
+          )}
         </div>
       </div>
 

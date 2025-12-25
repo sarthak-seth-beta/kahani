@@ -49,17 +49,12 @@ function getR2Client(): S3Client | null {
   return r2Client;
 }
 
-function buildPublicUrl(bucket: string, key: string): string {
-  const encodedKey = encodeURIComponent(key);
-
-  if (R2_PUBLIC_BUCKET_BASE_URL) {
-    // Caller is expected to configure this as something like
-    // https://media.example.com or https://<account>.r2.cloudflarestorage.com
-    return `${R2_PUBLIC_BUCKET_BASE_URL.replace(/\/+$/, "")}/${bucket}/${encodedKey}`;
+function buildPublicUrl(key: string, contentType: string): string {
+  if (contentType === "audio/mp3") {
+    return `${R2_PUBLIC_BUCKET_BASE_URL}${key}`;
+  } else {
+    return `${R2_PUBLIC_BUCKET_BASE_URL}/${key}`;
   }
-
-  // Default to direct R2 public bucket URL
-  return `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${bucket}/${encodedKey}`;
 }
 
 async function uploadToR2(
@@ -82,7 +77,7 @@ async function uploadToR2(
       }),
     );
 
-    const publicUrl = buildPublicUrl(bucket, key);
+    const publicUrl = buildPublicUrl(key, contentType);
     console.log("Uploaded object to R2:", {
       bucket,
       key,

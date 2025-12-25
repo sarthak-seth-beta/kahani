@@ -13,7 +13,7 @@ export default function ThankYou() {
   const businessPhone = "918700242804"; // E.164 format without + for URL
   const [trialId, setTrialId] = useState<string | null>(null);
   const [buttonText, setButtonText] = useState<string>(
-    "Redirecting to WhatsApp..."
+    "Redirecting to WhatsApp...",
   );
   const [hasRedirected, setHasRedirected] = useState<boolean>(false);
 
