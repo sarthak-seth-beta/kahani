@@ -508,11 +508,53 @@ export class DatabaseStorage implements IStorage {
           sql`${freeTrials.questionReminderCount} < 3`,
         ),
       );
-    return trials.filter((trial) => {
-      if (trial.reminderSentAt) return false;
-      if (!trial.nextQuestionScheduledFor) return true;
-      return trial.nextQuestionScheduledFor <= now;
-    });
+
+    // Filter trials that need reminders
+    const filteredTrials = [];
+    for (const trial of trials) {
+      // Check if it's a conversational album
+      let album = await this.getAlbumByTitle(trial.selectedAlbum);
+      if (!album) {
+        album = await this.getAlbumById(trial.selectedAlbum);
+      }
+      const isConversationalAlbum = album?.isConversationalAlbum === true;
+
+      if (isConversationalAlbum) {
+        // For conversational albums: allow reminders if questionReminderCount < 2 (max 2 reminders)
+        // Check if it's been 10 hours since lastQuestionSentAt (first reminder) or reminderSentAt (subsequent reminders)
+        if (trial.questionReminderCount < 2) {
+          const timeSinceLastAction = trial.reminderSentAt
+            ? new Date(trial.reminderSentAt).getTime()
+            : trial.lastQuestionSentAt
+              ? new Date(trial.lastQuestionSentAt).getTime()
+              : 0;
+
+          if (
+            timeSinceLastAction > 0 &&
+            now.getTime() - timeSinceLastAction >= 10 * 60 * 60 * 1000
+          ) {
+            // Also check that nextQuestionScheduledFor is null or due (for questions 1, 2, 3 in batch)
+            if (
+              !trial.nextQuestionScheduledFor ||
+              new Date(trial.nextQuestionScheduledFor) <= now
+            ) {
+              filteredTrials.push(trial);
+            }
+          }
+        }
+      } else {
+        // For non-conversational albums: existing logic
+        if (!trial.reminderSentAt) {
+          if (!trial.nextQuestionScheduledFor) {
+            filteredTrials.push(trial);
+          } else if (new Date(trial.nextQuestionScheduledFor) <= now) {
+            filteredTrials.push(trial);
+          }
+        }
+      }
+    }
+
+    return filteredTrials;
   }
 
   async createVoiceNote(

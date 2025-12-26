@@ -862,6 +862,7 @@ export async function sendQuestion(
   trial: any,
   fromNumber: string,
   questionIndex?: number,
+  isReminder: boolean = false,
 ): Promise<void> {
   console.log("sendQuestion called:", {
     trialId: trial.id,
@@ -943,12 +944,20 @@ export async function sendQuestion(
     });
   }
 
-  await storage.updateFreeTrialDb(trial.id, {
+  // Update trial - only reset reminder fields if it's a new question, not a reminder
+  const updateData: any = {
     currentQuestionIndex: targetQuestionIndex,
     lastQuestionSentAt: new Date(),
     nextQuestionScheduledFor: null,
-    questionReminderCount: 0, // Reset reminder count for new question
-  });
+  };
+
+  if (!isReminder) {
+    // Reset reminder fields for new questions
+    updateData.questionReminderCount = 0;
+    updateData.reminderSentAt = null;
+  }
+
+  await storage.updateFreeTrialDb(trial.id, updateData);
   console.log("Trial updated with question sent timestamp");
 }
 

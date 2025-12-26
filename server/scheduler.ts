@@ -110,21 +110,39 @@ export async function sendPendingReminders(): Promise<void> {
       continue;
     }
 
+    // Check if it's a conversational album
+    let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+    if (!album) {
+      album = await storage.getAlbumById(trial.selectedAlbum);
+    }
+    const isConversationalAlbum = album?.isConversationalAlbum === true;
+
+    // For conversational albums, limit reminders to 2 max (3 total attempts)
+    const currentCount = trial.questionReminderCount || 0;
+    if (isConversationalAlbum) {
+      if (currentCount >= 2) {
+        console.log(
+          "Trial has reached max reminders for conversational album, skipping:",
+          trial.id,
+        );
+        continue;
+      }
+    }
+
     try {
-      // Resend the full question instead of just a reminder
-      await sendQuestion(trial, trial.storytellerPhone);
+      // Resend the full question as a reminder
+      await sendQuestion(trial, trial.storytellerPhone, undefined, true);
 
       // Increment reminder count and update timestamps
-      const currentCount = trial.questionReminderCount || 0;
       await storage.updateFreeTrialDb(trial.id, {
         questionReminderCount: currentCount + 1,
-        lastQuestionSentAt: new Date(),
         reminderSentAt: new Date(),
       });
 
       console.log("Resent question as reminder to trial:", {
         trialId: trial.id,
         reminderCount: currentCount + 1,
+        isConversationalAlbum,
       });
     } catch (error) {
       console.error(
