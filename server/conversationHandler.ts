@@ -921,11 +921,11 @@ export async function sendQuestion(
   console.log("Question message send result:", messageSent);
 
   // Send photo request to buyer if image not uploaded yet and after 2 questions have been answered
-  // (targetQuestionIndex >= 2 means we're sending the 3rd question, so 2 have been answered)
+  // (targetQuestionIndex >= 8 means we're sending the 9th question, so 2 have been answered)
   if (
     trial.customerPhone &&
     !trial.customCoverImageUrl &&
-    targetQuestionIndex >= 2
+    targetQuestionIndex >= 8
   ) {
     console.log("Sending photo request to buyer:", {
       buyerPhone: trial.customerPhone,
@@ -1084,13 +1084,14 @@ async function handleVoiceNote(
 
     if (batchPosition === 0 || batchPosition === 1) {
       // 1st or 2nd question in batch: send intermediate ack and next question immediately
-      const questionNumber = batchPosition === 0 ? 1 : 2;
-      await sendIntermediateAcknowledgment(
-        fromNumber,
-        trial.storytellerName,
-        questionNumber as 1 | 2,
-        trial.storytellerLanguagePreference,
-      );
+
+      // const questionNumber = batchPosition === 0 ? 1 : 2;
+      // await sendIntermediateAcknowledgment(
+      //   fromNumber,
+      //   trial.storytellerName,
+      //   questionNumber as 1 | 2,
+      //   trial.storytellerLanguagePreference,
+      // );
 
       // Check if there are more questions before sending next one
       if (nextQuestionIndex < totalQuestions) {
