@@ -635,10 +635,10 @@ export async function askReadiness(
   );
 
   // Set retryReadinessAt if not already set (for initial readiness checks)
-  // This ensures ignored readiness checks get retried after 8 hours
+  // This ensures ignored readiness checks get retried after 10 hours
   const retryReadinessAt = trial.retryReadinessAt
     ? undefined
-    : new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours from now
+    : new Date(Date.now() + 10 * 60 * 60 * 1000); // 10 hours from now
 
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
@@ -781,7 +781,7 @@ async function handleReadinessResponse(
       throw error;
     }
   } else if (isMaybe) {
-    const retryAt = new Date(Date.now() + 4 * 60 * 60 * 1000); // 4 hours
+    const retryAt = new Date(Date.now() + 10 * 60 * 60 * 1000); // 10 hours
 
     await storage.updateFreeTrialDb(trial.id, {
       lastReadinessResponse: "maybe",
