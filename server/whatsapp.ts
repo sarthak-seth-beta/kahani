@@ -725,6 +725,24 @@ export function getLocalizedMessage(
       hn: (name: string, question?: string) =>
         `धन्यवाद ${name}!\n\nज़रा आराम से बैठिए और इस बात को याद कीजिए:\n\n*${question || ""}*\n\nजब भी आप बताने के लिए तैयार हों, कृपया मुझे एक वॉइस नोट भेजें 🎙️`,
     },
+    questionMessage1: {
+      en: (name: string, question?: string) =>
+        `Okay. Now I would love to hear your story about this.\n\n*${question || ""}*\n\nTake your time. The more details, the better. 🤍`,
+      hn: (name: string, question?: string) =>
+        `ठीक है। अब मैं इस बारे में आपकी कहानी सुनना चाहूँगी।\n\n*${question || ""}*\n\nआराम से बोलिए। जितना विस्तार, उतना अच्छा। 🤍`,
+    },
+    questionMessage2: {
+      en: (name: string, question?: string) =>
+        `And one more.\n\n*${question || ""}*\n\nIf any small memory comes up, please share that too. 🙂`,
+      hn: (name: string, question?: string) =>
+        `और एक बात।\n\n*${question || ""}*\n\nअगर कोई छोटी-सी याद भी आए, तो वह भी बता दीजिए। 🙂`,
+    },
+    questionMessage3: {
+      en: (name: string, question?: string) =>
+        `Last one for today.\n\n*${question || ""}*\n\nSay it the way you remember it. 🤍`,
+      hn: (name: string, question?: string) =>
+        `आज की आख़िरी बात।\n\n*${question || ""}*\n\nजैसे आपको याद हो, वैसे ही बता दीजिए। 🤍`,
+    },
     reminderMessage: {
       en: (name: string, question?: string) =>
         `Hi ${name}, just a gentle reminder about the question I sent earlier:\n\n*${question || ""}*\n\nWhenever you're ready, please share your story with a voice note. Take your time.`,

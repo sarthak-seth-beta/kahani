@@ -935,8 +935,21 @@ export async function sendQuestion(
     await new Promise((resolve) => setTimeout(resolve, 45 * 1000));
   }
 
+  // Select the appropriate message template based on batch position for conversational albums
+  let messageKey = "questionMessage"; // Default for non-conversational albums
+  if (isConversationalAlbum) {
+    const batchPosition = targetQuestionIndex % 3; // 0 = 1st, 1 = 2nd, 2 = 3rd
+    if (batchPosition === 0) {
+      messageKey = "questionMessage1";
+    } else if (batchPosition === 1) {
+      messageKey = "questionMessage2";
+    } else {
+      messageKey = "questionMessage3";
+    }
+  }
+
   const questionMessage = getLocalizedMessage(
-    "questionMessage",
+    messageKey,
     trial.storytellerLanguagePreference,
     {
       name: trial.storytellerName,
