@@ -3,6 +3,7 @@ import {
   logOutgoingMessage,
   updateMessageWithResponse,
 } from "./whatsappLogger";
+import { storage } from "./storage";
 
 const WHATSAPP_API_VERSION = "v22.0";
 const WHATSAPP_BASE_URL = "https://graph.facebook.com";
@@ -1011,6 +1012,8 @@ export async function sendShareableLink(
 
   const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
 
+  let messageSent = false;
+
   if (isProduction) {
     const templateParams = [
       { type: "text", text: storytellerName },
@@ -1020,18 +1023,44 @@ export async function sendShareableLink(
     const templateName =
       `forward_vaani` + getStorytellerLanguageSuffix(languagePreference);
 
-    return sendTemplateMessageWithRetry(
+    messageSent = await sendTemplateMessageWithRetry(
       recipientNumber,
       templateName,
       templateParams,
+      { orderId },
     );
   } else {
     const message = `Please share this link with *${storytellerName}*:
     ${whatsappLink} 
     When ${storytellerName} opens this link, they'll be able to start chatting with us directly on WhatsApp!`;
 
-    return sendTextMessageWithRetry(recipientNumber, message);
+    messageSent = await sendTextMessageWithRetry(recipientNumber, message, {
+      orderId,
+    });
   }
+
+  // Track when shareable link is sent (only on first successful send)
+  if (messageSent) {
+    try {
+      const trial = await storage.getFreeTrialDb(orderId);
+      if (trial && !trial.forwardLinkSentAt) {
+        await storage.updateFreeTrialDb(orderId, {
+          forwardLinkSentAt: new Date(),
+        });
+        console.log("Tracked forward link sent timestamp for trial:", orderId);
+      }
+    } catch (error) {
+      // Log error but don't fail the function if tracking fails
+      console.error(
+        "Failed to track forward link sent timestamp:",
+        error,
+        "OrderId:",
+        orderId,
+      );
+    }
+  }
+
+  return messageSent;
 }
 
 export async function sendReadinessCheck(

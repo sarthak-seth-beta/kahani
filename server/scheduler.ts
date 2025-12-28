@@ -1,6 +1,9 @@
 import cron from "node-cron";
 import { storage } from "./storage";
-import { sendTextMessageWithRetry, getLocalizedMessage } from "./whatsapp";
+import {
+  sendTextMessageWithRetry,
+  sendTemplateMessageWithRetry,
+} from "./whatsapp";
 import {
   processRetryReminders,
   askReadiness,
@@ -154,6 +157,64 @@ export async function sendPendingReminders(): Promise<void> {
   }
 }
 
+export async function sendBuyerRemindersForNoStorytellerContact(): Promise<void> {
+  const trials = await storage.getTrialsNeedingBuyerReminder();
+
+  for (const trial of trials) {
+    if (!trial.customerPhone) {
+      console.log("Skipping trial without customer phone:", trial.id);
+      continue;
+    }
+    const currentTrial = await storage.getFreeTrialDb(trial.id);
+    if (!currentTrial) {
+      console.log("Trial no longer exists, skipping:", trial.id);
+      continue;
+    }
+
+    if (
+      currentTrial.storytellerPhone &&
+      currentTrial.conversationState !== "awaiting_initial_contact"
+    ) {
+      continue;
+    }
+
+    if (currentTrial.buyerNoContactReminderSentAt) {
+      continue;
+    }
+
+    try {
+      const templateParams = [
+        { type: "text", text: trial.buyerName },
+        { type: "text", text: trial.storytellerName },
+      ];
+
+      const reminderSent = await sendTemplateMessageWithRetry(
+        trial.customerPhone,
+        "storyteller_no_contact_buyer_reminder_en",
+        templateParams,
+        { orderId: trial.id },
+      );
+
+      if (reminderSent) {
+        await storage.updateFreeTrialDb(trial.id, {
+          buyerNoContactReminderSentAt: new Date(),
+        });
+      } else {
+        console.log(
+          "Failed to send buyer reminder template for trial:",
+          trial.id,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error sending buyer reminder for no storyteller contact:",
+        trial.id,
+        error,
+      );
+    }
+  }
+}
+
 export async function processScheduledTasks(): Promise<void> {
   if (isProcessing) {
     console.log("Scheduler already running, skipping this run");
@@ -170,6 +231,8 @@ export async function processScheduledTasks(): Promise<void> {
     await sendPendingReminders();
 
     await processRetryReminders();
+
+    await sendBuyerRemindersForNoStorytellerContact();
 
     console.log("Scheduled tasks completed");
   } catch (error) {
@@ -193,4 +256,6 @@ export function startScheduler(): NodeJS.Timeout {
   ); // Run every 5 minutes
 
   processScheduledTasks().catch(console.error);
+
+  return intervalId;
 }

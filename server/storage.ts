@@ -59,6 +59,7 @@ export interface IStorage {
   getFreeTrialsNeedingRetry(): Promise<FreeTrialRow[]>;
   getScheduledQuestionsDue(): Promise<FreeTrialRow[]>;
   getPendingReminders(): Promise<FreeTrialRow[]>;
+  getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]>;
 
   createVoiceNote(voiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow>;
   getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]>;
@@ -555,6 +556,25 @@ export class DatabaseStorage implements IStorage {
     }
 
     return filteredTrials;
+  }
+
+  async getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]> {
+    const now = new Date();
+    const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+    const trials = await db
+      .select()
+      .from(freeTrials)
+      .where(
+        and(
+          isNotNull(freeTrials.forwardLinkSentAt),
+          lte(freeTrials.forwardLinkSentAt, fortyEightHoursAgo),
+          sql`(${freeTrials.storytellerPhone} IS NULL OR ${freeTrials.conversationState} = 'awaiting_initial_contact')`,
+          sql`${freeTrials.buyerNoContactReminderSentAt} IS NULL`,
+        ),
+      );
+
+    return trials;
   }
 
   async createVoiceNote(

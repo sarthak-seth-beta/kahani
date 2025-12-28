@@ -272,6 +272,13 @@ export const freeTrials = pgTable(
     storytellerLanguagePreference: varchar("storyteller_language_preference", {
       length: 2,
     }),
+    forwardLinkSentAt: timestamp("forward_link_sent_at", {
+      withTimezone: true,
+    }),
+    buyerNoContactReminderSentAt: timestamp(
+      "buyer_no_contact_reminder_sent_at",
+      { withTimezone: true },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
