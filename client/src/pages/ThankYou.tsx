@@ -29,7 +29,7 @@ export default function ThankYou() {
   const handleWhatsAppRedirect = useCallback(() => {
     if (!businessPhone || !trialId) return;
 
-    const prefilledMessage = `Hi Vaani, I have placed an order by_${trialId} but didn't get any confirmation yet. Can you please help?`;
+    const prefilledMessage = `Hi Vaani, I just placed an order on Kahani.xyz. My order ID is by_${trialId} `;
     const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
     // Use window.location.href for better mobile compatibility
     // This will open WhatsApp app on mobile devices and WhatsApp Web on desktop

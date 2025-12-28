@@ -14,6 +14,8 @@ import {
   normalizePhoneNumber,
   sendTemplateMessageWithRetry,
   sendInteractiveMessageWithCTA,
+  sendHowToUseKahani,
+  sendQuestionnairePremise,
 } from "./whatsapp";
 import { uploadVoiceNoteToR2, uploadImageToR2 } from "./r2";
 import ffmpeg from "fluent-ffmpeg";
@@ -387,8 +389,9 @@ async function handleBuyerSendingStorytellerMessage(
   const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
 
   // Send polite message with emojis
-  const message = `Hi ${trial.buyerName}! 👋\n\nLooks like you clicked on the link that was meant for ${trial.storytellerName}. 😊\n\nNo worries! Please *copy this link and send it to ${trial.storytellerName}*:\n\n${whatsappLink}\n\nThey just need to click the link and send the pre-filled message - that's it! ✨\n\nHope to hear from them soon! ❤️`;
+  // const message = `Hi ${trial.buyerName}! 👋\n\nLooks like you clicked on the link that was meant for ${trial.storytellerName}. 😊\n\nNo worries! Please *copy this link and send it to ${trial.storytellerName}*:\n\n${whatsappLink}\n\nThey just need to click the link and send the pre-filled message - that's it! ✨\n\nHope to hear from them soon! ❤️`;
 
+  const message = `"This link is for your ${trial.storytellerName}. \nPlease copy the message above and send it to them. \nOnce they tap the link and message me, I will begin."`;
   await sendTextMessageWithRetry(fromNumber, message);
 }
 
@@ -609,6 +612,15 @@ async function handleInitialContact(
   await sendStorytellerOnboarding(
     fromNumber,
     trial.storytellerName,
+    trial.buyerName,
+    trial.selectedAlbum,
+    trial.storytellerLanguagePreference,
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  await sendHowToUseKahani(
+    fromNumber,
     trial.buyerName,
     trial.storytellerLanguagePreference,
   );
@@ -898,11 +910,30 @@ export async function sendQuestion(
     return;
   }
 
-  console.log("Question retrieved:", {
-    questionIndex: targetQuestionIndex,
-    questionLength: question.length,
-    questionPreview: question.substring(0, 50) + "...",
-  });
+  // Check if this is a conversational album and first question in a batch
+  // For conversational albums, batches are every 3 questions (0, 3, 6, 9, etc.)
+  let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+  if (!album) {
+    album = await storage.getAlbumById(trial.selectedAlbum);
+  }
+  const isConversationalAlbum = album?.isConversationalAlbum === true;
+  const isFirstQuestionInBatch =
+    isConversationalAlbum && targetQuestionIndex % 3 === 0 && !isReminder;
+
+  // Send pre-batch message for conversational albums before first question in each batch
+  if (isFirstQuestionInBatch) {
+    await sendQuestionnairePremise(
+      fromNumber,
+      targetQuestionIndex,
+      album?.questionSetPremise,
+      trial.buyerName,
+      trial.storytellerLanguagePreference,
+    );
+
+    // Wait 45 seconds before sending the question
+    console.log("Waiting 45 seconds before sending question...");
+    await new Promise((resolve) => setTimeout(resolve, 45 * 1000));
+  }
 
   const questionMessage = getLocalizedMessage(
     "questionMessage",

@@ -859,17 +859,16 @@ export async function sendFreeTrialConfirmation(
   // const isProduction = false;
 
   if (isProduction) {
-    const templateParams = [
-      { type: "text", text: customerName },
-      { type: "text", text: relation },
-      { type: "text", text: relation },
-    ];
+    const message = `Hello ${customerName}.
 
-    return sendTemplateMessageWithRetry(
-      recipientNumber,
-      "buyerconfirmation_vaani_en",
-      templateParams,
-    );
+${albumName} is a lovely choice for your ${relation}. ✨
+I will help you collect their stories in their own voice, the kind you will want to come back to years later.
+
+Next, I will share a short message.
+Please copy it and send it to your ${relation}.
+Once they message me, I will begin.`;
+
+    return sendTextMessageWithRetry(recipientNumber, message);
   } else {
     const message = `Hi ${customerName}, Thank you for choosing Kahani. You and ${relation} are about to start something truly special. Their Kahani will soon always stay with you. To confirm, you would like a mini album on "${albumName}" for ${relation}, right? If this looks different, please reply and let us know. To get started, you will get a short message to forward to your ${relation}. They just need to click the link and send the pre-filled message - that's it.`;
 
@@ -881,6 +880,7 @@ export async function sendStorytellerOnboarding(
   recipientNumber: string,
   relation: string,
   customerName: string,
+  albumName: string,
   languagePreference?: string | null,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
@@ -890,6 +890,7 @@ export async function sendStorytellerOnboarding(
     const templateParams = [
       { type: "text", text: relation },
       { type: "text", text: customerName },
+      { type: "text", text: albumName },
     ];
 
     const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
@@ -905,6 +906,93 @@ export async function sendStorytellerOnboarding(
 
     return sendTextMessageWithRetry(recipientNumber, message);
   }
+}
+
+export async function sendHowToUseKahani(
+  recipientNumber: string,
+  buyerName: string,
+  languagePreference?: string | null,
+): Promise<boolean> {
+  const messageEnglish = `It is simple.
+
+I will share a short question here.
+You send a voice note whenever you feel like.
+These become a small album for ${buyerName} to keep.
+
+That is all. Take your time. 🙂`;
+
+  const messageHindi = `यह बहुत आसान है।
+
+मैं यहाँ एक छोटी-सी बात कहूँगी।
+आप जब मन करे, एक वॉइस नोट भेज दीजिए।
+इनसे ${buyerName} के लिए एक छोटा-सा एल्बम बन जाएगा।
+बस इतना ही। आराम से बोलिए। 🙂`;
+
+  const message = languagePreference === "hn" ? messageHindi : messageEnglish;
+
+  return sendTextMessageWithRetry(recipientNumber, message);
+}
+
+export async function sendPreBatchMessage(
+  recipientNumber: string,
+  storytellerDescription: string,
+  buyerName: string,
+  languagePreference?: string | null,
+): Promise<boolean> {
+  const messageEnglish = `Before we start, please take  a minute.
+
+Just remember your stories about ${storytellerDescription}.
+
+${buyerName} will really enjoy the little details. 🙂`;
+
+  const messageHindi = `शुरू करने से पहले, कृपया एक मिनट लें।
+
+बस ${storytellerDescription} के बारे में अपनी कहानियों को याद करें।
+
+${buyerName} छोटी-छोटी बातों का बहुत आनंद लेंगे। 🙂`;
+
+  const message = languagePreference === "hn" ? messageHindi : messageEnglish;
+
+  return sendTextMessageWithRetry(recipientNumber, message);
+}
+
+export async function sendQuestionnairePremise(
+  recipientNumber: string,
+  questionIndex: number,
+  questionSetPremise: { en: string[]; hn: string[] } | null | undefined,
+  buyerName: string,
+  languagePreference?: string | null,
+): Promise<boolean> {
+  if (!questionSetPremise) {
+    console.warn(
+      "questionSetPremise is not available, skipping premise message",
+    );
+    return false;
+  }
+
+  // Calculate batch number: 0th question = batch 0, 3rd question = batch 1, 6th question = batch 2, etc.
+  const batchNumber = Math.floor(questionIndex / 3);
+
+  // Get the premise string from the appropriate language array
+  const isHindi = languagePreference === "hn";
+  const premiseArray = isHindi ? questionSetPremise.hn : questionSetPremise.en;
+
+  if (!premiseArray || premiseArray.length <= batchNumber) {
+    console.warn(
+      `Premise array doesn't have enough elements. Batch: ${batchNumber}, Array length: ${premiseArray?.length || 0}`,
+    );
+    return false;
+  }
+
+  const storytellerDescription = premiseArray[batchNumber];
+
+  // Use the existing sendPreBatchMessage function
+  return sendPreBatchMessage(
+    recipientNumber,
+    storytellerDescription,
+    buyerName,
+    languagePreference,
+  );
 }
 
 export async function sendShareableLink(

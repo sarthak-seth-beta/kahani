@@ -364,6 +364,10 @@ export const albums = pgTable(
       en: string[];
       hn: string[];
     }>(),
+    questionSetPremise: jsonb("question_set_premise").$type<{
+      en: string[];
+      hn: string[];
+    }>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -390,6 +394,13 @@ export const albumSchema = z.object({
   isActive: z.boolean(),
   isConversationalAlbum: z.boolean(),
   questionSetTitles: z
+    .object({
+      en: z.array(z.string()),
+      hn: z.array(z.string()),
+    })
+    .nullable()
+    .optional(),
+  questionSetPremise: z
     .object({
       en: z.array(z.string()),
       hn: z.array(z.string()),
