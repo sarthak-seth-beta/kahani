@@ -612,12 +612,15 @@ export default function PlaylistAlbumsGallery() {
     groupedTracks.length > 0 &&
     "title" in groupedTracks[0];
 
+  // Check if player ribbon is visible
+  const isPlayerVisible = currentTrack !== null;
+
   return (
     <div
       style={{
         background: "#FDF4DC",
         minHeight: "100dvh",
-        paddingBottom: isPlaying ? "80px" : "0",
+        paddingBottom: isPlayerVisible ? "100px" : "0",
       }}
     >
       {/* Header */}
