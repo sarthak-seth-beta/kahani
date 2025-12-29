@@ -875,8 +875,8 @@ export default function PlaylistAlbumsGallery() {
             }}
           >
             <img
-              src="https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/coverImage.jpg"
-              alt="Cover"
+              src={album.coverImage}
+              alt={trial.selectedAlbum}
               style={{
                 width: "100%",
                 height: "100%",
