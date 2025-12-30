@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe } from "lucide-react";
+import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe, Edit2 } from "lucide-react";
 import { MiniPlayer } from "@/components/playlist/MiniPlayer";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import {
@@ -10,6 +10,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import ProfilePictureDialog from "@/components/ProfilePictureDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const FALLBACK_AUDIO_URL =
   "https://bvkaurviswhrjldeuabx.supabase.co/storage/v1/object/public/voice-notes/demo_audio.m4a";
@@ -73,10 +75,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-      questionIndex: number;
-      questionText: string;
-      mediaUrl: string | null;
-    }> {
+    questionIndex: number;
+    questionText: string;
+    mediaUrl: string | null;
+  }> {
   if (!isConversational) {
     return tracks;
   }
@@ -163,6 +165,43 @@ export default function PlaylistAlbumsGallery() {
   // State for language dropdown
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  // Profile Picture State
+  const [customProfileImage, setCustomProfileImage] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleProfileImageSave = async (croppedBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      // Filename doesn't matter much for backend usually, but gives it a context
+      formData.append("image", croppedBlob, "profile-pic.jpg");
+
+      const response = await fetch(`/api/free-trial/${trialId}/upload-cover`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const data = await response.json();
+      // Append timestamp to force reload
+      setCustomProfileImage(`${data.imageUrl}?t=${Date.now()}`);
+
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Handle window resize for responsive design
   useEffect(() => {
@@ -263,9 +302,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => {});
-        currentAudioRef.current.removeEventListener("pause", () => {});
-        currentAudioRef.current.removeEventListener("play", () => {});
+        currentAudioRef.current.removeEventListener("ended", () => { });
+        currentAudioRef.current.removeEventListener("pause", () => { });
+        currentAudioRef.current.removeEventListener("play", () => { });
         currentAudioRef.current = null;
       }
 
@@ -310,8 +349,8 @@ export default function PlaylistAlbumsGallery() {
           }
 
           const unplayedTracks = albumData.tracks
-            .map((_, index) => index)
-            .filter((index) => !currentPlayedTracks.has(index));
+            .map((_: Track, index: number) => index)
+            .filter((index: number) => !currentPlayedTracks.has(index));
 
           if (unplayedTracks.length === 0) {
             // All tracks played, reset and pick any track
@@ -491,8 +530,8 @@ export default function PlaylistAlbumsGallery() {
 
       // Get unplayed tracks
       const unplayedTracks = albumData.tracks
-        .map((_, index) => index)
-        .filter((index) => !playedTracksInShuffle.has(index));
+        .map((_: Track, index: number) => index)
+        .filter((index: number) => !playedTracksInShuffle.has(index));
 
       let randomIndex: number;
 
@@ -612,12 +651,15 @@ export default function PlaylistAlbumsGallery() {
     groupedTracks.length > 0 &&
     "title" in groupedTracks[0];
 
+  // Check if player ribbon is visible
+  const isPlayerVisible = currentTrack !== null;
+
   return (
     <div
       style={{
         background: "#FDF4DC",
         minHeight: "100dvh",
-        paddingBottom: isPlaying ? "80px" : "0",
+        paddingBottom: isPlayerVisible ? "100px" : "0",
       }}
     >
       {/* Header */}
@@ -872,8 +914,8 @@ export default function PlaylistAlbumsGallery() {
             }}
           >
             <img
-              src="https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/coverImage.jpg"
-              alt="Cover"
+              src={album.coverImage}
+              alt={trial.selectedAlbum}
               style={{
                 width: "100%",
                 height: "100%",
@@ -898,15 +940,42 @@ export default function PlaylistAlbumsGallery() {
               zIndex: 10,
             }}
           >
-            <img
-              src={album.coverImage}
-              alt={trial.selectedAlbum}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
+
+            <ProfilePictureDialog
+              initialImage={album.coverImage}
+              onSave={handleProfileImageSave}
+            >
+              <div style={{ width: "100%", height: "100%", cursor: "pointer", position: "relative" }}>
+                <img
+                  src={customProfileImage || album.coverImage}
+                  alt={trial.selectedAlbum}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+                {/* Pencil Icon Overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "10%",
+                    right: "15%",
+                    background: "white",
+                    borderRadius: "50%",
+                    padding: "6px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 20,
+                  }}
+                >
+                  <Edit2 size={12} color="#000" />
+                </div>
+              </div>
+            </ProfilePictureDialog>
+
           </div>
         </div>
 

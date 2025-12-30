@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
@@ -249,8 +249,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin endpoint: Upload album cover image (temporary)
   app.post(
     "/api/admin/albums/upload-image",
+    // @ts-expect-error - Multer bundles its own express types causing incompatibility, but runtime works correctly
     upload.single("image"),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
       try {
         // Check if file was uploaded
         if (!req.file) {
@@ -778,8 +779,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/free-trial/:trialId/upload-cover",
+    // @ts-expect-error - Multer bundles its own express types causing incompatibility, but runtime works correctly
     upload.single("image"),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
       try {
         const { trialId } = req.params;
 
