@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ScrollToTop from "@/components/ScrollToTop";
+import SimpleHeader from "@/components/SimpleHeader";
 import HeroSection from "@/components/HeroSection";
 import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
@@ -58,6 +59,9 @@ function HomePage() {
 
   return (
     <div className="w-full min-h-screen bg-[#EEE9DF] overflow-x-hidden">
+      {/* Simple Header - Fixed at top (Restored) */}
+      <SimpleHeader onRecordClick={handleRecordClick} />
+
       {/* Bottom Home Navbar - Fixed at bottom */}
       <BottomHomeNavbar onRecordClick={handleRecordClick} />
 
