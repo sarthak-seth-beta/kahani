@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import Cropper, { Point, Area } from "react-easy-crop";
 import getCroppedImg from "../utils/canvasUtils";
-import { IoAdd, IoRemove, IoCloudUploadOutline, IoClose } from "react-icons/io5";
+import { IoAdd, IoRemove, IoCloudUploadOutline } from "react-icons/io5";
 import {
     Dialog,
     DialogContent,
@@ -100,14 +100,11 @@ const ProfilePictureDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-white border border-gray-200 p-0 overflow-hidden font-['Outfit'] [&>button]:hidden">
-                <DialogHeader className="px-6 py-4 border-b border-gray-100 flex flex-row items-center justify-between bg-white">
+            <DialogContent className="sm:max-w-md bg-white border border-gray-200 p-0 overflow-hidden font-['Outfit']">
+                <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-white">
                     <DialogTitle className="text-xl font-bold text-[#1B2632]">
                         Update Profile Photo
                     </DialogTitle>
-                    <DialogClose className="opacity-70 hover:opacity-100 transition-opacity">
-                        <IoClose size={24} className="text-[#1B2632]" />
-                    </DialogClose>
                 </DialogHeader>
 
                 <div className="flex flex-col h-full bg-[#f8f9fa] min-h-[400px]">
