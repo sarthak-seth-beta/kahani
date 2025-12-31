@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 
 export interface Testimonial {
   id: number;
@@ -80,6 +79,28 @@ export default function SectionThreeTestimonials({
     ...testimonials,
   ];
 
+  const getCardWidth = () => {
+    if (!contentRef.current) return 0;
+    const firstCard = contentRef.current.querySelector(
+      '[data-testid^="testimonial-"]',
+    ) as HTMLElement;
+    return firstCard ? firstCard.offsetWidth + 24 : 0;
+  };
+
+  const scrollPrev = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = getCardWidth();
+      scrollContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    }
+  };
+
+  const scrollNext = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = getCardWidth();
+      scrollContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
     const container = scrollContainerRef.current;
     const content = contentRef.current;
@@ -94,21 +115,11 @@ export default function SectionThreeTestimonials({
       const firstCard = content.querySelector(
         '[data-testid^="testimonial-"]',
       ) as HTMLElement;
-      const firstSpacer = content.querySelector(
-        ".flex-shrink-0:first-child",
-      ) as HTMLElement;
       if (!firstCard) return 0;
       const cardWidth = firstCard.offsetWidth;
       const gap = 24;
-      const spacerWidth = firstSpacer ? firstSpacer.offsetWidth : 0;
-      return spacerWidth * 2 + (cardWidth + gap) * testimonials.length - gap;
-    };
-
-    const getCardWidth = () => {
-      const firstCard = content.querySelector(
-        '[data-testid^="testimonial-"]',
-      ) as HTMLElement;
-      return firstCard ? firstCard.offsetWidth + 24 : 0;
+      // The period is exactly N * (width + gap)
+      return (cardWidth + gap) * testimonials.length;
     };
 
     const handleTouchStart = () => {
@@ -124,61 +135,44 @@ export default function SectionThreeTestimonials({
     };
 
     const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      lastScrollTime = Date.now();
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
       isUserInteracting = true;
 
-      if (!isScrolling) {
-        const currentScroll = container.scrollLeft;
-        const scrollDelta = Math.abs(currentScroll - scrollStartRef.current);
-        const cardWidth = getCardWidth();
-        const maxScrollDistance = cardWidth * 2;
+      const container = scrollContainerRef.current;
+      if (!container) return;
 
-        if (scrollDelta > maxScrollDistance) {
-          const direction = currentScroll > lastScrollLeftRef.current ? 1 : -1;
-          const targetScroll =
-            scrollStartRef.current + direction * maxScrollDistance;
-          setIsScrolling(true);
-          container.style.scrollBehavior = "auto";
-          container.scrollLeft = targetScroll;
-          requestAnimationFrame(() => {
-            container.style.scrollBehavior = "smooth";
-            setIsScrolling(false);
-          });
-        }
+      const cardWidth = getCardWidth();
+      const oneSetWidth = calcOneSetWidth();
+
+      if (oneSetWidth === 0 || cardWidth === 0) return;
+
+      const scrollLeft = container.scrollLeft;
+
+      // Immediate seamless reset
+      // We buffer slightly to avoid fighting with bounce effects or momentum at the exact edge
+      const buffer = 50;
+
+      // If we've scrolled past the second set (into the third set)
+      if (scrollLeft >= 2 * oneSetWidth - buffer) {
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft = scrollLeft - oneSetWidth;
+      }
+      // If we've scrolled back into the first set
+      else if (scrollLeft <= oneSetWidth - buffer) {
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft = scrollLeft + oneSetWidth;
       }
 
-      lastScrollLeftRef.current = container.scrollLeft;
-
-      scrollTimeout = setTimeout(() => {
-        scrollStartRef.current = container.scrollLeft;
-        if (isScrolling || isUserInteracting) return;
-
-        const scrollLeft = container.scrollLeft;
-        const oneSetWidth = calcOneSetWidth();
-        if (oneSetWidth === 0) return;
-
-        const timeSinceLastScroll = Date.now() - lastScrollTime;
-        if (timeSinceLastScroll < 2000) return;
-
-        if (scrollLeft >= oneSetWidth * 2 - 100) {
-          setIsScrolling(true);
-          container.style.scrollBehavior = "auto";
-          container.scrollLeft = oneSetWidth + (scrollLeft - oneSetWidth * 2);
-          requestAnimationFrame(() => {
-            container.style.scrollBehavior = "smooth";
-            setIsScrolling(false);
-          });
-        } else if (scrollLeft <= 100) {
-          setIsScrolling(true);
-          container.style.scrollBehavior = "auto";
-          container.scrollLeft = oneSetWidth + scrollLeft;
-          requestAnimationFrame(() => {
-            container.style.scrollBehavior = "smooth";
-            setIsScrolling(false);
-          });
+      // Debounce the interaction flag reset
+      clearTimeout(resetTimeout);
+      resetTimeout = setTimeout(() => {
+        isUserInteracting = false;
+        if (container) {
+          container.style.scrollBehavior = "smooth";
         }
-      }, 300);
+      }, 100);
     };
 
     container.addEventListener("touchstart", handleTouchStart, {
@@ -189,12 +183,15 @@ export default function SectionThreeTestimonials({
 
     const initScroll = () => {
       const oneSetWidth = calcOneSetWidth();
-      if (oneSetWidth > 0) {
-        container.style.scrollBehavior = "auto";
-        container.scrollLeft = oneSetWidth;
+      if (oneSetWidth > 0 && scrollContainerRef.current) {
+        scrollContainerRef.current.style.scrollBehavior = "auto";
+        scrollContainerRef.current.scrollLeft = oneSetWidth;
+        // Restore smooth scroll style slightly later
         setTimeout(() => {
-          container.style.scrollBehavior = "smooth";
-        }, 0);
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.style.scrollBehavior = "smooth";
+          }
+        }, 50);
       }
     };
 
@@ -217,14 +214,57 @@ export default function SectionThreeTestimonials({
       id="why-kahani"
       className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12"
     >
-      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
+      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10 relative">
         {/* Heading */}
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
           Why Kahani?
         </h2>
 
         {/* Testimonials Slider */}
-        <div className="relative -mx-4 sm:-mx-6 md:-mx-8">
+        <div className="relative -mx-4 sm:-mx-6 md:-mx-8 group">
+          {/* Navigation Arrows */}
+          <button
+            onClick={scrollPrev}
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1B2632] transition-all duration-300"
+            aria-label="Previous testimonial"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5 sm:w-6 sm:h-6"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+
+          <button
+            onClick={scrollNext}
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1B2632] transition-all duration-300"
+            aria-label="Next testimonial"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5 sm:w-6 sm:h-6"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+
           {/* Left gradient fade - only for medium and large devices */}
           <div className="hidden md:block absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white via-white to-transparent z-10 pointer-events-none" />
 
@@ -292,15 +332,6 @@ export default function SectionThreeTestimonials({
           </div>
         </div>
 
-        {/* Scroll Indicator Dots */}
-        <div className="flex justify-center gap-3 pt-4">
-          {testimonials.map((_, index) => (
-            <div
-              key={index}
-              className="w-2.5 h-2.5 rounded-full bg-[#A35139]/40 hover:bg-[#A35139] transition-colors duration-300"
-            />
-          ))}
-        </div>
       </div>
 
       <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}[role="region"][aria-roledescription="carousel"]{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}[role="region"][aria-roledescription="carousel"]>div>div[style*="scrollSnapAlign"]{scroll-snap-stop:always!important}`}</style>

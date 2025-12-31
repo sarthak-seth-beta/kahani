@@ -74,14 +74,14 @@ function HomePage() {
       {/* Value Proposition with Logo */}
       <ValueProposition />
 
+      {/* Section 3 - Testimonials */}
+      <SectionThreeTestimonials onLearnMore={handleLearnMore} />
+
       {/* How It Works Section */}
       <HowItWorksSection />
 
       {/* Section 4 - Albums (Moved above Testimonials) */}
       <SectionFourAlbums onTryDemo={handleTryDemo} />
-
-      {/* Section 3 - Testimonials */}
-      <SectionThreeTestimonials onLearnMore={handleLearnMore} />
 
       {/* Section 5 - FAQs */}
       <SectionFiveFAQs />
