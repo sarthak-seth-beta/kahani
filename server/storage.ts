@@ -60,6 +60,7 @@ export interface IStorage {
   getScheduledQuestionsDue(): Promise<FreeTrialRow[]>;
   getPendingReminders(): Promise<FreeTrialRow[]>;
   getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]>;
+  getTrialsNeedingCheckin(): Promise<FreeTrialRow[]>;
 
   createVoiceNote(voiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow>;
   getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]>;
@@ -544,12 +545,24 @@ export class DatabaseStorage implements IStorage {
           }
         }
       } else {
-        // For non-conversational albums: existing logic
-        if (!trial.reminderSentAt) {
-          if (!trial.nextQuestionScheduledFor) {
-            filteredTrials.push(trial);
-          } else if (new Date(trial.nextQuestionScheduledFor) <= now) {
-            filteredTrials.push(trial);
+        // For non-conversational albums: allow reminders if questionReminderCount < 2 (max 2 reminders)
+        // Check if it's been 10 hours since lastQuestionSentAt (first reminder) or reminderSentAt (subsequent reminders)
+        if (trial.questionReminderCount < 2) {
+          const timeSinceLastAction = trial.reminderSentAt
+            ? new Date(trial.reminderSentAt).getTime()
+            : trial.lastQuestionSentAt
+              ? new Date(trial.lastQuestionSentAt).getTime()
+              : 0;
+
+          if (
+            timeSinceLastAction > 0 &&
+            now.getTime() - timeSinceLastAction >= 10 * 60 * 60 * 1000
+          ) {
+            if (!trial.nextQuestionScheduledFor) {
+              filteredTrials.push(trial);
+            } else if (new Date(trial.nextQuestionScheduledFor) <= now) {
+              filteredTrials.push(trial);
+            }
           }
         }
       }
@@ -571,6 +584,24 @@ export class DatabaseStorage implements IStorage {
           lte(freeTrials.forwardLinkSentAt, fortyEightHoursAgo),
           sql`(${freeTrials.storytellerPhone} IS NULL OR ${freeTrials.conversationState} = 'awaiting_initial_contact')`,
           sql`${freeTrials.buyerNoContactReminderSentAt} IS NULL`,
+        ),
+      );
+
+    return trials;
+  }
+
+  async getTrialsNeedingCheckin(): Promise<FreeTrialRow[]> {
+    const now = new Date();
+
+    const trials = await db
+      .select()
+      .from(freeTrials)
+      .where(
+        and(
+          isNotNull(freeTrials.storytellerCheckinScheduledFor),
+          lte(freeTrials.storytellerCheckinScheduledFor, now),
+          isNotNull(freeTrials.storytellerPhone),
+          sql`${freeTrials.storytellerCheckinSentAt} IS NULL`,
         ),
       );
 

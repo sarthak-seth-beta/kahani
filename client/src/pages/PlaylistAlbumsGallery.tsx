@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Share2, Play, Pause, Shuffle, Globe, Edit2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Share2,
+  Play,
+  Pause,
+  Shuffle,
+  Globe,
+  Edit2,
+} from "lucide-react";
 import { MiniPlayer } from "@/components/playlist/MiniPlayer";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import {
@@ -75,10 +83,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-    questionIndex: number;
-    questionText: string;
-    mediaUrl: string | null;
-  }> {
+      questionIndex: number;
+      questionText: string;
+      mediaUrl: string | null;
+    }> {
   if (!isConversational) {
     return tracks;
   }
@@ -167,7 +175,9 @@ export default function PlaylistAlbumsGallery() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   // Profile Picture State
-  const [customProfileImage, setCustomProfileImage] = useState<string | null>(null);
+  const [customProfileImage, setCustomProfileImage] = useState<string | null>(
+    null,
+  );
   const { toast } = useToast();
 
   const handleProfileImageSave = async (croppedBlob: Blob) => {
@@ -302,9 +312,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => { });
-        currentAudioRef.current.removeEventListener("pause", () => { });
-        currentAudioRef.current.removeEventListener("play", () => { });
+        currentAudioRef.current.removeEventListener("ended", () => {});
+        currentAudioRef.current.removeEventListener("pause", () => {});
+        currentAudioRef.current.removeEventListener("play", () => {});
         currentAudioRef.current = null;
       }
 
@@ -940,12 +950,18 @@ export default function PlaylistAlbumsGallery() {
               zIndex: 10,
             }}
           >
-
             <ProfilePictureDialog
               initialImage={album.coverImage}
               onSave={handleProfileImageSave}
             >
-              <div style={{ width: "100%", height: "100%", cursor: "pointer", position: "relative" }}>
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  cursor: "pointer",
+                  position: "relative",
+                }}
+              >
                 <img
                   src={customProfileImage || album.coverImage}
                   alt={trial.selectedAlbum}
@@ -975,7 +991,6 @@ export default function PlaylistAlbumsGallery() {
                 </div>
               </div>
             </ProfilePictureDialog>
-
           </div>
         </div>
 

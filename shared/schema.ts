@@ -279,6 +279,13 @@ export const freeTrials = pgTable(
       "buyer_no_contact_reminder_sent_at",
       { withTimezone: true },
     ),
+    storytellerCheckinScheduledFor: timestamp(
+      "storyteller_checkin_scheduled_for",
+      { withTimezone: true },
+    ),
+    storytellerCheckinSentAt: timestamp("storyteller_checkin_sent_at", {
+      withTimezone: true,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
