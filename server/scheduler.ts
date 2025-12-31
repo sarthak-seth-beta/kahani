@@ -4,6 +4,7 @@ import {
   sendTextMessageWithRetry,
   sendTemplateMessageWithRetry,
   sendStorytellerCheckin,
+  sendBuyerCheckin,
 } from "./whatsapp";
 import {
   processRetryReminders,
@@ -279,6 +280,33 @@ export async function sendStorytellerCheckins(): Promise<void> {
         });
 
         console.log("Sent storyteller check-in to trial:", trial.id);
+
+        // Also send check-in to buyer/customer if phone number exists
+        if (trial.customerPhone) {
+          try {
+            const buyerCheckinSent = await sendBuyerCheckin(
+              trial.customerPhone,
+              trial.buyerName,
+              trial.storytellerName,
+            );
+
+            if (buyerCheckinSent) {
+              console.log("Sent buyer check-in to trial:", trial.id);
+            } else {
+              console.log(
+                "Failed to send buyer check-in template for trial:",
+                trial.id,
+              );
+            }
+          } catch (buyerError) {
+            console.error(
+              "Error sending buyer check-in:",
+              trial.id,
+              buyerError,
+            );
+            // Don't fail the entire process if buyer check-in fails
+          }
+        }
       } else {
         console.log(
           "Failed to send storyteller check-in template for trial:",

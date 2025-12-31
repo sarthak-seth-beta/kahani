@@ -1157,6 +1157,32 @@ export async function sendStorytellerCheckin(
   }
 }
 
+export async function sendBuyerCheckin(
+  recipientNumber: string,
+  buyerName: string,
+  storytellerName: string,
+): Promise<boolean> {
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = true;
+
+  if (isProduction) {
+    const templateParams = [
+      { type: "text", text: buyerName },
+      { type: "text", text: storytellerName },
+    ];
+
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      "buyer_checkin_en",
+      templateParams,
+    );
+  } else {
+    const message = `Hello ${buyerName}.\n\nHope everything is well.\n\nLooks like ${storytellerName} has been busy, so I will pause for now.\nYou can resume anytime by messaging me.\n\nIf you need anything from my side, please tell me.`;
+
+    return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
+
 export async function sendIntermediateAcknowledgment(
   recipientNumber: string,
   storytellerName: string,
