@@ -31,8 +31,11 @@ export default function HeroSection({
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
 
-        {/* Dark gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1B2632]/80 via-[#1B2632]/40 to-transparent" />
+        {/* Dark gradient overlay for text readability (Centered) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#1B2632]/70 to-transparent" />
+
+        {/* Specific bottom fade for the image to blend with next section - Aggressive blend */}
+        <div className="absolute bottom-0 left-0 right-0 h-[50vh] bg-gradient-to-t from-[#1C2632] via-[#1C2632]/80 to-transparent" />
       </div>
 
       {/* Content - Center-Middle */}
@@ -62,6 +65,9 @@ export default function HeroSection({
           </p>
         </div>
       </div>
+
+      {/* Smooth Fade Transition to Next Section */}
+      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-b from-transparent to-[#1C2632] z-20 pointer-events-none" />
     </section>
   );
 }
