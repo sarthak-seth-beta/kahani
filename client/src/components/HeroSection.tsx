@@ -60,7 +60,7 @@ export default function HeroSection({
             Hear a Kahani
           </Button>
 
-          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap font-['Outfit']">
+          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
             WhatsApp-first. Grandparent-friendly. Private.
           </p>
         </div>

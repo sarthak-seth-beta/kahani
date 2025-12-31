@@ -1132,6 +1132,57 @@ export async function sendVoiceNoteAcknowledgment(
   }
 }
 
+export async function sendStorytellerCheckin(
+  recipientNumber: string,
+  storytellerName: string,
+  languagePreference?: string | null,
+): Promise<boolean> {
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = true;
+
+  if (isProduction) {
+    const templateParams = [{ type: "text", text: storytellerName }];
+    const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
+    const templateName = `storyteller_checkin${languageSuffix}`;
+
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      templateName,
+      templateParams,
+    );
+  } else {
+    const message = `Hi ${storytellerName}, just checking in to see if you're ready to continue sharing your stories.`;
+
+    return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
+
+export async function sendBuyerCheckin(
+  recipientNumber: string,
+  buyerName: string,
+  storytellerName: string,
+): Promise<boolean> {
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = true;
+
+  if (isProduction) {
+    const templateParams = [
+      { type: "text", text: buyerName },
+      { type: "text", text: storytellerName },
+    ];
+
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      "buyer_checkin_en",
+      templateParams,
+    );
+  } else {
+    const message = `Hello ${buyerName}.\n\nHope everything is well.\n\nLooks like ${storytellerName} has been busy, so I will pause for now.\nYou can resume anytime by messaging me.\n\nIf you need anything from my side, please tell me.`;
+
+    return sendTextMessageWithRetry(recipientNumber, message);
+  }
+}
+
 export async function sendIntermediateAcknowledgment(
   recipientNumber: string,
   storytellerName: string,

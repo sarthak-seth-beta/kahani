@@ -318,6 +318,9 @@ async function handleInProgressTextMessage(
   fromNumber: string,
   messageText: string,
 ): Promise<void> {
+  // Cancel scheduled check-in if user sends text message
+  await cancelScheduledCheckin(trial.id);
+
   const { orderId } = extractOrderId(messageText);
 
   if (orderId && orderId === trial.id) {
@@ -609,6 +612,9 @@ async function handleInitialContact(
   trial: any,
   fromNumber: string,
 ): Promise<void> {
+  // Cancel scheduled check-in if user makes initial contact
+  await cancelScheduledCheckin(trial.id);
+
   await sendStorytellerOnboarding(
     fromNumber,
     trial.storytellerName,
@@ -773,6 +779,9 @@ async function handleReadinessResponse(
   const isMaybe = isMaybeButton || isMaybeText;
 
   console.log("Final decision:", { isYes, isMaybe });
+
+  // Cancel scheduled check-in if user responds
+  await cancelScheduledCheckin(trial.id);
 
   if (isYes) {
     console.log("Processing YES response, updating trial state to in_progress");
@@ -1010,6 +1019,9 @@ async function handleVoiceNote(
   fromNumber: string,
   message: WhatsAppMessage,
 ): Promise<void> {
+  // Cancel scheduled check-in if user sends voice note
+  await cancelScheduledCheckin(trial.id);
+
   if (!message.audio || !message.audio.id) {
     console.error("Invalid voice note message - missing audio data");
     return;
@@ -1579,6 +1591,23 @@ async function handleBuyerImageMessage(
   }
 }
 
+/**
+ * Helper function to cancel scheduled check-in if user responds
+ */
+async function cancelScheduledCheckin(trialId: string): Promise<void> {
+  const trial = await storage.getFreeTrialDb(trialId);
+  if (
+    trial &&
+    trial.storytellerCheckinScheduledFor &&
+    !trial.storytellerCheckinSentAt
+  ) {
+    await storage.updateFreeTrialDb(trialId, {
+      storytellerCheckinScheduledFor: null,
+    });
+    console.log("Cancelled scheduled check-in for trial:", trialId);
+  }
+}
+
 export async function processRetryReminders(): Promise<void> {
   const trialsNeedingRetry = await storage.getFreeTrialsNeedingRetry();
 
@@ -1599,13 +1628,29 @@ export async function processRetryReminders(): Promise<void> {
     await askReadiness(trial, trial.storytellerPhone);
 
     const nextRetryAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
+    const readinessAskedAt = new Date();
 
-    await storage.updateFreeTrialDb(trial.id, {
-      readinessAskedAt: new Date(),
+    const updateData: any = {
+      readinessAskedAt,
       retryCount: nextRetryCount,
       retryReadinessAt: nextRetryAt,
       conversationState: "awaiting_readiness",
-    });
+    };
+
+    // If this is the last retry (retryCount will be 3), schedule check-in 48 hours after the last retry attempt
+    if (nextRetryCount === 3) {
+      const checkinScheduledFor = new Date(
+        readinessAskedAt.getTime() + 48 * 60 * 60 * 1000,
+      ); // 48 hours after readinessAskedAt
+      updateData.storytellerCheckinScheduledFor = checkinScheduledFor;
+      console.log("Scheduled storyteller check-in for trial:", {
+        trialId: trial.id,
+        checkinScheduledFor,
+        readinessAskedAt,
+      });
+    }
+
+    await storage.updateFreeTrialDb(trial.id, updateData);
 
     console.log("Retry reminder sent:", {
       trialId: trial.id,

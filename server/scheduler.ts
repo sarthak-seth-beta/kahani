@@ -3,6 +3,8 @@ import { storage } from "./storage";
 import {
   sendTextMessageWithRetry,
   sendTemplateMessageWithRetry,
+  sendStorytellerCheckin,
+  sendBuyerCheckin,
 } from "./whatsapp";
 import {
   processRetryReminders,
@@ -120,32 +122,58 @@ export async function sendPendingReminders(): Promise<void> {
     }
     const isConversationalAlbum = album?.isConversationalAlbum === true;
 
-    // For conversational albums, limit reminders to 2 max (3 total attempts)
+    // For both album types, limit reminders to 2 max (3 total attempts: original + 2 reminders)
     const currentCount = trial.questionReminderCount || 0;
-    if (isConversationalAlbum) {
-      if (currentCount >= 2) {
-        console.log(
-          "Trial has reached max reminders for conversational album, skipping:",
-          trial.id,
-        );
-        continue;
-      }
+    if (currentCount >= 2) {
+      console.log(
+        "Trial has reached max reminders, skipping:",
+        trial.id,
+        "isConversationalAlbum:",
+        isConversationalAlbum,
+      );
+      continue;
     }
 
     try {
       // Resend the full question as a reminder
       await sendQuestion(trial, trial.storytellerPhone, undefined, true);
 
-      // Increment reminder count and update timestamps
-      await storage.updateFreeTrialDb(trial.id, {
-        questionReminderCount: currentCount + 1,
-        reminderSentAt: new Date(),
-      });
+      const reminderSentAt = new Date();
+      const nextReminderCount = currentCount + 1;
+
+      const updateData: any = {
+        questionReminderCount: nextReminderCount,
+        reminderSentAt,
+      };
+
+      // If this is the last reminder (2 reminders for both album types = 3 total attempts),
+      // schedule check-in 48 hours after this reminder
+      const isLastReminder = nextReminderCount >= 2; // 2 reminders max (3 total attempts: original + 2 reminders)
+
+      if (isLastReminder) {
+        const checkinScheduledFor = new Date(
+          reminderSentAt.getTime() + 48 * 60 * 60 * 1000,
+        ); // 48 hours after reminder
+        updateData.storytellerCheckinScheduledFor = checkinScheduledFor;
+        console.log(
+          "Scheduled storyteller check-in after question reminders:",
+          {
+            trialId: trial.id,
+            checkinScheduledFor,
+            reminderSentAt,
+            reminderCount: nextReminderCount,
+            isConversationalAlbum,
+          },
+        );
+      }
+
+      await storage.updateFreeTrialDb(trial.id, updateData);
 
       console.log("Resent question as reminder to trial:", {
         trialId: trial.id,
-        reminderCount: currentCount + 1,
+        reminderCount: nextReminderCount,
         isConversationalAlbum,
+        isLastReminder,
       });
     } catch (error) {
       console.error(
@@ -215,6 +243,82 @@ export async function sendBuyerRemindersForNoStorytellerContact(): Promise<void>
   }
 }
 
+export async function sendStorytellerCheckins(): Promise<void> {
+  const trials = await storage.getTrialsNeedingCheckin();
+
+  console.log(`Found ${trials.length} trials needing storyteller check-in`);
+
+  for (const trial of trials) {
+    if (!trial.storytellerPhone) {
+      console.log("Skipping trial without storyteller phone:", trial.id);
+      continue;
+    }
+
+    // Double-check that check-in hasn't been sent (race condition protection)
+    const currentTrial = await storage.getFreeTrialDb(trial.id);
+    if (!currentTrial) {
+      console.log("Trial no longer exists, skipping:", trial.id);
+      continue;
+    }
+
+    if (currentTrial.storytellerCheckinSentAt) {
+      console.log("Check-in already sent for trial, skipping:", trial.id);
+      continue;
+    }
+
+    try {
+      const checkinSent = await sendStorytellerCheckin(
+        trial.storytellerPhone,
+        trial.storytellerName,
+        trial.storytellerLanguagePreference,
+      );
+
+      if (checkinSent) {
+        await storage.updateFreeTrialDb(trial.id, {
+          storytellerCheckinSentAt: new Date(),
+          storytellerCheckinScheduledFor: null,
+        });
+
+        console.log("Sent storyteller check-in to trial:", trial.id);
+
+        // Also send check-in to buyer/customer if phone number exists
+        if (trial.customerPhone) {
+          try {
+            const buyerCheckinSent = await sendBuyerCheckin(
+              trial.customerPhone,
+              trial.buyerName,
+              trial.storytellerName,
+            );
+
+            if (buyerCheckinSent) {
+              console.log("Sent buyer check-in to trial:", trial.id);
+            } else {
+              console.log(
+                "Failed to send buyer check-in template for trial:",
+                trial.id,
+              );
+            }
+          } catch (buyerError) {
+            console.error(
+              "Error sending buyer check-in:",
+              trial.id,
+              buyerError,
+            );
+            // Don't fail the entire process if buyer check-in fails
+          }
+        }
+      } else {
+        console.log(
+          "Failed to send storyteller check-in template for trial:",
+          trial.id,
+        );
+      }
+    } catch (error) {
+      console.error("Error sending storyteller check-in:", trial.id, error);
+    }
+  }
+}
+
 export async function processScheduledTasks(): Promise<void> {
   if (isProcessing) {
     console.log("Scheduler already running, skipping this run");
@@ -233,6 +337,8 @@ export async function processScheduledTasks(): Promise<void> {
     await processRetryReminders();
 
     await sendBuyerRemindersForNoStorytellerContact();
+
+    await sendStorytellerCheckins();
 
     console.log("Scheduled tasks completed");
   } catch (error) {
