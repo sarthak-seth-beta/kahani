@@ -11,7 +11,8 @@ import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
-import SectionFourAlbums from "@/components/SectionFourAlbums";
+// import SectionFourAlbums from "@/components/SectionFourAlbums";
+import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
 import SectionSixCTA from "@/components/SectionSixCTA";
 import { Footer } from "@/components/Footer";
@@ -81,7 +82,8 @@ function HomePage() {
       <HowItWorksSection />
 
       {/* Section 4 - Albums (Moved above Testimonials) */}
-      <SectionFourAlbums onTryDemo={handleTryDemo} />
+      {/* <SectionFourAlbums onTryDemo={handleTryDemo} /> */}
+      <SectionFourAlbumsNew />
 
       {/* Section 5 - FAQs */}
       <SectionFiveFAQs />
