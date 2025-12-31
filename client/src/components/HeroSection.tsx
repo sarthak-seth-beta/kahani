@@ -21,15 +21,6 @@ export default function HeroSection({
   imageSrc = heroImage,
   onStartTrialClick,
 }: HeroSectionProps) {
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % storyTexts.length);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
   return (
     <section className="relative w-full h-screen flex flex-col overflow-hidden">
       {/* Full Screen Background Image */}
@@ -40,29 +31,43 @@ export default function HeroSection({
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
 
-        {/* Dark gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1B2632]/70 via-[#1B2632]/30 to-transparent" />
+        {/* Dark gradient overlay for text readability (Centered) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#1B2632]/70 to-transparent" />
+
+        {/* Specific bottom fade for the image to blend with next section - Aggressive blend */}
+        <div className="absolute bottom-0 left-0 right-0 h-[50vh] bg-gradient-to-t from-[#1C2632] via-[#1C2632]/80 to-transparent" />
       </div>
 
-      {/* Content - Centered with More Space */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-start px-4 sm:px-6 pb-8 sm:pb-12 pt-24 sm:pt-24">
-        {/* Text Overlay - Three Lines */}
+      {/* Content - Center-Middle */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-24">
+        {/* Text Overlay */}
         <h1
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-tight tracking-tight mb-8 sm:mb-12 font-['Outfit'] max-w-4xl"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4 font-['Outfit'] max-w-5xl"
           data-testid="text-hero-headline"
         >
-          <span
-            key={currentTextIndex}
-            className="inline-block animate-fade-in text-[#FFB162]"
-          >
-            {storyTexts[currentTextIndex]}
-          </span>
-          <br />
-          STORIES AND VOICE
-          <br />
-          NOW AND FOREVER
+          Spotify for your family’s stories
         </h1>
+
+        <p className="text-base sm:text-xl md:text-2xl text-white/90 font-medium mb-8 max-w-2xl whitespace-nowrap">
+          They speak on WhatsApp. <br /> You keep it forever.
+        </p>
+
+        <div className="flex flex-col items-center gap-4">
+          <Button
+            onClick={onStartTrialClick}
+            className="px-10 py-3 bg-[#E5484D] hover:bg-[#D93D42] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300"
+          >
+            Hear a Kahani
+          </Button>
+
+          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
+            WhatsApp-first. Grandparent-friendly. Private.
+          </p>
+        </div>
       </div>
+
+      {/* Smooth Fade Transition to Next Section */}
+      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-b from-transparent to-[#1C2632] z-20 pointer-events-none" />
     </section>
   );
 }

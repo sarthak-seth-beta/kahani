@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ScrollToTop from "@/components/ScrollToTop";
 import SimpleHeader from "@/components/SimpleHeader";
 import HeroSection from "@/components/HeroSection";
+import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
@@ -58,10 +59,14 @@ function HomePage() {
 
   return (
     <div className="w-full min-h-screen bg-[#EEE9DF] overflow-x-hidden">
-      {/* Simple Header - Fixed at top */}
+      {/* Simple Header - Fixed at top (Restored) */}
       <SimpleHeader onRecordClick={handleRecordClick} />
-      {/* Spacer to account for fixed header height (approximately 80px on desktop, 64px on mobile) */}
-      <div className="h-16 md:h-20" />
+
+      {/* Bottom Home Navbar - Fixed at bottom */}
+      <BottomHomeNavbar onRecordClick={handleRecordClick} />
+
+      {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
+      {/* <div className="h-20" /> */}
 
       {/* Hero Section - Full Screen with Button */}
       <HeroSection onStartTrialClick={handleStartTrialClick} />
@@ -86,6 +91,9 @@ function HomePage() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Spacer for bottom navbar */}
+      <div className="h-24 md:h-20" />
     </div>
   );
 }
