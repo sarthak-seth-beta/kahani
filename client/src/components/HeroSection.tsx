@@ -42,7 +42,7 @@ export default function HeroSection({
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-24">
         {/* Text Overlay */}
         <h1
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4 font-['Outfit'] max-w-5xl"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4 max-w-5xl"
           data-testid="text-hero-headline"
         >
           Spotify for your family’s stories
@@ -55,12 +55,12 @@ export default function HeroSection({
         <div className="flex flex-col items-center gap-4">
           <Button
             onClick={onStartTrialClick}
-            className="px-10 py-3 bg-[#E5484D] hover:bg-[#D93D42] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300"
+            className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300"
           >
             Hear a Kahani
           </Button>
 
-          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
+          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap font-['Outfit']">
             WhatsApp-first. Grandparent-friendly. Private.
           </p>
         </div>
