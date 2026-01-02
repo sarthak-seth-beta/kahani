@@ -5,7 +5,7 @@ import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface HeroSectionProps {
   imageSrc?: string;
-  onStartTrialClick?: () => void;
+  onHearKahaniClick?: () => void;
 }
 
 const storyTexts = [
@@ -19,7 +19,7 @@ const storyTexts = [
 
 export default function HeroSection({
   imageSrc = heroImage,
-  onStartTrialClick,
+  onHearKahaniClick,
 }: HeroSectionProps) {
   return (
     <section className="relative w-full h-screen flex flex-col overflow-hidden">
@@ -54,7 +54,7 @@ export default function HeroSection({
 
         <div className="flex flex-col items-center gap-4">
           <Button
-            onClick={onStartTrialClick}
+            onClick={onHearKahaniClick}
             className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300"
           >
             Hear a Kahani

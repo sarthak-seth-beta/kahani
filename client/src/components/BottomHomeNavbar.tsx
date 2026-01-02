@@ -1,35 +1,107 @@
 import { useLocation } from "wouter";
-import { Play, Home, Search, User, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, Home, Search, User, SkipBack, SkipForward, RotateCcw } from "lucide-react";
 import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
 import { useState, useEffect } from "react";
 
 interface BottomHomeNavbarProps {
-  onRecordClick?: () => void;
+  isActive?: boolean;
+  onInactive?: () => void;
 }
 
-export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
+const DUMMY_AUDIO_URL = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/testing.ogg";
+
+export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps) {
   const [, setLocation] = useLocation();
   const [isMobile, setIsMobile] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isEnded, setIsEnded] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [audio] = useState(new Audio(DUMMY_AUDIO_URL));
+
+  // Audio Control
+  useEffect(() => {
+    const updateProgress = () => {
+      if (audio.duration && !isNaN(audio.duration) && audio.duration !== Infinity) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      } else {
+        setProgress(0);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setIsEnded(true);
+    };
+
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', handleEnded);
+
+    if (isActive) {
+      setIsPlaying(true);
+      setIsEnded(false);
+      audio.play().catch(e => console.error("Audio playback failed", e));
+    } else {
+      setIsPlaying(false);
+      audio.pause();
+      audio.currentTime = 0;
+      setProgress(0);
+    }
+    return () => {
+      audio.pause();
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [isActive, audio]);
+
+  // Auto-hide timer when paused (Mobile only)
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isMobile && !isPlaying && isActive && isEnded) {
+      timeout = setTimeout(() => {
+        if (onInactive) onInactive();
+      }, 5000);
+    }
+    return () => clearTimeout(timeout);
+  }, [isPlaying, isActive, isEnded, onInactive, isMobile]);
+
+  const togglePlay = () => {
+    if (isEnded) {
+      audio.currentTime = 0;
+      audio.play();
+      setIsPlaying(true);
+      setIsEnded(false);
+    } else if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
 
-    // Auto-hide logic
     const handleScroll = () => {
-      // Check if we are near the bottom of the page
-      const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100; // 100px buffer
-      setIsVisible(!scrolledToBottom);
+      const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+      setIsAtBottom(scrolledToBottom);
     };
 
     window.addEventListener("resize", checkMobile);
     window.addEventListener("scroll", handleScroll);
+
+    // Initial check
+    handleScroll();
+
     return () => {
       window.removeEventListener("resize", checkMobile);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  const isVisible = (!isMobile || !!isActive) && !isAtBottom;
 
   return (
     <div
@@ -80,11 +152,17 @@ export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
             </button>
 
             <button
-              onClick={onRecordClick}
+              onClick={togglePlay}
               className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#A35139] text-white shadow-md hover:bg-[#8B4430] hover:scale-105 transition-all active:scale-95"
-              aria-label="Play"
+              aria-label={isPlaying ? "Pause" : (isEnded ? "Replay" : "Play")}
             >
-              <Play size={20} fill="currentColor" className="ml-0.5 md:ml-1" />
+              {isEnded ? (
+                <RotateCcw size={20} fill="none" className="ml-0" strokeWidth={2.5} />
+              ) : isPlaying ? (
+                <Pause size={20} fill="currentColor" />
+              ) : (
+                <Play size={20} fill="currentColor" className="ml-0.5 md:ml-1" />
+              )}
             </button>
 
             <button
@@ -97,7 +175,7 @@ export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
 
           {/* Progress Bar (Desktop Only) */}
           <div className="hidden md:flex w-32 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
-            <div className="h-full bg-[#A35139] w-1/3 rounded-full"></div>
+            <div className="h-full bg-[#A35139] rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
 
@@ -132,7 +210,7 @@ export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
                 Alternatively, we can put it above the ribbon like typical audio players.
             */}
       <div className="md:hidden absolute bottom-[calc(100%-1px)] left-0 right-0 h-0.5 bg-gray-200">
-        <div className="h-full bg-[#A35139] w-1/3"></div>
+        <div className="h-full bg-[#A35139] transition-all duration-300" style={{ width: `${progress}%` }}></div>
       </div>
     </div>
   );

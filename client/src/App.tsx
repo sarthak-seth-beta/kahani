@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,10 +12,8 @@ import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import GetStartedSection from "@/components/GetStartedSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
-// import SectionFourAlbums from "@/components/SectionFourAlbums";
 import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
-import SectionSixCTA from "@/components/SectionSixCTA";
 import { Footer } from "@/components/Footer";
 import Checkout from "@/pages/Checkout";
 import FreeTrialCheckout from "@/pages/FreeTrialCheckout";
@@ -44,21 +42,22 @@ import { trackPageView } from "@/lib/analytics";
 
 function HomePage() {
   const [, setLocation] = useLocation();
+  const [isPlayerActive, setIsPlayerActive] = useState(false);
+
+  const handleHearKahaniClick = () => {
+    setIsPlayerActive(true);
+  };
+
+  const handlePlayerInactive = () => {
+    setIsPlayerActive(false);
+  };
 
   const handleRecordClick = () => {
     setLocation("/free-trial-checkout");
   };
 
-  const handleStartTrialClick = () => {
-    setLocation("/free-trial-checkout");
-  };
-
   const handleLearnMore = () => {
     setLocation("/how-to-use");
-  };
-
-  const handleTryDemo = () => {
-    setLocation("/playlist-albums/demo-album-id");
   };
 
   return (
@@ -67,13 +66,13 @@ function HomePage() {
       <SimpleHeader onRecordClick={handleRecordClick} />
 
       {/* Bottom Home Navbar - Fixed at bottom */}
-      <BottomHomeNavbar onRecordClick={handleRecordClick} />
+      <BottomHomeNavbar isActive={isPlayerActive} onInactive={handlePlayerInactive} />
 
       {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
       {/* <div className="h-20" /> */}
 
       {/* Hero Section - Full Screen with Button */}
-      <HeroSection onStartTrialClick={handleStartTrialClick} />
+      <HeroSection onHearKahaniClick={handleHearKahaniClick} />
 
       {/* Value Proposition with Logo */}
       <ValueProposition />
@@ -88,14 +87,10 @@ function HomePage() {
       <GetStartedSection />
 
       {/* Section 4 - Albums (Moved above Testimonials) */}
-      {/* <SectionFourAlbums onTryDemo={handleTryDemo} /> */}
       <SectionFourAlbumsNew />
 
       {/* Section 5 - FAQs */}
       <SectionFiveFAQs />
-
-      {/* Section 6 - Final CTA */}
-      {/* <SectionSixCTA onStartTrial={handleStartTrialClick} /> */}
 
       {/* Footer */}
       <Footer />
