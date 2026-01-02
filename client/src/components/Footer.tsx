@@ -1,190 +1,90 @@
 import { Link, useLocation } from "wouter";
-import { SiFacebook, SiInstagram, SiWhatsapp } from "react-icons/si";
+import { SiWhatsapp, SiInstagram } from "react-icons/si";
 
 export function Footer() {
   const [, setLocation] = useLocation();
 
-  const scrollToSection = (id: string) => {
-    // If not on home page, go to home page first
-    if (window.location.pathname !== "/") {
-      setLocation("/");
-      // Short timeout to allow navigation to complete
-      setTimeout(() => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 100);
-    } else {
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
-
   return (
-    <footer className="w-full bg-[#1B2632] text-[#EEE9DF] py-8 px-6 md:px-12">
-      <div className="max-w-6xl mx-auto">
-        {/* Social Media Icons - Top Right */}
-        <div className="flex justify-end mb-8">
-          <div className="flex gap-4">
-            <a
-              href="https://wa.me/918510889286"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-[#EEE9DF]/10 hover:bg-[#FFB162]/20 flex items-center justify-center transition-colors"
-              data-testid="link-whatsapp"
-              aria-label="WhatsApp"
-            >
-              <SiWhatsapp className="w-5 h-5 text-[#EEE9DF]" />
-            </a>
-            <a
-              href="https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-[#EEE9DF]/10 hover:bg-[#FFB162]/20 flex items-center justify-center transition-colors"
-              data-testid="link-instagram"
-              aria-label="Instagram"
-            >
-              <SiInstagram className="w-5 h-5 text-[#EEE9DF]" />
-            </a>
-          </div>
+    <footer className="relative w-full bg-[#1B1B1B] text-[#EEE9DF] pt-32 pb-16 px-6 overflow-hidden flex flex-col items-center justify-center text-center">
+
+      {/* 1. Circular Backdrop Glow */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none opacity-20 blur-[100px]"
+        style={{
+          background: "radial-gradient(circle, #FFB162 0%, rgba(255, 177, 98, 0) 70%)"
+        }}
+      />
+
+      {/* 2. Main Content Container (z-10 to be above glow) */}
+      <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center space-y-6">
+
+        {/* Main Heading */}
+        <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-tight tracking-tight">
+          Before they're <br />
+          <span className="text-[#FFB162]">just memories</span>
+        </h2>
+
+        {/* Record Button */}
+        <button
+          onClick={() => setLocation("/all-albums")}
+          className="group relative px-8 py-4 bg-transparent border border-[#EEE9DF]/30 rounded-full text-lg font-medium hover:bg-[#EEE9DF] hover:text-[#1B1B1B] transition-all duration-300 overflow-hidden"
+        >
+          <span className="relative z-10">Record Now</span>
+        </button>
+
+        {/* Divider Line */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#EEE9DF]/20 to-transparent w-full max-w-2xl" />
+
+        {/* Brand Tagline */}
+        <div className="space-y-2">
+          <p className="text-2xl font-serif text-[#FFB162]">
+            Kahani
+          </p>
+          <span className="text-[#EEE9DF]/60 text-base font-sans font-normal">by families, for families</span>
         </div>
 
-        {/* Footer Links Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-8">
-          {/* Explore */}
-          <div>
-            <h3
-              className="text-lg font-semibold mb-4"
-              data-testid="heading-explore"
-            >
-              Explore
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <button
-                  onClick={() => scrollToSection("how-it-works")}
-                  className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer text-left"
-                  data-testid="link-how-it-works"
-                >
-                  How it works
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("why-kahani")}
-                  className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer text-left"
-                  data-testid="link-why-kahani"
-                >
-                  Why Kahani
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("albums")}
-                  className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer text-left"
-                  data-testid="link-albums"
-                >
-                  Albums
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("faqs")}
-                  className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer text-left"
-                  data-testid="link-faqs"
-                >
-                  FAQs
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3
-              className="text-lg font-semibold mb-4"
-              data-testid="heading-company"
-            >
-              Company
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/about-us">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    About us
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/affiliate">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    Affiliate
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact-us">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    Contact us
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/blogs">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    Blogs
-                  </span>
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h3
-              className="text-lg font-semibold mb-4"
-              data-testid="heading-legal"
-            >
-              Legal
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/privacy-policy">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    Privacy policy
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms-of-service">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    Terms of Service
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/data-deletion">
-                  <span className="text-[#EEE9DF]/80 hover:text-[#FFB162] transition-colors cursor-pointer">
-                    Data Deletion
-                  </span>
-                </Link>
-              </li>
-            </ul>
-          </div>
+        {/* Social Icons */}
+        <div className="flex items-center gap-6">
+          <a
+            href="https://wa.me/918510889286"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#EEE9DF] text-[#1B1B1B] hover:bg-[#FFB162] hover:text-white transition-all transform hover:scale-110"
+          >
+            <SiWhatsapp className="w-5 h-5" />
+          </a>
+          <a
+            href="https://www.instagram.com/kahani.xyz?igsh=b3oyNXJwZ3g5bHR2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#EEE9DF] text-[#1B1B1B] hover:bg-[#FFB162] hover:text-white transition-all transform hover:scale-110"
+          >
+            <SiInstagram className="w-5 h-5" />
+          </a>
         </div>
+
+        {/* Bottom Links */}
+        <div className="flex gap-8 text-sm text-[#EEE9DF]/60 mt-16 md:mt-24">
+          <Link href="/company-legal">
+            <span className="hover:text-[#FFB162] transition-colors cursor-pointer">Privacy</span>
+          </Link>
+          <Link href="/about-us">
+            <span className="hover:text-[#FFB162] transition-colors cursor-pointer">About Us</span>
+          </Link>
+          <Link href="/contact-us">
+            <span className="hover:text-[#FFB162] transition-colors cursor-pointer">Contact Us</span>
+          </Link>
+        </div>
+
+        {/* Divider Line */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#EEE9DF]/20 to-transparent w-full max-w-2xl" />
 
         {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-[#EEE9DF]/20 text-center">
-          <p className="text-[#EEE9DF]/60 text-sm">
-            © 2025 Kahani. All rights reserved.
-          </p>
-          <p className="text-[#EEE9DF]/60 text-sm mt-2">
-            by Sprism Culture Labs Pvt Ltd
-          </p>
+        <div className="space-y-1 text-xs text-[#EEE9DF]/40 pt-8">
+          <p>© 2025 Kahani. All rights reserved.</p>
+          <p>by Sprism Culture Labs Pvt Ltd</p>
         </div>
+
       </div>
     </footer>
   );

@@ -10,16 +10,31 @@ interface BottomHomeNavbarProps {
 export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
   const [, setLocation] = useLocation();
   const [isMobile, setIsMobile] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
+
+    // Auto-hide logic
+    const handleScroll = () => {
+      // Check if we are near the bottom of the page
+      const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100; // 100px buffer
+      setIsVisible(!scrolledToBottom);
+    };
+
     window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-0 pb-0 pt-0 md:px-4 md:pb-4 md:pt-2 pointer-events-none flex justify-center">
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-50 px-0 pb-0 pt-0 md:px-4 md:pb-4 md:pt-2 pointer-events-none flex justify-center transition-transform duration-500 ease-in-out ${isVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}
+    >
       <div
         className="pointer-events-auto relative w-full md:max-w-3xl bg-white/95 backdrop-blur-md border-t md:border border-black/10 md:shadow-2xl md:rounded-2xl p-3 flex items-center justify-between gap-4 transition-all"
         style={{

@@ -28,6 +28,7 @@ import Affiliate from "@/pages/Affiliate";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
 import FAQs from "@/pages/FAQs";
+import CompanyLegal from "@/pages/CompanyLegal";
 import Blogs from "@/pages/Blogs";
 import AlbumsGallery from "@/pages/AlbumsGallery";
 import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
@@ -90,13 +91,12 @@ function HomePage() {
       <SectionFiveFAQs />
 
       {/* Section 6 - Final CTA */}
-      <SectionSixCTA onStartTrial={handleStartTrialClick} />
+      {/* <SectionSixCTA onStartTrial={handleStartTrialClick} /> */}
 
       {/* Footer */}
       <Footer />
 
-      {/* Spacer for bottom navbar */}
-      <div className="h-24 md:h-20" />
+
     </div>
   );
 }
@@ -140,6 +140,7 @@ function App() {
             component={CustomAlbumCover}
           />
           <Route path="/yl-personal-support" component={YlPersonalSupport} />
+          <Route path="/company-legal" component={CompanyLegal} />
           <Route path="/enzo-xyz" component={Admin} />
           <Route path="/enzo-xyz/albums" component={ManageAlbums} />
           <Route component={NotFound} />
