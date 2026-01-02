@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -41,32 +41,8 @@ const defaultSteps: Step[] = [
 
 const FlowConnector = ({ className }: { className?: string }) => (
   <div className={`flex items-center justify-center ${className} z-0`}>
-    {/* Mobile Vertical Arrow */}
     <svg
-      className="block md:hidden h-12 w-6 overflow-visible"
-      viewBox="0 0 2 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M1 0V64"
-        stroke="#E5E7EB"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M1 0V64"
-        stroke="#A35139"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeDasharray="4 80"
-        className="animate-flow-vertical"
-      />
-    </svg>
-
-    {/* Desktop Horizontal Curved Arrow */}
-    <svg
-      className="hidden md:block w-16 lg:w-24 h-6 overflow-visible"
+      className="block w-16 lg:w-24 h-6 overflow-visible"
       viewBox="0 0 96 2"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -93,26 +69,55 @@ export default function HowItWorksSection({
   steps = defaultSteps,
   onVideoClick = () => window.open("https://youtube.com", "_blank"),
 }: HowItWorksSectionProps) {
+  const [activeStep, setActiveStep] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const { scrollLeft, clientWidth } = scrollContainerRef.current;
+        const newIndex = Math.round(scrollLeft / clientWidth);
+        const clampedIndex = Math.min(
+          Math.max(newIndex, 0),
+          steps.length - 1
+        );
+        setActiveStep(clampedIndex);
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
+      return () => container.removeEventListener("scroll", handleScroll);
+    }
+  }, [steps.length]);
+
   return (
     <section
       id="how-it-works"
-      className="w-full bg-white px-4 sm:px-6 min-h-screen flex flex-col pt-5 pb-16"
+      className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-12 flex flex-col relative overflow-hidden"
     >
+      {/* Top Fade Gradient */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
       {/* 1. Heading Top - Centered */}
-      <div className="flex-none mb-4 sm:mb-8">
+      <div className="flex-none mb-4 sm:mb-8 relative z-20">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
           How It Works
         </h2>
       </div>
 
       {/* 2. Content Middle - Centered vertically in remaining space */}
-      <div className="flex-1 flex flex-col justify-center w-full max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-center gap-8 md:gap-4 lg:gap-6 w-full">
+      <div className="flex-1 flex flex-col justify-center w-full max-w-7xl mx-auto relative z-20">
+        <div
+          ref={scrollContainerRef}
+          className="flex flex-row items-start md:items-start justify-start md:justify-center gap-4 md:gap-4 lg:gap-6 w-full overflow-x-auto snap-x snap-mandatory pb-6 no-scrollbar"
+        >
           {steps.map((step, index) => (
             <React.Fragment key={index}>
               {/* Step Card */}
               <div
-                className="w-full max-w-sm flex-1 flex flex-col items-start text-left md:items-center md:text-center space-y-4 md:space-y-6 relative z-10"
+                className="w-[85vw] md:w-full max-w-sm flex-none md:flex-1 snap-center flex flex-col items-start text-left md:items-center md:text-center space-y-4 md:space-y-6 relative z-10"
+                style={{ scrollSnapStop: 'always' }}
                 data-testid={`step-${index + 1}`}
               >
                 {/* Image Container */}
@@ -143,15 +148,26 @@ export default function HowItWorksSection({
 
               {/* Connector */}
               {index < steps.length - 1 && (
-                <FlowConnector className="hidden md:flex py-2 md:py-0 md:px-0 flex-shrink-0 md:mt-[11%] -my-4 md:my-0 relative z-0" />
+                <FlowConnector className="flex flex-shrink-0 mt-[35vw] md:mt-[11%] relative z-0" />
               )}
             </React.Fragment>
           ))}
         </div>
       </div>
 
+      {/* Navigation Dots for Mobile */}
+      <div className="flex md:hidden justify-center gap-2 mb-6">
+        {steps.map((_, index) => (
+          <div
+            key={index}
+            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+              }`}
+          />
+        ))}
+      </div>
+
       {/* 3. CTA Bottom */}
-      <div className="sticky bottom-24 z-40 flex mx-auto mt-6 sm:mt-0 text-center">
+      <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
         <Button
           onClick={onVideoClick}
           className="inline-flex items-center gap-2 px-8 py-6 bg-transparent border-2 border-[#1B2632]/10 hover:border-[#A35139] text-[#1B2632] hover:text-[#A35139] rounded-full text-lg font-semibold transition-all duration-300 group"
@@ -162,7 +178,17 @@ export default function HowItWorksSection({
         </Button>
       </div>
 
+      {/* Bottom Fade Gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />
+
       <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
         @keyframes flowHorizontal {
           from { stroke-dashoffset: 156; }
           to { stroke-dashoffset: 0; }
