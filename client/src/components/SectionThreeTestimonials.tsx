@@ -90,14 +90,20 @@ export default function SectionThreeTestimonials({
   const scrollPrev = () => {
     if (scrollContainerRef.current) {
       const cardWidth = getCardWidth();
-      scrollContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      scrollContainerRef.current.scrollBy({
+        left: -cardWidth,
+        behavior: "smooth",
+      });
     }
   };
 
   const scrollNext = () => {
     if (scrollContainerRef.current) {
       const cardWidth = getCardWidth();
-      scrollContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      scrollContainerRef.current.scrollBy({
+        left: cardWidth,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -331,7 +337,6 @@ export default function SectionThreeTestimonials({
             </div>
           </div>
         </div>
-
       </div>
 
       <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}[role="region"][aria-roledescription="carousel"]{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}[role="region"][aria-roledescription="carousel"]>div>div[style*="scrollSnapAlign"]{scroll-snap-stop:always!important}`}</style>

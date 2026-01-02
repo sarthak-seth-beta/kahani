@@ -7,11 +7,13 @@ export default function ValueProposition() {
         </h2>
 
         <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white leading-relaxed">
-          Kahani helps you record your loved one’s stories and voice through WhatsApp.
+          Kahani helps you record your loved one’s stories and voice through
+          WhatsApp.
         </p>
 
         <p className="text-lg sm:text-xl md:text-2xl text-white/80 leading-relaxed">
-          We ask the questions you have always wanted to ask — and life got busy.
+          We ask the questions you have always wanted to ask — and life got
+          busy.
         </p>
       </div>
     </section>

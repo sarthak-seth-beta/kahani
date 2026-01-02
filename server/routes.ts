@@ -249,7 +249,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin endpoint: Upload album cover image (temporary)
   app.post(
     "/api/admin/albums/upload-image",
-    // @ts-expect-error - Multer bundles its own express types causing incompatibility, but runtime works correctly
     upload.single("image"),
     async (req: Request, res: Response) => {
       try {
@@ -779,7 +778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/free-trial/:trialId/upload-cover",
-    // @ts-expect-error - Multer bundles its own express types causing incompatibility, but runtime works correctly
+
     upload.single("image"),
     async (req: Request, res: Response) => {
       try {
@@ -1342,9 +1341,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check for error codes that require email alerts
         const errorCode = status.errors?.[0]?.code;
         if (
-          errorCode &&
-          ERROR_CODES_TO_ALERT.includes(errorCode) &&
-          status.recipient_id
+          errorCode
+          // &&
+          // ERROR_CODES_TO_ALERT.includes(errorCode) &&
+          // status.recipient_id
         ) {
           const errorReason =
             status.errors?.[0]?.message ||

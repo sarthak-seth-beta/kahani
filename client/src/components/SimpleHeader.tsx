@@ -39,7 +39,10 @@ export default function SimpleHeader({
       </style>
       <div className="flex items-center justify-center md:justify-between px-4 py-2 md:px-8 gap-4 h-[70px]">
         {/* Logo */}
-        <div onClick={() => setLocation("/")} className="hidden md:block cursor-pointer shrink-0">
+        <div
+          onClick={() => setLocation("/")}
+          className="hidden md:block cursor-pointer shrink-0"
+        >
           <img
             src={logoSrc}
             alt="Kahani Logo"

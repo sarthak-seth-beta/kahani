@@ -36,32 +36,13 @@ ${JSON.stringify(webhookPayload, null, 2)}
 
     // Make subject unique to prevent email threading
 
-    const uniqueSubject = `Message dropped by Meta fir ${recipientId}`;
+    const uniqueSubject = `Message dropped by Meta for ${recipientId}`;
 
-    const response = await resend.emails.send({
+    await resend.emails.send({
       from: "Kahani Alerts <onboarding@resend.dev>",
       to: "sarthakseth021@gmail.com",
       subject: uniqueSubject,
       text: emailBody,
-    });
-
-    // Log the full response to debug
-    console.log("Resend API response:", JSON.stringify(response, null, 2));
-
-    if (response.error) {
-      console.error("Resend API returned an error:", {
-        error: response.error,
-        errorCode,
-        recipientId,
-      });
-      return;
-    }
-
-    console.log("Error alert email sent successfully:", {
-      errorCode,
-      recipientId,
-      emailId: response.data?.id,
-      to: ALERT_EMAILS,
     });
   } catch (error: any) {
     // Log error but don't throw - webhook processing should continue

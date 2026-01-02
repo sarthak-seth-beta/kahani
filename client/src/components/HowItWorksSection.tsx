@@ -48,7 +48,12 @@ const FlowConnector = ({ className }: { className?: string }) => (
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M1 0V64" stroke="#E5E7EB" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M1 0V64"
+        stroke="#E5E7EB"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
       <path
         d="M1 0V64"
         stroke="#A35139"
@@ -66,7 +71,12 @@ const FlowConnector = ({ className }: { className?: string }) => (
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M0 1H96" stroke="#E5E7EB" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M0 1H96"
+        stroke="#E5E7EB"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
       <path
         d="M0 1H96"
         stroke="#A35139"
@@ -133,9 +143,7 @@ export default function HowItWorksSection({
 
               {/* Connector */}
               {index < steps.length - 1 && (
-                <FlowConnector
-                  className="hidden md:flex py-2 md:py-0 md:px-0 flex-shrink-0 md:mt-[11%] -my-4 md:my-0 relative z-0"
-                />
+                <FlowConnector className="hidden md:flex py-2 md:py-0 md:px-0 flex-shrink-0 md:mt-[11%] -my-4 md:my-0 relative z-0" />
               )}
             </React.Fragment>
           ))}
