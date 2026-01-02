@@ -93,7 +93,7 @@ const AlbumCard = ({
         if (navigator.share) {
           navigator
             .share({ title: album.title, text: text, url: url })
-            .catch(() => {});
+            .catch(() => { });
         }
         break;
     }
@@ -265,7 +265,7 @@ export default function SectionFourAlbumsNew({
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
         <div className="text-center mb-8 space-y-4 px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-[#1B2632] font-['Outfit']">
+          <h2 className="text-3xl md:text-5xl font-bold text-[#1B2632] font-['Outfit']">
             Explore our collection
           </h2>
           <p className="text-lg text-[#1B2632]/60 max-w-2xl mx-auto">

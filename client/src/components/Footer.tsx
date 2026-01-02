@@ -19,7 +19,7 @@ export function Footer() {
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center space-y-6">
 
         {/* Main Heading */}
-        <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-tight tracking-tight">
+        <h2 className="text-3xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-tight tracking-tight">
           Before they're <br />
           <span className="text-[#FFB162]">just memories</span>
         </h2>

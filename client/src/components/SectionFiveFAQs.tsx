@@ -93,7 +93,7 @@ export default function SectionFiveFAQs({
     <section id="faqs" className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-3xl mx-auto space-y-8 sm:space-y-10">
         {/* FAQs Heading */}
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
           Frequently Asked Questions
         </h2>
 

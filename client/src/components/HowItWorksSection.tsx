@@ -137,10 +137,10 @@ export default function HowItWorksSection({
 
                 {/* Text Content */}
                 <div className="px-2 w-full">
-                  <h3 className="text-xl sm:text-2xl font-bold text-[#1B2632] mb-1 sm:mb-3 font-['Outfit']">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#1B2632] mb-3 sm:mb-4 font-['Outfit']">
                     {step.title}
                   </h3>
-                  <p className="text-[#1B2632]/70 leading-relaxed text-sm sm:text-base">
+                  <p className="text-[#1B2632]/70 leading-loose text-sm sm:text-base">
                     {step.description}
                   </p>
                 </div>
