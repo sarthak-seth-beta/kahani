@@ -64,7 +64,7 @@ export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
 
                         <button
                             onClick={onRecordClick}
-                            className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#E5484D] text-white shadow-md hover:bg-[#D93D42] hover:scale-105 transition-all active:scale-95"
+                            className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#A35139] text-white shadow-md hover:bg-[#8B4430] hover:scale-105 transition-all active:scale-95"
                             aria-label="Play"
                         >
                             <Play size={20} fill="currentColor" className="ml-0.5 md:ml-1" />
@@ -80,7 +80,7 @@ export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
 
                     {/* Progress Bar (Desktop Only) */}
                     <div className="hidden md:flex w-32 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
-                        <div className="h-full bg-[#E5484D] w-1/3 rounded-full"></div>
+                        <div className="h-full bg-[#A35139] w-1/3 rounded-full"></div>
                     </div>
                 </div>
 
@@ -115,7 +115,7 @@ export function BottomHomeNavbar({ onRecordClick }: BottomHomeNavbarProps) {
                 Alternatively, we can put it above the ribbon like typical audio players.
             */}
             <div className="md:hidden absolute bottom-[calc(100%-1px)] left-0 right-0 h-0.5 bg-gray-200">
-                <div className="h-full bg-[#E5484D] w-1/3"></div>
+                <div className="h-full bg-[#A35139] w-1/3"></div>
             </div>
         </div>
     );
