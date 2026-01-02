@@ -10,6 +10,7 @@ import HeroSection from "@/components/HeroSection";
 import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
+import GetStartedSection from "@/components/GetStartedSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
 // import SectionFourAlbums from "@/components/SectionFourAlbums";
 import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
@@ -82,6 +83,9 @@ function HomePage() {
 
       {/* How It Works Section */}
       <HowItWorksSection />
+
+      {/* Get Started Section */}
+      <GetStartedSection />
 
       {/* Section 4 - Albums (Moved above Testimonials) */}
       {/* <SectionFourAlbums onTryDemo={handleTryDemo} /> */}
