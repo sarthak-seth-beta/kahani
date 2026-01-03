@@ -654,7 +654,7 @@ async function handleInitialContact(
     trial.storytellerLanguagePreference,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 45000));
 
   await sendHowToUseKahani(
     fromNumber,
@@ -662,7 +662,7 @@ async function handleInitialContact(
     trial.storytellerLanguagePreference,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 45000));
 
   await askReadiness(trial, fromNumber);
 
@@ -684,10 +684,10 @@ export async function askReadiness(
   );
 
   // Set retryReadinessAt if not already set (for initial readiness checks)
-  // This ensures ignored readiness checks get retried after 10 hours
+  // This ensures ignored readiness checks get retried after 24 hours
   const retryReadinessAt = trial.retryReadinessAt
     ? undefined
-    : new Date(Date.now() + 10 * 60 * 60 * 1000); // 10 hours from now
+    : new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
@@ -1676,7 +1676,7 @@ export async function processRetryReminders(): Promise<void> {
 
     const currentRetryCount = trial.retryCount || 0;
 
-    if (currentRetryCount >= 3) {
+    if (currentRetryCount >= 4) {
       console.log("Max retries already reached, skipping trial:", trial.id);
       continue;
     }
@@ -1685,7 +1685,7 @@ export async function processRetryReminders(): Promise<void> {
 
     await askReadiness(trial, trial.storytellerPhone);
 
-    const nextRetryAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
+    const nextRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     const readinessAskedAt = new Date();
 
     const updateData: any = {
@@ -1695,8 +1695,8 @@ export async function processRetryReminders(): Promise<void> {
       conversationState: "awaiting_readiness",
     };
 
-    // If this is the last retry (retryCount will be 3), schedule check-in 48 hours after the last retry attempt
-    if (nextRetryCount === 3) {
+    // If this is the last retry (retryCount will be 4), schedule check-in 48 hours after the last retry attempt
+    if (nextRetryCount === 4) {
       const checkinScheduledFor = new Date(
         readinessAskedAt.getTime() + 48 * 60 * 60 * 1000,
       ); // 48 hours after readinessAskedAt
