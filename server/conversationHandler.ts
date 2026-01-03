@@ -204,12 +204,26 @@ async function resendBuyerOnboardingTemplates(
       recipientNumber,
     });
 
+    // Get album title from albumId
+    let albumTitle = trial.selectedAlbum; // Fallback to selectedAlbum if available
+    if (trial.albumId) {
+      const album = await storage.getAlbumById(trial.albumId);
+      if (album) {
+        albumTitle = album.title;
+      }
+    }
+
+    if (!albumTitle) {
+      console.error("No album title found for trial:", trial.id);
+      return;
+    }
+
     // Send buyer confirmation template
     const confirmationSent = await sendFreeTrialConfirmation(
       recipientNumber,
       trial.buyerName,
       trial.storytellerName,
-      trial.selectedAlbum,
+      albumTitle,
     );
 
     if (!confirmationSent) {
@@ -297,8 +311,13 @@ async function handleMultipleActiveTrials(
     // All questions are answered - this shouldn't happen if trial is in_progress
     // but handle it gracefully
     console.log("All questions answered for trial:", trial.id);
+    const albumIdentifier = getAlbumIdentifier(trial);
+    if (!albumIdentifier) {
+      console.error("No album identifier found for trial:", trial.id);
+      return;
+    }
     const totalQuestions = await storage.getTotalQuestionsForAlbum(
-      trial.selectedAlbum,
+      albumIdentifier,
       trial.storytellerLanguagePreference,
     );
     if (trial.currentQuestionIndex >= totalQuestions - 1) {
@@ -615,11 +634,23 @@ async function handleInitialContact(
   // Cancel scheduled check-in if user makes initial contact
   await cancelScheduledCheckin(trial.id);
 
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
+  // Get album to get title for display
+  let album = await storage.getAlbumById(albumIdentifier);
+  if (!album) {
+    album = await storage.getAlbumByTitle(albumIdentifier);
+  }
+  const albumTitle = album?.title || albumIdentifier;
+
   await sendStorytellerOnboarding(
     fromNumber,
     trial.storytellerName,
     trial.buyerName,
-    trial.selectedAlbum,
+    albumTitle,
     trial.storytellerLanguagePreference,
   );
 
@@ -832,6 +863,13 @@ async function handleReadinessResponse(
   }
 }
 
+/**
+ * Helper function to get album identifier (ID preferred, fallback to name for backward compatibility)
+ */
+function getAlbumIdentifier(trial: any): string | null {
+  return trial.albumId || trial.selectedAlbum || null;
+}
+
 async function getNextUnansweredQuestion(trial: any): Promise<number | null> {
   console.log("getNextUnansweredQuestion called:", {
     trialId: trial.id,
@@ -850,8 +888,13 @@ async function getNextUnansweredQuestion(trial: any): Promise<number | null> {
   );
 
   // Get total questions count
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return null;
+  }
   const totalQuestions = await storage.getTotalQuestionsForAlbum(
-    trial.selectedAlbum,
+    albumIdentifier,
     trial.storytellerLanguagePreference,
   );
 
@@ -885,12 +928,19 @@ export async function sendQuestion(
   questionIndex?: number,
   isReminder: boolean = false,
 ): Promise<void> {
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
+
   console.log("sendQuestion called:", {
     trialId: trial.id,
     fromNumber,
     questionIndex,
     currentQuestionIndex: trial.currentQuestionIndex,
-    selectedAlbum: trial.selectedAlbum,
+    albumId: trial.albumId,
+    albumIdentifier,
   });
 
   // const isProduction = process.env.NODE_ENV === "production";
@@ -904,7 +954,7 @@ export async function sendQuestion(
     targetQuestionIndex,
   );
   const question = await storage.getQuestionByIndex(
-    trial.selectedAlbum,
+    albumIdentifier,
     targetQuestionIndex,
     trial.storytellerLanguagePreference,
   );
@@ -912,7 +962,7 @@ export async function sendQuestion(
   if (!question) {
     console.error(
       "No question found for album:",
-      trial.selectedAlbum,
+      albumIdentifier,
       "index:",
       targetQuestionIndex,
     );
@@ -921,9 +971,9 @@ export async function sendQuestion(
 
   // Check if this is a conversational album and first question in a batch
   // For conversational albums, batches are every 3 questions (0, 3, 6, 9, etc.)
-  let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+  let album = await storage.getAlbumById(albumIdentifier);
   if (!album) {
-    album = await storage.getAlbumById(trial.selectedAlbum);
+    album = await storage.getAlbumByTitle(albumIdentifier);
   }
   const isConversationalAlbum = album?.isConversationalAlbum === true;
   const isFirstQuestionInBatch =
@@ -1030,8 +1080,13 @@ async function handleVoiceNote(
   const audioId = message.audio.id;
   const mimeType = message.audio.mime_type;
 
+  const albumIdentifier = trial.albumId;
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
   const currentQuestion = await storage.getQuestionByIndex(
-    trial.selectedAlbum,
+    albumIdentifier,
     trial.currentQuestionIndex,
     trial.storytellerLanguagePreference,
   );
@@ -1081,10 +1136,13 @@ async function handleVoiceNote(
     }
   }
 
-  // Get album info to check if it's conversational
-  let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
+  let album = await storage.getAlbumById(albumIdentifier);
   if (!album) {
-    album = await storage.getAlbumById(trial.selectedAlbum);
+    album = await storage.getAlbumByTitle(albumIdentifier);
   }
 
   const isConversationalAlbum = album?.isConversationalAlbum === true;

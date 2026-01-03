@@ -626,11 +626,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { normalizePhoneNumber } = await import("./whatsapp");
       const normalizedPhone = normalizePhoneNumber(validatedData.customerPhone);
 
+      // Get album to verify it exists and get title for tracking
+      const album = await storage.getAlbumById(validatedData.albumId);
+      if (!album) {
+        return res.status(400).json({ error: "Invalid album ID" });
+      }
+
       const trial = await storage.createFreeTrialDb({
         customerPhone: normalizedPhone,
         buyerName: validatedData.buyerName,
         storytellerName: validatedData.storytellerName,
-        selectedAlbum: validatedData.selectedAlbum,
+        albumId: validatedData.albumId,
+        selectedAlbum: album.title, // Populate for backward compatibility
         storytellerLanguagePreference:
           validatedData.storytellerLanguagePreference,
       });
@@ -639,7 +646,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use trial ID as distinct ID (no PII)
       trackServerEvent(trial.id, "free_trial_created", {
         trial_id: trial.id,
-        album_title: validatedData.selectedAlbum,
+        album_id: validatedData.albumId,
+        album_title: album.title,
         language_preference: validatedData.storytellerLanguagePreference,
         // Don't include phone, names, or other PII
       });
@@ -685,9 +693,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fetch album ONCE at the beginning
-      let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+      // Use albumId if available, fallback to selectedAlbum for backward compatibility
+      const albumIdentifier = trial.albumId;
+      if (!albumIdentifier) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+      let album = await storage.getAlbumById(albumIdentifier);
       if (!album) {
-        album = await storage.getAlbumById(trial.selectedAlbum);
+        album = await storage.getAlbumByTitle(albumIdentifier);
       }
       if (!album) {
         return res.status(404).json({ error: "Album not found" });
@@ -760,7 +773,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: trial.id,
           storytellerName: trial.storytellerName,
           buyerName: trial.buyerName,
-          selectedAlbum: trial.selectedAlbum,
+          albumId: trial.albumId || album.id,
+          selectedAlbum: album.title, // Keep for backward compatibility
         },
         album: {
           description: albumDescription,

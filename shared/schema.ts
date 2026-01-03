@@ -89,7 +89,7 @@ export const insertFreeTrialSchema = z.object({
   storytellerName: z
     .string()
     .min(2, "Storyteller name must be at least 2 characters"),
-  selectedAlbum: z.string().min(2, "Album selection is required"),
+  albumId: z.string().uuid("Album ID must be a valid UUID"),
   storytellerLanguagePreference: z.enum(["en", "hn"]).default("en"),
 });
 
@@ -245,7 +245,10 @@ export const freeTrials = pgTable(
     customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
     buyerName: varchar("buyer_name", { length: 255 }).notNull(),
     storytellerName: varchar("storyteller_name", { length: 255 }).notNull(),
-    selectedAlbum: varchar("selected_album", { length: 255 }).notNull(),
+    albumId: varchar("album_id", { length: 255 })
+      .notNull()
+      .references(() => albums.id, { onDelete: "restrict" }),
+    selectedAlbum: varchar("selected_album", { length: 255 }), // Optional, kept for backward compatibility
     storytellerPhone: varchar("storyteller_phone", { length: 20 }),
     conversationState: varchar("conversation_state", { length: 50 })
       .notNull()

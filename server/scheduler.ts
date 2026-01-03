@@ -28,8 +28,14 @@ export async function sendScheduledQuestions(): Promise<void> {
       continue;
     }
 
+    // Use albumId if available, fallback to selectedAlbum for backward compatibility
+    const albumIdentifier = trial.albumId;
+    if (!albumIdentifier) {
+      console.error("No album identifier found for trial:", trial.id);
+      continue;
+    }
     const question = await storage.getQuestionByIndex(
-      trial.selectedAlbum,
+      albumIdentifier,
       trial.currentQuestionIndex,
       trial.storytellerLanguagePreference,
     );
@@ -116,9 +122,15 @@ export async function sendPendingReminders(): Promise<void> {
     }
 
     // Check if it's a conversational album
-    let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+    // Use albumId if available, fallback to selectedAlbum for backward compatibility
+    const albumIdentifier = trial.albumId;
+    if (!albumIdentifier) {
+      console.error("No album identifier found for trial:", trial.id);
+      continue;
+    }
+    let album = await storage.getAlbumById(albumIdentifier);
     if (!album) {
-      album = await storage.getAlbumById(trial.selectedAlbum);
+      album = await storage.getAlbumByTitle(albumIdentifier);
     }
     const isConversationalAlbum = album?.isConversationalAlbum === true;
 

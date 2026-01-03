@@ -515,9 +515,13 @@ export class DatabaseStorage implements IStorage {
     const filteredTrials = [];
     for (const trial of trials) {
       // Check if it's a conversational album
-      let album = await this.getAlbumByTitle(trial.selectedAlbum);
-      if (!album) {
-        album = await this.getAlbumById(trial.selectedAlbum);
+      // Use albumId if available, fallback to selectedAlbum for backward compatibility
+      const albumIdentifier = trial.albumId;
+      let album = albumIdentifier
+        ? await this.getAlbumById(albumIdentifier)
+        : null;
+      if (!album && albumIdentifier) {
+        album = await this.getAlbumByTitle(albumIdentifier);
       }
       const isConversationalAlbum = album?.isConversationalAlbum === true;
 
