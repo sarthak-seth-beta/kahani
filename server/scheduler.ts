@@ -255,6 +255,65 @@ export async function sendBuyerRemindersForNoStorytellerContact(): Promise<void>
   }
 }
 
+export async function sendBuyerCheckins(): Promise<void> {
+  const trials = await storage.getTrialsNeedingBuyerCheckin();
+
+  console.log(`Found ${trials.length} trials needing buyer check-in`);
+
+  for (const trial of trials) {
+    if (!trial.customerPhone) {
+      console.log("Skipping trial without customer phone:", trial.id);
+      continue;
+    }
+
+    // Double-check that buyer check-in hasn't been sent (race condition protection)
+    const currentTrial = await storage.getFreeTrialDb(trial.id);
+    if (!currentTrial) {
+      console.log("Trial no longer exists, skipping:", trial.id);
+      continue;
+    }
+
+    if (currentTrial.buyerCheckinSentAt) {
+      console.log("Buyer check-in already sent for trial, skipping:", trial.id);
+      continue;
+    }
+
+    // Only send buyer check-in if storyteller hasn't responded
+    // Check if buyer check-in was cancelled (buyerCheckinScheduledFor is null)
+    if (!currentTrial.buyerCheckinScheduledFor) {
+      console.log(
+        "Buyer check-in was cancelled (storyteller responded), skipping:",
+        trial.id,
+      );
+      continue;
+    }
+
+    try {
+      const buyerCheckinSent = await sendBuyerCheckin(
+        trial.customerPhone,
+        trial.buyerName,
+        trial.storytellerName,
+      );
+
+      if (buyerCheckinSent) {
+        await storage.updateFreeTrialDb(trial.id, {
+          buyerCheckinSentAt: new Date(),
+          buyerCheckinScheduledFor: null,
+        });
+
+        console.log("Sent buyer check-in to trial:", trial.id);
+      } else {
+        console.log(
+          "Failed to send buyer check-in template for trial:",
+          trial.id,
+        );
+      }
+    } catch (error) {
+      console.error("Error sending buyer check-in:", trial.id, error);
+    }
+  }
+}
+
 export async function sendStorytellerCheckins(): Promise<void> {
   const trials = await storage.getTrialsNeedingCheckin();
 
@@ -286,39 +345,29 @@ export async function sendStorytellerCheckins(): Promise<void> {
       );
 
       if (checkinSent) {
-        await storage.updateFreeTrialDb(trial.id, {
-          storytellerCheckinSentAt: new Date(),
+        const now = new Date();
+        const buyerCheckinScheduledFor = new Date(
+          now.getTime() + 24 * 60 * 60 * 1000,
+        ); // 24 hours from now
+
+        const updateData: any = {
+          storytellerCheckinSentAt: now,
           storytellerCheckinScheduledFor: null,
-        });
+        };
 
-        console.log("Sent storyteller check-in to trial:", trial.id);
-
-        // Also send check-in to buyer/customer if phone number exists
+        // Schedule buyer check-in for 24 hours later if customer phone exists
         if (trial.customerPhone) {
-          try {
-            const buyerCheckinSent = await sendBuyerCheckin(
-              trial.customerPhone,
-              trial.buyerName,
-              trial.storytellerName,
-            );
-
-            if (buyerCheckinSent) {
-              console.log("Sent buyer check-in to trial:", trial.id);
-            } else {
-              console.log(
-                "Failed to send buyer check-in template for trial:",
-                trial.id,
-              );
-            }
-          } catch (buyerError) {
-            console.error(
-              "Error sending buyer check-in:",
-              trial.id,
-              buyerError,
-            );
-            // Don't fail the entire process if buyer check-in fails
-          }
+          updateData.buyerCheckinScheduledFor = buyerCheckinScheduledFor;
         }
+
+        await storage.updateFreeTrialDb(trial.id, updateData);
+
+        console.log("Sent storyteller check-in to trial:", {
+          trialId: trial.id,
+          buyerCheckinScheduledFor: trial.customerPhone
+            ? buyerCheckinScheduledFor
+            : null,
+        });
       } else {
         console.log(
           "Failed to send storyteller check-in template for trial:",
@@ -351,6 +400,8 @@ export async function processScheduledTasks(): Promise<void> {
     await sendBuyerRemindersForNoStorytellerContact();
 
     await sendStorytellerCheckins();
+
+    await sendBuyerCheckins();
 
     console.log("Scheduled tasks completed");
   } catch (error) {

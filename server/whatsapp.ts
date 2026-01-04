@@ -769,6 +769,12 @@ export function getLocalizedMessage(
       en: "Wonderful! I'm listening. Here's one more question... ✨🎙️",
       hn: "बहुत बढ़िया! मैं सुन रही हूँ। यहाँ एक और प्रश्न है... ✨🎙️",
     },
+    checkinLaterResponse: {
+      en: (name: string) =>
+        `Sure ${name}. I will resend my last question in a little while. Cannot wait to hear your story. 🤍`,
+      hn: (name: string) =>
+        `ज़रूर ${name}। मैं अपना पिछला सवाल थोड़ी देर में फिर से भेज दूँगी। आपकी कहानी सुनने का इंतज़ार रहेगा। 🤍`,
+    },
   };
 
   const messageConfig = messages[messageKey];
