@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,11 +10,10 @@ import HeroSection from "@/components/HeroSection";
 import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
+import GetStartedSection from "@/components/GetStartedSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
-// import SectionFourAlbums from "@/components/SectionFourAlbums";
 import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
-import SectionSixCTA from "@/components/SectionSixCTA";
 import { Footer } from "@/components/Footer";
 import Checkout from "@/pages/Checkout";
 import FreeTrialCheckout from "@/pages/FreeTrialCheckout";
@@ -27,6 +26,8 @@ import DataDeletion from "@/pages/DataDeletion";
 import Affiliate from "@/pages/Affiliate";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
+import FAQs from "@/pages/FAQs";
+import CompanyLegal from "@/pages/CompanyLegal";
 import Blogs from "@/pages/Blogs";
 import AlbumsGallery from "@/pages/AlbumsGallery";
 import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
@@ -41,21 +42,22 @@ import { trackPageView } from "@/lib/analytics";
 
 function HomePage() {
   const [, setLocation] = useLocation();
+  const [isPlayerActive, setIsPlayerActive] = useState(false);
+
+  const handleHearKahaniClick = () => {
+    setIsPlayerActive(true);
+  };
+
+  const handlePlayerInactive = () => {
+    setIsPlayerActive(false);
+  };
 
   const handleRecordClick = () => {
     setLocation("/free-trial-checkout");
   };
 
-  const handleStartTrialClick = () => {
-    setLocation("/free-trial-checkout");
-  };
-
   const handleLearnMore = () => {
     setLocation("/how-to-use");
-  };
-
-  const handleTryDemo = () => {
-    setLocation("/playlist-albums/demo-album-id");
   };
 
   return (
@@ -64,13 +66,13 @@ function HomePage() {
       <SimpleHeader onRecordClick={handleRecordClick} />
 
       {/* Bottom Home Navbar - Fixed at bottom */}
-      <BottomHomeNavbar onRecordClick={handleRecordClick} />
+      <BottomHomeNavbar isActive={isPlayerActive} onInactive={handlePlayerInactive} />
 
       {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
       {/* <div className="h-20" /> */}
 
       {/* Hero Section - Full Screen with Button */}
-      <HeroSection onStartTrialClick={handleStartTrialClick} />
+      <HeroSection onHearKahaniClick={handleHearKahaniClick} />
 
       {/* Value Proposition with Logo */}
       <ValueProposition />
@@ -81,21 +83,19 @@ function HomePage() {
       {/* How It Works Section */}
       <HowItWorksSection />
 
+      {/* Get Started Section */}
+      <GetStartedSection />
+
       {/* Section 4 - Albums (Moved above Testimonials) */}
-      {/* <SectionFourAlbums onTryDemo={handleTryDemo} /> */}
       <SectionFourAlbumsNew />
 
       {/* Section 5 - FAQs */}
       <SectionFiveFAQs />
 
-      {/* Section 6 - Final CTA */}
-      <SectionSixCTA onStartTrial={handleStartTrialClick} />
-
       {/* Footer */}
       <Footer />
 
-      {/* Spacer for bottom navbar */}
-      <div className="h-24 md:h-20" />
+
     </div>
   );
 }
@@ -125,6 +125,7 @@ function App() {
           <Route path="/about-us" component={AboutUs} />
           <Route path="/affiliate" component={Affiliate} />
           <Route path="/contact-us" component={ContactUs} />
+          <Route path="/faqs" component={FAQs} />
           <Route path="/blogs" component={Blogs} />
           <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
           <Route
@@ -138,6 +139,7 @@ function App() {
             component={CustomAlbumCover}
           />
           <Route path="/yl-personal-support" component={YlPersonalSupport} />
+          <Route path="/company-legal" component={CompanyLegal} />
           <Route path="/enzo-xyz" component={Admin} />
           <Route path="/enzo-xyz/albums" component={ManageAlbums} />
           <Route component={NotFound} />

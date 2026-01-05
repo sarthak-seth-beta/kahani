@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowRight } from "lucide-react";
+import { useLocation } from "wouter";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface FAQItem {
@@ -18,6 +19,16 @@ const defaultFAQs: FAQItem[] = [
       "You absolutely can… but you never will. Life gets busy, parents get shy, recordings stay unfinished. Kahani makes it effortless - we ask the right questions, at the right pace, and turn everything into a real album your family can keep forever.",
   },
   {
+    question: "Will they understand how to use this? They're not tech-savvy.",
+    answer:
+      "If they can send a WhatsApp voice note, they can create a Kahani. No app. No login. No password. Just open, talk, done.",
+  },
+  {
+    question: "What language can they speak in?",
+    answer:
+      "Any language they live in - Hindi, English, Tamil, Bengali, Kannada, Gujarati, Punjabi… everything works. Their natural voice is the point.",
+  },
+  {
     question: "So… what exactly is Kahani?",
     answer:
       "Kahani captures your loved ones' stories and voice through simple WhatsApp messages and turns them into a private audio album your whole family can listen to forever.",
@@ -31,16 +42,6 @@ const defaultFAQs: FAQItem[] = [
     question: "How does Kahani talk to my parents/grandparents?",
     answer:
       "Exactly like family. Warm WhatsApp questions, gentle pacing, no pressure. They tap the mic, speak in their own way, and we do everything else.",
-  },
-  {
-    question: "Will they understand how to use this? They're not tech-savvy.",
-    answer:
-      "If they can send a WhatsApp voice note, they can create a Kahani. No app. No login. No password. Just open, talk, done.",
-  },
-  {
-    question: "What language can they speak in?",
-    answer:
-      "Any language they live in - Hindi, English, Tamil, Bengali, Kannada, Gujarati, Punjabi… everything works. Their natural voice is the point.",
   },
   {
     question: "Is everything private?",
@@ -67,6 +68,7 @@ const defaultFAQs: FAQItem[] = [
 export default function SectionFiveFAQs({
   faqs = defaultFAQs,
 }: SectionFiveFAQsProps) {
+  const [, setLocation] = useLocation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
@@ -91,13 +93,13 @@ export default function SectionFiveFAQs({
     <section id="faqs" className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-3xl mx-auto space-y-8 sm:space-y-10">
         {/* FAQs Heading */}
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
           Frequently Asked Questions
         </h2>
 
         {/* FAQ Accordion */}
         <div className="space-y-4">
-          {faqs.map((faq, index) => (
+          {faqs.slice(0, 3).map((faq, index) => (
             <div
               key={index}
               className="bg-[#EEE9DF]/50 rounded-2xl overflow-hidden shadow-sm"
@@ -114,19 +116,17 @@ export default function SectionFiveFAQs({
                   {faq.question}
                 </span>
                 <ChevronDown
-                  className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${
-                    openIndex === index ? "rotate-180" : ""
-                  }`}
+                  className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${openIndex === index ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
               {/* Answer Body */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  openIndex === index
-                    ? "max-h-96 opacity-100"
-                    : "max-h-0 opacity-0"
-                }`}
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index
+                  ? "max-h-96 opacity-100"
+                  : "max-h-0 opacity-0"
+                  }`}
               >
                 {openIndex === index && (
                   <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
@@ -143,10 +143,18 @@ export default function SectionFiveFAQs({
           ))}
         </div>
 
-        {/* Closure Text */}
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center leading-tight font-['Outfit'] pt-8 border-t border-[#1B2632]/10">
-          Keep stories alive, because stories are what make us.
-        </h2>
+        {/* Contact Us & View All Links */}
+        <div className="text-center space-y-4 flex flex-col items-center">
+          <button
+            onClick={() => setLocation("/faqs")}
+            className="group inline-flex items-center gap-2 text-sm font-medium text-[#1B2632] hover:text-[#A35139] transition-colors"
+          >
+            <span className="border-b border-transparent group-hover:border-[#A35139] transition-all">
+              View all FAQs
+            </span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
       </div>
     </section>
   );
