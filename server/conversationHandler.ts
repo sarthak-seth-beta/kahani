@@ -415,7 +415,7 @@ async function handleBuyerSendingStorytellerMessage(
   // Send polite message with emojis
   // const message = `Hi ${trial.buyerName}! 👋\n\nLooks like you clicked on the link that was meant for ${trial.storytellerName}. 😊\n\nNo worries! Please *copy this link and send it to ${trial.storytellerName}*:\n\n${whatsappLink}\n\nThey just need to click the link and send the pre-filled message - that's it! ✨\n\nHope to hear from them soon! ❤️`;
 
-  const message = `"This link is for your ${trial.storytellerName}. \nPlease copy the message above and send it to them. \nOnce they tap the link and message me, I will begin."`;
+  const message = `This link is for your ${trial.storytellerName}. \nPlease copy the message above and send it to them. \nOnce they tap the link and message me, I will begin.`;
   await sendTextMessageWithRetry(fromNumber, message);
 }
 
