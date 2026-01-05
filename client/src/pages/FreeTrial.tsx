@@ -65,18 +65,25 @@ export default function FreeTrial() {
       const album = albums.find((a) => a.id === albumIdFromUrl);
       if (album)
         return {
+          id: album.id,
           title: album.title,
           cover_image: album.cover_image,
           questions: album.questions || [],
         };
     }
-    // Fallback to title from URL (backward compatibility) or default
-    return {
-      title: albumTitleFromUrl || "Our Family History",
-      cover_image:
-        "https://images.unsplash.com/photo-1542038784456-1ea8c935640e?q=80&w=2670&auto=format&fit=crop", // Default image
-      questions: [],
-    };
+    // Fallback: try to find by title from URL (backward compatibility)
+    if (albumTitleFromUrl && albums) {
+      const album = albums.find((a) => a.title === albumTitleFromUrl);
+      if (album)
+        return {
+          id: album.id,
+          title: album.title,
+          cover_image: album.cover_image,
+          questions: album.questions || [],
+        };
+    }
+    // No valid album found
+    return null;
   }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
   const form = useForm<FreeTrialFormData>({
@@ -85,22 +92,23 @@ export default function FreeTrial() {
       customerPhone: "",
       buyerName: "",
       storytellerName: "",
-      selectedAlbum: selectedAlbum.title,
+      albumId: selectedAlbum?.id || "",
       storytellerLanguagePreference: "en",
     },
   });
 
-  // Update form when album title is determined
+  // Update form when album is determined
   useEffect(() => {
-    if (selectedAlbum.title) {
-      form.setValue("selectedAlbum", selectedAlbum.title);
+    if (selectedAlbum?.id) {
+      form.setValue("albumId", selectedAlbum.id);
     }
-  }, [selectedAlbum.title, form]);
+  }, [selectedAlbum?.id, form]);
 
   const freeTrialMutation = useMutation({
     mutationFn: async (data: FreeTrialFormData) => {
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_STARTED, {
-        album_title: data.selectedAlbum,
+        album_id: data.albumId,
+        album_title: selectedAlbum?.title,
         language_preference: data.storytellerLanguagePreference,
       });
       const response = await apiRequest("POST", "/api/free-trial", data);
@@ -108,7 +116,7 @@ export default function FreeTrial() {
         const errorData = await response.json();
         trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_ERROR, {
           error_message: errorData.error || "Failed to sign up",
-          album_title: data.selectedAlbum,
+          album_id: data.albumId,
         });
         throw new Error(errorData.error || "Failed to sign up");
       }
@@ -119,7 +127,8 @@ export default function FreeTrial() {
 
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
         trial_id: trial.id,
-        album_title: form.getValues("selectedAlbum"),
+        album_id: form.getValues("albumId"),
+        album_title: selectedAlbum?.title,
         language_preference: form.getValues("storytellerLanguagePreference"),
       });
 
@@ -155,8 +164,8 @@ export default function FreeTrial() {
           <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-4">
             <div className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
               <img
-                src={selectedAlbum.cover_image}
-                alt={selectedAlbum.title}
+                src={selectedAlbum?.cover_image}
+                alt={selectedAlbum?.title}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -165,7 +174,7 @@ export default function FreeTrial() {
                 Selected Album
               </p>
               <h3 className="text-sm sm:text-xl font-bold text-[#1B2632] line-clamp-2 break-words">
-                {selectedAlbum.title}
+                {selectedAlbum?.title}
               </h3>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 bg-[#A35139]/10 px-2 sm:px-4 py-1.5 sm:py-2 rounded-full flex-shrink-0">
@@ -180,7 +189,7 @@ export default function FreeTrial() {
           </div>
 
           {/* Questions Dropdown */}
-          {selectedAlbum.questions && selectedAlbum.questions.length > 0 && (
+          {selectedAlbum?.questions && selectedAlbum.questions.length > 0 && (
             <>
               <div className="border-t border-[#C9C1B1]/30"></div>
               <Accordion type="single" collapsible className="w-full">
@@ -402,7 +411,7 @@ export default function FreeTrial() {
               {/* Hidden field for selected album */}
               <FormField
                 control={form.control}
-                name="selectedAlbum"
+                name="albumId"
                 render={({ field }) => <input type="hidden" {...field} />}
               />
 

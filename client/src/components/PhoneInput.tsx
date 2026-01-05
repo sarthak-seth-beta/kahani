@@ -152,7 +152,9 @@ export function PhoneInput({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.replace(/\D/g, ""); // Only digits
-    setPhoneNumber(input);
+    // Limit to 10 digits
+    const limitedInput = input.slice(0, 10);
+    setPhoneNumber(limitedInput);
   };
 
   const handleCountryChange = (countryCode: string) => {
@@ -244,6 +246,7 @@ export function PhoneInput({
         onChange={handlePhoneChange}
         placeholder={placeholder}
         className="h-12 text-base flex-1"
+        maxLength={10}
       />
     </div>
   );

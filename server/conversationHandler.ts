@@ -204,12 +204,26 @@ async function resendBuyerOnboardingTemplates(
       recipientNumber,
     });
 
+    // Get album title from albumId
+    let albumTitle = trial.selectedAlbum; // Fallback to selectedAlbum if available
+    if (trial.albumId) {
+      const album = await storage.getAlbumById(trial.albumId);
+      if (album) {
+        albumTitle = album.title;
+      }
+    }
+
+    if (!albumTitle) {
+      console.error("No album title found for trial:", trial.id);
+      return;
+    }
+
     // Send buyer confirmation template
     const confirmationSent = await sendFreeTrialConfirmation(
       recipientNumber,
       trial.buyerName,
       trial.storytellerName,
-      trial.selectedAlbum,
+      albumTitle,
     );
 
     if (!confirmationSent) {
@@ -297,8 +311,13 @@ async function handleMultipleActiveTrials(
     // All questions are answered - this shouldn't happen if trial is in_progress
     // but handle it gracefully
     console.log("All questions answered for trial:", trial.id);
+    const albumIdentifier = getAlbumIdentifier(trial);
+    if (!albumIdentifier) {
+      console.error("No album identifier found for trial:", trial.id);
+      return;
+    }
     const totalQuestions = await storage.getTotalQuestionsForAlbum(
-      trial.selectedAlbum,
+      albumIdentifier,
       trial.storytellerLanguagePreference,
     );
     if (trial.currentQuestionIndex >= totalQuestions - 1) {
@@ -320,6 +339,8 @@ async function handleInProgressTextMessage(
 ): Promise<void> {
   // Cancel scheduled check-in if user sends text message
   await cancelScheduledCheckin(trial.id);
+  // Cancel buyer check-in if storyteller responds
+  await cancelBuyerCheckin(trial.id);
 
   const { orderId } = extractOrderId(messageText);
 
@@ -394,7 +415,7 @@ async function handleBuyerSendingStorytellerMessage(
   // Send polite message with emojis
   // const message = `Hi ${trial.buyerName}! 👋\n\nLooks like you clicked on the link that was meant for ${trial.storytellerName}. 😊\n\nNo worries! Please *copy this link and send it to ${trial.storytellerName}*:\n\n${whatsappLink}\n\nThey just need to click the link and send the pre-filled message - that's it! ✨\n\nHope to hear from them soon! ❤️`;
 
-  const message = `"This link is for your ${trial.storytellerName}. \nPlease copy the message above and send it to them. \nOnce they tap the link and message me, I will begin."`;
+  const message = `This link is for your ${trial.storytellerName}. \nPlease copy the message above and send it to them. \nOnce they tap the link and message me, I will begin.`;
   await sendTextMessageWithRetry(fromNumber, message);
 }
 
@@ -533,6 +554,27 @@ export async function handleIncomingMessage(
     }
   }
 
+  // Check for check-in button responses
+  // This should be checked before normal state routing
+  if (
+    trial.storytellerCheckinSentAt &&
+    (messageType === "button" || messageType === "interactive")
+  ) {
+    const responseText =
+      messageType === "button" || messageType === "interactive"
+        ? interactiveText
+        : messageText;
+    const isCheckinResponse = await handleCheckinResponse(
+      trial,
+      fromNumber,
+      responseText,
+    );
+    if (isCheckinResponse) {
+      console.log("Handled check-in response, returning early");
+      return;
+    }
+  }
+
   // Route to appropriate handler based on conversation state
   switch (trial.conversationState) {
     case "awaiting_initial_contact":
@@ -614,16 +656,30 @@ async function handleInitialContact(
 ): Promise<void> {
   // Cancel scheduled check-in if user makes initial contact
   await cancelScheduledCheckin(trial.id);
+  // Cancel buyer check-in if storyteller responds
+  await cancelBuyerCheckin(trial.id);
+
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
+  // Get album to get title for display
+  let album = await storage.getAlbumById(albumIdentifier);
+  if (!album) {
+    album = await storage.getAlbumByTitle(albumIdentifier);
+  }
+  const albumTitle = album?.title || albumIdentifier;
 
   await sendStorytellerOnboarding(
     fromNumber,
     trial.storytellerName,
     trial.buyerName,
-    trial.selectedAlbum,
+    albumTitle,
     trial.storytellerLanguagePreference,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 45000));
 
   await sendHowToUseKahani(
     fromNumber,
@@ -631,7 +687,7 @@ async function handleInitialContact(
     trial.storytellerLanguagePreference,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 45000));
 
   await askReadiness(trial, fromNumber);
 
@@ -653,10 +709,10 @@ export async function askReadiness(
   );
 
   // Set retryReadinessAt if not already set (for initial readiness checks)
-  // This ensures ignored readiness checks get retried after 10 hours
+  // This ensures ignored readiness checks get retried after 24 hours
   const retryReadinessAt = trial.retryReadinessAt
     ? undefined
-    : new Date(Date.now() + 10 * 60 * 60 * 1000); // 10 hours from now
+    : new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 
   await storage.updateFreeTrialDb(trial.id, {
     readinessAskedAt: new Date(),
@@ -832,6 +888,190 @@ async function handleReadinessResponse(
   }
 }
 
+/**
+ * Handles check-in button responses from storyteller_checkin template
+ * Returns true if the response was a check-in button, false otherwise
+ */
+async function handleCheckinResponse(
+  trial: any,
+  fromNumber: string,
+  response: string,
+): Promise<boolean> {
+  console.log("handleCheckinResponse called:", {
+    trialId: trial.id,
+    fromNumber,
+    response,
+    responseLength: response.length,
+  });
+
+  // Normalize response: lowercase, trim, and normalize apostrophes/quotes
+  let normalizedResponse = response.toLowerCase().trim();
+
+  // Define button patterns for check-in responses
+  const continueButtonPatterns = ["continue", "जारी रखें"];
+  const laterButtonPatterns = ["later", "बाद में"];
+
+  // Check for button responses (exact match)
+  const isContinueButton = continueButtonPatterns.some(
+    (pattern) => normalizedResponse === pattern,
+  );
+  const isLaterButton = laterButtonPatterns.some(
+    (pattern) => normalizedResponse === pattern,
+  );
+
+  console.log("Check-in button pattern matching:", {
+    isContinueButton,
+    isLaterButton,
+    normalizedResponse,
+  });
+
+  if (isContinueButton) {
+    console.log("Processing Continue response for check-in");
+    await handleCheckinContinue(trial, fromNumber);
+    return true;
+  } else if (isLaterButton) {
+    console.log("Processing Later response for check-in");
+    await handleCheckinLater(trial, fromNumber);
+    return true;
+  }
+
+  // Not a check-in response
+  return false;
+}
+
+/**
+ * Handles "Continue" button response from check-in
+ * Sends the last unanswered question immediately
+ */
+async function handleCheckinContinue(
+  trial: any,
+  fromNumber: string,
+): Promise<void> {
+  console.log("handleCheckinContinue called:", {
+    trialId: trial.id,
+    fromNumber,
+  });
+
+  // Cancel buyer check-in since storyteller responded
+  await cancelBuyerCheckin(trial.id);
+
+  // Get the last unanswered question
+  const nextQuestionIndex = await getNextUnansweredQuestion(trial);
+
+  if (nextQuestionIndex !== null) {
+    // Update conversation state to in_progress if needed
+    const updateData: any = {
+      questionReminderCount: 0,
+      retryCount: 0,
+    };
+
+    if (
+      trial.conversationState !== "in_progress" &&
+      trial.conversationState !== "completed"
+    ) {
+      updateData.conversationState = "in_progress";
+    }
+
+    await storage.updateFreeTrialDb(trial.id, updateData);
+
+    // Refresh trial to get updated state
+    const updatedTrial = await storage.getFreeTrialDb(trial.id);
+    if (!updatedTrial) {
+      console.error("Failed to refresh trial after update:", trial.id);
+      return;
+    }
+
+    // Send the question
+    console.log("Sending last unanswered question after Continue:", {
+      trialId: updatedTrial.id,
+      questionIndex: nextQuestionIndex,
+    });
+    await sendQuestion(updatedTrial, fromNumber, nextQuestionIndex);
+  } else {
+    // All questions are completed - do nothing as per requirement
+    console.log(
+      "All questions completed, doing nothing for Continue response:",
+      {
+        trialId: trial.id,
+      },
+    );
+  }
+}
+
+/**
+ * Handles "Later" button response from check-in
+ * Sends acknowledgment message and schedules question for 10 hours later
+ */
+async function handleCheckinLater(
+  trial: any,
+  fromNumber: string,
+): Promise<void> {
+  console.log("handleCheckinLater called:", {
+    trialId: trial.id,
+    fromNumber,
+  });
+
+  // Cancel buyer check-in since storyteller responded
+  await cancelBuyerCheckin(trial.id);
+
+  // Send localized acknowledgment message immediately
+  const laterMessage = getLocalizedMessage(
+    "checkinLaterResponse",
+    trial.storytellerLanguagePreference,
+    {
+      name: trial.storytellerName,
+    },
+  );
+  await sendTextMessageWithRetry(fromNumber, laterMessage);
+
+  // Get the last unanswered question
+  const nextQuestionIndex = await getNextUnansweredQuestion(trial);
+
+  if (nextQuestionIndex !== null) {
+    // Schedule question for 10 hours later
+    const now = new Date();
+    const nextQuestionScheduledFor = new Date(
+      now.getTime() + 10 * 60 * 60 * 1000,
+    ); // 10 hours from now
+
+    const updateData: any = {
+      nextQuestionScheduledFor,
+      questionReminderCount: 0,
+      retryCount: 0,
+    };
+
+    // Update conversation state to in_progress if needed
+    if (trial.conversationState !== "in_progress") {
+      updateData.conversationState = "in_progress";
+    }
+
+    await storage.updateFreeTrialDb(trial.id, updateData);
+
+    console.log("Scheduled question for 10 hours after Later response:", {
+      trialId: trial.id,
+      questionIndex: nextQuestionIndex,
+      nextQuestionScheduledFor,
+    });
+  } else {
+    // All questions are completed
+    console.log("All questions completed for Later response:", {
+      trialId: trial.id,
+    });
+    // Still reset counters
+    await storage.updateFreeTrialDb(trial.id, {
+      questionReminderCount: 0,
+      retryCount: 0,
+    });
+  }
+}
+
+/**
+ * Helper function to get album identifier (ID preferred, fallback to name for backward compatibility)
+ */
+function getAlbumIdentifier(trial: any): string | null {
+  return trial.albumId || trial.selectedAlbum || null;
+}
+
 async function getNextUnansweredQuestion(trial: any): Promise<number | null> {
   console.log("getNextUnansweredQuestion called:", {
     trialId: trial.id,
@@ -850,8 +1090,13 @@ async function getNextUnansweredQuestion(trial: any): Promise<number | null> {
   );
 
   // Get total questions count
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return null;
+  }
   const totalQuestions = await storage.getTotalQuestionsForAlbum(
-    trial.selectedAlbum,
+    albumIdentifier,
     trial.storytellerLanguagePreference,
   );
 
@@ -885,12 +1130,19 @@ export async function sendQuestion(
   questionIndex?: number,
   isReminder: boolean = false,
 ): Promise<void> {
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
+
   console.log("sendQuestion called:", {
     trialId: trial.id,
     fromNumber,
     questionIndex,
     currentQuestionIndex: trial.currentQuestionIndex,
-    selectedAlbum: trial.selectedAlbum,
+    albumId: trial.albumId,
+    albumIdentifier,
   });
 
   // const isProduction = process.env.NODE_ENV === "production";
@@ -904,7 +1156,7 @@ export async function sendQuestion(
     targetQuestionIndex,
   );
   const question = await storage.getQuestionByIndex(
-    trial.selectedAlbum,
+    albumIdentifier,
     targetQuestionIndex,
     trial.storytellerLanguagePreference,
   );
@@ -912,7 +1164,7 @@ export async function sendQuestion(
   if (!question) {
     console.error(
       "No question found for album:",
-      trial.selectedAlbum,
+      albumIdentifier,
       "index:",
       targetQuestionIndex,
     );
@@ -921,9 +1173,9 @@ export async function sendQuestion(
 
   // Check if this is a conversational album and first question in a batch
   // For conversational albums, batches are every 3 questions (0, 3, 6, 9, etc.)
-  let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+  let album = await storage.getAlbumById(albumIdentifier);
   if (!album) {
-    album = await storage.getAlbumById(trial.selectedAlbum);
+    album = await storage.getAlbumByTitle(albumIdentifier);
   }
   const isConversationalAlbum = album?.isConversationalAlbum === true;
   const isFirstQuestionInBatch =
@@ -1021,6 +1273,8 @@ async function handleVoiceNote(
 ): Promise<void> {
   // Cancel scheduled check-in if user sends voice note
   await cancelScheduledCheckin(trial.id);
+  // Cancel buyer check-in if storyteller responds
+  await cancelBuyerCheckin(trial.id);
 
   if (!message.audio || !message.audio.id) {
     console.error("Invalid voice note message - missing audio data");
@@ -1030,8 +1284,13 @@ async function handleVoiceNote(
   const audioId = message.audio.id;
   const mimeType = message.audio.mime_type;
 
+  const albumIdentifier = trial.albumId;
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
   const currentQuestion = await storage.getQuestionByIndex(
-    trial.selectedAlbum,
+    albumIdentifier,
     trial.currentQuestionIndex,
     trial.storytellerLanguagePreference,
   );
@@ -1081,10 +1340,13 @@ async function handleVoiceNote(
     }
   }
 
-  // Get album info to check if it's conversational
-  let album = await storage.getAlbumByTitle(trial.selectedAlbum);
+  if (!albumIdentifier) {
+    console.error("No album identifier found for trial:", trial.id);
+    return;
+  }
+  let album = await storage.getAlbumById(albumIdentifier);
   if (!album) {
-    album = await storage.getAlbumById(trial.selectedAlbum);
+    album = await storage.getAlbumByTitle(albumIdentifier);
   }
 
   const isConversationalAlbum = album?.isConversationalAlbum === true;
@@ -1608,6 +1870,19 @@ async function cancelScheduledCheckin(trialId: string): Promise<void> {
   }
 }
 
+/**
+ * Helper function to cancel scheduled buyer check-in if storyteller responds
+ */
+async function cancelBuyerCheckin(trialId: string): Promise<void> {
+  const trial = await storage.getFreeTrialDb(trialId);
+  if (trial && trial.buyerCheckinScheduledFor && !trial.buyerCheckinSentAt) {
+    await storage.updateFreeTrialDb(trialId, {
+      buyerCheckinScheduledFor: null,
+    });
+    console.log("Cancelled scheduled buyer check-in for trial:", trialId);
+  }
+}
+
 export async function processRetryReminders(): Promise<void> {
   const trialsNeedingRetry = await storage.getFreeTrialsNeedingRetry();
 
@@ -1618,7 +1893,7 @@ export async function processRetryReminders(): Promise<void> {
 
     const currentRetryCount = trial.retryCount || 0;
 
-    if (currentRetryCount >= 3) {
+    if (currentRetryCount >= 4) {
       console.log("Max retries already reached, skipping trial:", trial.id);
       continue;
     }
@@ -1627,7 +1902,7 @@ export async function processRetryReminders(): Promise<void> {
 
     await askReadiness(trial, trial.storytellerPhone);
 
-    const nextRetryAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
+    const nextRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     const readinessAskedAt = new Date();
 
     const updateData: any = {
@@ -1637,8 +1912,8 @@ export async function processRetryReminders(): Promise<void> {
       conversationState: "awaiting_readiness",
     };
 
-    // If this is the last retry (retryCount will be 3), schedule check-in 48 hours after the last retry attempt
-    if (nextRetryCount === 3) {
+    // If this is the last retry (retryCount will be 4), schedule check-in 48 hours after the last retry attempt
+    if (nextRetryCount === 4) {
       const checkinScheduledFor = new Date(
         readinessAskedAt.getTime() + 48 * 60 * 60 * 1000,
       ); // 48 hours after readinessAskedAt

@@ -61,6 +61,7 @@ export interface IStorage {
   getPendingReminders(): Promise<FreeTrialRow[]>;
   getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]>;
   getTrialsNeedingCheckin(): Promise<FreeTrialRow[]>;
+  getTrialsNeedingBuyerCheckin(): Promise<FreeTrialRow[]>;
 
   createVoiceNote(voiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow>;
   getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]>;
@@ -515,9 +516,13 @@ export class DatabaseStorage implements IStorage {
     const filteredTrials = [];
     for (const trial of trials) {
       // Check if it's a conversational album
-      let album = await this.getAlbumByTitle(trial.selectedAlbum);
-      if (!album) {
-        album = await this.getAlbumById(trial.selectedAlbum);
+      // Use albumId if available, fallback to selectedAlbum for backward compatibility
+      const albumIdentifier = trial.albumId;
+      let album = albumIdentifier
+        ? await this.getAlbumById(albumIdentifier)
+        : null;
+      if (!album && albumIdentifier) {
+        album = await this.getAlbumByTitle(albumIdentifier);
       }
       const isConversationalAlbum = album?.isConversationalAlbum === true;
 
@@ -573,7 +578,7 @@ export class DatabaseStorage implements IStorage {
 
   async getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]> {
     const now = new Date();
-    const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const fortyEightHoursAgo = new Date(now.getTime() - 72 * 60 * 60 * 1000);
 
     const trials = await db
       .select()
@@ -602,6 +607,25 @@ export class DatabaseStorage implements IStorage {
           lte(freeTrials.storytellerCheckinScheduledFor, now),
           isNotNull(freeTrials.storytellerPhone),
           sql`${freeTrials.storytellerCheckinSentAt} IS NULL`,
+        ),
+      );
+
+    return trials;
+  }
+
+  async getTrialsNeedingBuyerCheckin(): Promise<FreeTrialRow[]> {
+    const now = new Date();
+
+    const trials = await db
+      .select()
+      .from(freeTrials)
+      .where(
+        and(
+          isNotNull(freeTrials.buyerCheckinScheduledFor),
+          lte(freeTrials.buyerCheckinScheduledFor, now),
+          isNotNull(freeTrials.customerPhone),
+          sql`${freeTrials.buyerCheckinSentAt} IS NULL`,
+          isNotNull(freeTrials.storytellerCheckinSentAt), // Only if storyteller check-in was sent
         ),
       );
 

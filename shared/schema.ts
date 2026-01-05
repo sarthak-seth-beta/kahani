@@ -83,13 +83,62 @@ export const webhookEventSchema = z.object({
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 
+// Helper function to extract phone number part (without country code)
+function extractPhoneNumberDigits(phone: string): string {
+  // Known country codes with their lengths
+  const countryCodes: Array<{ prefix: string; length: number }> = [
+    { prefix: "+971", length: 3 }, // UAE
+    { prefix: "+880", length: 3 }, // Bangladesh
+    { prefix: "+886", length: 3 }, // Taiwan
+    { prefix: "+852", length: 3 }, // Hong Kong
+    { prefix: "+966", length: 3 }, // Saudi Arabia
+    { prefix: "+965", length: 3 }, // Kuwait
+    { prefix: "+974", length: 3 }, // Qatar
+    { prefix: "+968", length: 3 }, // Oman
+    { prefix: "+973", length: 3 }, // Bahrain
+    { prefix: "+962", length: 3 }, // Jordan
+    { prefix: "+961", length: 3 }, // Lebanon
+    { prefix: "+358", length: 3 }, // Finland
+    { prefix: "+380", length: 3 }, // Ukraine
+    { prefix: "+351", length: 3 }, // Portugal
+    { prefix: "+353", length: 3 }, // Ireland
+    { prefix: "+44", length: 2 }, // UK
+    { prefix: "+91", length: 2 }, // India
+    { prefix: "+1", length: 1 }, // US/Canada
+  ];
+
+  // Try to match known country codes
+  for (const { prefix, length } of countryCodes) {
+    if (phone.startsWith(prefix)) {
+      const withoutPrefix = phone.slice(prefix.length);
+      return withoutPrefix.replace(/\D/g, "");
+    }
+  }
+
+  // Default: remove + and first 1-3 digits (country code), then extract digits
+  const withoutPlus = phone.replace(/^\+/, "");
+  const phoneNumberPart = withoutPlus.replace(/^\d{1,3}/, "");
+  return phoneNumberPart.replace(/\D/g, "");
+}
+
 export const insertFreeTrialSchema = z.object({
-  customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+  customerPhone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine(
+      (phone) => {
+        const phoneDigits = extractPhoneNumberDigits(phone);
+        return phoneDigits.length === 10;
+      },
+      {
+        message: "Phone number must be exactly 10 digits",
+      },
+    ),
   buyerName: z.string().min(2, "Name must be at least 2 characters"),
   storytellerName: z
     .string()
     .min(2, "Storyteller name must be at least 2 characters"),
-  selectedAlbum: z.string().min(2, "Album selection is required"),
+  albumId: z.string().uuid("Album ID must be a valid UUID"),
   storytellerLanguagePreference: z.enum(["en", "hn"]).default("en"),
 });
 
@@ -245,7 +294,10 @@ export const freeTrials = pgTable(
     customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
     buyerName: varchar("buyer_name", { length: 255 }).notNull(),
     storytellerName: varchar("storyteller_name", { length: 255 }).notNull(),
-    selectedAlbum: varchar("selected_album", { length: 255 }).notNull(),
+    albumId: varchar("album_id", { length: 255 })
+      .notNull()
+      .references(() => albums.id, { onDelete: "restrict" }),
+    selectedAlbum: varchar("selected_album", { length: 255 }), // Optional, kept for backward compatibility
     storytellerPhone: varchar("storyteller_phone", { length: 20 }),
     conversationState: varchar("conversation_state", { length: 50 })
       .notNull()
@@ -284,6 +336,12 @@ export const freeTrials = pgTable(
       { withTimezone: true },
     ),
     storytellerCheckinSentAt: timestamp("storyteller_checkin_sent_at", {
+      withTimezone: true,
+    }),
+    buyerCheckinScheduledFor: timestamp("buyer_checkin_scheduled_for", {
+      withTimezone: true,
+    }),
+    buyerCheckinSentAt: timestamp("buyer_checkin_sent_at", {
       withTimezone: true,
     }),
     createdAt: timestamp("created_at", { withTimezone: true })
