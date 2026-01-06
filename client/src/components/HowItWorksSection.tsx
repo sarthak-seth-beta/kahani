@@ -24,8 +24,8 @@ const defaultSteps: Step[] = [
   },
   {
     number: "2",
-    title: "They speak on WhatsApp",
-    description: "We send one question. They reply with a voice note.",
+    title: "They record on WhatsApp",
+    description: "We send them questions. They reply with a voice note.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_2.jpg",
   },

@@ -16,7 +16,6 @@ import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
 import { Footer } from "@/components/Footer";
 import Checkout from "@/pages/Checkout";
-import FreeTrialCheckout from "@/pages/FreeTrialCheckout";
 import FreeTrial from "@/pages/FreeTrial";
 import HowToUse from "@/pages/HowToUse";
 import ThankYou from "@/pages/ThankYou";
@@ -53,7 +52,7 @@ function HomePage() {
   };
 
   const handleRecordClick = () => {
-    setLocation("/free-trial-checkout");
+    setLocation("/all-albums");
   };
 
   const handleLearnMore = () => {
@@ -61,7 +60,7 @@ function HomePage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#EEE9DF] overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#EEE9DF]">
       {/* Simple Header - Fixed at top (Restored) */}
       <SimpleHeader onRecordClick={handleRecordClick} />
 
@@ -115,7 +114,7 @@ function App() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/checkout" component={Checkout} />
-          <Route path="/free-trial-checkout" component={FreeTrialCheckout} />
+          {/* FreeTrialCheckout route removed */}
           <Route path="/free-trial" component={FreeTrial} />
           <Route path="/how-to-use" component={HowToUse} />
           <Route path="/thank-you" component={ThankYou} />
