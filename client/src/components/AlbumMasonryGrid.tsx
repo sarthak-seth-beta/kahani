@@ -6,9 +6,17 @@ import { useLocation } from "wouter";
 
 interface AlbumMasonryGridProps {
     albums: Album[];
+    hideRelation?: boolean;
+    hideLikeButton?: boolean;
+    showCompactDescription?: boolean;
 }
 
-export const AlbumMasonryGrid = ({ albums }: AlbumMasonryGridProps) => {
+export const AlbumMasonryGrid = ({
+    albums,
+    hideRelation = false,
+    hideLikeButton = false,
+    showCompactDescription = false
+}: AlbumMasonryGridProps) => {
     const [, setLocation] = useLocation();
 
     // Distribute albums into 2 columns
@@ -48,6 +56,8 @@ export const AlbumMasonryGrid = ({ albums }: AlbumMasonryGridProps) => {
                     key={album.id}
                     album={album}
                     onClick={() => handleCardClick(album.id)}
+                    hideRelation={hideRelation}
+                    hideLikeButton={hideLikeButton}
                 />
             );
         } else {
@@ -56,6 +66,9 @@ export const AlbumMasonryGrid = ({ albums }: AlbumMasonryGridProps) => {
                     key={album.id}
                     album={album}
                     onClick={() => handleCardClick(album.id)}
+                    hideRelation={hideRelation}
+                    hideLikeButton={hideLikeButton}
+                    showDescription={showCompactDescription}
                 />
             );
         }

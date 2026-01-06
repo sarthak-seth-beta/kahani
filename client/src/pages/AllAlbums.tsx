@@ -285,7 +285,12 @@ export default function AllAlbums() {
             {/* Staggered Masonry Grid */}
             {!isLoading && !error && filteredAlbums.length > 0 && (
               <div className="w-full px-1">
-                <AlbumMasonryGrid albums={filteredAlbums} />
+                <AlbumMasonryGrid
+                  albums={filteredAlbums}
+                  hideRelation={true}
+                  hideLikeButton={true}
+                  showCompactDescription={true}
+                />
               </div>
             )}
 
