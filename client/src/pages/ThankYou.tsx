@@ -101,15 +101,7 @@ export default function ThankYou() {
                 data-testid="button-whatsapp-support"
               >
                 <MessageCircle className="h-5 w-5" />
-                Final Step! (Open WhatsApp)
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={() => setLocation("/all-albums")}
-                className="text-[#1B2632]/80 hover:text-[#1B2632] hover:bg-transparent font-medium mt-12"
-              >
-                Explore other albums
+                Open WhatsApp
               </Button>
             </div>
           )}
