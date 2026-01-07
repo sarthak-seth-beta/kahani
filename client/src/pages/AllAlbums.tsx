@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default function AllAlbums() {
   const [, setLocation] = useLocation();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(["All"]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -33,39 +33,20 @@ export default function AllAlbums() {
     "Dadi",
   ];
 
-  // toggle logic
+  // toggle logic (single select)
   const toggleCategory = (category: string) => {
-    if (category === "All") {
-      setSelectedCategories(["All"]);
-      return;
-    }
-
-    setSelectedCategories((prev) => {
-      // If currently "All", clear it and select the new one
-      if (prev.includes("All")) {
-        return [category];
-      }
-
-      // If already selected, remove it
-      if (prev.includes(category)) {
-        const remaining = prev.filter((c) => c !== category);
-        return remaining.length === 0 ? ["All"] : remaining;
-      }
-
-      // Otherwise add it
-      return [category, ...prev];
-    });
+    setSelectedCategory(category);
   };
 
-  // Sort categories: selected ones first (excluding 'All' if we want to keep it fixed, but let's just sort active ones first)
+  // Sort categories: selected one first
   const sortedCategories = useMemo(() => {
     return [...allCategories].sort((a, b) => {
-      const aSelected = selectedCategories.includes(a);
-      const bSelected = selectedCategories.includes(b);
+      const aSelected = a === selectedCategory;
+      const bSelected = b === selectedCategory;
       if (aSelected === bSelected) return 0;
       return aSelected ? -1 : 1;
     });
-  }, [selectedCategories]);
+  }, [selectedCategory]);
 
   const filteredAlbums = useMemo(() => {
     if (!albums) return [];
@@ -73,12 +54,10 @@ export default function AllAlbums() {
     let result = albums;
 
     // Filter by Categories
-    if (!selectedCategories.includes("All")) {
+    if (selectedCategory !== "All") {
       result = result.filter((album) =>
         album.best_fit_for?.some((cat) =>
-          selectedCategories.some((selected) =>
-            cat.toLowerCase().includes(selected.toLowerCase())
-          )
+          cat.toLowerCase().includes(selectedCategory.toLowerCase())
         )
       );
     }
@@ -94,7 +73,7 @@ export default function AllAlbums() {
     }
 
     return result;
-  }, [albums, selectedCategories, searchQuery]);
+  }, [albums, selectedCategory, searchQuery]);
 
 
 
@@ -215,7 +194,7 @@ export default function AllAlbums() {
                 onClick={() => toggleCategory(category)}
                 className={cn(
                   "w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
-                  selectedCategories.includes(category)
+                  selectedCategory === category
                     ? "bg-[#1B2632] text-white shadow-md"
                     : "text-[#1B2632]/70 hover:bg-white/60 hover:text-[#1B2632]"
                 )}
@@ -240,7 +219,7 @@ export default function AllAlbums() {
             </div>
 
             {/* Mobile Filter Bar (md:hidden) */}
-            <div className="w-full overflow-x-auto no-scrollbar py-1 md:hidden sticky top-12 z-30 bg-[#EEE9DF]/95 backdrop-blur-sm">
+            <div className="w-full overflow-x-auto no-scrollbar py-1 md:hidden sticky top-12 z-30 bg-[#EEE9DF]/95 backdrop-blur-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div className="flex items-center justify-start gap-1 px-1 min-w-max mx-auto">
                 <AnimatePresence initial={false}>
                   {sortedCategories.map((category) => (
@@ -254,7 +233,7 @@ export default function AllAlbums() {
                       onClick={() => toggleCategory(category)}
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap",
-                        selectedCategories.includes(category)
+                        selectedCategory === category
                           ? "bg-[#1B2632] text-white shadow-md"
                           : "bg-white/50 text-[#1B2632]/70 hover:bg-white hover:text-[#1B2632] hover:shadow-sm"
                       )}
@@ -305,7 +284,7 @@ export default function AllAlbums() {
                 </p>
                 <Button
                   variant="ghost"
-                  onClick={() => setSelectedCategories(["All"])}
+                  onClick={() => setSelectedCategory("All")}
                   className="text-[#A35139] mt-4 hover:bg-[#A35139]/10"
                 >
                   View All Albums
