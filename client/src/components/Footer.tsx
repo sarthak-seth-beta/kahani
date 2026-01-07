@@ -24,6 +24,10 @@ export function Footer() {
           <span className="text-[#FFB162]">just memories</span>
         </h2>
 
+        <p className="text-lg md:text-xl text-[#EEE9DF]/80 max-w-2xl font-light italic mt-4">
+          "We ask the questions you have always wanted to ask - and life got busy."
+        </p>
+
         {/* Record Button */}
         <button
           onClick={() => setLocation("/all-albums")}

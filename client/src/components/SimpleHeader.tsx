@@ -46,7 +46,7 @@ export default function SimpleHeader({
           <img
             src={logoSrc}
             alt="Kahani Logo"
-            className="h-10 md:h-16 w-auto object-contain"
+            className="h-14 md:h-20 w-auto object-contain"
           />
         </div>
 
@@ -59,7 +59,7 @@ export default function SimpleHeader({
           {onRecordClick && (
             <button
               onClick={onRecordClick}
-              className="px-4 h-9 md:h-10 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-full font-bold text-sm md:text-base shadow-md hover:bg-[#1B2632]/90 hover:scale-105 active:scale-95 transition-all flex items-center justify-center overflow-hidden min-w-[80px] md:min-w-[110px]"
+              className="px-2 h-7 md:h-9 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-xl font-bold text-sm md:text-base shadow-md hover:bg-[#1B2632]/90 hover:scale-105 active:scale-95 transition-all flex items-center justify-center overflow-hidden min-w-[80px] md:min-w-[110px]"
               data-testid="button-record"
             >
               <span key={roleIndex} className="animate-scroll-up block">

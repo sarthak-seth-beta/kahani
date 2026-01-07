@@ -42,10 +42,10 @@ export default function HeroSection({
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-24">
         {/* Text Overlay */}
         <h1
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-5xl"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl mx-auto"
           data-testid="text-hero-headline"
         >
-          Your family’s voice. <br className="hidden sm:block" /> In an album.
+          Your family’s voice. <br className="block md:hidden" /> In an album.
         </h1>
 
         {/* Removed: "They speak on WhatsApp. You keep it forever." */}

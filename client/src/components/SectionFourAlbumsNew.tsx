@@ -2,26 +2,11 @@ import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import {
-  Play,
-  Share2,
   Loader2,
-  Heart,
-  Copy,
-  Mail,
-  MessageCircle,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { AlbumCard, type Album } from "@/components/AlbumCard";
 
 
@@ -74,11 +59,11 @@ export default function SectionFourAlbumsNew({
         {/* Header */}
         <div className="text-center mb-8 space-y-4 px-4">
           <h2 className="text-3xl md:text-5xl font-bold text-[#1B2632] font-['Outfit']">
-            Explore our collection
+            Explore Our Albums
           </h2>
           <p className="text-lg text-[#1B2632]/60 max-w-2xl mx-auto">
             Discover the perfect way to preserve your family's legacy with our
-            curated templates.
+            curated albums.
           </p>
         </div>
 

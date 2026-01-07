@@ -11,9 +11,7 @@ export default function ValueProposition() {
           WhatsApp.
         </p>
 
-        <p className="text-lg sm:text-xl md:text-2xl text-white/80 leading-relaxed italic">
-          "We ask the questions you have always wanted to ask - and life got busy."
-        </p>
+
       </div>
     </section>
   );

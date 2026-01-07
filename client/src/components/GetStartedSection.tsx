@@ -44,7 +44,7 @@ export default function GetStartedSection() {
 
             <div className="relative z-20 container mx-auto px-4 md:px-6 mb-10 text-center">
                 <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider">
-                    Get started for
+                    Get Started For
                 </h2>
             </div>
 
