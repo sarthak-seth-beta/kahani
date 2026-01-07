@@ -602,6 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: album.description,
         cover_image: album.coverImage,
         questions: album.questions,
+        question_set_titles: album.questionSetTitles || null,
         best_fit_for: album.bestFitFor || null,
       }));
       res.json(albumsResponse);
@@ -713,8 +714,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         languagePreference || trial.storytellerLanguagePreference;
       const questions =
         finalLanguagePreference === "hn" &&
-        album.questionsHn &&
-        album.questionsHn.length > 0
+          album.questionsHn &&
+          album.questionsHn.length > 0
           ? album.questionsHn
           : album.questions;
 
@@ -749,7 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trial.customCoverImageUrl || trialAny.custom_cover_image_url;
       const customCoverImage =
         customCoverImageUrlValue &&
-        String(customCoverImageUrlValue).trim() !== ""
+          String(customCoverImageUrlValue).trim() !== ""
           ? String(customCoverImageUrlValue).trim()
           : null;
       const albumCoverImage =

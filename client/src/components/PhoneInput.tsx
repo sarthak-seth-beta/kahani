@@ -181,24 +181,24 @@ export function PhoneInput({
             )}
             aria-label="Select country"
           >
-            <span className="flex items-center gap-1 sm:gap-2 min-w-0">
-              <span className="text-base sm:text-lg flex-shrink-0">
+            <span className="flex items-center gap-1 sm:gap-2 min-w-0 h-full">
+              <span className="text-base sm:text-lg flex-shrink-0 leading-none">
                 {selectedCountry.flag}
               </span>
-              <span className="text-xs sm:text-sm font-medium truncate">
+              <span className="text-xs sm:text-sm font-medium truncate leading-none pt-0.5">
                 {selectedCountry.dialCode}
               </span>
             </span>
             <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-50 flex-shrink-0 ml-1" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0" align="start">
+        <PopoverContent className="w-[300px] p-0 max-h-[300px]" align="start">
           <Command>
             <CommandInput
               placeholder="Search country, code, or number..."
-              className="h-11"
+              className="h-11 text-sm sm:text-base"
             />
-            <CommandList>
+            <CommandList className="max-h-[200px] overflow-y-auto [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded">
               <CommandEmpty>No country found.</CommandEmpty>
               <CommandGroup>
                 {COUNTRIES.map((country) => {
@@ -219,8 +219,8 @@ export function PhoneInput({
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <span className="text-lg">{country.flag}</span>
-                      <span className="font-medium">{country.dialCode}</span>
-                      <span className="text-muted-foreground ml-1 flex-1">
+                      <span className="font-medium text-sm sm:text-base">{country.dialCode}</span>
+                      <span className="text-muted-foreground ml-1 flex-1 text-sm sm:text-base">
                         {country.name}
                       </span>
                       <Check
@@ -245,7 +245,7 @@ export function PhoneInput({
         value={phoneNumber}
         onChange={handlePhoneChange}
         placeholder={placeholder}
-        className="h-12 text-base flex-1"
+        className="h-12 text-sm sm:text-base flex-1"
         maxLength={10}
       />
     </div>

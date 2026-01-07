@@ -139,7 +139,7 @@ export const insertFreeTrialSchema = z.object({
     .string()
     .min(2, "Storyteller name must be at least 2 characters"),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
-  storytellerLanguagePreference: z.enum(["en", "hn"]).default("en"),
+  storytellerLanguagePreference: z.enum(["en", "hn", "other"]).default("en"),
 });
 
 export type InsertFreeTrial = z.infer<typeof insertFreeTrialSchema>;
@@ -432,7 +432,7 @@ export const albums = pgTable(
     isConversationalAlbum: boolean("is_conversational_album")
       .notNull()
       .default(false),
-    questionSetTitles: jsonb("question_set_tilles").$type<{
+    questionSetTitles: jsonb("question_set_titles").$type<{
       en: string[];
       hn: string[];
     }>(),

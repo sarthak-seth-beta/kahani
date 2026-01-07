@@ -100,11 +100,11 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
     return (
         <div className="space-y-6">
             <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2 text-[#1B2632]">
-                    Ready to Begin?
+                <h2 className="text-lg sm:text-xl font-bold mb-2 text-[#1B2632]">
+                    Ready to record some Kahani?
                 </h2>
-                <p className="text-muted-foreground text-sm">
-                    Enter your WhatsApp number and we'll send you your first question
+                <p className="text-muted-foreground text-xs sm:text-sm">
+                    Please enter your details, and not the details of the storyteller. We will reach out with the next steps on Whatsapp.
                 </p>
             </div>
 
@@ -115,15 +115,15 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
                         name="buyerName"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-base font-semibold text-[#1B2632]">
+                                <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
                                     Your Name
                                 </FormLabel>
                                 <FormControl>
                                     <Input
                                         {...field}
                                         type="text"
-                                        placeholder="Enter your full name"
-                                        className="h-11 text-base"
+                                        placeholder="What your loved ones call you!"
+                                        className="h-11 text-sm sm:text-base"
                                         data-testid="input-buyer-name"
                                     />
                                 </FormControl>
@@ -137,7 +137,7 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
                         name="customerPhone"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-base font-semibold text-[#1B2632]">
+                                <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
                                     Your Whatsapp Number
                                 </FormLabel>
                                 <FormControl>
@@ -158,15 +158,15 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
                         name="storytellerName"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-base font-semibold text-[#1B2632]">
-                                    Who's Kahani do you want to record?
+                                <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
+                                    What you call them with love!
                                 </FormLabel>
                                 <FormControl>
                                     <Input
                                         {...field}
                                         type="text"
-                                        placeholder="Mom, Dad, Dadu, Nani, etc"
-                                        className="h-11 text-base"
+                                        placeholder="Mom / Dad / Amma / Nani"
+                                        className="h-11 text-sm sm:text-base"
                                         data-testid="input-storyteller-name"
                                     />
                                 </FormControl>
@@ -180,8 +180,8 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
                         name="storytellerLanguagePreference"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-base font-semibold text-[#1B2632]">
-                                    Preferred Language
+                                <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
+                                    What is their preferred language?
                                 </FormLabel>
                                 <Select
                                     onValueChange={field.onChange}
@@ -189,7 +189,7 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
                                     defaultValue="en"
                                 >
                                     <FormControl>
-                                        <SelectTrigger className="h-11 text-base">
+                                        <SelectTrigger className="h-11 text-sm sm:text-base">
                                             <SelectValue />
                                         </SelectTrigger>
                                     </FormControl>
@@ -214,7 +214,7 @@ export function FreeTrialForm({ albumId, albumTitle, onSuccess }: FreeTrialFormP
                         <Button
                             type="submit"
                             size="lg"
-                            className="w-full text-lg h-12 bg-[#A35139] text-white rounded-xl shadow-md hover:bg-[#A35139]/90 transition-all duration-300"
+                            className="w-full text-base sm:text-lg h-12 bg-[#A35139] text-white rounded-xl shadow-md hover:bg-[#A35139]/90 transition-all duration-300"
                             disabled={freeTrialMutation.isPending}
                             data-testid="button-start-trial"
                         >

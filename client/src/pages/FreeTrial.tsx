@@ -15,6 +15,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { FreeTrialForm } from "@/components/FreeTrialForm";
+import type { Album } from "@shared/schema";
 
 export default function FreeTrial() {
   const [, setLocation] = useLocation();
@@ -32,6 +33,7 @@ export default function FreeTrial() {
       cover_image: string;
       description: string;
       questions: string[];
+      question_set_titles?: Album["questionSetTitles"];
     }>
   >({
     queryKey: ["/api/albums"],
@@ -128,9 +130,19 @@ export default function FreeTrial() {
                       <div className="h-8 w-8 rounded-full bg-[#A35139]/10 flex items-center justify-center text-[#A35139] flex-shrink-0">
                         <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
                       </div>
-                      <span className="text-lg font-bold text-[#1B2632] font-['Outfit']">
-                        Chapter {idx + 1}
-                      </span>
+                      <div className="flex flex-col text-left">
+                        {(() => {
+                          // Strictly fetch from 'en' array as requested
+                          const titles = selectedAlbum.question_set_titles;
+                          const title = titles?.en?.[idx] || `Chapter ${idx + 1}`;
+
+                          return (
+                            <span className="text-base font-bold text-[#1B2632] font-['Outfit'] leading-tight">
+                              {title}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-4">
@@ -151,29 +163,7 @@ export default function FreeTrial() {
           {/* 5. Less Prominent Info (Included / How it works) */}
           <div className="pt-8 space-y-8 pb-8 border-t border-[#C9C1B1]/30">
 
-            {/* How It Works */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#1B2632]/90">
-                How It Works
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { step: 1, title: "You message us on WhatsApp", desc: "No app. Just WhatsApp." },
-                  { step: 2, title: "Your loved one shares voice notes", desc: "One story at a time" },
-                  { step: 3, title: "You get a private album link", desc: "And you can track progress live" }
-                ].map((item) => (
-                  <div key={item.step} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1B2632]/5 flex items-center justify-center text-xs font-bold text-[#1B2632]">
-                      {item.step}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#1B2632]">{item.title}</p>
-                      <p className="text-xs text-[#1B2632]/60">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
 
             {/* What's Included */}
             <div className="space-y-3">
@@ -200,11 +190,37 @@ export default function FreeTrial() {
             {/* Our Ethos */}
             <div className="space-y-4">
               <Accordion type="single" collapsible className="w-full">
+                {/* How It Works (Moved & Collapsible) */}
+                <AccordionItem value="how-it-works" className="border-b">
+                  <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-4">
+                    How It Works
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-0 pb-4">
+                    <div className="space-y-4">
+                      {[
+                        { step: 1, title: "You message us on WhatsApp", desc: "No app. Just WhatsApp." },
+                        { step: 2, title: "Your loved one shares voice notes", desc: "One story at a time" },
+                        { step: 3, title: "You get a private album link", desc: "And you can track progress live" }
+                      ].map((item) => (
+                        <div key={item.step} className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1B2632]/5 flex items-center justify-center text-xs font-bold text-[#1B2632]">
+                            {item.step}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[#1B2632]">{item.title}</p>
+                            <p className="text-xs text-[#1B2632]/60">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 <AccordionItem value="ethos" className="border-b-0">
-                  <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-0">
+                  <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-4">
                     Our Ethos
                   </AccordionTrigger>
-                  <AccordionContent className="pt-3 pb-0">
+                  <AccordionContent className="pt-0 pb-0">
                     <div className="space-y-2 text-sm text-[#1B2632]/70 leading-relaxed">
                       <p>We keep this safe and simple.</p>
                       <p>That is why I do not message your loved one first.</p>
@@ -229,21 +245,24 @@ export default function FreeTrial() {
       {/* Floating Bottom Bar (Mobile/Desktop) */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#C9C1B1]/30 z-50 flex items-center justify-between md:justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="md:w-full md:max-w-2xl flex items-center justify-between w-full gap-4">
-          <div className="flex flex-col md:hidden">
-            <span className="text-xs text-[#1B2632]/60 font-medium">Total</span>
-            <span className="text-lg font-bold text-[#1B2632]">Free</span>
+          <div className="flex flex-col items-start md:hidden">
+            <span className="text-xs text-[#1B2632]/60 font-medium ml-1">Total</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-[#1B2632]/40 line-through">₹499</span>
+              <span className="text-xl font-bold text-[#A35139]">Free</span>
+            </div>
           </div>
 
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button
                 size="lg"
-                className="flex-1 md:flex-none md:w-full bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12"
+                className="flex-none w-auto px-8 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12 max-w-[200px]"
               >
                 Place an Order
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md w-[95vw] rounded-2xl p-6 bg-[#EEE9DF]">
+            <DialogContent className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded">
               <FreeTrialForm
                 albumId={selectedAlbum.id}
                 albumTitle={selectedAlbum.title}
