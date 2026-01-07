@@ -181,6 +181,9 @@ export default function HowItWorksSection({
       {/* Bottom Fade Gradient */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />
 
+      {/* Bottom Fade Gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />
+
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;

@@ -53,6 +53,10 @@ function HomePage() {
   };
 
   const handleRecordClick = () => {
+    setLocation("/free-trial-checkout");
+  };
+
+  const handleRecordClick = () => {
     setLocation("/all-albums");
   };
 
