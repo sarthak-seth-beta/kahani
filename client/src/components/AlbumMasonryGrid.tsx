@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { LargeAlbumCard } from "./LargeAlbumCard";
 import { CompactAlbumCard } from "./CompactAlbumCard";
+import { CustomAlbumCard } from "./CustomAlbumCard";
 import type { Album } from "./AlbumCard";
 import { useLocation } from "wouter";
 
@@ -9,13 +10,15 @@ interface AlbumMasonryGridProps {
     hideRelation?: boolean;
     hideLikeButton?: boolean;
     showCompactDescription?: boolean;
+    onCustomCardClick?: () => void;
 }
 
 export const AlbumMasonryGrid = ({
     albums,
     hideRelation = false,
     hideLikeButton = false,
-    showCompactDescription = false
+    showCompactDescription = false,
+    onCustomCardClick
 }: AlbumMasonryGridProps) => {
     const [, setLocation] = useLocation();
 
@@ -49,6 +52,15 @@ export const AlbumMasonryGrid = ({
 
         const isLarge = (columnIndex === 0 && cardIndex % 2 === 0) ||
             (columnIndex === 1 && cardIndex % 2 !== 0);
+
+        if (album.id === 'custom-card-placeholder') {
+            return (
+                <CustomAlbumCard
+                    key={album.id}
+                    onClick={() => onCustomCardClick?.()}
+                />
+            );
+        }
 
         if (isLarge) {
             return (

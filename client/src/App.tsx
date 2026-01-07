@@ -32,6 +32,7 @@ import AlbumsGallery from "@/pages/AlbumsGallery";
 import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
+import CreateAlbum from "@/pages/CreateAlbum";
 import CustomAlbumCover from "@/pages/CustomAlbumCover";
 import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import Admin from "@/pages/Admin";
@@ -132,6 +133,7 @@ function App() {
             component={PlaylistAlbumsGallery}
           />
           <Route path="/all-albums" component={AllAlbums} />
+          <Route path="/create-album" component={CreateAlbum} />
           <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
           <Route
             path="/custom-album-cover/:trialId"

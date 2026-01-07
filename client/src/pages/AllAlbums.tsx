@@ -9,11 +9,13 @@ import { type Album } from "@/components/AlbumCard";
 import { AlbumMasonryGrid } from "@/components/AlbumMasonryGrid";
 import { cn } from "@/lib/utils";
 
+
 export default function AllAlbums() {
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
 
   const {
     data: albums,
@@ -73,7 +75,35 @@ export default function AllAlbums() {
     }
 
     return result;
+
   }, [albums, selectedCategory, searchQuery]);
+
+  // Inject Custom Card at index 2 (3rd position)
+  const displayAlbums = useMemo(() => {
+    if (!filteredAlbums) return [];
+
+    // Only inject if we have enough albums or if it's the filtered view where we want it.
+    // User said "in place of the 3rd card... addition to the cards list".
+    // We'll inject it at index 2.
+    const withCustom = [...filteredAlbums];
+    const customPlaceholder: Album = {
+      id: "custom-card-placeholder",
+      title: "Create Your Own",
+      description: "Customize a Kahani album",
+      cover_image: "",
+      questions: [],
+      best_fit_for: []
+    };
+
+    // Check if we should insert or push
+    if (withCustom.length >= 2) {
+      withCustom.splice(2, 0, customPlaceholder);
+    } else {
+      withCustom.push(customPlaceholder);
+    }
+
+    return withCustom;
+  }, [filteredAlbums]);
 
 
 
@@ -262,19 +292,20 @@ export default function AllAlbums() {
             )}
 
             {/* Staggered Masonry Grid */}
-            {!isLoading && !error && filteredAlbums.length > 0 && (
+            {!isLoading && !error && displayAlbums.length > 0 && (
               <div className="w-full px-1">
                 <AlbumMasonryGrid
-                  albums={filteredAlbums}
+                  albums={displayAlbums}
                   hideRelation={true}
                   hideLikeButton={true}
                   showCompactDescription={true}
+                  onCustomCardClick={() => setLocation("/create-album")}
                 />
               </div>
             )}
 
             {/* Empty State */}
-            {filteredAlbums.length === 0 && !isLoading && !error && (
+            {displayAlbums.length === 0 && !isLoading && !error && (
               <div className="text-center py-20 flex flex-col items-center justify-center">
                 <h3 className="text-xl font-bold text-[#1B2632] mb-2 font-['Outfit']">
                   No albums found
