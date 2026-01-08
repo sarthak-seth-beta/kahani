@@ -18,7 +18,7 @@ interface BottomHomeNavbarProps {
 }
 
 const DUMMY_AUDIO_URL =
-  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/testing.ogg";
+  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/nani_wedding_day.ogg";
 
 export function BottomHomeNavbar({
   isActive,
