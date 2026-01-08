@@ -42,15 +42,13 @@ export default function HeroSection({
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-24">
         {/* Text Overlay */}
         <h1
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4 max-w-5xl"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl mx-auto"
           data-testid="text-hero-headline"
         >
-          Spotify for your family’s stories
+          Your family’s voice. <br className="block md:hidden" /> In an album.
         </h1>
 
-        <p className="text-base sm:text-xl md:text-2xl text-white/90 font-medium mb-8 max-w-2xl whitespace-nowrap">
-          They speak on WhatsApp. <br /> You keep it forever.
-        </p>
+        {/* Removed: "They speak on WhatsApp. You keep it forever." */}
 
         <div className="flex flex-col items-center gap-4">
           <Button
@@ -61,7 +59,7 @@ export default function HeroSection({
           </Button>
 
           <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
-            WhatsApp-first. Grandparent-friendly. Private.
+            No app download. Verified by grandparents.
           </p>
         </div>
       </div>

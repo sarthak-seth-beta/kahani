@@ -3,68 +3,34 @@ import { X } from "lucide-react";
 import Vinyl from "@/components/Vinyl";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 
 // Custom icon component for skip backward 10 seconds
 const SkipBack10Icon = ({ size = 20 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {/* Circular arrow pointing counter-clockwise (left/backward) */}
-    <path d="M12 4 C7.6 4 4 7.6 4 12 C4 16.4 7.6 20 12 20" fill="none" />
-    {/* Arrowhead pointing left */}
-    <path d="M8 8 L4 12 L8 16" fill="none" />
-    {/* Number 10 in center */}
-    <text
-      x="12"
-      y="15.5"
-      textAnchor="middle"
-      fontSize="7"
-      fontWeight="bold"
-      fill="currentColor"
-      fontFamily="system-ui, -apple-system, sans-serif"
-    >
-      10
-    </text>
-  </svg>
+  <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size }}>
+    <RotateCcw size={size} strokeWidth={2} />
+    <span style={{
+      position: "absolute",
+      fontSize: Math.max(8, size * 0.35),
+      fontWeight: "bold",
+      lineHeight: 1,
+      marginTop: size * 0.1
+    }}>10</span>
+  </div>
 );
 
 // Custom icon component for skip forward 10 seconds
 const SkipForward10Icon = ({ size = 20 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {/* Circular arrow pointing clockwise (right/forward) */}
-    <path d="M12 4 C16.4 4 20 7.6 20 12 C20 16.4 16.4 20 12 20" fill="none" />
-    {/* Arrowhead pointing right */}
-    <path d="M16 8 L20 12 L16 16" fill="none" />
-    {/* Number 10 in center */}
-    <text
-      x="12"
-      y="15.5"
-      textAnchor="middle"
-      fontSize="7"
-      fontWeight="bold"
-      fill="currentColor"
-      fontFamily="system-ui, -apple-system, sans-serif"
-    >
-      10
-    </text>
-  </svg>
+  <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size }}>
+    <RotateCw size={size} strokeWidth={2} />
+    <span style={{
+      position: "absolute",
+      fontSize: Math.max(8, size * 0.35),
+      fontWeight: "bold",
+      lineHeight: 1,
+      marginTop: size * 0.1
+    }}>10</span>
+  </div>
 );
 
 interface ExpandedPlayerProps {

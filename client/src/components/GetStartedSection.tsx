@@ -3,24 +3,32 @@ import { useLocation } from "wouter";
 
 const imgURL = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/family_image.png";
 
-const ITEMS_ROW_1 = [
+const ACTIVE_RELATIONS = [
+    // Active
     { id: "mom", label: "Mom", type: "active", image: imgURL },
     { id: "dad", label: "Dad", type: "active", image: imgURL },
     { id: "dadu", label: "Dadu", type: "active", image: imgURL },
     { id: "nanu", label: "Nanu", type: "active", image: imgURL },
     { id: "nani", label: "Nani", type: "active", image: imgURL },
     { id: "dadi", label: "Dadi", type: "active", image: imgURL },
-];
-
-const ITEMS_ROW_2 = [
-    { id: "mentor", label: "Mentor", type: "coming-soon", image: imgURL },
-    { id: "friend", label: "Friend", type: "coming-soon", image: imgURL },
-    { id: "teacher", label: "Teacher", type: "coming-soon", image: imgURL },
-    // Fill row 2 with some active items too for balance if needed, or repeat
+    // Pad to match Locked count (8)
     { id: "mom_2", label: "Mom", type: "active", image: imgURL },
     { id: "dad_2", label: "Dad", type: "active", image: imgURL },
-    { id: "dadu_2", label: "Dadu", type: "active", image: imgURL },
 ];
+
+const LOCKED_RELATIONS = [
+    { id: "husband", label: "Husband", type: "coming-soon", image: imgURL },
+    { id: "wife", label: "Wife", type: "coming-soon", image: imgURL },
+    { id: "nana", label: "Nana", type: "coming-soon", image: imgURL },
+    { id: "dada", label: "Dada", type: "coming-soon", image: imgURL },
+    { id: "mentor", label: "Mentor", type: "coming-soon", image: imgURL },
+    { id: "teacher", label: "Teacher", type: "coming-soon", image: imgURL },
+    { id: "best_friend", label: "Best Friend", type: "coming-soon", image: imgURL },
+    { id: "grandchild", label: "Grandchild", type: "coming-soon", image: imgURL },
+];
+
+const ITEMS_ROW_1 = [...ACTIVE_RELATIONS, ...LOCKED_RELATIONS];
+const ITEMS_ROW_2 = [...LOCKED_RELATIONS, ...ACTIVE_RELATIONS];
 
 export default function GetStartedSection() {
     const [, setLocation] = useLocation();
@@ -36,7 +44,7 @@ export default function GetStartedSection() {
 
             <div className="relative z-20 container mx-auto px-4 md:px-6 mb-10 text-center">
                 <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider">
-                    Get started for
+                    Get Started For
                 </h2>
             </div>
 
@@ -71,10 +79,10 @@ export default function GetStartedSection() {
                     100% { transform: translateX(0); }
                 }
                 .animate-marquee-left {
-                    animation: marquee-left 40s linear infinite;
+                    animation: marquee-left 75s linear infinite;
                 }
                 .animate-marquee-right {
-                    animation: marquee-right 45s linear infinite;
+                    animation: marquee-right 75s linear infinite;
                 }
             `}</style>
         </section>

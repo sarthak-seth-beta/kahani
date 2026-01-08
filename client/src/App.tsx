@@ -16,7 +16,6 @@ import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
 import { Footer } from "@/components/Footer";
 import Checkout from "@/pages/Checkout";
-import FreeTrialCheckout from "@/pages/FreeTrialCheckout";
 import FreeTrial from "@/pages/FreeTrial";
 import HowToUse from "@/pages/HowToUse";
 import ThankYou from "@/pages/ThankYou";
@@ -33,6 +32,7 @@ import AlbumsGallery from "@/pages/AlbumsGallery";
 import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
+import CreateAlbum from "@/pages/CreateAlbum";
 import CustomAlbumCover from "@/pages/CustomAlbumCover";
 import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import Admin from "@/pages/Admin";
@@ -56,12 +56,16 @@ function HomePage() {
     setLocation("/free-trial-checkout");
   };
 
+  const handleRecordClick = () => {
+    setLocation("/all-albums");
+  };
+
   const handleLearnMore = () => {
     setLocation("/how-to-use");
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#EEE9DF] overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#EEE9DF]">
       {/* Simple Header - Fixed at top (Restored) */}
       <SimpleHeader onRecordClick={handleRecordClick} />
 
@@ -115,7 +119,7 @@ function App() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/checkout" component={Checkout} />
-          <Route path="/free-trial-checkout" component={FreeTrialCheckout} />
+          {/* FreeTrialCheckout route removed */}
           <Route path="/free-trial" component={FreeTrial} />
           <Route path="/how-to-use" component={HowToUse} />
           <Route path="/thank-you" component={ThankYou} />
@@ -133,6 +137,7 @@ function App() {
             component={PlaylistAlbumsGallery}
           />
           <Route path="/all-albums" component={AllAlbums} />
+          <Route path="/create-album" component={CreateAlbum} />
           <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
           <Route
             path="/custom-album-cover/:trialId"

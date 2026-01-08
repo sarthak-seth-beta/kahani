@@ -18,14 +18,14 @@ const defaultSteps: Step[] = [
   {
     number: "1",
     title: "Pick an album",
-    description: "Choose a theme for Mom/Dad/Dadu/Nani.",
+    description: "Choose a theme for Mom / Dad / Dadu / Nani.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_1.jpg",
   },
   {
     number: "2",
-    title: "They speak on WhatsApp",
-    description: "We send one question. They reply with a voice note.",
+    title: "They record on WhatsApp",
+    description: "We send them questions. They reply with a voice note.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_2.jpg",
   },
@@ -166,8 +166,8 @@ export default function HowItWorksSection({
         ))}
       </div>
 
-      {/* 3. CTA Bottom */}
-      <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
+      {/* 3. CTA Bottom (Hidden as per request) */}
+      {/* <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
         <Button
           onClick={onVideoClick}
           className="inline-flex items-center gap-2 px-8 py-6 bg-transparent border-2 border-[#1B2632]/10 hover:border-[#A35139] text-[#1B2632] hover:text-[#A35139] rounded-full text-lg font-semibold transition-all duration-300 group"
@@ -176,7 +176,10 @@ export default function HowItWorksSection({
           <Play className="w-5 h-5 fill-current" />
           See how it works
         </Button>
-      </div>
+      </div> */}
+
+      {/* Bottom Fade Gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />
 
       {/* Bottom Fade Gradient */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />

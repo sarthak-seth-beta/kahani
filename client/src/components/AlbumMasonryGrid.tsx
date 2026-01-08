@@ -1,14 +1,25 @@
 import { useMemo } from "react";
 import { LargeAlbumCard } from "./LargeAlbumCard";
 import { CompactAlbumCard } from "./CompactAlbumCard";
+import { CustomAlbumCard } from "./CustomAlbumCard";
 import type { Album } from "./AlbumCard";
 import { useLocation } from "wouter";
 
 interface AlbumMasonryGridProps {
     albums: Album[];
+    hideRelation?: boolean;
+    hideLikeButton?: boolean;
+    showCompactDescription?: boolean;
+    onCustomCardClick?: () => void;
 }
 
-export const AlbumMasonryGrid = ({ albums }: AlbumMasonryGridProps) => {
+export const AlbumMasonryGrid = ({
+    albums,
+    hideRelation = false,
+    hideLikeButton = false,
+    showCompactDescription = false,
+    onCustomCardClick
+}: AlbumMasonryGridProps) => {
     const [, setLocation] = useLocation();
 
     // Distribute albums into 2 columns
@@ -42,12 +53,23 @@ export const AlbumMasonryGrid = ({ albums }: AlbumMasonryGridProps) => {
         const isLarge = (columnIndex === 0 && cardIndex % 2 === 0) ||
             (columnIndex === 1 && cardIndex % 2 !== 0);
 
+        if (album.id === 'custom-card-placeholder') {
+            return (
+                <CustomAlbumCard
+                    key={album.id}
+                    onClick={() => onCustomCardClick?.()}
+                />
+            );
+        }
+
         if (isLarge) {
             return (
                 <LargeAlbumCard
                     key={album.id}
                     album={album}
                     onClick={() => handleCardClick(album.id)}
+                    hideRelation={hideRelation}
+                    hideLikeButton={hideLikeButton}
                 />
             );
         } else {
@@ -56,6 +78,9 @@ export const AlbumMasonryGrid = ({ albums }: AlbumMasonryGridProps) => {
                     key={album.id}
                     album={album}
                     onClick={() => handleCardClick(album.id)}
+                    hideRelation={hideRelation}
+                    hideLikeButton={hideLikeButton}
+                    showDescription={showCompactDescription}
                 />
             );
         }

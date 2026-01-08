@@ -20,9 +20,13 @@ import type { Album } from "./AlbumCard"; // Importing type from original card t
 export const LargeAlbumCard = ({
     album,
     onClick,
+    hideRelation = false,
+    hideLikeButton = false,
 }: {
     album: Album;
     onClick: () => void;
+    hideRelation?: boolean;
+    hideLikeButton?: boolean;
 }) => {
     const { toast } = useToast();
     const [isLiked, setIsLiked] = useState(false);
@@ -150,8 +154,11 @@ export const LargeAlbumCard = ({
             </div>
 
             {/* Content Area */}
-            <div className="flex flex-col flex-grow px-3 pt-2 pb-3 bg-white z-0 gap-1.5 md:gap-2">
-                <div className="space-y-0.5 md:space-y-1">
+            <div className={cn(
+                "flex flex-col flex-grow bg-white z-0 gap-1 md:gap-1.5",
+                (!hideRelation || !hideLikeButton) ? "px-2.5 pt-2 pb-2" : "px-2.5 pt-2 pb-1.5"
+            )}>
+                <div className="space-y-0.5">
                     <h3 className="text-sm md:text-base lg:text-lg font-bold text-[#1B2632] font-['Outfit'] leading-tight line-clamp-2">
                         {album.title}
                     </h3>
@@ -160,31 +167,37 @@ export const LargeAlbumCard = ({
                     </p>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-gray-100 pt-1.5 md:pt-2 mt-auto">
-                    <span className="text-[8px] md:text-[10px] lg:text-xs font-bold text-[#1B2632]/50 tracking-wider uppercase leading-none truncate max-w-[75%]">
-                        {album.best_fit_for && album.best_fit_for.length > 0
-                            ? `FOR ${album.best_fit_for.join(", ")}`
-                            : "AUDIO STORY • 12:34"}
-                    </span>
-
-                    <button
-                        onClick={handleLike}
-                        className={cn(
-                            "transition-all duration-300 transform",
-                            isBeating && "scale-125",
-                            !isBeating && "scale-100",
+                {(!hideRelation || !hideLikeButton) && (
+                    <div className="flex items-center justify-between border-t border-gray-100 pt-1.5 mt-auto">
+                        {!hideRelation && (
+                            <span className="text-[8px] md:text-[10px] lg:text-xs font-bold text-[#1B2632]/50 tracking-wider uppercase leading-none truncate max-w-[75%]">
+                                {album.best_fit_for && album.best_fit_for.length > 0
+                                    ? `FOR ${album.best_fit_for.join(", ")}`
+                                    : "AUDIO STORY • 12:34"}
+                            </span>
                         )}
-                    >
-                        <Heart
-                            className={cn(
-                                "w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 transition-colors duration-300 ml-1.5",
-                                isLiked
-                                    ? "fill-[#E5484D] text-[#E5484D]"
-                                    : "text-[#1B2632]/30 hover:text-[#E5484D]",
-                            )}
-                        />
-                    </button>
-                </div>
+
+                        {!hideLikeButton && (
+                            <button
+                                onClick={handleLike}
+                                className={cn(
+                                    "transition-all duration-300 transform ml-auto",
+                                    isBeating && "scale-125",
+                                    !isBeating && "scale-100",
+                                )}
+                            >
+                                <Heart
+                                    className={cn(
+                                        "w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 transition-colors duration-300 ml-1.5",
+                                        isLiked
+                                            ? "fill-[#E5484D] text-[#E5484D]"
+                                            : "text-[#1B2632]/30 hover:text-[#E5484D]",
+                                    )}
+                                />
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,47 +1,25 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useMemo, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Check, ArrowLeft, Play } from "lucide-react";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { insertFreeTrialSchema } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { z } from "zod";
-import SimpleHeader from "@/components/SimpleHeader";
-import { Footer } from "@/components/Footer";
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Check, Heart } from "lucide-react";
-import { PhoneInput } from "@/components/PhoneInput";
-import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
-
-type FreeTrialFormData = z.infer<typeof insertFreeTrialSchema>;
+import { FreeTrialForm } from "@/components/FreeTrialForm";
+import type { Album } from "@shared/schema";
 
 export default function FreeTrial() {
-  const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const urlParams = new URLSearchParams(window.location.search);
   const albumIdFromUrl = urlParams.get("albumId") || "";
@@ -53,7 +31,9 @@ export default function FreeTrial() {
       id: string;
       title: string;
       cover_image: string;
+      description: string;
       questions: string[];
+      question_set_titles?: Album["questionSetTitles"];
     }>
   >({
     queryKey: ["/api/albums"],
@@ -62,405 +42,236 @@ export default function FreeTrial() {
   // Determine selected album details
   const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albums) {
-      const album = albums.find((a) => a.id === albumIdFromUrl);
-      if (album)
-        return {
-          id: album.id,
-          title: album.title,
-          cover_image: album.cover_image,
-          questions: album.questions || [],
-        };
+      return albums.find((a) => a.id === albumIdFromUrl);
     }
     // Fallback: try to find by title from URL (backward compatibility)
     if (albumTitleFromUrl && albums) {
-      const album = albums.find((a) => a.title === albumTitleFromUrl);
-      if (album)
-        return {
-          id: album.id,
-          title: album.title,
-          cover_image: album.cover_image,
-          questions: album.questions || [],
-        };
+      return albums.find((a) => a.title === albumTitleFromUrl);
     }
-    // No valid album found
     return null;
   }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
-  const form = useForm<FreeTrialFormData>({
-    resolver: zodResolver(insertFreeTrialSchema),
-    defaultValues: {
-      customerPhone: "",
-      buyerName: "",
-      storytellerName: "",
-      albumId: selectedAlbum?.id || "",
-      storytellerLanguagePreference: "en",
-    },
-  });
-
-  // Update form when album is determined
-  useEffect(() => {
-    if (selectedAlbum?.id) {
-      form.setValue("albumId", selectedAlbum.id);
+  // Helper to chunk questions into chapters
+  const chapters = useMemo(() => {
+    if (!selectedAlbum?.questions) return [];
+    const chunkSize = 3;
+    const result = [];
+    for (let i = 0; i < selectedAlbum.questions.length; i += chunkSize) {
+      result.push(selectedAlbum.questions.slice(i, i + chunkSize));
     }
-  }, [selectedAlbum?.id, form]);
+    return result;
+  }, [selectedAlbum]);
 
-  const freeTrialMutation = useMutation({
-    mutationFn: async (data: FreeTrialFormData) => {
-      trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_STARTED, {
-        album_id: data.albumId,
-        album_title: selectedAlbum?.title,
-        language_preference: data.storytellerLanguagePreference,
-      });
-      const response = await apiRequest("POST", "/api/free-trial", data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_ERROR, {
-          error_message: errorData.error || "Failed to sign up",
-          album_id: data.albumId,
-        });
-        throw new Error(errorData.error || "Failed to sign up");
-      }
-      return response.json();
-    },
-    onSuccess: (trial) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/free-trial"] });
-
-      trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
-        trial_id: trial.id,
-        album_id: form.getValues("albumId"),
-        album_title: selectedAlbum?.title,
-        language_preference: form.getValues("storytellerLanguagePreference"),
-      });
-
-      form.reset();
-      setLocation(`/thank-you?trialId=${trial.id}`);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to sign up. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: FreeTrialFormData) => {
-    freeTrialMutation.mutate(data);
-  };
+  if (!selectedAlbum) {
+    return (
+      <div className="min-h-screen bg-[#EEE9DF] flex items-center justify-center">
+        <p>Loading album details...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <SimpleHeader />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl py-16">
-        {/* Page Heading */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#1B2632] font-['Outfit']">
-            Enter your details
-          </h1>
+    <div className="min-h-screen bg-[#EEE9DF] relative pb-24">
+
+      {/* Container - Constrained but full width on mobile for image */}
+      <div className="container mx-auto px-0 md:px-4 max-w-2xl md:pt-4">
+
+        {/* 1. Cover Photo with Back Button Overlay */}
+        <div className="relative w-full aspect-square md:aspect-video md:rounded-2xl overflow-hidden bg-gray-100 shadow-sm group">
+          <img
+            src={selectedAlbum.cover_image}
+            alt={selectedAlbum.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 md:rounded-2xl" />
+
+          {/* Circular Back Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => window.history.back()}
+            className="absolute top-4 left-4 z-50 min-h-[40px] min-w-[40px] h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90 border border-[#C9C1B1]/20 no-default-hover-elevate !absolute"
+          >
+            <ArrowLeft className="h-5 w-5 text-[#1B2632]" />
+          </Button>
         </div>
 
-        {/* Selected Album Summary */}
-        <div className="bg-white rounded-xl shadow-sm border mb-8 overflow-hidden">
-          <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-4">
-            <div className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-              <img
-                src={selectedAlbum?.cover_image}
-                alt={selectedAlbum?.title}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="flex-grow min-w-0">
-              <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wide font-semibold mb-0.5 sm:mb-1">
-                Selected Album
-              </p>
-              <h3 className="text-sm sm:text-xl font-bold text-[#1B2632] line-clamp-2 break-words">
-                {selectedAlbum?.title}
-              </h3>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2 bg-[#A35139]/10 px-2 sm:px-4 py-1.5 sm:py-2 rounded-full flex-shrink-0">
-              <span className="text-xs sm:text-sm font-medium text-[#A35139] whitespace-nowrap">
-                <span className="hidden sm:inline">Quantity:</span>
-                <span className="sm:hidden">Qty:</span>
-              </span>
-              <span className="text-sm sm:text-lg font-bold text-[#A35139]">
-                1
-              </span>
+        <div className="px-4 py-6 md:px-0 space-y-6">
+          {/* Title Section */}
+          <div>
+            <h1 className="text-2xl md:text-4xl font-bold text-[#1B2632] font-['Outfit'] leading-tight mb-2">
+              {selectedAlbum.title}
+            </h1>
+            <p className="text-[#1B2632]/70 text-sm md:text-base leading-relaxed">
+              {selectedAlbum.description || "Capture your family's precious memories with this guided audio album."}
+            </p>
+            <div className="flex items-center gap-4 mt-4 text-xs font-semibold text-[#1B2632]/60 uppercase tracking-wider">
+              <span>{chapters.length} Chapters</span>
+              <span>•</span>
+              <span>{selectedAlbum.questions?.length || 0} Questions</span>
             </div>
           </div>
 
-          {/* Questions Dropdown */}
-          {selectedAlbum?.questions && selectedAlbum.questions.length > 0 && (
-            <>
-              <div className="border-t border-[#C9C1B1]/30"></div>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="questions" className="border-0">
-                  <AccordionTrigger className="px-3 sm:px-4 py-3 hover:no-underline text-sm sm:text-base font-semibold text-[#1B2632]">
-                    View Questions ({selectedAlbum.questions.length})
+          {/* 3. Collapsible Chapter-wise Questions */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
+              What you'll cover
+            </h2>
+
+            <Accordion type="single" collapsible className="w-full space-y-3">
+              {chapters.map((chapterQuestions, idx) => (
+                <AccordionItem
+                  key={idx}
+                  value={`chapter-${idx}`}
+                  className="bg-white rounded-xl border border-[#C9C1B1]/20 shadow-sm px-5 data-[state=open]:pb-2 overflow-hidden"
+                >
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-3 w-full text-left">
+                      <div className="h-8 w-8 rounded-full bg-[#A35139]/10 flex items-center justify-center text-[#A35139] flex-shrink-0">
+                        <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        {(() => {
+                          // Strictly fetch from 'en' array as requested
+                          const titles = selectedAlbum.question_set_titles;
+                          const title = titles?.en?.[idx] || `Chapter ${idx + 1}`;
+
+                          return (
+                            <span className="text-base font-bold text-[#1B2632] font-['Outfit'] leading-tight">
+                              {title}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-3 sm:px-4 pb-3 sm:pb-4">
-                    <ul className="space-y-2 sm:space-y-3">
-                      {selectedAlbum.questions.map((question, index) => (
-                        <li
-                          key={index}
-                          className="text-[#1B2632]/80 text-sm leading-relaxed pl-3 border-l-2 border-[#A35139]/40"
-                        >
-                          {question}
+                  <AccordionContent className="pb-4">
+                    <ul className="space-y-3 pt-1">
+                      {chapterQuestions.map((q, qIdx) => (
+                        <li key={qIdx} className="flex items-start gap-3 text-[#1B2632]/80 text-sm leading-relaxed">
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#1B2632]/30 flex-shrink-0" />
+                          <span>{q}</span>
                         </li>
                       ))}
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
-              </Accordion>
-            </>
-          )}
-        </div>
+              ))}
+            </Accordion>
+          </div>
 
-        {/* Info Accordions */}
-        <div className="space-y-4 mb-8">
-          <Accordion type="single" collapsible className="w-full">
+          {/* 5. Less Prominent Info (Included / How it works) */}
+          <div className="pt-8 space-y-8 pb-8 border-t border-[#C9C1B1]/30">
+
+
+
             {/* What's Included */}
-            <AccordionItem
-              value="included"
-              className="border rounded-xl px-6 bg-white shadow-sm"
-            >
-              <AccordionTrigger className="text-lg font-semibold text-[#1B2632] hover:no-underline hover:text-[#A35139]">
-                What's Included in this
-              </AccordionTrigger>
-              <AccordionContent className="pt-2 pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    "5 thoughtful questions",
-                    "Whatsapp communication and support",
-                    "Voice enabled storytelling",
-                    "Finished voice first memory album",
-                    "Flexible schedule",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="flex-shrink-0 bg-[#A35139]/10 rounded-full p-1">
-                        <Check className="h-3 w-3 text-[#A35139]" />
-                      </div>
-                      <span className="text-[#1B2632]/80">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* How It Works */}
-            <AccordionItem
-              value="how-it-works"
-              className="border rounded-xl px-6 bg-white shadow-sm mt-4"
-            >
-              <AccordionTrigger className="text-lg font-semibold text-[#1B2632] hover:no-underline hover:text-[#A35139]">
-                How It Works
-              </AccordionTrigger>
-              <AccordionContent className="pt-2 pb-6">
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#A35139]/10 flex items-center justify-center font-bold text-[#A35139]">
-                      1
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#1B2632] mb-1">
-                        Choose an album
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Select the perfect collection for your stories
-                      </p>
-                    </div>
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-[#1B2632]/90">
+                What's Included
+              </h3>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  "Private digital voice album (shareable link)",
+                  "Listen anytime (replay forever)",
+                  "Download anytime",
+                  "WhatsApp prompts + support",
+                  "No deadlines (record at your pace)",
+                  "Gift plaque with QR (coming soon)",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 text-[#A35139]" />
+                    <span className="text-sm text-[#1B2632]/70">{item}</span>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#A35139]/10 flex items-center justify-center font-bold text-[#A35139]">
-                      2
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#1B2632] mb-1">
-                        Enter your details
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        We just need your name and number
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#A35139]/10 flex items-center justify-center font-bold text-[#A35139]">
-                      3
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#1B2632] mb-1">
-                        We message you on Whatsapp to start!
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Look out for a message from us
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-
-        {/* Form Section */}
-        <div className="bg-white rounded-xl p-6 sm:p-8 border shadow-sm mb-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[#1B2632]">
-              Ready to Begin?
-            </h2>
-            <p className="text-muted-foreground">
-              Enter your WhatsApp number and we'll send you your first question
-            </p>
-          </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="buyerName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-[#1B2632]">
-                      Your Name
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="text"
-                        placeholder="Enter your full name"
-                        className="h-12 text-base"
-                        data-testid="input-buyer-name"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="customerPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-[#1B2632]">
-                      Your Whatsapp Number
-                    </FormLabel>
-                    <FormControl>
-                      <PhoneInput
-                        value={field.value}
-                        onChange={field.onChange}
-                        defaultCountry="IN"
-                        data-testid="input-customer-phone"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="storytellerName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-[#1B2632]">
-                      Who's Kahani do you want to record? (what do you call
-                      them?)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="text"
-                        placeholder="Mom, Dad, Dadu, Nani, etc"
-                        className="h-12 text-base"
-                        data-testid="input-storyteller-name"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="storytellerLanguagePreference"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-[#1B2632]">
-                      Preferred Language for Storytelling
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue="en"
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-12 text-base">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="hn">हिंदी (Hindi)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Hidden field for selected album */}
-              <FormField
-                control={form.control}
-                name="albumId"
-                render={({ field }) => <input type="hidden" {...field} />}
-              />
-
-              <div className="flex justify-center mt-8">
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-auto px-10 text-lg h-14 bg-[#A35139] text-white rounded-2xl shadow-xl border border-[#A35139] hover:bg-[#A35139]/90 transition-all duration-300"
-                  disabled={freeTrialMutation.isPending}
-                  data-testid="button-start-trial"
-                >
-                  {freeTrialMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                      Starting Your Trial...
-                    </>
-                  ) : (
-                    "Record Now"
-                  )}
-                </Button>
+                ))}
               </div>
-            </form>
-          </Form>
-        </div>
+            </div>
 
-        {/* Trust Section */}
-        <div className="text-center space-y-2 pt-6 pb-2">
-          <div className="flex items-center justify-center gap-2 text-[#1B2632]/80 font-medium">
-            <span>Spreading love</span>
-            <Heart className="h-4 w-4 fill-[#A35139] text-[#A35139]" />
-          </div>
-          <div className="text-[#1B2632]/80 font-medium">
-            1,000+ kahaniya recorded
-          </div>
-          <div>
-            <a
-              href="https://wa.me/?text=Hi%2C%20I%20have%20a%20question%20about%20the%20free%20trial."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#A35139] hover:text-[#A35139]/80 font-semibold text-sm transition-colors"
-            >
-              Contact us
-            </a>
+            {/* Our Ethos */}
+            <div className="space-y-4">
+              <Accordion type="single" collapsible className="w-full">
+                {/* How It Works (Moved & Collapsible) */}
+                <AccordionItem value="how-it-works" className="border-b">
+                  <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-4">
+                    How It Works
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-0 pb-4">
+                    <div className="space-y-4">
+                      {[
+                        { step: 1, title: "You message us on WhatsApp", desc: "No app. Just WhatsApp." },
+                        { step: 2, title: "Your loved one shares voice notes", desc: "One story at a time" },
+                        { step: 3, title: "You get a private album link", desc: "And you can track progress live" }
+                      ].map((item) => (
+                        <div key={item.step} className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1B2632]/5 flex items-center justify-center text-xs font-bold text-[#1B2632]">
+                            {item.step}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[#1B2632]">{item.title}</p>
+                            <p className="text-xs text-[#1B2632]/60">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="ethos" className="border-b-0">
+                  <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-4">
+                    Our Ethos
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-0 pb-0">
+                    <div className="space-y-2 text-sm text-[#1B2632]/70 leading-relaxed">
+                      <p>We keep this safe and simple.</p>
+                      <p>That is why I do not message your loved one first.</p>
+                      <p>You share the link. They choose to start.</p>
+                      <p className="font-medium text-[#A35139]">Your stories stay private. Always.</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            {/* Trust / Contact */}
+            <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#1B2632]/50 pt-4">
+              <span>1,000+ kahaniya recorded</span>
+              <span>•</span>
+              <a href="https://wa.me/" className="underline hover:text-[#A35139]">Contact Support</a>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      {/* Floating Bottom Bar (Mobile/Desktop) */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#C9C1B1]/30 z-50 flex items-center justify-between md:justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="md:w-full md:max-w-2xl flex items-center justify-between w-full gap-4">
+          <div className="flex flex-col items-start md:hidden">
+            <span className="text-xs text-[#1B2632]/60 font-medium ml-1">Total</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-[#1B2632]/40 line-through">₹499</span>
+              <span className="text-xl font-bold text-[#A35139]">Free</span>
+            </div>
+          </div>
+
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="lg"
+                className="flex-none w-auto px-8 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12 max-w-[200px]"
+              >
+                Place an Order
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded">
+              <FreeTrialForm
+                albumId={selectedAlbum.id}
+                albumTitle={selectedAlbum.title}
+                onSuccess={() => setIsFormOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
     </div>
   );
 }

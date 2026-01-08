@@ -174,7 +174,10 @@ export const AlbumCard = ({
       <div className="relative h-[35%] px-5 pt-3 pb-3 flex flex-col justify-between bg-white z-0 gap-2">
         <div className="space-y-1">
           <h3 className="text-lg font-bold text-[#1B2632] font-['Outfit'] leading-snug">
-            {splitTitle(album.title)}
+            <span className="md:hidden block h-14 line-clamp-2 overflow-hidden text-ellipsis">
+              {album.title}
+            </span>
+            <span className="hidden md:block">{splitTitle(album.title)}</span>
           </h3>
           <p className="text-[#1B2632]/70 text-xs font-medium leading-relaxed line-clamp-2">
             {album.description}
