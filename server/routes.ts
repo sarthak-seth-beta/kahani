@@ -714,8 +714,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         languagePreference || trial.storytellerLanguagePreference;
       const questions =
         finalLanguagePreference === "hn" &&
-          album.questionsHn &&
-          album.questionsHn.length > 0
+        album.questionsHn &&
+        album.questionsHn.length > 0
           ? album.questionsHn
           : album.questions;
 
@@ -750,7 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trial.customCoverImageUrl || trialAny.custom_cover_image_url;
       const customCoverImage =
         customCoverImageUrlValue &&
-          String(customCoverImageUrlValue).trim() !== ""
+        String(customCoverImageUrlValue).trim() !== ""
           ? String(customCoverImageUrlValue).trim()
           : null;
       const albumCoverImage =

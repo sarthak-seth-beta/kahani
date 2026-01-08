@@ -53,10 +53,6 @@ function HomePage() {
   };
 
   const handleRecordClick = () => {
-    setLocation("/free-trial-checkout");
-  };
-
-  const handleRecordClick = () => {
     setLocation("/all-albums");
   };
 
@@ -70,7 +66,10 @@ function HomePage() {
       <SimpleHeader onRecordClick={handleRecordClick} />
 
       {/* Bottom Home Navbar - Fixed at bottom */}
-      <BottomHomeNavbar isActive={isPlayerActive} onInactive={handlePlayerInactive} />
+      <BottomHomeNavbar
+        isActive={isPlayerActive}
+        onInactive={handlePlayerInactive}
+      />
 
       {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
       {/* <div className="h-20" /> */}
@@ -98,8 +97,6 @@ function HomePage() {
 
       {/* Footer */}
       <Footer />
-
-
     </div>
   );
 }

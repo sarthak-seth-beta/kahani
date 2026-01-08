@@ -219,7 +219,9 @@ export function PhoneInput({
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <span className="text-lg">{country.flag}</span>
-                      <span className="font-medium text-sm sm:text-base">{country.dialCode}</span>
+                      <span className="font-medium text-sm sm:text-base">
+                        {country.dialCode}
+                      </span>
                       <span className="text-muted-foreground ml-1 flex-1 text-sm sm:text-base">
                         {country.name}
                       </span>

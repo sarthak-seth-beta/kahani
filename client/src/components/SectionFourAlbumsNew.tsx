@@ -1,15 +1,8 @@
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import {
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  ArrowRight,
-} from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { AlbumCard, type Album } from "@/components/AlbumCard";
-
-
 
 interface SectionFourAlbumsNewProps {
   albums?: Album[];

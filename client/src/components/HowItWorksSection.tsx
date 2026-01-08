@@ -77,10 +77,7 @@ export default function HowItWorksSection({
       if (scrollContainerRef.current) {
         const { scrollLeft, clientWidth } = scrollContainerRef.current;
         const newIndex = Math.round(scrollLeft / clientWidth);
-        const clampedIndex = Math.min(
-          Math.max(newIndex, 0),
-          steps.length - 1
-        );
+        const clampedIndex = Math.min(Math.max(newIndex, 0), steps.length - 1);
         setActiveStep(clampedIndex);
       }
     };
@@ -117,7 +114,7 @@ export default function HowItWorksSection({
               {/* Step Card */}
               <div
                 className="w-[85vw] md:w-full max-w-sm flex-none md:flex-1 snap-center flex flex-col items-start text-left md:items-center md:text-center space-y-4 md:space-y-6 relative z-10"
-                style={{ scrollSnapStop: 'always' }}
+                style={{ scrollSnapStop: "always" }}
                 data-testid={`step-${index + 1}`}
               >
                 {/* Image Container */}
@@ -160,8 +157,9 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-              }`}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+            }`}
           />
         ))}
       </div>

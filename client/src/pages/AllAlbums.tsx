@@ -9,13 +9,11 @@ import { type Album } from "@/components/AlbumCard";
 import { AlbumMasonryGrid } from "@/components/AlbumMasonryGrid";
 import { cn } from "@/lib/utils";
 
-
 export default function AllAlbums() {
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
 
   const {
     data: albums,
@@ -25,15 +23,7 @@ export default function AllAlbums() {
     queryKey: ["/api/albums"],
   });
 
-  const allCategories = [
-    "All",
-    "Mom",
-    "Dad",
-    "Dadu",
-    "Nanu",
-    "Nani",
-    "Dadi",
-  ];
+  const allCategories = ["All", "Mom", "Dad", "Dadu", "Nanu", "Nani", "Dadi"];
 
   // toggle logic (single select)
   const toggleCategory = (category: string) => {
@@ -59,8 +49,8 @@ export default function AllAlbums() {
     if (selectedCategory !== "All") {
       result = result.filter((album) =>
         album.best_fit_for?.some((cat) =>
-          cat.toLowerCase().includes(selectedCategory.toLowerCase())
-        )
+          cat.toLowerCase().includes(selectedCategory.toLowerCase()),
+        ),
       );
     }
 
@@ -70,12 +60,11 @@ export default function AllAlbums() {
       result = result.filter(
         (album) =>
           album.title.toLowerCase().includes(query) ||
-          album.description.toLowerCase().includes(query)
+          album.description.toLowerCase().includes(query),
       );
     }
 
     return result;
-
   }, [albums, selectedCategory, searchQuery]);
 
   // Inject Custom Card at index 2 (3rd position)
@@ -92,7 +81,7 @@ export default function AllAlbums() {
       description: "Customize a Kahani album",
       cover_image: "",
       questions: [],
-      best_fit_for: []
+      best_fit_for: [],
     };
 
     // Check if we should insert or push
@@ -105,11 +94,8 @@ export default function AllAlbums() {
     return withCustom;
   }, [filteredAlbums]);
 
-
-
   return (
     <div className="w-full min-h-screen bg-[#EEE9DF] relative overflow-x-hidden md:flex">
-
       {/* --- MOBILE HEADER & FILTERS (md:hidden) --- */}
       <div className="md:hidden">
         {/* Mobile Header - Back Arrow Only (Contact Us Style) */}
@@ -172,7 +158,6 @@ export default function AllAlbums() {
         </header>
       </div>
 
-
       {/* --- DESKTOP SIDEBAR (hidden md:flex) --- */}
       <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-[#E5E0D5]/50 border-r border-[#C9C1B1]/20 p-6 z-50 backdrop-blur-sm">
         {/* Back Button */}
@@ -226,7 +211,7 @@ export default function AllAlbums() {
                   "w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
                   selectedCategory === category
                     ? "bg-[#1B2632] text-white shadow-md"
-                    : "text-[#1B2632]/70 hover:bg-white/60 hover:text-[#1B2632]"
+                    : "text-[#1B2632]/70 hover:bg-white/60 hover:text-[#1B2632]",
                 )}
               >
                 {category}
@@ -240,7 +225,6 @@ export default function AllAlbums() {
       <main className="flex-1 min-w-0 md:h-screen md:overflow-y-auto">
         <section className="w-full px-1 md:px-8 pt-12 md:pt-8 pb-4 min-h-screen flex flex-col items-center">
           <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-8">
-
             {/* Page Header - Sticky on Desktop, Normal on Mobile */}
             <div className="text-center space-y-2 sticky top-0 md:static z-30 pt-4 pb-2 md:pt-0 md:pb-0 bg-[#EEE9DF]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1B2632] font-['Outfit']">
@@ -265,7 +249,7 @@ export default function AllAlbums() {
                         "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap",
                         selectedCategory === category
                           ? "bg-[#1B2632] text-white shadow-md"
-                          : "bg-white/50 text-[#1B2632]/70 hover:bg-white hover:text-[#1B2632] hover:shadow-sm"
+                          : "bg-white/50 text-[#1B2632]/70 hover:bg-white hover:text-[#1B2632] hover:shadow-sm",
                       )}
                     >
                       {category}

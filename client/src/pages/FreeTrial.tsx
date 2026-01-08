@@ -3,11 +3,7 @@ import { useLocation } from "wouter";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowLeft, Play } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Accordion,
   AccordionContent,
@@ -72,10 +68,8 @@ export default function FreeTrial() {
 
   return (
     <div className="min-h-screen bg-[#EEE9DF] relative pb-24">
-
       {/* Container - Constrained but full width on mobile for image */}
       <div className="container mx-auto px-0 md:px-4 max-w-2xl md:pt-4">
-
         {/* 1. Cover Photo with Back Button Overlay */}
         <div className="relative w-full aspect-square md:aspect-video md:rounded-2xl overflow-hidden bg-gray-100 shadow-sm group">
           <img
@@ -103,7 +97,8 @@ export default function FreeTrial() {
               {selectedAlbum.title}
             </h1>
             <p className="text-[#1B2632]/70 text-sm md:text-base leading-relaxed">
-              {selectedAlbum.description || "Capture your family's precious memories with this guided audio album."}
+              {selectedAlbum.description ||
+                "Capture your family's precious memories with this guided audio album."}
             </p>
             <div className="flex items-center gap-4 mt-4 text-xs font-semibold text-[#1B2632]/60 uppercase tracking-wider">
               <span>{chapters.length} Chapters</span>
@@ -134,7 +129,8 @@ export default function FreeTrial() {
                         {(() => {
                           // Strictly fetch from 'en' array as requested
                           const titles = selectedAlbum.question_set_titles;
-                          const title = titles?.en?.[idx] || `Chapter ${idx + 1}`;
+                          const title =
+                            titles?.en?.[idx] || `Chapter ${idx + 1}`;
 
                           return (
                             <span className="text-base font-bold text-[#1B2632] font-['Outfit'] leading-tight">
@@ -148,7 +144,10 @@ export default function FreeTrial() {
                   <AccordionContent className="pb-4">
                     <ul className="space-y-3 pt-1">
                       {chapterQuestions.map((q, qIdx) => (
-                        <li key={qIdx} className="flex items-start gap-3 text-[#1B2632]/80 text-sm leading-relaxed">
+                        <li
+                          key={qIdx}
+                          className="flex items-start gap-3 text-[#1B2632]/80 text-sm leading-relaxed"
+                        >
                           <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#1B2632]/30 flex-shrink-0" />
                           <span>{q}</span>
                         </li>
@@ -162,9 +161,6 @@ export default function FreeTrial() {
 
           {/* 5. Less Prominent Info (Included / How it works) */}
           <div className="pt-8 space-y-8 pb-8 border-t border-[#C9C1B1]/30">
-
-
-
             {/* What's Included */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-[#1B2632]/90">
@@ -198,17 +194,33 @@ export default function FreeTrial() {
                   <AccordionContent className="pt-0 pb-4">
                     <div className="space-y-4">
                       {[
-                        { step: 1, title: "You message us on WhatsApp", desc: "No app. Just WhatsApp." },
-                        { step: 2, title: "Your loved one shares voice notes", desc: "One story at a time" },
-                        { step: 3, title: "You get a private album link", desc: "And you can track progress live" }
+                        {
+                          step: 1,
+                          title: "You message us on WhatsApp",
+                          desc: "No app. Just WhatsApp.",
+                        },
+                        {
+                          step: 2,
+                          title: "Your loved one shares voice notes",
+                          desc: "One story at a time",
+                        },
+                        {
+                          step: 3,
+                          title: "You get a private album link",
+                          desc: "And you can track progress live",
+                        },
                       ].map((item) => (
                         <div key={item.step} className="flex items-start gap-3">
                           <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1B2632]/5 flex items-center justify-center text-xs font-bold text-[#1B2632]">
                             {item.step}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-[#1B2632]">{item.title}</p>
-                            <p className="text-xs text-[#1B2632]/60">{item.desc}</p>
+                            <p className="text-sm font-medium text-[#1B2632]">
+                              {item.title}
+                            </p>
+                            <p className="text-xs text-[#1B2632]/60">
+                              {item.desc}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -225,7 +237,9 @@ export default function FreeTrial() {
                       <p>We keep this safe and simple.</p>
                       <p>That is why I do not message your loved one first.</p>
                       <p>You share the link. They choose to start.</p>
-                      <p className="font-medium text-[#A35139]">Your stories stay private. Always.</p>
+                      <p className="font-medium text-[#A35139]">
+                        Your stories stay private. Always.
+                      </p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -236,7 +250,12 @@ export default function FreeTrial() {
             <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#1B2632]/50 pt-4">
               <span>1,000+ kahaniya recorded</span>
               <span>•</span>
-              <a href="https://wa.me/" className="underline hover:text-[#A35139]">Contact Support</a>
+              <a
+                href="https://wa.me/"
+                className="underline hover:text-[#A35139]"
+              >
+                Contact Support
+              </a>
             </div>
           </div>
         </div>
@@ -246,9 +265,13 @@ export default function FreeTrial() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#C9C1B1]/30 z-50 flex items-center justify-between md:justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="md:w-full md:max-w-2xl flex items-center justify-between w-full gap-4">
           <div className="flex flex-col items-start md:hidden">
-            <span className="text-xs text-[#1B2632]/60 font-medium ml-1">Total</span>
+            <span className="text-xs text-[#1B2632]/60 font-medium ml-1">
+              Total
+            </span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-[#1B2632]/40 line-through">₹499</span>
+              <span className="text-sm font-medium text-[#1B2632]/40 line-through">
+                ₹499
+              </span>
               <span className="text-xl font-bold text-[#A35139]">Free</span>
             </div>
           </div>

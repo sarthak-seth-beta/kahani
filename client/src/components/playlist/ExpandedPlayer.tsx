@@ -3,33 +3,66 @@ import { X } from "lucide-react";
 import Vinyl from "@/components/Vinyl";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, RotateCw } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause,
+  RotateCcw,
+  RotateCw,
+} from "lucide-react";
 
 // Custom icon component for skip backward 10 seconds
 const SkipBack10Icon = ({ size = 20 }: { size?: number }) => (
-  <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size }}>
+  <div
+    style={{
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: size,
+      height: size,
+    }}
+  >
     <RotateCcw size={size} strokeWidth={2} />
-    <span style={{
-      position: "absolute",
-      fontSize: Math.max(8, size * 0.35),
-      fontWeight: "bold",
-      lineHeight: 1,
-      marginTop: size * 0.1
-    }}>10</span>
+    <span
+      style={{
+        position: "absolute",
+        fontSize: Math.max(8, size * 0.35),
+        fontWeight: "bold",
+        lineHeight: 1,
+        marginTop: size * 0.1,
+      }}
+    >
+      10
+    </span>
   </div>
 );
 
 // Custom icon component for skip forward 10 seconds
 const SkipForward10Icon = ({ size = 20 }: { size?: number }) => (
-  <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size }}>
+  <div
+    style={{
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: size,
+      height: size,
+    }}
+  >
     <RotateCw size={size} strokeWidth={2} />
-    <span style={{
-      position: "absolute",
-      fontSize: Math.max(8, size * 0.35),
-      fontWeight: "bold",
-      lineHeight: 1,
-      marginTop: size * 0.1
-    }}>10</span>
+    <span
+      style={{
+        position: "absolute",
+        fontSize: Math.max(8, size * 0.35),
+        fontWeight: "bold",
+        lineHeight: 1,
+        marginTop: size * 0.1,
+      }}
+    >
+      10
+    </span>
   </div>
 );
 

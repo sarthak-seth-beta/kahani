@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Play,
-  Share2,
-  Heart,
-  Copy,
-  Mail,
-  MessageCircle,
-} from "lucide-react";
+import { Play, Share2, Heart, Copy, Mail, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,7 +74,7 @@ export const AlbumCard = ({
         if (navigator.share) {
           navigator
             .share({ title: album.title, text: text, url: url })
-            .catch(() => { });
+            .catch(() => {});
         }
         break;
     }

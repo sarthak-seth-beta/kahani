@@ -1,5 +1,14 @@
 import { useLocation } from "wouter";
-import { Play, Pause, Home, Search, User, SkipBack, SkipForward, RotateCcw } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Home,
+  Search,
+  User,
+  SkipBack,
+  SkipForward,
+  RotateCcw,
+} from "lucide-react";
 import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
 import { useState, useEffect } from "react";
 
@@ -8,9 +17,13 @@ interface BottomHomeNavbarProps {
   onInactive?: () => void;
 }
 
-const DUMMY_AUDIO_URL = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/testing.ogg";
+const DUMMY_AUDIO_URL =
+  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/testing.ogg";
 
-export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps) {
+export function BottomHomeNavbar({
+  isActive,
+  onInactive,
+}: BottomHomeNavbarProps) {
   const [, setLocation] = useLocation();
   const [isMobile, setIsMobile] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -22,7 +35,11 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
   // Audio Control
   useEffect(() => {
     const updateProgress = () => {
-      if (audio.duration && !isNaN(audio.duration) && audio.duration !== Infinity) {
+      if (
+        audio.duration &&
+        !isNaN(audio.duration) &&
+        audio.duration !== Infinity
+      ) {
         setProgress((audio.currentTime / audio.duration) * 100);
       } else {
         setProgress(0);
@@ -34,13 +51,13 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
       setIsEnded(true);
     };
 
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("ended", handleEnded);
 
     if (isActive) {
       setIsPlaying(true);
       setIsEnded(false);
-      audio.play().catch(e => console.error("Audio playback failed", e));
+      audio.play().catch((e) => console.error("Audio playback failed", e));
     } else {
       setIsPlaying(false);
       audio.pause();
@@ -49,8 +66,8 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
     }
     return () => {
       audio.pause();
-      audio.removeEventListener('timeupdate', updateProgress);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", updateProgress);
+      audio.removeEventListener("ended", handleEnded);
     };
   }, [isActive, audio]);
 
@@ -85,7 +102,8 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
     checkMobile();
 
     const handleScroll = () => {
-      const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+      const scrolledToBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
       setIsAtBottom(scrolledToBottom);
     };
 
@@ -105,7 +123,7 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 px-0 pb-0 pt-0 md:px-4 md:pb-4 md:pt-2 pointer-events-none flex justify-center transition-transform duration-500 ease-in-out ${isVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}
+      className={`fixed bottom-0 left-0 right-0 z-50 px-0 pb-0 pt-0 md:px-4 md:pb-4 md:pt-2 pointer-events-none flex justify-center transition-transform duration-500 ease-in-out ${isVisible ? "translate-y-0" : "translate-y-[120%]"}`}
     >
       <div
         className="pointer-events-auto relative w-full md:max-w-3xl bg-white/95 backdrop-blur-md border-t md:border border-black/10 md:shadow-2xl md:rounded-2xl p-3 flex items-center justify-between gap-4 transition-all"
@@ -154,14 +172,23 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
             <button
               onClick={togglePlay}
               className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#A35139] text-white shadow-md hover:bg-[#8B4430] hover:scale-105 transition-all active:scale-95"
-              aria-label={isPlaying ? "Pause" : (isEnded ? "Replay" : "Play")}
+              aria-label={isPlaying ? "Pause" : isEnded ? "Replay" : "Play"}
             >
               {isEnded ? (
-                <RotateCcw size={20} fill="none" className="ml-0" strokeWidth={2.5} />
+                <RotateCcw
+                  size={20}
+                  fill="none"
+                  className="ml-0"
+                  strokeWidth={2.5}
+                />
               ) : isPlaying ? (
                 <Pause size={20} fill="currentColor" />
               ) : (
-                <Play size={20} fill="currentColor" className="ml-0.5 md:ml-1" />
+                <Play
+                  size={20}
+                  fill="currentColor"
+                  className="ml-0.5 md:ml-1"
+                />
               )}
             </button>
 
@@ -175,7 +202,10 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
 
           {/* Progress Bar (Desktop Only) */}
           <div className="hidden md:flex w-32 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
-            <div className="h-full bg-[#A35139] rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+            <div
+              className="h-full bg-[#A35139] rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            ></div>
           </div>
         </div>
 
@@ -210,7 +240,10 @@ export function BottomHomeNavbar({ isActive, onInactive }: BottomHomeNavbarProps
                 Alternatively, we can put it above the ribbon like typical audio players.
             */}
       <div className="md:hidden absolute bottom-[calc(100%-1px)] left-0 right-0 h-0.5 bg-gray-200">
-        <div className="h-full bg-[#A35139] transition-all duration-300" style={{ width: `${progress}%` }}></div>
+        <div
+          className="h-full bg-[#A35139] transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        ></div>
       </div>
     </div>
   );

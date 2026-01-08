@@ -10,8 +10,6 @@ export default function ValueProposition() {
           Kahani helps you record your loved one’s stories and voice through
           WhatsApp.
         </p>
-
-
       </div>
     </section>
   );

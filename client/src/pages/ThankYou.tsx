@@ -77,7 +77,6 @@ export default function ThankYou() {
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
         <div className="max-w-xl w-full text-center space-y-8">
-
           <div className="space-y-4">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#1B2632] tracking-tight">
               Final Step!
@@ -91,7 +90,8 @@ export default function ThankYou() {
           {trialId && businessPhone && (
             <div className="flex flex-col items-center gap-4 w-full">
               <p className="text-sm text-[#1B2632]/70 max-w-md mx-auto leading-relaxed">
-                If you were not redirected, tap below. A message with your Order ID is ready — just press Send.
+                If you were not redirected, tap below. A message with your Order
+                ID is ready — just press Send.
               </p>
 
               <Button
@@ -111,7 +111,16 @@ export default function ThankYou() {
       {/* Footer Note */}
       <div className="p-6 text-center">
         <p className="text-xs sm:text-sm text-[#1B2632]/50 max-w-2xl mx-auto leading-relaxed">
-          Note: We do not ask for any information of your storyteller. This is absolutely safe and secure. For more information, refer to our <a href="/faqs" className="underline hover:text-[#A35139]">FAQs</a> and <a href="/privacy-policy" className="underline hover:text-[#A35139]">Privacy Policy</a>.
+          Note: We do not ask for any information of your storyteller. This is
+          absolutely safe and secure. For more information, refer to our{" "}
+          <a href="/faqs" className="underline hover:text-[#A35139]">
+            FAQs
+          </a>{" "}
+          and{" "}
+          <a href="/privacy-policy" className="underline hover:text-[#A35139]">
+            Privacy Policy
+          </a>
+          .
         </p>
       </div>
     </div>

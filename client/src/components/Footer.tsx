@@ -6,18 +6,17 @@ export function Footer() {
 
   return (
     <footer className="relative w-full bg-[#1B1B1B] text-[#EEE9DF] pt-8 pb-4 px-6 overflow-hidden flex flex-col items-center justify-center text-center">
-
       {/* 1. Circular Backdrop Glow */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none opacity-20 blur-[100px]"
         style={{
-          background: "radial-gradient(circle, #FFB162 0%, rgba(255, 177, 98, 0) 70%)"
+          background:
+            "radial-gradient(circle, #FFB162 0%, rgba(255, 177, 98, 0) 70%)",
         }}
       />
 
       {/* 2. Main Content Container (z-10 to be above glow) */}
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center space-y-6">
-
         {/* Main Heading */}
         <h2 className="text-3xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-tight tracking-tight">
           Before they're <br />
@@ -25,7 +24,8 @@ export function Footer() {
         </h2>
 
         <p className="text-lg md:text-xl text-[#EEE9DF]/80 max-w-2xl font-light italic mt-4">
-          "We ask the questions you have always wanted to ask - and life got busy."
+          "We ask the questions you have always wanted to ask - and life got
+          busy."
         </p>
 
         {/* Record Button */}
@@ -43,10 +43,10 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-2">
           {/* Brand Tagline */}
           <div className="space-y-2">
-            <p className="text-2xl font-serif text-[#FFB162]">
-              Kahani
-            </p>
-            <span className="text-[#EEE9DF]/60 text-base font-sans font-normal">by families, for families</span>
+            <p className="text-2xl font-serif text-[#FFB162]">Kahani</p>
+            <span className="text-[#EEE9DF]/60 text-base font-sans font-normal">
+              by families, for families
+            </span>
           </div>
 
           {/* Social Icons */}
@@ -72,13 +72,19 @@ export function Footer() {
           {/* Bottom Links */}
           <div className="flex gap-8 text-sm text-[#EEE9DF]/60 mt-4">
             <Link href="/company-legal">
-              <span className="hover:text-[#FFB162] transition-colors cursor-pointer">Privacy</span>
+              <span className="hover:text-[#FFB162] transition-colors cursor-pointer">
+                Privacy
+              </span>
             </Link>
             <Link href="/about-us">
-              <span className="hover:text-[#FFB162] transition-colors cursor-pointer">About Us</span>
+              <span className="hover:text-[#FFB162] transition-colors cursor-pointer">
+                About Us
+              </span>
             </Link>
             <Link href="/contact-us">
-              <span className="hover:text-[#FFB162] transition-colors cursor-pointer">Contact Us</span>
+              <span className="hover:text-[#FFB162] transition-colors cursor-pointer">
+                Contact Us
+              </span>
             </Link>
           </div>
         </div>
@@ -91,7 +97,6 @@ export function Footer() {
           <p>© 2025 Kahani. All rights reserved.</p>
           <p>by Sprism Culture Labs Pvt Ltd</p>
         </div>
-
       </div>
     </footer>
   );
