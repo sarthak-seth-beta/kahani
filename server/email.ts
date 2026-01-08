@@ -54,3 +54,45 @@ ${JSON.stringify(webhookPayload, null, 2)}
     });
   }
 }
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<boolean> {
+  console.log("--- sendEmail called ---");
+  console.log("To:", to);
+  console.log("Subject:", subject);
+  console.log("API Key present:", !!process.env.RESEND_API_KEY);
+
+  if (!resend || !process.env.RESEND_API_KEY) {
+    console.error("DEBUG: RESEND_API_KEY missing or resend client null");
+    return false;
+  }
+
+  try {
+    console.log("DEBUG: Calling resend.emails.send...");
+    const { data, error } = await resend.emails.send({
+      from: "Kahani <team@resend.dev>",
+      to,
+      subject,
+      html,
+    });
+    console.log("DEBUG: Resend response received");
+
+    if (error) {
+      console.error("DEBUG: Resend API Error:", error);
+      return false;
+    }
+
+    console.log("DEBUG: Email sent successfully:", data);
+    return true;
+  } catch (error) {
+    console.error("DEBUG: Failed to execute sendEmail exception:", error);
+    return false;
+  }
+}

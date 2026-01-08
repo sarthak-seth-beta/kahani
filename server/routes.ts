@@ -1460,6 +1460,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/custom-album", async (req, res) => {
+    try {
+      const {
+        title,
+        recipientName,
+        occasion,
+        language,
+        instructions,
+        email,
+        phone,
+        questions,
+      } = req.body;
+
+      // Validate required fields
+      if (!title || !recipientName || !email) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const { sendEmail } = await import("./email");
+
+      // Format Questions List
+      const questionsList = questions
+        ?.map((q: any, i: number) => `<li><strong>Q${i + 1}:</strong> ${q.text}</li>`)
+        .join("") || "<li>No custom questions provided</li>";
+
+      const emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #A35139;">New Custom Album Request</h1>
+          <p>You have received a new request for a custom album!</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Title</td><td style="padding: 10px;">${title}</td></tr>
+            <tr><td style="padding: 10px; font-weight: bold;">Acc for</td><td style="padding: 10px;">${recipientName}</td></tr>
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Occasion</td><td style="padding: 10px;">${occasion}</td></tr>
+            <tr><td style="padding: 10px; font-weight: bold;">Language</td><td style="padding: 10px;">${language}</td></tr>
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Contact Email</td><td style="padding: 10px;">${email}</td></tr>
+            <tr><td style="padding: 10px; font-weight: bold;">Phone</td><td style="padding: 10px;">${phone}</td></tr>
+             <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Instructions</td><td style="padding: 10px;">${instructions || 'N/A'}</td></tr>
+          </table>
+
+          <h3>Custom Questions:</h3>
+          <ul>
+            ${questionsList}
+          </ul>
+
+          <div style="margin-top: 30px; font-size: 12px; color: #888;">
+            Sent from Kahani Web Platform
+          </div>
+        </div>
+      `;
+
+      // Send to Admin
+      // IMPORTANT: In "Test Mode" on Resend, you can ONLY send to your verified email.
+      // If sarthakseth021@gmail.com is not your verified email, this will fail.
+      const emailSent = await sendEmail({
+        to: "sarthakseth021@gmail.com",
+        subject: `New Album Request: ${title}`,
+        html: emailHtml,
+      });
+
+      if (!emailSent) {
+        throw new Error("Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.");
+      }
+
+      res.json({ success: true, message: "Request received successfully" });
+
+    } catch (error: any) {
+      console.error("Error submitting custom album:", error);
+      res.status(500).json({ error: "Failed to submit request" });
+    }
+  });
+
   // Optional: Endpoint for Render Cron Jobs or external schedulers
   app.post("/api/internal/process-scheduled", async (req, res) => {
     // Optional: Add auth check
