@@ -76,7 +76,7 @@ export const AlbumCard = ({
         if (navigator.share) {
           navigator
             .share({ title: album.title, text: text, url: url })
-            .catch(() => { });
+            .catch(() => {});
         }
         break;
     }

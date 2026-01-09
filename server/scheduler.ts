@@ -5,6 +5,8 @@ import {
   sendTemplateMessageWithRetry,
   sendStorytellerCheckin,
   sendBuyerCheckin,
+  sendBuyerFeedbackRequest,
+  sendStorytellerFeedbackRequest,
 } from "./whatsapp";
 import {
   processRetryReminders,
@@ -380,6 +382,121 @@ export async function sendStorytellerCheckins(): Promise<void> {
   }
 }
 
+export async function sendScheduledFeedbackRequests(): Promise<void> {
+  // Send buyer feedback requests
+  const buyerTrials = await storage.getTrialsNeedingBuyerFeedback();
+  console.log(`Found ${buyerTrials.length} trials needing buyer feedback`);
+
+  for (const trial of buyerTrials) {
+    if (!trial.customerPhone) {
+      console.log("Skipping trial without customer phone:", trial.id);
+      continue;
+    }
+
+    // Get buyer feedback row
+    const buyerFeedback = await storage.getUserFeedbackByTrialAndType(
+      trial.id,
+      "buyer",
+    );
+
+    if (!buyerFeedback) {
+      console.log("Buyer feedback row not found for trial:", trial.id);
+      continue;
+    }
+
+    // Double-check that feedback hasn't been sent (race condition protection)
+    if (buyerFeedback.sentAt) {
+      console.log("Buyer feedback already sent for trial, skipping:", trial.id);
+      continue;
+    }
+
+    try {
+      const feedbackSent = await sendBuyerFeedbackRequest(
+        trial.customerPhone,
+        trial.buyerName,
+        trial.storytellerName,
+        trial.id,
+      );
+
+      if (feedbackSent) {
+        await storage.updateUserFeedback(buyerFeedback.id, {
+          sentAt: new Date(),
+        });
+
+        console.log("Sent buyer feedback request to trial:", trial.id);
+      } else {
+        console.log(
+          "Failed to send buyer feedback request for trial:",
+          trial.id,
+        );
+      }
+    } catch (error) {
+      console.error("Error sending buyer feedback request:", trial.id, error);
+    }
+  }
+
+  // Send storyteller feedback requests
+  const storytellerTrials = await storage.getTrialsNeedingStorytellerFeedback();
+  console.log(
+    `Found ${storytellerTrials.length} trials needing storyteller feedback`,
+  );
+
+  for (const trial of storytellerTrials) {
+    if (!trial.storytellerPhone) {
+      console.log("Skipping trial without storyteller phone:", trial.id);
+      continue;
+    }
+
+    // Get storyteller feedback row
+    const storytellerFeedback = await storage.getUserFeedbackByTrialAndType(
+      trial.id,
+      "storyteller",
+    );
+
+    if (!storytellerFeedback) {
+      console.log("Storyteller feedback row not found for trial:", trial.id);
+      continue;
+    }
+
+    // Double-check that feedback hasn't been sent (race condition protection)
+    if (storytellerFeedback.sentAt) {
+      console.log(
+        "Storyteller feedback already sent for trial, skipping:",
+        trial.id,
+      );
+      continue;
+    }
+
+    try {
+      const feedbackSent = await sendStorytellerFeedbackRequest(
+        trial.storytellerPhone,
+        trial.storytellerName,
+        trial.storytellerLanguagePreference,
+        trial.id,
+      );
+
+      if (feedbackSent) {
+        await storage.updateUserFeedback(storytellerFeedback.id, {
+          sentAt: new Date(),
+        });
+
+        console.log("Sent storyteller feedback request to trial:", trial.id);
+      } else {
+        console.log(
+          "Failed to send storyteller feedback request for trial:",
+          trial.id,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error sending storyteller feedback request:",
+        trial.id,
+        error,
+      );
+    }
+  }
+}
+
 export async function processScheduledTasks(): Promise<void> {
   if (isProcessing) {
     console.log("Scheduler already running, skipping this run");
@@ -402,6 +519,8 @@ export async function processScheduledTasks(): Promise<void> {
     await sendStorytellerCheckins();
 
     await sendBuyerCheckins();
+
+    await sendScheduledFeedbackRequests();
 
     console.log("Scheduled tasks completed");
   } catch (error) {

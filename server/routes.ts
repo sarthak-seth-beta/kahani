@@ -1483,9 +1483,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sendEmail } = await import("./email");
 
       // Format Questions List
-      const questionsList = questions
-        ?.map((q: any, i: number) => `<li><strong>Q${i + 1}:</strong> ${q.text}</li>`)
-        .join("") || "<li>No custom questions provided</li>";
+      const questionsList =
+        questions
+          ?.map(
+            (q: any, i: number) =>
+              `<li><strong>Q${i + 1}:</strong> ${q.text}</li>`,
+          )
+          .join("") || "<li>No custom questions provided</li>";
 
       const emailHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
@@ -1500,7 +1504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <tr><td style="padding: 10px; font-weight: bold;">Language</td><td style="padding: 10px;">${language}</td></tr>
             <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Contact Email</td><td style="padding: 10px;">${email || 'N/A'}</td></tr>
             <tr><td style="padding: 10px; font-weight: bold;">Phone</td><td style="padding: 10px;">${phone}</td></tr>
-             <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Instructions</td><td style="padding: 10px;">${instructions || 'N/A'}</td></tr>
+             <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Instructions</td><td style="padding: 10px;">${instructions || "N/A"}</td></tr>
           </table>
 
           <h3>Custom Questions:</h3>
@@ -1524,11 +1528,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!emailSent) {
-        throw new Error("Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.");
+        throw new Error(
+          "Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.",
+        );
       }
 
       res.json({ success: true, message: "Request received successfully" });
-
     } catch (error: any) {
       console.error("Error submitting custom album:", error);
       res.status(500).json({ error: "Failed to submit request" });

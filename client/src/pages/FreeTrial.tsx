@@ -3,11 +3,7 @@ import { useLocation } from "wouter";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowLeft, Play, Globe, ChevronDown } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Accordion,
   AccordionContent,
@@ -136,7 +132,9 @@ export default function FreeTrial() {
               {selectedAlbum.questions_hn?.length > 0 && (
                 <div className="relative">
                   <button
-                    onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                    onClick={() =>
+                      setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
+                    }
                     className="flex items-center justify-center gap-2 px-3 py-2 bg-transparent border border-black/20 rounded-lg min-w-[100px] transition-all duration-200 hover:bg-black/5"
                   >
                     <Globe className="w-4 h-4 text-black" />
@@ -158,8 +156,11 @@ export default function FreeTrial() {
                             setLang("en");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en" ? "bg-[#A35139]/10 text-black" : "text-black hover:bg-black/5"
-                            }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${
+                            lang === "en"
+                              ? "bg-[#A35139]/10 text-black"
+                              : "text-black hover:bg-black/5"
+                          }`}
                         >
                           English
                         </button>
@@ -168,8 +169,11 @@ export default function FreeTrial() {
                             setLang("hn");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn" ? "bg-[#A35139]/10 text-black" : "text-black hover:bg-black/5"
-                            }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${
+                            lang === "hn"
+                              ? "bg-[#A35139]/10 text-black"
+                              : "text-black hover:bg-black/5"
+                          }`}
                         >
                           हिंदी
                         </button>
@@ -196,7 +200,10 @@ export default function FreeTrial() {
                         {(() => {
                           // Strictly fetch from 'en' array as requested
                           const titles = selectedAlbum.question_set_titles;
-                          const title = titles?.[lang]?.[idx] || titles?.en?.[idx] || `Chapter ${idx + 1}`;
+                          const title =
+                            titles?.[lang]?.[idx] ||
+                            titles?.en?.[idx] ||
+                            `Chapter ${idx + 1}`;
 
                           return (
                             <span className="text-base font-bold text-[#1B2632] font-['Outfit'] leading-tight">
