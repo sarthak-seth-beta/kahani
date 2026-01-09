@@ -1027,41 +1027,30 @@ export async function sendShareableLink(
   orderId: string,
   languagePreference?: string | null,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = true;
-  // const isProduction = false;
   const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
 
   const prefilledMessage = `Hi, ${buyerName} has placed an order st_${orderId} for me.`;
 
   const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
 
-  let messageSent = false;
+  const isHindi = languagePreference === "hn";
 
-  if (isProduction) {
-    const templateParams = [
-      { type: "text", text: storytellerName },
-      { type: "text", text: whatsappLink },
-    ];
+  const messageEnglish = `Hello ${storytellerName}.
 
-    const templateName =
-      `forward_vaani` + getStorytellerLanguageSuffix(languagePreference);
+I would love to save a few stories from your life in your voice. Please tap this link ${whatsappLink}.
+A new WhatsApp chat will open - please press Send.`;
 
-    messageSent = await sendTemplateMessageWithRetry(
-      recipientNumber,
-      templateName,
-      templateParams,
-      { orderId },
-    );
-  } else {
-    const message = `Please share this link with *${storytellerName}*:
-    ${whatsappLink} 
-    When ${storytellerName} opens this link, they'll be able to start chatting with us directly on WhatsApp!`;
+  const messageHindi = `नमस्ते ${storytellerName},
 
-    messageSent = await sendTextMessageWithRetry(recipientNumber, message, {
-      orderId,
-    });
-  }
+मुझे आपकी ज़िंदगी की कुछ कहानियाँ हमेशा के लिए रिकॉर्ड करके रखनी हैं।
+
+कृपया इस लिंक को दबाइए - ${whatsappLink} - एक नई WhatsApp चैट शुरू होगी, और वहाँ आप कोई भी मैसेज भेज दीजिए। धन्यवाद!`;
+
+  const message = isHindi ? messageHindi : messageEnglish;
+
+  const messageSent = await sendTextMessageWithRetry(recipientNumber, message, {
+    orderId,
+  });
 
   // Track when shareable link is sent (only on first successful send)
   if (messageSent) {
