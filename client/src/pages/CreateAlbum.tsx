@@ -6,7 +6,6 @@ import { z } from "zod";
 import {
     ArrowLeft,
     Loader2,
-    Upload,
     Sparkles,
     Plus,
     Trash2,
@@ -19,19 +18,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from "@/components/ui/form";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
@@ -79,10 +78,10 @@ export default function CreateAlbum() {
         },
     });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "questions",
-  });
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "questions",
+    });
 
     const onSubmit = async (data: CreateAlbumFormValues) => {
         setIsSubmitting(true);
@@ -103,7 +102,7 @@ export default function CreateAlbum() {
                 body: JSON.stringify(submissionData),
             });
 
-      if (!response.ok) throw new Error("Failed to submit");
+            if (!response.ok) throw new Error("Failed to submit");
 
             console.log("Form Submitted:", submissionData);
             toast({
@@ -241,13 +240,6 @@ export default function CreateAlbum() {
                                 )}
                             />
                         </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
 
                         {/* 4. Instructions (Special Request) */}
                         <FormField
@@ -417,91 +409,9 @@ export default function CreateAlbum() {
                             )}
                         </Button>
 
-              <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex items-center gap-2 animate-in slide-in-from-left-2 duration-300"
-                  >
-                    <FormField
-                      control={form.control}
-                      name={`questions.${index}.text`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder={`Question ${index + 1}`}
-                              className="h-10 text-sm bg-white"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="h-10 w-10 text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {fields.length === 0 && (
-                <p className="text-xs text-muted-foreground italic">
-                  No questions added. Click "Add Question" to suggest topics.
-                </p>
-              )}
+                    </form>
+                </Form>
             </div>
-
-            {/* Instructions */}
-            <FormField
-              control={form.control}
-              name="instructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Special Instructions
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Any specific stories, themes, or memories you want to capture?"
-                      className="min-h-[120px] text-sm sm:text-base bg-white resize-none"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 mt-4"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Request My Album
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }
