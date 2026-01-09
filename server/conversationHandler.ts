@@ -233,8 +233,30 @@ async function resendBuyerOnboardingTemplates(
       );
     }
 
-    // Wait 2 seconds before sending shareable link (similar to existing flow)
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Wait 30 seconds before sending the heads up message
+    await new Promise((resolve) => setTimeout(resolve, 30000));
+
+    // Send heads up message about the process
+    const headsUpMessage = `A quick heads up on how this will go (3 steps):
+1. Next, I will share a short message for your ${trial.storytellerName}. Please copy and send it. I do not message them first.
+2. They tap the WhatsApp link and press Send. I will welcome them and take it from there.
+3. Over the next few days, I will ask questions about ${albumTitle}.
+
+They reply with voice notes, and you get the album. A little daily encouragement from you helps. 🤍
+
+Copy the next message for your ${trial.storytellerName} ⬇️`;
+
+    const headsUpSent = await sendTextMessageWithRetry(
+      recipientNumber,
+      headsUpMessage,
+    );
+
+    if (!headsUpSent) {
+      console.warn("Failed to send heads up message for trial:", trial.id);
+    }
+
+    // Wait 30 seconds before sending shareable link
+    await new Promise((resolve) => setTimeout(resolve, 30000));
 
     // Send shareable link template
     const shareableLinkSent = await sendShareableLink(
@@ -1231,7 +1253,8 @@ export async function sendQuestion(
   if (
     trial.customerPhone &&
     !trial.customCoverImageUrl &&
-    targetQuestionIndex >= 8 && targetQuestionIndex % 3 === 2
+    targetQuestionIndex >= 8 &&
+    targetQuestionIndex % 3 === 2
   ) {
     console.log("Sending photo request to buyer:", {
       buyerPhone: trial.customerPhone,
