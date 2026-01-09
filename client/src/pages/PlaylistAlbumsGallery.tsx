@@ -83,10 +83,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-      questionIndex: number;
-      questionText: string;
-      mediaUrl: string | null;
-    }> {
+    questionIndex: number;
+    questionText: string;
+    mediaUrl: string | null;
+  }> {
   if (!isConversational) {
     return tracks;
   }
@@ -312,9 +312,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => {});
-        currentAudioRef.current.removeEventListener("pause", () => {});
-        currentAudioRef.current.removeEventListener("play", () => {});
+        currentAudioRef.current.removeEventListener("ended", () => { });
+        currentAudioRef.current.removeEventListener("pause", () => { });
+        currentAudioRef.current.removeEventListener("play", () => { });
         currentAudioRef.current = null;
       }
 
@@ -1197,9 +1197,17 @@ export default function PlaylistAlbumsGallery() {
                                 trackIndexInBatch < batch.tracks.length - 1
                                   ? "1px solid rgba(0, 0, 0, 0.05)"
                                   : "none",
-                              cursor: "pointer",
+                              cursor: !track.mediaUrl ? "default" : "pointer",
+                              opacity: !track.mediaUrl ? 0.5 : 1,
                             }}
                             onClick={() => {
+                              if (!track.mediaUrl) {
+                                toast({
+                                  description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
+                                  duration: 4000,
+                                });
+                                return;
+                              }
                               trackEvent(AnalyticsEvents.TRACK_CLICKED, {
                                 track_index: globalIndex,
                                 track_question: track.questionText,
@@ -1238,6 +1246,13 @@ export default function PlaylistAlbumsGallery() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (!track.mediaUrl) {
+                                  toast({
+                                    description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
+                                    duration: 4000,
+                                  });
+                                  return;
+                                }
                                 handlePlayPause(globalIndex);
                               }}
                               style={{
@@ -1299,9 +1314,17 @@ export default function PlaylistAlbumsGallery() {
                         alignItems: "center",
                         padding: "0.75rem 0",
                         borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-                        cursor: "pointer",
+                        cursor: !track.mediaUrl ? "default" : "pointer",
+                        opacity: !track.mediaUrl ? 0.5 : 1,
                       }}
                       onClick={() => {
+                        if (!track.mediaUrl) {
+                          toast({
+                            description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
+                            duration: 4000,
+                          });
+                          return;
+                        }
                         trackEvent(AnalyticsEvents.TRACK_CLICKED, {
                           track_index: index,
                           track_question: track.questionText,
@@ -1340,6 +1363,13 @@ export default function PlaylistAlbumsGallery() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (!track.mediaUrl) {
+                            toast({
+                              description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
+                              duration: 4000,
+                            });
+                            return;
+                          }
                           handlePlayPause(index);
                         }}
                         style={{
