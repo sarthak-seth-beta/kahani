@@ -2,8 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowLeft, Play } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Check, ArrowLeft, Play, Globe, ChevronDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Accordion,
   AccordionContent,
@@ -16,6 +20,8 @@ import type { Album } from "@shared/schema";
 export default function FreeTrial() {
   const [, setLocation] = useLocation();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [lang, setLang] = useState<"en" | "hn">("en");
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
 
   const urlParams = new URLSearchParams(window.location.search);
   const albumIdFromUrl = urlParams.get("albumId") || "";
@@ -29,12 +35,14 @@ export default function FreeTrial() {
       cover_image: string;
       description: string;
       questions: string[];
+      questions_hn: string[];
       question_set_titles?: Album["questionSetTitles"];
     }>
   >({
     queryKey: ["/api/albums"],
   });
 
+  // Determine selected album details
   // Determine selected album details
   const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albums) {
@@ -47,16 +55,25 @@ export default function FreeTrial() {
     return null;
   }, [albumIdFromUrl, albumTitleFromUrl, albums]);
 
+  // Determine current questions based on language
+  const currentQuestions = useMemo(() => {
+    if (!selectedAlbum) return [];
+    if (lang === "hn" && selectedAlbum.questions_hn?.length > 0) {
+      return selectedAlbum.questions_hn;
+    }
+    return selectedAlbum.questions;
+  }, [selectedAlbum, lang]);
+
   // Helper to chunk questions into chapters
   const chapters = useMemo(() => {
-    if (!selectedAlbum?.questions) return [];
+    if (!currentQuestions) return [];
     const chunkSize = 3;
     const result = [];
-    for (let i = 0; i < selectedAlbum.questions.length; i += chunkSize) {
-      result.push(selectedAlbum.questions.slice(i, i + chunkSize));
+    for (let i = 0; i < currentQuestions.length; i += chunkSize) {
+      result.push(currentQuestions.slice(i, i + chunkSize));
     }
     return result;
-  }, [selectedAlbum]);
+  }, [currentQuestions]);
 
   if (!selectedAlbum) {
     return (
@@ -93,9 +110,11 @@ export default function FreeTrial() {
         <div className="px-4 py-6 md:px-0 space-y-6">
           {/* Title Section */}
           <div>
-            <h1 className="text-2xl md:text-4xl font-bold text-[#1B2632] font-['Outfit'] leading-tight mb-2">
-              {selectedAlbum.title}
-            </h1>
+            <div className="flex justify-between items-start gap-4 mb-2">
+              <h1 className="text-2xl md:text-4xl font-bold text-[#1B2632] font-['Outfit'] leading-tight">
+                {selectedAlbum.title}
+              </h1>
+            </div>
             <p className="text-[#1B2632]/70 text-sm md:text-base leading-relaxed">
               {selectedAlbum.description ||
                 "Capture your family's precious memories with this guided audio album."}
@@ -109,9 +128,57 @@ export default function FreeTrial() {
 
           {/* 3. Collapsible Chapter-wise Questions */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
-              What you'll cover
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
+                What you'll cover
+              </h2>
+
+              {selectedAlbum.questions_hn?.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-transparent border border-black/20 rounded-lg min-w-[100px] transition-all duration-200 hover:bg-black/5"
+                  >
+                    <Globe className="w-4 h-4 text-black" />
+                    <span className="font-['Outfit'] text-sm text-black">
+                      {lang === "hn" ? "हिंदी" : "English"}
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-black/60 ml-1" />
+                  </button>
+
+                  {isLanguageDropdownOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsLanguageDropdownOpen(false)}
+                      />
+                      <div className="absolute top-full right-0 mt-2 bg-white border border-black/10 rounded-lg shadow-lg z-50 min-w-[140px] overflow-hidden">
+                        <button
+                          onClick={() => {
+                            setLang("en");
+                            setIsLanguageDropdownOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en" ? "bg-[#A35139]/10 text-black" : "text-black hover:bg-black/5"
+                            }`}
+                        >
+                          English
+                        </button>
+                        <button
+                          onClick={() => {
+                            setLang("hn");
+                            setIsLanguageDropdownOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn" ? "bg-[#A35139]/10 text-black" : "text-black hover:bg-black/5"
+                            }`}
+                        >
+                          हिंदी
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
 
             <Accordion type="single" collapsible className="w-full space-y-3">
               {chapters.map((chapterQuestions, idx) => (
@@ -129,8 +196,7 @@ export default function FreeTrial() {
                         {(() => {
                           // Strictly fetch from 'en' array as requested
                           const titles = selectedAlbum.question_set_titles;
-                          const title =
-                            titles?.en?.[idx] || `Chapter ${idx + 1}`;
+                          const title = titles?.[lang]?.[idx] || titles?.en?.[idx] || `Chapter ${idx + 1}`;
 
                           return (
                             <span className="text-base font-bold text-[#1B2632] font-['Outfit'] leading-tight">
