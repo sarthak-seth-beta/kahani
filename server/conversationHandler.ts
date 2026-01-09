@@ -16,6 +16,7 @@ import {
   sendInteractiveMessageWithCTA,
   sendHowToUseKahani,
   sendQuestionnairePremise,
+  sendFeedbackThankYou,
 } from "./whatsapp";
 import { uploadVoiceNoteToR2, uploadImageToR2 } from "./r2";
 import ffmpeg from "fluent-ffmpeg";
@@ -573,6 +574,52 @@ export async function handleIncomingMessage(
       });
       await handleMultipleActiveTrials(trial, fromNumber);
       return;
+    }
+  }
+
+  // Check for buyer feedback button responses
+  // This should be checked before normal state routing
+  if (messageType === "button" || messageType === "interactive") {
+    const normalizedFromNumber = normalizePhoneNumber(fromNumber);
+    if (trial.customerPhone === normalizedFromNumber) {
+      const buyerFeedback = await storage.getUserFeedbackByTrialAndType(
+        trial.id,
+        "buyer",
+      );
+      if (
+        buyerFeedback &&
+        buyerFeedback.sentAt &&
+        buyerFeedback.buyerFeedbackRating === null
+      ) {
+        const responseText =
+          messageType === "button" || messageType === "interactive"
+            ? interactiveText
+            : messageText;
+        await handleBuyerFeedbackResponse(normalizedFromNumber, responseText);
+        console.log("Handled buyer feedback response, returning early");
+        return;
+      }
+    }
+  }
+
+  // Check for storyteller feedback voice note
+  // This should be checked before normal state routing
+  if (messageType === "audio") {
+    const normalizedFromNumber = normalizePhoneNumber(fromNumber);
+    if (trial.storytellerPhone === normalizedFromNumber) {
+      const storytellerFeedback = await storage.getUserFeedbackByTrialAndType(
+        trial.id,
+        "storyteller",
+      );
+      if (
+        storytellerFeedback &&
+        storytellerFeedback.sentAt &&
+        storytellerFeedback.storytellerFeedbackVoiceNoteUrl === null
+      ) {
+        await handleStorytellerFeedbackVoiceNote(normalizedFromNumber, message);
+        console.log("Handled storyteller feedback voice note, returning early");
+        return;
+      }
     }
   }
 
@@ -1403,22 +1450,40 @@ async function handleVoiceNote(
       await import("./whatsapp");
 
     // Send to storyteller
-    await sendStorytellerCompletionMessages(
+    const storytellerMessageSent = await sendStorytellerCompletionMessages(
       fromNumber,
       trial.storytellerName,
       trial.id,
       trial.storytellerLanguagePreference,
     );
 
+    // Schedule storyteller feedback 24 hours after completion message
+    if (storytellerMessageSent) {
+      await storage.createUserFeedback({
+        trialId: trial.id,
+        feedbackType: "storyteller",
+        scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+    }
+
     // Send to buyer if phone number exists
     if (trial.customerPhone) {
-      await sendBuyerCompletionMessage(
+      const buyerMessageSent = await sendBuyerCompletionMessage(
         trial.customerPhone,
         trial.buyerName,
         trial.storytellerName,
         trial.id,
         trial.storytellerLanguagePreference,
       );
+
+      // Schedule buyer feedback 24 hours after completion message
+      if (buyerMessageSent) {
+        await storage.createUserFeedback({
+          trialId: trial.id,
+          feedbackType: "buyer",
+          scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        });
+      }
     }
   } else if (isConversationalAlbum) {
     // Conversational album: handle batch flow
@@ -1904,6 +1969,281 @@ async function cancelBuyerCheckin(trialId: string): Promise<void> {
       buyerCheckinScheduledFor: null,
     });
     console.log("Cancelled scheduled buyer check-in for trial:", trialId);
+  }
+}
+
+/**
+ * Helper function to check if both feedbacks are received and send thank you message
+ */
+async function checkAndSendThankYou(trial: any): Promise<void> {
+  // Get both feedback rows
+  const buyerFeedback = await storage.getUserFeedbackByTrialAndType(
+    trial.id,
+    "buyer",
+  );
+  const storytellerFeedback = await storage.getUserFeedbackByTrialAndType(
+    trial.id,
+    "storyteller",
+  );
+
+  // Check if both feedbacks are received and thank you not sent
+  if (
+    buyerFeedback &&
+    storytellerFeedback &&
+    buyerFeedback.receivedAt !== null &&
+    storytellerFeedback.receivedAt !== null &&
+    buyerFeedback.thankYouSentAt === null
+  ) {
+    // Send thank you to buyer
+    if (trial.customerPhone) {
+      await sendFeedbackThankYou(trial.customerPhone, trial.buyerName);
+    }
+
+    // Send thank you to storyteller
+    if (trial.storytellerPhone) {
+      await sendFeedbackThankYou(trial.storytellerPhone, trial.storytellerName);
+    }
+
+    // Mark thank you as sent (update buyer feedback row)
+    await storage.updateUserFeedback(buyerFeedback.id, {
+      thankYouSentAt: new Date(),
+    });
+
+    console.log("Sent thank you messages for trial:", trial.id);
+  }
+}
+
+/**
+ * Handle buyer feedback button response
+ */
+async function handleBuyerFeedbackResponse(
+  fromNumber: string,
+  buttonText: string,
+): Promise<void> {
+  console.log("Handling buyer feedback response:", {
+    fromNumber,
+    buttonText,
+  });
+
+  // Map button text to rating
+  const normalizedButtonText = buttonText.toLowerCase().trim();
+  let rating: number | null = null;
+
+  if (normalizedButtonText === "loved it") {
+    rating = 3;
+  } else if (normalizedButtonText === "it was nice") {
+    rating = 2;
+  } else if (normalizedButtonText === "could be better") {
+    rating = 1;
+  }
+
+  if (rating === null) {
+    console.log("Unknown buyer feedback button text:", buttonText);
+    return;
+  }
+
+  // Find oldest trial without feedback for this buyer phone number
+  const normalizedFromNumber = normalizePhoneNumber(fromNumber);
+  const trial =
+    await storage.getOldestTrialWithoutBuyerFeedback(normalizedFromNumber);
+
+  if (!trial) {
+    console.log("No trial found for buyer feedback:", normalizedFromNumber);
+    return;
+  }
+
+  // Get buyer feedback row
+  const buyerFeedback = await storage.getUserFeedbackByTrialAndType(
+    trial.id,
+    "buyer",
+  );
+
+  if (!buyerFeedback) {
+    console.log(
+      "Buyer feedback row not found for trial:",
+      trial.id,
+      "Ignoring response",
+    );
+    return;
+  }
+
+  // Check if feedback was already sent (should have been sent before receiving response)
+  if (!buyerFeedback.sentAt) {
+    console.log(
+      "Buyer feedback request not sent yet for trial:",
+      trial.id,
+      "Ignoring response",
+    );
+    return;
+  }
+
+  // Check if feedback already received
+  if (buyerFeedback.buyerFeedbackRating !== null) {
+    console.log("Buyer feedback already received for trial:", trial.id);
+    return;
+  }
+
+  // Update feedback row with rating
+  await storage.updateUserFeedback(buyerFeedback.id, {
+    buyerFeedbackRating: rating,
+    receivedAt: new Date(),
+  });
+
+  console.log("Updated buyer feedback rating:", {
+    trialId: trial.id,
+    feedbackId: buyerFeedback.id,
+    rating,
+  });
+
+  // Check if both feedbacks received and send thank you
+  await checkAndSendThankYou(trial);
+}
+
+/**
+ * Handle storyteller feedback voice note
+ */
+async function handleStorytellerFeedbackVoiceNote(
+  fromNumber: string,
+  message: WhatsAppMessage,
+): Promise<void> {
+  console.log("Handling storyteller feedback voice note:", {
+    fromNumber,
+    audioId: message.audio?.id,
+  });
+
+  if (!message.audio || !message.audio.id) {
+    console.error("Invalid voice note message - missing audio data");
+    return;
+  }
+
+  const audioId = message.audio.id;
+  const mimeType = message.audio.mime_type;
+
+  // Find oldest trial without feedback for this storyteller phone number
+  const normalizedFromNumber = normalizePhoneNumber(fromNumber);
+  const trial =
+    await storage.getOldestTrialWithoutStorytellerFeedback(
+      normalizedFromNumber,
+    );
+
+  if (!trial) {
+    console.log(
+      "No trial found for storyteller feedback:",
+      normalizedFromNumber,
+    );
+    return;
+  }
+
+  // Get storyteller feedback row
+  const storytellerFeedback = await storage.getUserFeedbackByTrialAndType(
+    trial.id,
+    "storyteller",
+  );
+
+  if (!storytellerFeedback) {
+    console.log(
+      "Storyteller feedback row not found for trial:",
+      trial.id,
+      "Ignoring response",
+    );
+    return;
+  }
+
+  // Check if feedback was already sent (should have been sent before receiving response)
+  if (!storytellerFeedback.sentAt) {
+    console.log(
+      "Storyteller feedback request not sent yet for trial:",
+      trial.id,
+      "Ignoring response",
+    );
+    return;
+  }
+
+  // Check if feedback already received
+  if (storytellerFeedback.storytellerFeedbackVoiceNoteUrl !== null) {
+    console.log("Storyteller feedback already received for trial:", trial.id);
+    return;
+  }
+
+  try {
+    // Step 1: Get media info (URL) from WhatsApp
+    const mediaInfo = await downloadVoiceNoteMedia(audioId);
+
+    if (!mediaInfo) {
+      console.error(
+        "Failed to get media info for storyteller feedback voice note:",
+        trial.id,
+      );
+      return;
+    }
+
+    // Step 2: Use mimeType from mediaInfo (more accurate) or fallback to parameter
+    const finalMimeType = mediaInfo.mimeType || mimeType || "audio/ogg";
+
+    // Step 3: Download the actual file from WhatsApp
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+    if (!accessToken) {
+      console.error("WhatsApp access token not available for downloading file");
+      return;
+    }
+
+    const fileBuffer = await downloadMediaFile(mediaInfo.url, accessToken);
+
+    if (!fileBuffer) {
+      console.error(
+        "Failed to download media file for storyteller feedback:",
+        trial.id,
+      );
+      return;
+    }
+
+    // Step 4: Convert to MP3 format with compression
+    console.log("Converting storyteller feedback voice note to MP3:", {
+      trialId: trial.id,
+      originalMimeType: finalMimeType,
+      originalSize: fileBuffer.length,
+    });
+
+    const mp3Buffer = await convertToMp3(fileBuffer, finalMimeType);
+    const finalMp3MimeType = "audio/mp3";
+
+    // Step 5: Upload to R2 with name {trialId}_storyteller_feedback
+    const fileName = `${trial.id}_storyteller_feedback`;
+    const r2Url = await uploadVoiceNoteToR2(
+      mp3Buffer,
+      fileName,
+      finalMp3MimeType,
+    );
+
+    if (!r2Url) {
+      console.error(
+        "Failed to upload storyteller feedback voice note to R2:",
+        trial.id,
+      );
+      return;
+    }
+
+    // Step 6: Update feedback row with R2 URL
+    await storage.updateUserFeedback(storytellerFeedback.id, {
+      storytellerFeedbackVoiceNoteUrl: r2Url,
+      receivedAt: new Date(),
+    });
+
+    console.log("Storyteller feedback voice note saved:", {
+      trialId: trial.id,
+      feedbackId: storytellerFeedback.id,
+      r2Url,
+    });
+
+    // Check if both feedbacks received and send thank you
+    await checkAndSendThankYou(trial);
+  } catch (error) {
+    console.error(
+      "Error processing storyteller feedback voice note:",
+      error,
+      "Trial ID:",
+      trial.id,
+    );
   }
 }
 

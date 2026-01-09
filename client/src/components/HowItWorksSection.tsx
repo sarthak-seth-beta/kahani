@@ -158,8 +158,9 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-              }`}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+            }`}
           />
         ))}
       </div>

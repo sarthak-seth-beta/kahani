@@ -15,9 +15,12 @@ import {
   type InsertVoiceNoteRow,
   type AlbumRow,
   type InsertAlbumRow,
+  type UserFeedbackRow,
+  type InsertUserFeedbackRow,
   freeTrials,
   voiceNotes,
   albums,
+  userFeedbacks,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -30,6 +33,7 @@ import {
   asc,
   getTableColumns,
   isNotNull,
+  isNull,
   sql,
 } from "drizzle-orm";
 
@@ -62,6 +66,23 @@ export interface IStorage {
   getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]>;
   getTrialsNeedingCheckin(): Promise<FreeTrialRow[]>;
   getTrialsNeedingBuyerCheckin(): Promise<FreeTrialRow[]>;
+  getTrialsNeedingBuyerFeedback(): Promise<FreeTrialRow[]>;
+  getTrialsNeedingStorytellerFeedback(): Promise<FreeTrialRow[]>;
+  getOldestTrialWithoutBuyerFeedback(
+    phoneNumber: string,
+  ): Promise<FreeTrialRow | undefined>;
+  getOldestTrialWithoutStorytellerFeedback(
+    phoneNumber: string,
+  ): Promise<FreeTrialRow | undefined>;
+  createUserFeedback(feedback: InsertUserFeedbackRow): Promise<UserFeedbackRow>;
+  getUserFeedbackByTrialAndType(
+    trialId: string,
+    feedbackType: "buyer" | "storyteller",
+  ): Promise<UserFeedbackRow | undefined>;
+  updateUserFeedback(
+    id: string,
+    updates: Partial<UserFeedbackRow>,
+  ): Promise<UserFeedbackRow>;
 
   createVoiceNote(voiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow>;
   getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]>;
@@ -630,6 +651,152 @@ export class DatabaseStorage implements IStorage {
       );
 
     return trials;
+  }
+
+  async getTrialsNeedingBuyerFeedback(): Promise<FreeTrialRow[]> {
+    const now = new Date();
+    const trials = await db
+      .select(getTableColumns(freeTrials))
+      .from(freeTrials)
+      .innerJoin(
+        userFeedbacks,
+        and(
+          eq(userFeedbacks.trialId, freeTrials.id),
+          eq(userFeedbacks.feedbackType, "buyer"),
+        ),
+      )
+      .where(
+        and(
+          isNotNull(freeTrials.customerPhone),
+          isNotNull(userFeedbacks.scheduledFor),
+          lte(userFeedbacks.scheduledFor, now),
+          isNull(userFeedbacks.sentAt),
+        ),
+      );
+    return trials;
+  }
+
+  async getTrialsNeedingStorytellerFeedback(): Promise<FreeTrialRow[]> {
+    const now = new Date();
+    const trials = await db
+      .select(getTableColumns(freeTrials))
+      .from(freeTrials)
+      .innerJoin(
+        userFeedbacks,
+        and(
+          eq(userFeedbacks.trialId, freeTrials.id),
+          eq(userFeedbacks.feedbackType, "storyteller"),
+        ),
+      )
+      .where(
+        and(
+          isNotNull(freeTrials.storytellerPhone),
+          isNotNull(userFeedbacks.scheduledFor),
+          lte(userFeedbacks.scheduledFor, now),
+          isNull(userFeedbacks.sentAt),
+        ),
+      );
+    return trials;
+  }
+
+  async getOldestTrialWithoutBuyerFeedback(
+    phoneNumber: string,
+  ): Promise<FreeTrialRow | undefined> {
+    // Find trials where there's no buyer feedback row or buyer feedback rating is null
+    const [trial] = await db
+      .select(getTableColumns(freeTrials))
+      .from(freeTrials)
+      .leftJoin(
+        userFeedbacks,
+        and(
+          eq(userFeedbacks.trialId, freeTrials.id),
+          eq(userFeedbacks.feedbackType, "buyer"),
+        ),
+      )
+      .where(
+        and(
+          eq(freeTrials.customerPhone, phoneNumber),
+          sql`${userFeedbacks.id} IS NULL OR ${userFeedbacks.buyerFeedbackRating} IS NULL`,
+        ),
+      )
+      .orderBy(asc(freeTrials.createdAt))
+      .limit(1);
+    return trial;
+  }
+
+  async getOldestTrialWithoutStorytellerFeedback(
+    phoneNumber: string,
+  ): Promise<FreeTrialRow | undefined> {
+    // Find trials where there's no storyteller feedback row or voice note URL is null
+    const [trial] = await db
+      .select(getTableColumns(freeTrials))
+      .from(freeTrials)
+      .leftJoin(
+        userFeedbacks,
+        and(
+          eq(userFeedbacks.trialId, freeTrials.id),
+          eq(userFeedbacks.feedbackType, "storyteller"),
+        ),
+      )
+      .where(
+        and(
+          eq(freeTrials.storytellerPhone, phoneNumber),
+          sql`${userFeedbacks.id} IS NULL OR ${userFeedbacks.storytellerFeedbackVoiceNoteUrl} IS NULL`,
+        ),
+      )
+      .orderBy(asc(freeTrials.createdAt))
+      .limit(1);
+    return trial;
+  }
+
+  async createUserFeedback(
+    feedback: InsertUserFeedbackRow,
+  ): Promise<UserFeedbackRow> {
+    const [userFeedback] = await db
+      .insert(userFeedbacks)
+      .values({
+        ...feedback,
+        updatedAt: new Date(),
+      })
+      .returning();
+    return userFeedback;
+  }
+
+  async getUserFeedbackByTrialAndType(
+    trialId: string,
+    feedbackType: "buyer" | "storyteller",
+  ): Promise<UserFeedbackRow | undefined> {
+    const [feedback] = await db
+      .select()
+      .from(userFeedbacks)
+      .where(
+        and(
+          eq(userFeedbacks.trialId, trialId),
+          eq(userFeedbacks.feedbackType, feedbackType),
+        ),
+      )
+      .limit(1);
+    return feedback;
+  }
+
+  async updateUserFeedback(
+    id: string,
+    updates: Partial<UserFeedbackRow>,
+  ): Promise<UserFeedbackRow> {
+    const [updatedFeedback] = await db
+      .update(userFeedbacks)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(userFeedbacks.id, id))
+      .returning();
+
+    if (!updatedFeedback) {
+      throw new Error(`User feedback with id ${id} not found`);
+    }
+
+    return updatedFeedback;
   }
 
   async createVoiceNote(

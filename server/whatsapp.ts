@@ -1346,6 +1346,58 @@ export async function sendBuyerCompletionMessage(
   // );
 }
 
+export async function sendBuyerFeedbackRequest(
+  recipientNumber: string,
+  buyerName: string,
+  relationName: string,
+  trialId: string,
+): Promise<boolean> {
+  const templateParams = [
+    { type: "text", text: buyerName },
+    { type: "text", text: relationName },
+  ];
+
+  return sendTemplateMessageWithRetry(
+    recipientNumber,
+    "buyer_feedback_en",
+    templateParams,
+    {
+      orderId: trialId,
+      messageType: "feedback_request",
+    },
+  );
+}
+
+export async function sendStorytellerFeedbackRequest(
+  recipientNumber: string,
+  relationName: string,
+  languagePreference?: string | null,
+  trialId?: string,
+): Promise<boolean> {
+  const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
+  const templateName = `storyteller_feedback${languageSuffix}`;
+  const templateParams = [{ type: "text", text: relationName }];
+
+  return sendTemplateMessageWithRetry(
+    recipientNumber,
+    templateName,
+    templateParams,
+    {
+      ...(trialId && { orderId: trialId }),
+      messageType: "feedback_request",
+    },
+  );
+}
+
+export async function sendFeedbackThankYou(
+  recipientNumber: string,
+  name: string,
+): Promise<boolean> {
+  const message = `Thank you, ${name}. 🙏\n\nThis means a lot to me.\n\nIf you have one more thoughts, please reachout to me at vaani@kahani.xyz.`;
+
+  return sendTextMessageWithRetry(recipientNumber, message);
+}
+
 export async function sendPhotoRequestToBuyer(
   recipientNumber: string,
   buyerName: string,

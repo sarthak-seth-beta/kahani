@@ -416,6 +416,49 @@ export const voiceNotes = pgTable(
 export type VoiceNoteRow = typeof voiceNotes.$inferSelect;
 export type InsertVoiceNoteRow = typeof voiceNotes.$inferInsert;
 
+export const userFeedbacks = pgTable(
+  "user_feedbacks",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    trialId: varchar("trial_id", { length: 255 })
+      .notNull()
+      .references(() => freeTrials.id, { onDelete: "cascade" }),
+    feedbackType: varchar("feedback_type", { length: 20 }).notNull(),
+    buyerFeedbackRating: integer("buyer_feedback_rating"),
+    storytellerFeedbackVoiceNoteUrl: text(
+      "storyteller_feedback_voice_note_url",
+    ),
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    receivedAt: timestamp("received_at", { withTimezone: true }),
+    thankYouSentAt: timestamp("thank_you_sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    trialIdIdx: index("user_feedbacks_trial_id_idx").on(table.trialId),
+    feedbackTypeIdx: index("user_feedbacks_feedback_type_idx").on(
+      table.feedbackType,
+    ),
+    scheduledForIdx: index("user_feedbacks_scheduled_for_idx").on(
+      table.scheduledFor,
+    ),
+    trialTypeUnique: uniqueIndex("user_feedbacks_trial_type_unique").on(
+      table.trialId,
+      table.feedbackType,
+    ),
+  }),
+);
+
+export type UserFeedbackRow = typeof userFeedbacks.$inferSelect;
+export type InsertUserFeedbackRow = typeof userFeedbacks.$inferInsert;
+
 export const albums = pgTable(
   "albums",
   {
