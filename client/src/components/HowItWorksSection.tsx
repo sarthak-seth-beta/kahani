@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Play } from "lucide-react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 
 interface Step {
@@ -69,6 +69,7 @@ export default function HowItWorksSection({
   steps = defaultSteps,
   onVideoClick = () => window.open("https://youtube.com", "_blank"),
 }: HowItWorksSectionProps) {
+  const [, setLocation] = useLocation();
   const [activeStep, setActiveStep] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -157,27 +158,21 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+              }`}
           />
         ))}
       </div>
 
-      {/* 3. CTA Bottom (Hidden as per request) */}
-      {/* <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
+      {/* 3. CTA Bottom to sample-albums page */}
+      <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
         <Button
-          onClick={onVideoClick}
-          className="inline-flex items-center gap-2 px-8 py-6 bg-transparent border-2 border-[#1B2632]/10 hover:border-[#A35139] text-[#1B2632] hover:text-[#A35139] rounded-full text-lg font-semibold transition-all duration-300 group"
-          variant="outline"
+          onClick={() => setLocation("/sample-album")}
+          className="px-6 py-2 bg-transparent border-2 border-[#A35139] text-[#A35139] hover:bg-[#A35139] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
         >
-          <Play className="w-5 h-5 fill-current" />
-          See how it works
+          See Sample Album
         </Button>
-      </div> */}
-
-      {/* Bottom Fade Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />
+      </div>
 
       {/* Bottom Fade Gradient */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none z-10" />

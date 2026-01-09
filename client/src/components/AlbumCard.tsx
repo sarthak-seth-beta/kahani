@@ -33,9 +33,11 @@ const splitTitle = (title: string) => {
 
 export const AlbumCard = ({
   album,
+  variant = "default",
   onClick,
 }: {
   album: Album;
+  variant?: "default" | "simple";
   onClick: () => void;
 }) => {
   const { toast } = useToast();
@@ -74,7 +76,7 @@ export const AlbumCard = ({
         if (navigator.share) {
           navigator
             .share({ title: album.title, text: text, url: url })
-            .catch(() => {});
+            .catch(() => { });
         }
         break;
     }

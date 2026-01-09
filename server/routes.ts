@@ -602,6 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: album.description,
         cover_image: album.coverImage,
         questions: album.questions,
+        questions_hn: album.questionsHn || [],
         question_set_titles: album.questionSetTitles || null,
         best_fit_for: album.bestFitFor || null,
       }));

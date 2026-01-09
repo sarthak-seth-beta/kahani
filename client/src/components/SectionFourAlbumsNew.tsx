@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Loader2, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { AlbumCard, type Album } from "@/components/AlbumCard";
+import { Button } from "./ui/button";
 
 interface SectionFourAlbumsNewProps {
   albums?: Album[];
@@ -126,6 +127,15 @@ export default function SectionFourAlbumsNew({
               <div className="w-[7.5vw] sm:w-0 flex-shrink-0" />
             </div>
           </div>
+        </div>
+        {/* View All Button */}
+        <div className="flex justify-center mt-2">
+          <Button
+            onClick={() => setLocation("/all-albums")}
+            className="px-6 py-2 bg-transparent border-2 border-[#A35139] text-[#A35139] hover:bg-[#A35139] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
+          >
+            View All Albums
+          </Button>
         </div>
       </div>
     </section>

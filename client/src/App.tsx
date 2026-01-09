@@ -37,6 +37,7 @@ import CustomAlbumCover from "@/pages/CustomAlbumCover";
 import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import Admin from "@/pages/Admin";
 import ManageAlbums from "@/pages/ManageAlbums";
+import SampleAlbum from "@/pages/SampleAlbum";
 import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 
@@ -134,6 +135,7 @@ function App() {
             component={PlaylistAlbumsGallery}
           />
           <Route path="/all-albums" component={AllAlbums} />
+          <Route path="/sample-album" component={SampleAlbum} />
           <Route path="/create-album" component={CreateAlbum} />
           <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
           <Route

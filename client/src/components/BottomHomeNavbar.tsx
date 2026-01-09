@@ -17,6 +17,8 @@ interface BottomHomeNavbarProps {
   onInactive?: () => void;
 }
 
+const DadiImage = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/dadi-image_bottomNav.png"
+
 const DUMMY_AUDIO_URL =
   "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/nani_wedding_day.ogg";
 
@@ -141,7 +143,7 @@ export function BottomHomeNavbar({
           >
             <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-200 border border-black/10 shadow-sm">
               <img
-                src={kahaniLogo}
+                src={DadiImage}
                 alt="Album Cover"
                 className="w-full h-full object-cover opacity-90"
               />
@@ -150,7 +152,7 @@ export function BottomHomeNavbar({
 
           <div className="flex flex-col overflow-hidden min-w-0">
             <span className="font-outfit font-bold text-gray-900 truncate text-sm md:text-base leading-tight">
-              Nani's Wedding Day
+              किसी त्योहार का खाना, जिसकी याद आज भी बहुत गहरी है
             </span>
             <span className="font-outfit text-xs text-gray-500 truncate">
               Narrated by Grandmother
