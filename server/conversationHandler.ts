@@ -1226,11 +1226,12 @@ export async function sendQuestion(
   console.log("Question message send result:", messageSent);
 
   // Send photo request to buyer if image not uploaded yet and after 2 questions have been answered
-  // (targetQuestionIndex >= 8 means we're sending the 9th question, so 2 have been answered)
+  // (targetQuestionIndex === 8 means we're sending the 9th question, so exactly 2 have been answered)
+  // Only send once - on the first question after 2 answers
   if (
     trial.customerPhone &&
     !trial.customCoverImageUrl &&
-    targetQuestionIndex >= 8
+    targetQuestionIndex >= 8 && targetQuestionIndex % 3 === 2
   ) {
     console.log("Sending photo request to buyer:", {
       buyerPhone: trial.customerPhone,
