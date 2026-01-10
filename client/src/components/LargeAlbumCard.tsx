@@ -33,7 +33,7 @@ export const LargeAlbumCard = ({
   };
 
   const handleShare = (method: string) => {
-    const url = window.location.href;
+    const url = `${window.location.origin}/free-trial?albumId=${encodeURIComponent(album.id)}`;
     const text = `Check out this album: ${album.title}`;
 
     switch (method) {

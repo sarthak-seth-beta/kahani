@@ -83,10 +83,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-    questionIndex: number;
-    questionText: string;
-    mediaUrl: string | null;
-  }> {
+      questionIndex: number;
+      questionText: string;
+      mediaUrl: string | null;
+    }> {
   if (!isConversational) {
     return tracks;
   }
@@ -312,9 +312,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => { });
-        currentAudioRef.current.removeEventListener("pause", () => { });
-        currentAudioRef.current.removeEventListener("play", () => { });
+        currentAudioRef.current.removeEventListener("ended", () => {});
+        currentAudioRef.current.removeEventListener("pause", () => {});
+        currentAudioRef.current.removeEventListener("play", () => {});
         currentAudioRef.current = null;
       }
 
@@ -566,6 +566,18 @@ export default function PlaylistAlbumsGallery() {
     (sum, duration) => sum + duration,
     0,
   );
+
+  const showToast = () => {
+    const TOAST_MESSAGE =
+      "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍";
+    const YAJUR_NANI_TRIAL_ID = "f6258c48-043e-4b23-883b-dfb4ace3b43c";
+    if (trialId !== YAJUR_NANI_TRIAL_ID) {
+      toast({
+        description: TOAST_MESSAGE,
+        duration: 4000,
+      });
+    }
+  };
 
   if (!trialId) {
     return (
@@ -1202,10 +1214,7 @@ export default function PlaylistAlbumsGallery() {
                             }}
                             onClick={() => {
                               if (!track.mediaUrl) {
-                                toast({
-                                  description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
-                                  duration: 4000,
-                                });
+                                showToast();
                                 return;
                               }
                               trackEvent(AnalyticsEvents.TRACK_CLICKED, {
@@ -1247,10 +1256,7 @@ export default function PlaylistAlbumsGallery() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!track.mediaUrl) {
-                                  toast({
-                                    description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
-                                    duration: 4000,
-                                  });
+                                  showToast();
                                   return;
                                 }
                                 handlePlayPause(globalIndex);
@@ -1319,10 +1325,7 @@ export default function PlaylistAlbumsGallery() {
                       }}
                       onClick={() => {
                         if (!track.mediaUrl) {
-                          toast({
-                            description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
-                            duration: 4000,
-                          });
+                          showToast();
                           return;
                         }
                         trackEvent(AnalyticsEvents.TRACK_CLICKED, {
@@ -1364,10 +1367,6 @@ export default function PlaylistAlbumsGallery() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!track.mediaUrl) {
-                            toast({
-                              description: "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍",
-                              duration: 4000,
-                            });
                             return;
                           }
                           handlePlayPause(index);

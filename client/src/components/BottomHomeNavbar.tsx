@@ -140,7 +140,11 @@ export function BottomHomeNavbar({
         <div className="flex items-center gap-3 flex-1 md:flex-none md:w-1/3 min-w-0 z-10">
           <div
             className="relative group cursor-pointer shrink-0"
-            onClick={() => setLocation("/")}
+            onClick={() =>
+              setLocation(
+                "/playlist-albums/f6258c48-043e-4b23-883b-dfb4ace3b43c",
+              )
+            }
           >
             <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-200 border border-black/10 shadow-sm">
               <img

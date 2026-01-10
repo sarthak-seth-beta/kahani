@@ -52,7 +52,7 @@ export const AlbumCard = ({
   };
 
   const handleShare = (method: string) => {
-    const url = window.location.href; // Or specific album link
+    const url = `${window.location.origin}/free-trial?albumId=${encodeURIComponent(album.id)}`;
     const text = `Check out this album: ${album.title}`;
 
     switch (method) {

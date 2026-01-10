@@ -69,7 +69,10 @@ function HomePage() {
           })
           .catch((error) => {
             // Log error for debugging
-            console.error("[QR Tracking] Failed to track traffic source:", error);
+            console.error(
+              "[QR Tracking] Failed to track traffic source:",
+              error,
+            );
           });
 
         // Clean URL by removing the source parameter

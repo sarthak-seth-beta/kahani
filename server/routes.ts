@@ -715,8 +715,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         languagePreference || trial.storytellerLanguagePreference;
       const questions =
         finalLanguagePreference === "hn" &&
-          album.questionsHn &&
-          album.questionsHn.length > 0
+        album.questionsHn &&
+        album.questionsHn.length > 0
           ? album.questionsHn
           : album.questions;
 
@@ -751,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trial.customCoverImageUrl || trialAny.custom_cover_image_url;
       const customCoverImage =
         customCoverImageUrlValue &&
-          String(customCoverImageUrlValue).trim() !== ""
+        String(customCoverImageUrlValue).trim() !== ""
           ? String(customCoverImageUrlValue).trim()
           : null;
       const albumCoverImage =
@@ -1502,7 +1502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Acc for</td><td style="padding: 10px;">${recipientName}</td></tr>
             <tr><td style="padding: 10px; font-weight: bold;">Occasion</td><td style="padding: 10px;">${occasion}</td></tr>
             <tr><td style="padding: 10px; font-weight: bold;">Language</td><td style="padding: 10px;">${language}</td></tr>
-            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Contact Email</td><td style="padding: 10px;">${email || 'N/A'}</td></tr>
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Contact Email</td><td style="padding: 10px;">${email || "N/A"}</td></tr>
             <tr><td style="padding: 10px; font-weight: bold;">Phone</td><td style="padding: 10px;">${phone}</td></tr>
              <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Instructions</td><td style="padding: 10px;">${instructions || "N/A"}</td></tr>
           </table>

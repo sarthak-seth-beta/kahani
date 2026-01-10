@@ -168,7 +168,9 @@ export default function HowItWorksSection({
       {/* 3. CTA Bottom to sample-albums page */}
       <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
         <Button
-          onClick={() => setLocation("/sample-album")}
+          onClick={() =>
+            setLocation("/playlist-albums/f6258c48-043e-4b23-883b-dfb4ace3b43c")
+          }
           className="px-6 py-2 bg-transparent border-2 border-[#A35139] text-[#A35139] hover:bg-[#A35139] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
         >
           See Sample Album
