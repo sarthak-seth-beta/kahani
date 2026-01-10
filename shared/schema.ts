@@ -652,3 +652,18 @@ export const insertWhatsAppWebhookEventSchema = z.object({
 export type InsertWhatsAppWebhookEvent = z.infer<
   typeof insertWhatsAppWebhookEventSchema
 >;
+
+// Traffic Sources Tracking Table
+export const trafficSources = pgTable("traffic_sources", {
+  source: varchar("source", { length: 50 }).primaryKey(),
+  count: integer("count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type TrafficSourceRow = typeof trafficSources.$inferSelect;
+export type InsertTrafficSourceRow = typeof trafficSources.$inferInsert;

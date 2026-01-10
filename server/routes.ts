@@ -1540,6 +1540,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Traffic source tracking endpoint
+  app.post("/api/tracking/source", async (req, res) => {
+    try {
+      const { source } = req.body;
+
+      if (!source || typeof source !== "string") {
+        return res.status(400).json({ error: "Source parameter is required" });
+      }
+
+      // Validate source is a safe string (alphanumeric and hyphens/underscores only)
+      if (!/^[a-zA-Z0-9_-]+$/.test(source)) {
+        return res.status(400).json({ error: "Invalid source format" });
+      }
+
+      const { pool } = await import("./db");
+
+      // Update the existing record (assumes record exists)
+      const result = await pool.query(
+        `
+        UPDATE traffic_sources 
+        SET 
+          count = count + 1,
+          updated_at = NOW()
+        WHERE source = $1
+        RETURNING source, count
+        `,
+        [source],
+      );
+
+      // If no rows were updated, the record doesn't exist - insert it
+      if (result.rowCount === 0) {
+        const insertResult = await pool.query(
+          `
+          INSERT INTO traffic_sources (source, count, created_at, updated_at)
+          VALUES ($1, 1, NOW(), NOW())
+          RETURNING source, count
+          `,
+          [source],
+        );
+        return res.json({
+          success: true,
+          source: insertResult.rows[0].source,
+          count: insertResult.rows[0].count,
+        });
+      }
+
+      res.json({
+        success: true,
+        source: result.rows[0].source,
+        count: result.rows[0].count,
+      });
+    } catch (error) {
+      console.error("[Tracking] Error tracking traffic source:", error);
+      // Don't break user experience - return success even if tracking fails
+      res.status(500).json({ error: "Failed to track source" });
+    }
+  });
+
   // Optional: Endpoint for Render Cron Jobs or external schedulers
   app.post("/api/internal/process-scheduled", async (req, res) => {
     // Optional: Add auth check
