@@ -40,10 +40,54 @@ import ManageAlbums from "@/pages/ManageAlbums";
 import SampleAlbum from "@/pages/SampleAlbum";
 import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
+import { apiRequest } from "./lib/queryClient";
 
 function HomePage() {
   const [, setLocation] = useLocation();
   const [isPlayerActive, setIsPlayerActive] = useState(false);
+
+  // Track traffic source from URL parameter (e.g., ?source=qr)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get("source");
+
+    if (source) {
+      // Check if we've already tracked this source in this session
+      const storageKey = `tracked_source_${source}`;
+      const alreadyTracked = sessionStorage.getItem(storageKey);
+
+      if (!alreadyTracked) {
+        // Track the source
+        apiRequest("POST", "/api/tracking/source", { source })
+          .then(async (response) => {
+            const data = await response.json();
+            if (import.meta.env.DEV) {
+              console.log("[QR Tracking] Successfully tracked:", data);
+            }
+            // Mark as tracked in sessionStorage
+            sessionStorage.setItem(storageKey, "true");
+          })
+          .catch((error) => {
+            // Log error for debugging
+            console.error("[QR Tracking] Failed to track traffic source:", error);
+          });
+
+        // Clean URL by removing the source parameter
+        urlParams.delete("source");
+        const newSearch = urlParams.toString();
+        const newUrl =
+          window.location.pathname + (newSearch ? `?${newSearch}` : "");
+        window.history.replaceState({}, "", newUrl);
+      } else {
+        // Already tracked, just clean the URL
+        urlParams.delete("source");
+        const newSearch = urlParams.toString();
+        const newUrl =
+          window.location.pathname + (newSearch ? `?${newSearch}` : "");
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []); // Run only once on mount
 
   const handleHearKahaniClick = () => {
     setIsPlayerActive(true);
