@@ -50,6 +50,7 @@ interface AlbumData {
   album: {
     description: string;
     coverImage: string;
+    cover_image?: string | null; // Direct cover_image from albums table
     isConversationalAlbum: boolean;
     questionSetTitles?: { en: string[]; hn: string[] } | null;
   };
@@ -936,7 +937,7 @@ export default function PlaylistAlbumsGallery() {
             }}
           >
             <img
-              src={album.coverImage}
+              src={album.cover_image || album.coverImage}
               alt={trial.selectedAlbum}
               style={{
                 width: "100%",
