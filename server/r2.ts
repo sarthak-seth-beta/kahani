@@ -52,7 +52,7 @@ function getR2Client(): S3Client | null {
   return r2Client;
 }
 
-function buildPublicUrl(key: string, contentType: string): string {
+export function buildPublicUrl(key: string, contentType: string): string {
   if (contentType === "audio/mp3") {
     return `${R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL}/${key}`;
   } else {
@@ -60,7 +60,7 @@ function buildPublicUrl(key: string, contentType: string): string {
   }
 }
 
-async function uploadToR2(
+export async function uploadToR2(
   bucket: string,
   key: string,
   body: Buffer,

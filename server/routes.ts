@@ -836,39 +836,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Compress image before upload
-        const { compressImage, uploadImageToStorage } =
-          await import("./supabase");
+        const { compressImage } = await import("./supabase");
         const originalBuffer = Buffer.from(req.file.buffer);
         const { buffer: compressedBuffer, mimeType: compressedMimeType } =
           await compressImage(originalBuffer, req.file.mimetype);
 
-        // Upload compressed image to Supabase Storage
-        const supabaseUrl = await uploadImageToStorage(
+        // Generate key with format: trialID_timestamp
+        const timestamp = Date.now();
+        const extension =
+          compressedMimeType.includes("jpeg") || compressedMimeType.includes("jpg")
+            ? "jpg"
+            : compressedMimeType.includes("png")
+              ? "png"
+              : compressedMimeType.includes("gif")
+                ? "gif"
+                : compressedMimeType.includes("webp")
+                  ? "webp"
+                  : "jpg";
+        const key = `${trialId}_${timestamp}.${extension}`;
+
+        // Upload compressed image to Cloudflare R2
+        const { uploadToR2, R2_ALBUM_COVERS_BUCKET } = await import("./r2");
+        const publicUrl = await uploadToR2(
+          R2_ALBUM_COVERS_BUCKET,
+          key,
           compressedBuffer,
-          trialId,
           compressedMimeType,
         );
 
-        if (!supabaseUrl) {
-          console.error("Failed to upload image to Supabase Storage:", trialId);
+        if (!publicUrl) {
+          console.error("Failed to upload image to R2:", trialId);
           return res.status(500).json({
             error: "Failed to upload image. Please try again later.",
           });
         }
 
-        // Update database with Supabase URL
+        // Update database with R2 URL
         await storage.updateFreeTrialDb(trialId, {
-          customCoverImageUrl: supabaseUrl,
+          customCoverImageUrl: publicUrl,
         });
 
         console.log("Custom cover image uploaded successfully:", {
           trialId,
-          supabaseUrl,
+          publicUrl,
+          key,
         });
 
         res.json({
           success: true,
-          imageUrl: supabaseUrl,
+          imageUrl: publicUrl,
           message: "Image uploaded successfully",
         });
       } catch (error: any) {
