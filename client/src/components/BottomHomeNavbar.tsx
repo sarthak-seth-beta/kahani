@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 interface BottomHomeNavbarProps {
   isActive?: boolean;
@@ -156,12 +157,33 @@ export function BottomHomeNavbar({
           </div>
 
           <div className="flex flex-col overflow-hidden min-w-0">
-            <span className="font-outfit font-bold text-gray-900 truncate text-sm md:text-base leading-tight">
-              किसी त्योहार का खाना, जिसकी याद आज भी बहुत गहरी है
-            </span>
-            <span className="font-outfit text-xs text-gray-500 truncate">
+            {isMobile ? (
+              <div className="flex overflow-hidden w-full mask-linear-fade">
+                <motion.div
+                  className="flex whitespace-nowrap"
+                  animate={{ x: "-50%" }}
+                  transition={{
+                    repeat: Infinity,
+                    ease: "linear",
+                    duration: 15,
+                  }}
+                >
+                  <span className="font-outfit font-bold text-gray-900 text-sm leading-tight mr-4">
+                    किसी त्योहार का खाना, जिसकी याद आज भी बहुत गहरी है
+                  </span>
+                  <span className="font-outfit font-bold text-gray-900 text-sm leading-tight mr-4">
+                    किसी त्योहार का खाना, जिसकी याद आज भी बहुत गहरी है
+                  </span>
+                </motion.div>
+              </div>
+            ) : (
+              <span className="font-outfit font-bold text-gray-900 truncate text-sm md:text-base leading-tight">
+                किसी त्योहार का खाना, जिसकी याद आज भी बहुत गहरी है
+              </span>
+            )}
+            {/* <span className="font-outfit text-xs text-gray-500 truncate">
               Narrated by Grandmother
-            </span>
+            </span> */}
           </div>
         </div>
 
