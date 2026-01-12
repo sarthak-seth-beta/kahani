@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ScrollToTop from "@/components/ScrollToTop";
+import SmoothScroll from "@/components/SmoothScroll";
 import SimpleHeader from "@/components/SimpleHeader";
 import HeroSection from "@/components/HeroSection";
 import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
@@ -161,10 +162,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ScrollToTop />
+        <SmoothScroll />
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/checkout" component={Checkout} />
-          {/* FreeTrialCheckout route removed */}
           <Route path="/free-trial" component={FreeTrial} />
           <Route path="/how-to-use" component={HowToUse} />
           <Route path="/thank-you" component={ThankYou} />
