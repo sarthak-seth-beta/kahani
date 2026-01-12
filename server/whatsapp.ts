@@ -1410,9 +1410,9 @@ export async function sendPhotoRequestToBuyer(
   if (isProduction) {
     return sendWhatsappButtonTemplate(
       recipientNumber,
-      "pic_request_en",
+      "picture_request_en",
       "en",
-      [buyerName, storytellerName, storytellerName],
+      [trialId, buyerName, storytellerName],
       `custom-album-cover/${trialId}`,
       "0",
     );
