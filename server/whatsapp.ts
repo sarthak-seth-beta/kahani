@@ -1359,7 +1359,7 @@ export async function sendBuyerFeedbackRequest(
 
   return sendTemplateMessageWithRetry(
     recipientNumber,
-    "buyer_feedback_en",
+    "feedback_buyer_en",
     templateParams,
     {
       orderId: trialId,
@@ -1375,7 +1375,7 @@ export async function sendStorytellerFeedbackRequest(
   trialId?: string,
 ): Promise<boolean> {
   const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
-  const templateName = `storyteller_feedback${languageSuffix}`;
+  const templateName = `feedback_storyteller${languageSuffix}`;
   const templateParams = [{ type: "text", text: relationName }];
 
   return sendTemplateMessageWithRetry(
