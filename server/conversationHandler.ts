@@ -1449,7 +1449,7 @@ async function handleVoiceNote(
         trial.customerPhone,
         "post_day_1_buyer_en",
         "en",
-        [trial.buyerName, trial.storytellerName, questionSetTitle],
+        [trial.buyerName, trial.storytellerName, questionSetTitle, trial.storytellerName],
         `playlist-albums/${trial.id}`,
         "0",
         {
