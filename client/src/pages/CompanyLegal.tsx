@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 
 const legalLinks = [
   { href: "/privacy-policy", label: "Privacy policy" },
+  { href: "/refund-policy", label: "Refund Policy" },
   { href: "/terms-of-service", label: "Terms of Service" },
   { href: "/data-deletion", label: "Data Deletion" },
 ];

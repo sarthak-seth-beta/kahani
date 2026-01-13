@@ -21,6 +21,7 @@ import FreeTrial from "@/pages/FreeTrial";
 import HowToUse from "@/pages/HowToUse";
 import ThankYou from "@/pages/ThankYou";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import RefundPolicy from "@/pages/RefundPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import DataDeletion from "@/pages/DataDeletion";
 import Affiliate from "@/pages/Affiliate";
@@ -170,6 +171,7 @@ function App() {
           <Route path="/how-to-use" component={HowToUse} />
           <Route path="/thank-you" component={ThankYou} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/refund-policy" component={RefundPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/about-us" component={AboutUs} />
