@@ -70,10 +70,10 @@ export function Footer() {
           </div>
 
           {/* Bottom Links */}
-          <div className="flex gap-8 text-sm text-[#EEE9DF]/60 mt-4">
+          <div className="flex gap-6 text-sm text-[#EEE9DF]/60 mt-4">
             <Link href="/company-legal">
               <span className="hover:text-[#FFB162] transition-colors cursor-pointer">
-                Privacy
+                Privacy & Terms
               </span>
             </Link>
             <Link href="/about-us">
