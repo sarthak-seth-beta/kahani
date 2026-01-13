@@ -50,12 +50,12 @@ export default function HowToUse() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
-        <div className="flex items-center justify-between px-6 py-4 md:px-12">
+        <div className="flex items-center justify-between px-4 py-3 md:px-12 md:py-4">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setLocation("/")}
-            className="min-h-[44px] min-w-[44px]"
+            onClick={() => setLocation("/company-legal")}
+            className="min-h-[40px] min-w-[40px] h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90 border border-[#C9C1B1]/20"
             data-testid="button-back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -72,41 +72,41 @@ export default function HowToUse() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-8 md:py-16">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight text-foreground">
+        <div className="text-center mb-10 md:mb-16">
+          <h1 className="text-3xl sm:text-5xl font-bold mb-4 md:mb-6 leading-tight text-foreground">
             How to Use Your Kahani Album
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Preserving memories has never been easier. Follow these simple steps
             to create your family's eternal story.
           </p>
         </div>
 
         {/* Steps */}
-        <div className="space-y-12">
+        <div className="space-y-8 md:space-y-12">
           {steps.map((step, index) => (
             <div
               key={step.number}
-              className="flex gap-6 items-start"
+              className="flex gap-4 md:gap-6 items-start"
               data-testid={`step-${step.number}`}
             >
               {/* Step Number */}
               <div className="flex-shrink-0">
-                <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary-foreground">
+                <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-lg md:text-2xl font-bold text-primary-foreground">
                     {step.number}
                   </span>
                 </div>
               </div>
 
               {/* Step Content */}
-              <div className="flex-1 pt-2">
-                <h2 className="text-2xl font-semibold mb-3 text-foreground">
+              <div className="flex-1 pt-1 md:pt-2">
+                <h2 className="text-xl md:text-2xl font-semibold mb-2 md:mb-3 text-foreground">
                   Step {step.number}: {step.title}
                 </h2>
-                <p className="text-lg text-muted-foreground leading-relaxed">
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -115,19 +115,19 @@ export default function HowToUse() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-20 text-center space-y-6">
+        <div className="mt-12 md:mt-20 text-center space-y-6">
           <div className="w-full h-px bg-border" />
-          <h3 className="text-2xl font-semibold text-foreground">
+          <h3 className="text-xl md:text-2xl font-semibold text-foreground">
             Ready to Begin?
           </h3>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Start your free trial today and experience the joy of preserving
             precious memories.
           </p>
           <Button
             size="lg"
             onClick={() => setLocation("/free-trial-checkout")}
-            className="px-8 py-6 text-lg font-semibold min-h-[56px]"
+            className="w-full sm:w-auto px-8 py-6 text-lg font-semibold min-h-[56px]"
             data-testid="button-start-trial"
           >
             Start Your Free Trial

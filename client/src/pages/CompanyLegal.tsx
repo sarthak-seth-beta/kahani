@@ -3,12 +3,39 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Footer } from "@/components/Footer";
 
-const legalLinks = [
-  { href: "/privacy-policy", label: "Privacy policy" },
+const guidesLinks = [
+  { href: "/how-to-use", label: "How to Use" },
+  { href: "/affiliate", label: "Affiliate Program" },
+];
+
+const policyLinks = [
+  { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/refund-policy", label: "Refund Policy" },
   { href: "/terms-of-service", label: "Terms of Service" },
   { href: "/data-deletion", label: "Data Deletion" },
 ];
+
+function LinkSection({ title, links }: { title: string; links: Array<{ href: string; label: string }> }) {
+  return (
+    <section className="space-y-6">
+      <h2 className="text-2xl font-semibold text-[#1B2632] font-['Outfit'] border-b border-[#1B2632]/10 pb-2">
+        {title}
+      </h2>
+      <div className="grid gap-4">
+        {links.map((link) => (
+          <Link key={link.href} href={link.href}>
+            <div className="group flex items-center justify-between p-4 rounded-xl bg-white border border-[#1B2632]/5 hover:border-[#1B2632]/20 hover:shadow-md transition-all cursor-pointer">
+              <span className="text-lg font-medium text-[#1B2632] group-hover:text-[#A35139] transition-colors">
+                {link.label}
+              </span>
+              <ArrowRight className="w-5 h-5 text-[#1B2632]/30 group-hover:text-[#A35139] group-hover:translate-x-1 transition-all" />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function CompanyLegal() {
   const [, setLocation] = useLocation();
@@ -30,24 +57,12 @@ export default function CompanyLegal() {
       {/* Main Content */}
       <main className="flex-grow flex flex-col items-center justify-center px-4 py-24 sm:px-6">
         <div className="w-full max-w-2xl space-y-12">
-          {/* Legal Section */}
-          <section className="space-y-6">
-            <h1 className="text-3xl font-bold text-[#1B2632] font-['Outfit'] border-b border-[#1B2632]/10 pb-4 text-center">
-              Legal
-            </h1>
-            <div className="grid gap-4">
-              {legalLinks.map((link) => (
-                <Link key={link.href} href={link.href}>
-                  <div className="group flex items-center justify-between p-4 rounded-xl bg-white border border-[#1B2632]/5 hover:border-[#1B2632]/20 hover:shadow-md transition-all cursor-pointer">
-                    <span className="text-lg font-medium text-[#1B2632] group-hover:text-[#A35139] transition-colors">
-                      {link.label}
-                    </span>
-                    <ArrowRight className="w-5 h-5 text-[#1B2632]/30 group-hover:text-[#A35139] group-hover:translate-x-1 transition-all" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+          <h1 className="text-4xl font-bold text-[#1B2632] font-['Outfit'] text-center mb-8">
+            Company & Legal
+          </h1>
+
+          <LinkSection title="Guides & Programs" links={guidesLinks} />
+          <LinkSection title="Policies & Terms" links={policyLinks} />
         </div>
       </main>
 

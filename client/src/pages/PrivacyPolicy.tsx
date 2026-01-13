@@ -15,8 +15,8 @@ export default function PrivacyPolicy() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setLocation("/")}
-            className="min-h-[44px] min-w-[44px]"
+            onClick={() => setLocation("/company-legal")}
+            className="min-h-[40px] min-w-[40px] h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90 border border-[#C9C1B1]/20"
             data-testid="button-back"
           >
             <ArrowLeft className="h-5 w-5" />

@@ -165,17 +165,12 @@ function App() {
         <ScrollToTop />
         <SmoothScroll />
         <Switch>
+          {/* foundational pages */}
           <Route path="/" component={HomePage} />
           <Route path="/checkout" component={Checkout} />
           <Route path="/free-trial" component={FreeTrial} />
-          <Route path="/how-to-use" component={HowToUse} />
           <Route path="/thank-you" component={ThankYou} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/refund-policy" component={RefundPolicy} />
-          <Route path="/terms-of-service" component={TermsOfService} />
-          <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/about-us" component={AboutUs} />
-          <Route path="/affiliate" component={Affiliate} />
           <Route path="/contact-us" component={ContactUs} />
           <Route path="/faqs" component={FAQs} />
           <Route path="/blogs" component={Blogs} />
@@ -193,9 +188,21 @@ function App() {
             component={CustomAlbumCover}
           />
           <Route path="/yl-personal-support" component={YlPersonalSupport} />
+
+          {/* static pages */}
+          <Route path="/how-to-use" component={HowToUse} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/refund-policy" component={RefundPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
+          <Route path="/data-deletion" component={DataDeletion} />
+          <Route path="/affiliate" component={Affiliate} />
           <Route path="/company-legal" component={CompanyLegal} />
+
+          {/* admin pages */}
           <Route path="/enzo-xyz" component={Admin} />
           <Route path="/enzo-xyz/albums" component={ManageAlbums} />
+
+          {/* 404 */}
           <Route component={NotFound} />
         </Switch>
         <Toaster />
