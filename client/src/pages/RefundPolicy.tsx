@@ -163,10 +163,10 @@ export default function RefundPolicy() {
                             6.1 Any complaint or request seeking a refund shall be submitted
                             exclusively by email to:{" "}
                             <a
-                                href="mailto:support@kahani.xyz"
+                                href="mailto:vaani@kahani.xyz"
                                 className="text-primary hover:underline"
                             >
-                                support@kahani.xyz
+                                vaani@kahani.xyz
                             </a>
                         </h3>
                         <p className="mb-4 text-muted-foreground">
