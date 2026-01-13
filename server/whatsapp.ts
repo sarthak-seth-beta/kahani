@@ -1312,38 +1312,22 @@ export async function sendStorytellerCompletionMessages(
 }
 
 export async function sendBuyerCompletionMessage(
-  recipientNumber: string,
+  {recipientNumber, buyerName, storytellerName, trialId}:{recipientNumber: string,
   buyerName: string,
   storytellerName: string,
-  albumId: string,
-  languagePreference?: string | null,
+  trialId: string,
+  languagePreference?: string | null,}
 ): Promise<boolean> {
   const buyerCompletionMessage = await sendWhatsappButtonTemplate(
     recipientNumber,
-    "albumlink_vaani_en",
+    "album_completion_buyer_en",
     "en",
-    [buyerName, storytellerName],
-    `playlist-albums/${albumId}`,
+    [buyerName, trialId, storytellerName],
+    `playlist-albums/${trialId}`,
     "0",
   );
   return buyerCompletionMessage;
-  // const message = getLocalizedMessage(
-  //   "buyerCompletionMessage",
-  //   languagePreference,
-  //   {
-  //     buyerName,
-  //     storytellerName,
-  //   },
-  // );
-  // const buttonTitle = "Open Website";
-  // const buttonUrl = `https://www.kahani.xyz/playlist-albums/${albumId}`;
 
-  // return await sendInteractiveMessageWithCTA(
-  //   recipientNumber,
-  //   message,
-  //   buttonTitle,
-  //   buttonUrl,
-  // );
 }
 
 export async function sendBuyerFeedbackRequest(

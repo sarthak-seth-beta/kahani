@@ -17,6 +17,7 @@ import {
   sendHowToUseKahani,
   sendQuestionnairePremise,
   sendFeedbackThankYou,
+  sendWhatsappButtonTemplate,
 } from "./whatsapp";
 import { uploadVoiceNoteToR2, uploadImageToR2 } from "./r2";
 import ffmpeg from "fluent-ffmpeg";
@@ -1420,6 +1421,47 @@ async function handleVoiceNote(
     album = await storage.getAlbumByTitle(albumIdentifier);
   }
 
+  // Check if 3 questions have been answered and send template to buyer
+  if (trial.customerPhone && album) {
+    const allVoiceNotes = await storage.getVoiceNotesByTrialId(trial.id);
+    const answeredQuestionIndices = new Set(
+      allVoiceNotes.map((note) => note.questionIndex),
+    );
+    
+    // Check if exactly 3 questions are answered (indices 0, 1, 2)
+    if (answeredQuestionIndices.size === 3 && 
+        answeredQuestionIndices.has(0) && 
+        answeredQuestionIndices.has(1) && 
+        answeredQuestionIndices.has(2)) {
+      
+      // Get the first question set title from album
+      const questionSetTitle = album.questionSetTitles?.en?.[0] || "";
+      
+      console.log("Sending post_day_1_buyer_en template to buyer:", {
+        trialId: trial.id,
+        buyerPhone: trial.customerPhone,
+        buyerName: trial.buyerName,
+        storytellerName: trial.storytellerName,
+        questionSetTitle,
+      });
+      
+      await sendWhatsappButtonTemplate(
+        trial.customerPhone,
+        "post_day_1_buyer_en",
+        "en",
+        [trial.buyerName, trial.storytellerName, questionSetTitle],
+        `playlist-albums/${trial.id}`,
+        "0",
+        {
+          orderId: trial.id,
+          messageType: "template",
+        },
+      ).catch((error) => {
+        console.error("Failed to send post_day_1_buyer_en template to buyer:", error);
+      });
+    }
+  }
+
   const isConversationalAlbum = album?.isConversationalAlbum === true;
 
   let totalQuestions = 0;
@@ -1468,13 +1510,12 @@ async function handleVoiceNote(
 
     // Send to buyer if phone number exists
     if (trial.customerPhone) {
-      const buyerMessageSent = await sendBuyerCompletionMessage(
-        trial.customerPhone,
-        trial.buyerName,
-        trial.storytellerName,
-        trial.id,
-        trial.storytellerLanguagePreference,
-      );
+      const buyerMessageSent = await sendBuyerCompletionMessage({
+        recipientNumber: trial.customerPhone,
+        buyerName: trial.buyerName,
+        storytellerName: trial.storytellerName,
+        trialId: trial.id,
+      });
 
       // Schedule buyer feedback 24 hours after completion message
       if (buyerMessageSent) {

@@ -12,7 +12,6 @@ const ACTIVE_RELATIONS = [
   { id: "nanu", label: "Nanu", type: "active", image: imgURL },
   { id: "nani", label: "Nani", type: "active", image: imgURL },
   { id: "dadi", label: "Dadi", type: "active", image: imgURL },
-  // Pad to match Locked count (8)
   { id: "mom_2", label: "Mom", type: "active", image: imgURL },
   { id: "dad_2", label: "Dad", type: "active", image: imgURL },
 ];
