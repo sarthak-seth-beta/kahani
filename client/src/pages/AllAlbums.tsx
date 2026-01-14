@@ -11,7 +11,12 @@ import { cn } from "@/lib/utils";
 
 export default function AllAlbums() {
   const [, setLocation] = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  // Get initial category from URL query params
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialCategory = urlParams.get("category") || "All";
+
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -40,10 +45,22 @@ export default function AllAlbums() {
     });
   }, [selectedCategory]);
 
-  const filteredAlbums = useMemo(() => {
+  // Shuffle albums randomly on load and when category changes
+  const shuffledAlbums = useMemo(() => {
     if (!albums) return [];
+    const array = [...albums];
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }, [albums, selectedCategory]);
 
-    let result = albums;
+  const filteredAlbums = useMemo(() => {
+    // Use shuffledAlbums instead of raw albums
+    if (!shuffledAlbums) return [];
+
+    let result = shuffledAlbums;
 
     // Filter by Categories
     if (selectedCategory !== "All") {
@@ -65,7 +82,7 @@ export default function AllAlbums() {
     }
 
     return result;
-  }, [albums, selectedCategory, searchQuery]);
+  }, [shuffledAlbums, selectedCategory, searchQuery]);
 
   // Inject Custom Card at index 2 (3rd position)
   const displayAlbums = useMemo(() => {
@@ -222,7 +239,7 @@ export default function AllAlbums() {
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main data-lenis-prevent className="flex-1 min-w-0 md:h-screen md:overflow-y-auto">
+      <main className="flex-1 min-w-0">
         <section className="w-full px-1 md:px-8 pt-12 md:pt-8 pb-4 min-h-screen flex flex-col items-center">
           <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-8">
             {/* Page Header - Sticky on Desktop, Normal on Mobile */}
