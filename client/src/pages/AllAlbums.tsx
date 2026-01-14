@@ -222,7 +222,7 @@ export default function AllAlbums() {
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main className="flex-1 min-w-0 md:h-screen md:overflow-y-auto">
+      <main data-lenis-prevent className="flex-1 min-w-0 md:h-screen md:overflow-y-auto">
         <section className="w-full px-1 md:px-8 pt-12 md:pt-8 pb-4 min-h-screen flex flex-col items-center">
           <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-8">
             {/* Page Header - Sticky on Desktop, Normal on Mobile */}
