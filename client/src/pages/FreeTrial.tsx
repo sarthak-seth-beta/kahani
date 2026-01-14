@@ -156,11 +156,10 @@ export default function FreeTrial() {
                             setLang("en");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${
-                            lang === "en"
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en"
                               ? "bg-[#A35139]/10 text-black"
                               : "text-black hover:bg-black/5"
-                          }`}
+                            }`}
                         >
                           English
                         </button>
@@ -169,11 +168,10 @@ export default function FreeTrial() {
                             setLang("hn");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${
-                            lang === "hn"
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn"
                               ? "bg-[#A35139]/10 text-black"
                               : "text-black hover:bg-black/5"
-                          }`}
+                            }`}
                         >
                           हिंदी
                         </button>
@@ -337,7 +335,7 @@ export default function FreeTrial() {
       {/* Floating Bottom Bar (Mobile/Desktop) */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#C9C1B1]/30 z-50 flex items-center justify-between md:justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="md:w-full md:max-w-2xl flex items-center justify-between w-full gap-4">
-          <div className="flex flex-col items-start md:hidden">
+          <div className="flex flex-col items-start">
             <span className="text-xs text-[#1B2632]/60 font-medium ml-1">
               Total
             </span>
@@ -358,7 +356,10 @@ export default function FreeTrial() {
                 Place an Order
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded">
+            <DialogContent
+              data-lenis-prevent
+              className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded"
+            >
               <FreeTrialForm
                 albumId={selectedAlbum.id}
                 albumTitle={selectedAlbum.title}
