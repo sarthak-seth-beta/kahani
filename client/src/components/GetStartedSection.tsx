@@ -126,7 +126,7 @@ function Card({ item, setLocation }: { item: any; setLocation: any }) {
     <div
       onClick={() => {
         if (item.type === "active") {
-          setLocation("/all-albums");
+          setLocation(`/all-albums?category=${encodeURIComponent(item.label)}`);
         }
       }}
       className={`

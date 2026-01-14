@@ -157,8 +157,8 @@ export default function FreeTrial() {
                             setIsLanguageDropdownOpen(false);
                           }}
                           className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en"
-                              ? "bg-[#A35139]/10 text-black"
-                              : "text-black hover:bg-black/5"
+                            ? "bg-[#A35139]/10 text-black"
+                            : "text-black hover:bg-black/5"
                             }`}
                         >
                           English
@@ -169,8 +169,8 @@ export default function FreeTrial() {
                             setIsLanguageDropdownOpen(false);
                           }}
                           className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn"
-                              ? "bg-[#A35139]/10 text-black"
-                              : "text-black hover:bg-black/5"
+                            ? "bg-[#A35139]/10 text-black"
+                            : "text-black hover:bg-black/5"
                             }`}
                         >
                           हिंदी
@@ -203,9 +203,36 @@ export default function FreeTrial() {
                             titles?.en?.[idx] ||
                             `Chapter ${idx + 1}`;
 
+                          const toRoman = (num: number) => {
+                            const map = {
+                              M: 1000,
+                              CM: 900,
+                              D: 500,
+                              CD: 400,
+                              C: 100,
+                              XC: 90,
+                              L: 50,
+                              XL: 40,
+                              X: 10,
+                              IX: 9,
+                              V: 5,
+                              IV: 4,
+                              I: 1,
+                            };
+                            let result = "";
+                            for (const key in map) {
+                              const val = map[key as keyof typeof map];
+                              while (num >= val) {
+                                result += key;
+                                num -= val;
+                              }
+                            }
+                            return result;
+                          };
+
                           return (
                             <span className="text-base font-bold text-[#1B2632] font-['Outfit'] leading-tight">
-                              {title}
+                              {toRoman(idx + 1)}. {title}
                             </span>
                           );
                         })()}
