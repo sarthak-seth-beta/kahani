@@ -42,7 +42,6 @@ export default function GetStartedSection() {
   const scrollRef2 = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-
   // Duplicate arrays to create seamless loop
   const SCROLL_ITEMS_1 = [
     ...ITEMS_ROW_1,
@@ -69,12 +68,14 @@ export default function GetStartedSection() {
     const animate = () => {
       // Only run JS animation on mobile/tablet (below md breakpoint)
       if (window.innerWidth < 768 && !isPaused) {
-
         // Row 1: Move Left (Viewport moves Right, Content moves Left)
         if (scrollRef1.current) {
           scrollRef1.current.scrollLeft += 1;
           // Reset when we've scrolled past half (since we have 4x duplication, half is safe)
-          if (scrollRef1.current.scrollLeft >= scrollRef1.current.scrollWidth / 2) {
+          if (
+            scrollRef1.current.scrollLeft >=
+            scrollRef1.current.scrollWidth / 2
+          ) {
             scrollRef1.current.scrollLeft = 0;
           }
         }
@@ -102,7 +103,6 @@ export default function GetStartedSection() {
     // Resume after a short delay to prevent instant movement after swipe
     setTimeout(() => setIsPaused(false), 1500);
   };
-
 
   return (
     <section className="relative py-12 bg-white overflow-hidden">

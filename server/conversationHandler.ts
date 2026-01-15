@@ -910,7 +910,39 @@ async function handleReadinessResponse(
   await cancelScheduledCheckin(trial.id);
 
   if (isYes) {
+    // Idempotency check: if trial is already in_progress, skip processing
+    // This prevents duplicate processing if handleReadinessResponse is called twice
+    if (trial.conversationState === "in_progress") {
+      console.log(
+        "Trial already in_progress, skipping duplicate readiness response processing:",
+        {
+          trialId: trial.id,
+          fromNumber,
+          currentState: trial.conversationState,
+        },
+      );
+      return;
+    }
+
     console.log("Processing YES response, updating trial state to in_progress");
+    // Fetch fresh trial data to avoid race conditions
+    const freshTrial = await storage.getFreeTrialDb(trial.id);
+    if (!freshTrial) {
+      console.error("Trial not found:", trial.id);
+      return;
+    }
+
+    // Double-check state hasn't changed (another process might have updated it)
+    if (freshTrial.conversationState === "in_progress") {
+      console.log(
+        "Trial state already changed to in_progress, skipping duplicate processing:",
+        {
+          trialId: trial.id,
+        },
+      );
+      return;
+    }
+
     await storage.updateFreeTrialDb(trial.id, {
       conversationState: "in_progress",
       lastReadinessResponse: "yes",
@@ -919,9 +951,16 @@ async function handleReadinessResponse(
     });
 
     console.log("Trial state updated to in_progress, calling sendQuestion");
+    // Fetch updated trial before sending question
+    const updatedTrial = await storage.getFreeTrialDb(trial.id);
+    if (!updatedTrial) {
+      console.error("Trial not found after update:", trial.id);
+      return;
+    }
+
     // Send the question (could be first question or next question)
     try {
-      await sendQuestion(trial, fromNumber);
+      await sendQuestion(updatedTrial, fromNumber);
       console.log("sendQuestion completed successfully");
     } catch (error) {
       console.error("Error in sendQuestion:", error);
@@ -1220,6 +1259,34 @@ export async function sendQuestion(
 
   // Use provided questionIndex or current question index
   const targetQuestionIndex = questionIndex ?? trial.currentQuestionIndex ?? 0;
+
+  // Idempotency check: prevent sending the same question twice within 2 minutes
+  // Fetch fresh trial data to avoid race conditions
+  if (!isReminder) {
+    const freshTrial = await storage.getFreeTrialDb(trial.id);
+    if (freshTrial && freshTrial.lastQuestionSentAt) {
+      const timeSinceLastQuestion =
+        Date.now() - new Date(freshTrial.lastQuestionSentAt).getTime();
+      const twoMinutesInMs = 2 * 60 * 1000;
+
+      // Check if we're trying to send the same question index that was just sent
+      // Compare against the fresh trial's currentQuestionIndex to catch concurrent updates
+      const freshCurrentIndex = freshTrial.currentQuestionIndex ?? 0;
+      if (
+        timeSinceLastQuestion < twoMinutesInMs &&
+        freshCurrentIndex === targetQuestionIndex
+      ) {
+        console.warn("Skipping duplicate question send (idempotency check):", {
+          trialId: trial.id,
+          targetQuestionIndex,
+          freshCurrentQuestionIndex: freshCurrentIndex,
+          lastQuestionSentAt: freshTrial.lastQuestionSentAt,
+          timeSinceLastQuestion: `${Math.round(timeSinceLastQuestion / 1000)}s`,
+        });
+        return;
+      }
+    }
+  }
 
   console.log(
     "Fetching question with targetQuestionIndex:",
