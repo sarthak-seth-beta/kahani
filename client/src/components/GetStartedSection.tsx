@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -37,6 +38,10 @@ const ITEMS_ROW_2 = [...LOCKED_RELATIONS, ...ACTIVE_RELATIONS];
 
 export default function GetStartedSection() {
   const [, setLocation] = useLocation();
+  const scrollRef1 = useRef<HTMLDivElement>(null);
+  const scrollRef2 = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
 
   // Duplicate arrays to create seamless loop
   const SCROLL_ITEMS_1 = [
@@ -52,6 +57,53 @@ export default function GetStartedSection() {
     ...ITEMS_ROW_2,
   ];
 
+  useEffect(() => {
+    let animationFrameId: number;
+
+    // Initialize Row 2 scroll position to the middle so it can scroll "left" (visually moving right)
+    if (scrollRef2.current) {
+      // We set it to half the scroll width to start in the middle of our duplicated content
+      scrollRef2.current.scrollLeft = scrollRef2.current.scrollWidth / 2;
+    }
+
+    const animate = () => {
+      // Only run JS animation on mobile/tablet (below md breakpoint)
+      if (window.innerWidth < 768 && !isPaused) {
+
+        // Row 1: Move Left (Viewport moves Right, Content moves Left)
+        if (scrollRef1.current) {
+          scrollRef1.current.scrollLeft += 1;
+          // Reset when we've scrolled past half (since we have 4x duplication, half is safe)
+          if (scrollRef1.current.scrollLeft >= scrollRef1.current.scrollWidth / 2) {
+            scrollRef1.current.scrollLeft = 0;
+          }
+        }
+
+        // Row 2: Move Right (Viewport moves Left, Content moves Right)
+        if (scrollRef2.current) {
+          scrollRef2.current.scrollLeft -= 1;
+          // Reset when we hit the start
+          if (scrollRef2.current.scrollLeft <= 0) {
+            scrollRef2.current.scrollLeft = scrollRef2.current.scrollWidth / 2;
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isPaused]);
+
+  // Pause on interaction
+  const handleInteractionStart = () => setIsPaused(true);
+  const handleInteractionEnd = () => {
+    // Resume after a short delay to prevent instant movement after swipe
+    setTimeout(() => setIsPaused(false), 1500);
+  };
+
+
   return (
     <section className="relative py-12 bg-white overflow-hidden">
       {/* Top Fade Gradient from Previous Section Color (#FAFAFA) to White */}
@@ -65,8 +117,15 @@ export default function GetStartedSection() {
 
       <div className="space-y-6 relative z-10 w-full">
         {/* Row 1: Left Scroll */}
-        <div className="relative w-full overflow-hidden group">
-          <div className="flex gap-4 w-max animate-marquee-left group-hover:[animation-play-state:paused] pl-4">
+        <div
+          ref={scrollRef1}
+          className="relative w-full overflow-x-auto md:overflow-hidden no-scrollbar group"
+          onTouchStart={handleInteractionStart}
+          onTouchEnd={handleInteractionEnd}
+          onMouseEnter={handleInteractionStart}
+          onMouseLeave={handleInteractionEnd}
+        >
+          <div className="flex gap-4 w-max md:w-max md:animate-marquee-left group-hover:[animation-play-state:paused] pl-4 md:pl-4">
             {SCROLL_ITEMS_1.map((item, index) => (
               <Card key={`r1-${index}`} item={item} setLocation={setLocation} />
             ))}
@@ -74,8 +133,15 @@ export default function GetStartedSection() {
         </div>
 
         {/* Row 2: Right Scroll */}
-        <div className="relative w-full overflow-hidden group">
-          <div className="flex gap-4 w-max animate-marquee-right group-hover:[animation-play-state:paused] pl-4">
+        <div
+          ref={scrollRef2}
+          className="relative w-full overflow-x-auto md:overflow-hidden no-scrollbar group"
+          onTouchStart={handleInteractionStart}
+          onTouchEnd={handleInteractionEnd}
+          onMouseEnter={handleInteractionStart}
+          onMouseLeave={handleInteractionEnd}
+        >
+          <div className="flex gap-4 w-max md:w-max md:animate-marquee-right group-hover:[animation-play-state:paused] pl-4 md:pl-4">
             {SCROLL_ITEMS_2.map((item, index) => (
               <Card key={`r2-${index}`} item={item} setLocation={setLocation} />
             ))}
@@ -97,6 +163,15 @@ export default function GetStartedSection() {
                 }
                 .animate-marquee-right {
                     animation: marquee-right 75s linear infinite;
+                }
+                /* Hide scrollbar for Chrome, Safari and Opera */
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                /* Hide scrollbar for IE, Edge and Firefox */
+                .no-scrollbar {
+                    -ms-overflow-style: none;  /* IE and Edge */
+                    scrollbar-width: none;  /* Firefox */
                 }
             `}</style>
     </section>

@@ -86,7 +86,7 @@ export default function FAQs() {
   };
 
   return (
-    <div className="h-screen bg-background overflow-y-auto relative">
+    <div className="min-h-screen bg-background relative">
       {/* Header - Only back arrow */}
       <header className="absolute top-0 left-0 right-0 z-40 w-full">
         <div className="flex items-start px-4 py-3 md:px-6 md:py-4">
@@ -127,19 +127,17 @@ export default function FAQs() {
                     {faq.question}
                   </span>
                   <ChevronDown
-                    className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${
-                      openIndex === index ? "rotate-180" : ""
-                    }`}
+                    className={`flex-shrink-0 w-5 h-5 text-[#A35139] transition-transform duration-300 ${openIndex === index ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
                 {/* Answer Body */}
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openIndex === index
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index
                       ? "max-h-96 opacity-100"
                       : "max-h-0 opacity-0"
-                  }`}
+                    }`}
                 >
                   {openIndex === index && (
                     <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
