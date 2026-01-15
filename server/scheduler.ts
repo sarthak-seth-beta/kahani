@@ -7,12 +7,14 @@ import {
   sendBuyerCheckin,
   sendBuyerFeedbackRequest,
   sendStorytellerFeedbackRequest,
+  getStorytellerLanguageSuffix,
 } from "./whatsapp";
 import {
   processRetryReminders,
   askReadiness,
   sendQuestion,
 } from "./conversationHandler";
+import { sendWhatsAppFailureAlertEmail } from "./email";
 
 let isProcessing = false;
 
@@ -340,6 +342,49 @@ export async function sendStorytellerCheckins(): Promise<void> {
     }
 
     try {
+      // Check for recent failed attempts to prevent infinite loops
+      const languageSuffix =
+        trial.storytellerLanguagePreference === "hn" ? "_hn" : "_en";
+      const templateName = `storyteller_checkin${languageSuffix}`;
+      const hasRecentFailures = await storage.hasRecentFailedAttempts(
+        trial.storytellerPhone,
+        templateName,
+        60, // within last 60 minutes
+        3, // max 3 attempts
+      );
+
+      if (hasRecentFailures) {
+        const failureDetails = await storage.getRecentFailedAttempts(
+          trial.storytellerPhone,
+          templateName,
+          60,
+        );
+
+        console.warn("Skipping storyteller check-in due to recent failures:", {
+          trialId: trial.id,
+          phoneNumber: trial.storytellerPhone,
+          template: templateName,
+          failureCount: failureDetails.count,
+        });
+
+        // Send email alert
+        await sendWhatsAppFailureAlertEmail({
+          templateName,
+          phoneNumber: trial.storytellerPhone,
+          trialId: trial.id,
+          messageType: "storyteller_checkin",
+          failureCount: failureDetails.count,
+          lastError: failureDetails.lastError,
+        });
+
+        // Mark as sent to prevent infinite retries, but log that it was skipped
+        await storage.updateFreeTrialDb(trial.id, {
+          storytellerCheckinSentAt: new Date(),
+          storytellerCheckinScheduledFor: null,
+        });
+        continue;
+      }
+
       const checkinSent = await sendStorytellerCheckin(
         trial.storytellerPhone,
         trial.storytellerName,
@@ -375,6 +420,40 @@ export async function sendStorytellerCheckins(): Promise<void> {
           "Failed to send storyteller check-in template for trial:",
           trial.id,
         );
+        // Check if we've exceeded retry limit - if so, mark as sent to prevent infinite loop
+        const hasTooManyFailures = await storage.hasRecentFailedAttempts(
+          trial.storytellerPhone,
+          templateName,
+          60,
+          5, // After 5 failures, give up
+        );
+        if (hasTooManyFailures) {
+          const failureDetails = await storage.getRecentFailedAttempts(
+            trial.storytellerPhone,
+            templateName,
+            60,
+          );
+
+          console.warn(
+            "Marking storyteller check-in as sent after too many failures:",
+            trial.id,
+          );
+
+          // Send email alert
+          await sendWhatsAppFailureAlertEmail({
+            templateName,
+            phoneNumber: trial.storytellerPhone,
+            trialId: trial.id,
+            messageType: "storyteller_checkin",
+            failureCount: failureDetails.count,
+            lastError: failureDetails.lastError,
+          });
+
+          await storage.updateFreeTrialDb(trial.id, {
+            storytellerCheckinSentAt: new Date(),
+            storytellerCheckinScheduledFor: null,
+          });
+        }
       }
     } catch (error) {
       console.error("Error sending storyteller check-in:", trial.id, error);
@@ -411,6 +490,49 @@ export async function sendScheduledFeedbackRequests(): Promise<void> {
     }
 
     try {
+      // Check for recent failed attempts to prevent infinite loops
+      const templateName = "feedback_from_buyer_en";
+      const hasRecentFailures = await storage.hasRecentFailedAttempts(
+        trial.customerPhone,
+        templateName,
+        60, // within last 60 minutes
+        3, // max 3 attempts
+      );
+
+      if (hasRecentFailures) {
+        const failureDetails = await storage.getRecentFailedAttempts(
+          trial.customerPhone,
+          templateName,
+          60,
+        );
+
+        console.warn(
+          "Skipping buyer feedback request due to recent failures:",
+          {
+            trialId: trial.id,
+            phoneNumber: trial.customerPhone,
+            template: templateName,
+            failureCount: failureDetails.count,
+          },
+        );
+
+        // Send email alert
+        await sendWhatsAppFailureAlertEmail({
+          templateName,
+          phoneNumber: trial.customerPhone,
+          trialId: trial.id,
+          messageType: "feedback_request",
+          failureCount: failureDetails.count,
+          lastError: failureDetails.lastError,
+        });
+
+        // Mark as sent to prevent infinite retries, but log that it was skipped
+        await storage.updateUserFeedback(buyerFeedback.id, {
+          sentAt: new Date(),
+        });
+        continue;
+      }
+
       const feedbackSent = await sendBuyerFeedbackRequest(
         trial.customerPhone,
         trial.buyerName,
@@ -429,6 +551,39 @@ export async function sendScheduledFeedbackRequests(): Promise<void> {
           "Failed to send buyer feedback request for trial:",
           trial.id,
         );
+        // Check if we've exceeded retry limit - if so, mark as sent to prevent infinite loop
+        const hasTooManyFailures = await storage.hasRecentFailedAttempts(
+          trial.customerPhone,
+          templateName,
+          60,
+          5, // After 5 failures, give up
+        );
+        if (hasTooManyFailures) {
+          const failureDetails = await storage.getRecentFailedAttempts(
+            trial.customerPhone,
+            templateName,
+            60,
+          );
+
+          console.warn(
+            "Marking buyer feedback as sent after too many failures:",
+            trial.id,
+          );
+
+          // Send email alert
+          await sendWhatsAppFailureAlertEmail({
+            templateName,
+            phoneNumber: trial.customerPhone,
+            trialId: trial.id,
+            messageType: "feedback_request",
+            failureCount: failureDetails.count,
+            lastError: failureDetails.lastError,
+          });
+
+          await storage.updateUserFeedback(buyerFeedback.id, {
+            sentAt: new Date(),
+          });
+        }
       }
     } catch (error) {
       console.error("Error sending buyer feedback request:", trial.id, error);
@@ -468,6 +623,52 @@ export async function sendScheduledFeedbackRequests(): Promise<void> {
     }
 
     try {
+      // Check for recent failed attempts to prevent infinite loops
+      const languageSuffix = getStorytellerLanguageSuffix(
+        trial.storytellerLanguagePreference,
+      );
+      const templateName = `feedback_storyteller${languageSuffix}`;
+      const hasRecentFailures = await storage.hasRecentFailedAttempts(
+        trial.storytellerPhone,
+        templateName,
+        60, // within last 60 minutes
+        3, // max 3 attempts
+      );
+
+      if (hasRecentFailures) {
+        const failureDetails = await storage.getRecentFailedAttempts(
+          trial.storytellerPhone,
+          templateName,
+          60,
+        );
+
+        console.warn(
+          "Skipping storyteller feedback request due to recent failures:",
+          {
+            trialId: trial.id,
+            phoneNumber: trial.storytellerPhone,
+            template: templateName,
+            failureCount: failureDetails.count,
+          },
+        );
+
+        // Send email alert
+        await sendWhatsAppFailureAlertEmail({
+          templateName,
+          phoneNumber: trial.storytellerPhone,
+          trialId: trial.id,
+          messageType: "feedback_request",
+          failureCount: failureDetails.count,
+          lastError: failureDetails.lastError,
+        });
+
+        // Mark as sent to prevent infinite retries, but log that it was skipped
+        await storage.updateUserFeedback(storytellerFeedback.id, {
+          sentAt: new Date(),
+        });
+        continue;
+      }
+
       const feedbackSent = await sendStorytellerFeedbackRequest(
         trial.storytellerPhone,
         trial.storytellerName,
@@ -486,6 +687,39 @@ export async function sendScheduledFeedbackRequests(): Promise<void> {
           "Failed to send storyteller feedback request for trial:",
           trial.id,
         );
+        // Check if we've exceeded retry limit - if so, mark as sent to prevent infinite loop
+        const hasTooManyFailures = await storage.hasRecentFailedAttempts(
+          trial.storytellerPhone,
+          templateName,
+          60,
+          5, // After 5 failures, give up
+        );
+        if (hasTooManyFailures) {
+          const failureDetails = await storage.getRecentFailedAttempts(
+            trial.storytellerPhone,
+            templateName,
+            60,
+          );
+
+          console.warn(
+            "Marking storyteller feedback as sent after too many failures:",
+            trial.id,
+          );
+
+          // Send email alert
+          await sendWhatsAppFailureAlertEmail({
+            templateName,
+            phoneNumber: trial.storytellerPhone,
+            trialId: trial.id,
+            messageType: "feedback_request",
+            failureCount: failureDetails.count,
+            lastError: failureDetails.lastError,
+          });
+
+          await storage.updateUserFeedback(storytellerFeedback.id, {
+            sentAt: new Date(),
+          });
+        }
       }
     } catch (error) {
       console.error(

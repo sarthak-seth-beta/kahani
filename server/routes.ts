@@ -844,7 +844,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate key with format: trialID_timestamp
         const timestamp = Date.now();
         const extension =
-          compressedMimeType.includes("jpeg") || compressedMimeType.includes("jpg")
+          compressedMimeType.includes("jpeg") ||
+          compressedMimeType.includes("jpg")
             ? "jpg"
             : compressedMimeType.includes("png")
               ? "png"

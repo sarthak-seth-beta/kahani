@@ -84,10 +84,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-    questionIndex: number;
-    questionText: string;
-    mediaUrl: string | null;
-  }> {
+      questionIndex: number;
+      questionText: string;
+      mediaUrl: string | null;
+    }> {
   if (!isConversational) {
     return tracks;
   }
@@ -317,9 +317,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => { });
-        currentAudioRef.current.removeEventListener("pause", () => { });
-        currentAudioRef.current.removeEventListener("play", () => { });
+        currentAudioRef.current.removeEventListener("ended", () => {});
+        currentAudioRef.current.removeEventListener("pause", () => {});
+        currentAudioRef.current.removeEventListener("play", () => {});
         currentAudioRef.current = null;
       }
 
@@ -379,7 +379,9 @@ export default function PlaylistAlbumsGallery() {
               .filter((t: Track & { index: number }) => t.mediaUrl);
 
             if (allPlayableTracks.length > 0) {
-              const randomIndex = Math.floor(Math.random() * allPlayableTracks.length);
+              const randomIndex = Math.floor(
+                Math.random() * allPlayableTracks.length,
+              );
               nextIndex = allPlayableTracks[randomIndex].index;
             }
           } else {
@@ -562,7 +564,9 @@ export default function PlaylistAlbumsGallery() {
       setPlayedTracksInShuffle(new Set());
 
       // Find first playable track
-      const firstPlayableIndex = albumData.tracks.findIndex((t: Track) => t.mediaUrl);
+      const firstPlayableIndex = albumData.tracks.findIndex(
+        (t: Track) => t.mediaUrl,
+      );
       if (firstPlayableIndex !== -1) {
         handlePlayPause(firstPlayableIndex, false);
       } else {

@@ -21,6 +21,7 @@ import {
   voiceNotes,
   albums,
   userFeedbacks,
+  whatsappMessages,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -35,6 +36,7 @@ import {
   isNotNull,
   isNull,
   sql,
+  gte,
 } from "drizzle-orm";
 
 export interface IStorage {
@@ -1084,6 +1086,59 @@ export class DatabaseStorage implements IStorage {
       return 0;
     }
     return album.questions.length;
+  }
+
+  /**
+   * Check if there are recent failed attempts to send a message with the same template to the same phone number
+   * This helps prevent infinite retry loops
+   */
+  async hasRecentFailedAttempts(
+    phoneNumber: string,
+    templateName: string,
+    withinMinutes: number = 60,
+    maxAttempts: number = 3,
+  ): Promise<boolean> {
+    const result = await this.getRecentFailedAttempts(
+      phoneNumber,
+      templateName,
+      withinMinutes,
+    );
+    return result.count >= maxAttempts;
+  }
+
+  /**
+   * Get details about recent failed attempts
+   * Returns count and last error message
+   */
+  async getRecentFailedAttempts(
+    phoneNumber: string,
+    templateName: string,
+    withinMinutes: number = 60,
+  ): Promise<{ count: number; lastError: string | null }> {
+    const cutoffTime = new Date(Date.now() - withinMinutes * 60 * 1000);
+
+    const failedMessages = await db
+      .select()
+      .from(whatsappMessages)
+      .where(
+        and(
+          eq(whatsappMessages.to, phoneNumber),
+          eq(whatsappMessages.messageTemplate, templateName),
+          eq(whatsappMessages.status, "failed"),
+          gte(whatsappMessages.createdAt, cutoffTime),
+        ),
+      )
+      .orderBy(asc(whatsappMessages.createdAt));
+
+    const lastError =
+      failedMessages.length > 0
+        ? failedMessages[failedMessages.length - 1].error || null
+        : null;
+
+    return {
+      count: failedMessages.length,
+      lastError,
+    };
   }
 }
 

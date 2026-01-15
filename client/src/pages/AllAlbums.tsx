@@ -16,7 +16,8 @@ export default function AllAlbums() {
   const urlParams = new URLSearchParams(window.location.search);
   const initialCategory = urlParams.get("category") || "All";
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>(initialCategory);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 

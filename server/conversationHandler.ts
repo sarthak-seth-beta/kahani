@@ -1427,16 +1427,17 @@ async function handleVoiceNote(
     const answeredQuestionIndices = new Set(
       allVoiceNotes.map((note) => note.questionIndex),
     );
-    
+
     // Check if exactly 3 questions are answered (indices 0, 1, 2)
-    if (answeredQuestionIndices.size === 3 && 
-        answeredQuestionIndices.has(0) && 
-        answeredQuestionIndices.has(1) && 
-        answeredQuestionIndices.has(2)) {
-      
+    if (
+      answeredQuestionIndices.size === 3 &&
+      answeredQuestionIndices.has(0) &&
+      answeredQuestionIndices.has(1) &&
+      answeredQuestionIndices.has(2)
+    ) {
       // Get the first question set title from album
       const questionSetTitle = album.questionSetTitles?.en?.[0] || "";
-      
+
       console.log("Sending post_day_1_buyer_en template to buyer:", {
         trialId: trial.id,
         buyerPhone: trial.customerPhone,
@@ -1444,12 +1445,17 @@ async function handleVoiceNote(
         storytellerName: trial.storytellerName,
         questionSetTitle,
       });
-      
+
       await sendWhatsappButtonTemplate(
         trial.customerPhone,
         "post_day_1_buyer_en",
         "en",
-        [trial.buyerName, trial.storytellerName, questionSetTitle, trial.storytellerName],
+        [
+          trial.buyerName,
+          trial.storytellerName,
+          questionSetTitle,
+          trial.storytellerName,
+        ],
         `playlist-albums/${trial.id}`,
         "0",
         {
@@ -1457,7 +1463,10 @@ async function handleVoiceNote(
           messageType: "template",
         },
       ).catch((error) => {
-        console.error("Failed to send post_day_1_buyer_en template to buyer:", error);
+        console.error(
+          "Failed to send post_day_1_buyer_en template to buyer:",
+          error,
+        );
       });
     }
   }

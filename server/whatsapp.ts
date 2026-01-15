@@ -1311,13 +1311,18 @@ export async function sendStorytellerCompletionMessages(
   return true;
 }
 
-export async function sendBuyerCompletionMessage(
-  {recipientNumber, buyerName, storytellerName, trialId}:{recipientNumber: string,
-  buyerName: string,
-  storytellerName: string,
-  trialId: string,
-  languagePreference?: string | null,}
-): Promise<boolean> {
+export async function sendBuyerCompletionMessage({
+  recipientNumber,
+  buyerName,
+  storytellerName,
+  trialId,
+}: {
+  recipientNumber: string;
+  buyerName: string;
+  storytellerName: string;
+  trialId: string;
+  languagePreference?: string | null;
+}): Promise<boolean> {
   const buyerCompletionMessage = await sendWhatsappButtonTemplate(
     recipientNumber,
     "album_completion_buyer_en",
@@ -1327,7 +1332,6 @@ export async function sendBuyerCompletionMessage(
     "0",
   );
   return buyerCompletionMessage;
-
 }
 
 export async function sendBuyerFeedbackRequest(

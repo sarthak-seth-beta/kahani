@@ -15,7 +15,13 @@ const policyLinks = [
   { href: "/data-deletion", label: "Data Deletion" },
 ];
 
-function LinkSection({ title, links }: { title: string; links: Array<{ href: string; label: string }> }) {
+function LinkSection({
+  title,
+  links,
+}: {
+  title: string;
+  links: Array<{ href: string; label: string }>;
+}) {
   return (
     <section className="space-y-6">
       <h2 className="text-2xl font-semibold text-[#1B2632] font-['Outfit'] border-b border-[#1B2632]/10 pb-2">
