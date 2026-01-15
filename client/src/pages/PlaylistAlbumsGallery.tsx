@@ -84,10 +84,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-      questionIndex: number;
-      questionText: string;
-      mediaUrl: string | null;
-    }> {
+    questionIndex: number;
+    questionText: string;
+    mediaUrl: string | null;
+  }> {
   if (!isConversational) {
     return tracks;
   }
@@ -294,9 +294,13 @@ export default function PlaylistAlbumsGallery() {
   const handlePlayPause = useCallback(
     (trackIndex: number, isShufflePlay: boolean = false) => {
       const track = albumData?.tracks[trackIndex];
-      if (!track) return;
+      // If no track or no mediaUrl, show toast and do NOT play
+      if (!track || !track.mediaUrl) {
+        showToast();
+        return;
+      }
 
-      const audioUrl = track.mediaUrl || FALLBACK_AUDIO_URL;
+      const audioUrl = track.mediaUrl;
 
       // If clicking the same track, toggle play/pause
       if (playingTrackIndex === trackIndex && currentAudioRef.current) {
@@ -313,9 +317,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => {});
-        currentAudioRef.current.removeEventListener("pause", () => {});
-        currentAudioRef.current.removeEventListener("play", () => {});
+        currentAudioRef.current.removeEventListener("ended", () => { });
+        currentAudioRef.current.removeEventListener("pause", () => { });
+        currentAudioRef.current.removeEventListener("play", () => { });
         currentAudioRef.current = null;
       }
 
@@ -359,26 +363,41 @@ export default function PlaylistAlbumsGallery() {
             return;
           }
 
-          const unplayedTracks = albumData.tracks
-            .map((_: Track, index: number) => index)
-            .filter((index: number) => !currentPlayedTracks.has(index));
-
-          if (unplayedTracks.length === 0) {
-            // All tracks played, reset and pick any track
-            setPlayedTracksInShuffle(new Set());
-            nextIndex = Math.floor(Math.random() * albumData.tracks.length);
-          } else {
-            // Pick random from unplayed tracks
-            const randomUnplayedIndex = Math.floor(
-              Math.random() * unplayedTracks.length,
+          // Get unplayed tracks that HAVE audio (mediaUrl)
+          const unplayedPlayableTracks = albumData.tracks
+            .map((t: Track, index: number) => ({ index, ...t }))
+            .filter(
+              (t: Track & { index: number }) =>
+                !currentPlayedTracks.has(t.index) && t.mediaUrl,
             );
-            nextIndex = unplayedTracks[randomUnplayedIndex];
+
+          if (unplayedPlayableTracks.length === 0) {
+            // All playable tracks played, reset and pick any playable track
+            setPlayedTracksInShuffle(new Set());
+            const allPlayableTracks = albumData.tracks
+              .map((t: Track, index: number) => ({ index, ...t }))
+              .filter((t: Track & { index: number }) => t.mediaUrl);
+
+            if (allPlayableTracks.length > 0) {
+              const randomIndex = Math.floor(Math.random() * allPlayableTracks.length);
+              nextIndex = allPlayableTracks[randomIndex].index;
+            }
+          } else {
+            // Pick random from unplayed playable tracks
+            const randomUnplayedIndex = Math.floor(
+              Math.random() * unplayedPlayableTracks.length,
+            );
+            nextIndex = unplayedPlayableTracks[randomUnplayedIndex].index;
           }
         } else {
-          // Normal mode: play next sequential track
-          const nextSeqIndex = trackIndex + 1;
-          if (albumData?.tracks && nextSeqIndex < albumData.tracks.length) {
-            nextIndex = nextSeqIndex;
+          // Normal mode: play next sequential track that HAS AUDIO
+          if (albumData?.tracks) {
+            for (let i = trackIndex + 1; i < albumData.tracks.length; i++) {
+              if (albumData.tracks[i].mediaUrl) {
+                nextIndex = i;
+                break;
+              }
+            }
           }
         }
 
@@ -477,16 +496,32 @@ export default function PlaylistAlbumsGallery() {
 
   const handleNextTrack = useCallback(() => {
     if (playingTrackIndex === null || !albumData?.tracks) return;
-    const nextIndex = playingTrackIndex + 1;
-    if (nextIndex < albumData.tracks.length) {
+    // Find next playable track
+    let nextIndex = -1;
+    for (let i = playingTrackIndex + 1; i < albumData.tracks.length; i++) {
+      if (albumData.tracks[i].mediaUrl) {
+        nextIndex = i;
+        break;
+      }
+    }
+
+    if (nextIndex !== -1) {
       handlePlayPause(nextIndex);
     }
   }, [playingTrackIndex, albumData, handlePlayPause]);
 
   const handlePreviousTrack = useCallback(() => {
     if (playingTrackIndex === null || !albumData?.tracks) return;
-    const prevIndex = playingTrackIndex - 1;
-    if (prevIndex >= 0) {
+    // Find previous playable track
+    let prevIndex = -1;
+    for (let i = playingTrackIndex - 1; i >= 0; i--) {
+      if (albumData.tracks[i].mediaUrl) {
+        prevIndex = i;
+        break;
+      }
+    }
+
+    if (prevIndex !== -1) {
       handlePlayPause(prevIndex);
     }
   }, [playingTrackIndex, albumData, handlePlayPause]);
@@ -515,7 +550,7 @@ export default function PlaylistAlbumsGallery() {
     setCurrentTime(0);
   }, [playingTrackIndex]);
 
-  // Handle play button (first track)
+  // Handle play button (find first playable track)
   const handlePlay = useCallback(() => {
     if (albumData?.tracks && albumData.tracks.length > 0) {
       trackEvent(AnalyticsEvents.PLAYLIST_PLAY_CLICKED, {
@@ -525,7 +560,14 @@ export default function PlaylistAlbumsGallery() {
       });
       setIsShuffleMode(false);
       setPlayedTracksInShuffle(new Set());
-      handlePlayPause(0, false);
+
+      // Find first playable track
+      const firstPlayableIndex = albumData.tracks.findIndex((t: Track) => t.mediaUrl);
+      if (firstPlayableIndex !== -1) {
+        handlePlayPause(firstPlayableIndex, false);
+      } else {
+        showToast();
+      }
     }
   }, [albumData, handlePlayPause]);
 
@@ -539,26 +581,45 @@ export default function PlaylistAlbumsGallery() {
       });
       setIsShuffleMode(true);
 
-      // Get unplayed tracks
-      const unplayedTracks = albumData.tracks
-        .map((_: Track, index: number) => index)
-        .filter((index: number) => !playedTracksInShuffle.has(index));
-
-      let randomIndex: number;
-
-      if (unplayedTracks.length === 0) {
-        // All tracks played, reset and pick any track
-        setPlayedTracksInShuffle(new Set());
-        randomIndex = Math.floor(Math.random() * albumData.tracks.length);
-      } else {
-        // Pick random from unplayed tracks
-        const randomUnplayedIndex = Math.floor(
-          Math.random() * unplayedTracks.length,
+      // Get unplayed tracks that HAVE audio (mediaUrl)
+      const unplayedPlayableTracks = albumData.tracks
+        .map((track: Track, index: number) => ({ index, ...track }))
+        .filter(
+          (t: Track & { index: number }) =>
+            !playedTracksInShuffle.has(t.index) && t.mediaUrl,
         );
-        randomIndex = unplayedTracks[randomUnplayedIndex];
-      }
 
-      handlePlayPause(randomIndex, true);
+      // If no unplayed tracks have mediaUrl, check if ANY tracks have mediaUrl
+      if (unplayedPlayableTracks.length === 0) {
+        const allPlayableTracks = albumData.tracks.filter(
+          (t: Track) => t.mediaUrl,
+        );
+
+        if (allPlayableTracks.length === 0) {
+          // No tracks have mediaUrl at all
+          showToast();
+          setIsShuffleMode(false); // Cancel shuffle mode
+          return;
+        }
+
+        // All playable tracks have been played, reset and pick any playable track
+        setPlayedTracksInShuffle(new Set());
+        const randomPlayableIndex = Math.floor(
+          Math.random() * allPlayableTracks.length,
+        );
+        // We need to find the original index of this playable track
+        const originalIndex = albumData.tracks.findIndex(
+          (t: Track) => t === allPlayableTracks[randomPlayableIndex],
+        );
+        handlePlayPause(originalIndex, true);
+      } else {
+        // Pick random from unplayed playable tracks
+        const randomUnplayedIndex = Math.floor(
+          Math.random() * unplayedPlayableTracks.length,
+        );
+        const targetTrack = unplayedPlayableTracks[randomUnplayedIndex];
+        handlePlayPause(targetTrack.index, true);
+      }
     }
   }, [albumData, handlePlayPause, playedTracksInShuffle]);
 
