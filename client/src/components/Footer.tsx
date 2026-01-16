@@ -20,7 +20,7 @@ export function Footer() {
         {/* Main Heading */}
         <h2 className="text-3xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-tight tracking-tight">
           We ask the questions you have always wanted to ask <br /> <br />
-          <span className="text-[#FFB162]">- and life got busy</span>
+          <span>- and life got busy</span>
         </h2>
 
         {/* <p className="text-lg md:text-xl text-[#EEE9DF]/80 max-w-2xl font-light italic mt-4">

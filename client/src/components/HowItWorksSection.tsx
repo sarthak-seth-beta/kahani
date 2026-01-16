@@ -17,23 +17,23 @@ interface HowItWorksSectionProps {
 const defaultSteps: Step[] = [
   {
     number: "1",
-    title: "Pick an album",
-    description: "Choose a theme for Mom / Dad / Dadu / Nani.",
+    title: "Pick a theme",
+    description: "Choose the best theme for your loved one.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_1.jpg",
   },
   {
     number: "2",
-    title: "They record on WhatsApp",
-    description: "We send them questions. They reply with a voice note.",
+    title: "Invite them on WhatsApp",
+    description: "We send gentle prompts on Whatsapp. They reply with voice notes.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_2.jpg",
   },
   {
     number: "3",
-    title: "You get the album",
+    title: "You get the book",
     description:
-      "A private link with their stories — ready to replay and share.",
+      "Their stories, saved as a book you can read and listen to.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_3.jpg",
   },
@@ -102,6 +102,9 @@ export default function HowItWorksSection({
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B2632] text-center font-['Outfit']">
           How It Works
         </h2>
+        <p className="text-sm sm:text-xs text-[#1B2632]/80 text-center mt-2 font-['Outfit'] font-medium whitespace-nowrap">
+          (pick someone you want to make a book for)
+        </p>
       </div>
 
       {/* 2. Content Middle - Centered vertically in remaining space */}
@@ -158,9 +161,8 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+              }`}
           />
         ))}
       </div>

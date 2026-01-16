@@ -53,11 +53,10 @@ export default function SectionFourAlbumsNew({
         {/* Header */}
         <div className="text-center mb-8 space-y-4 px-4">
           <h2 className="text-3xl md:text-5xl font-bold text-[#1B2632] font-['Outfit']">
-            Explore Our Albums
+            Explore Our Themes
           </h2>
           <p className="text-lg text-[#1B2632]/60 max-w-2xl mx-auto">
-            Discover the perfect way to preserve your family's legacy with our
-            curated albums.
+            Questions worth asking
           </p>
         </div>
 

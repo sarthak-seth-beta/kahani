@@ -27,7 +27,6 @@ import DataDeletion from "@/pages/DataDeletion";
 import Affiliate from "@/pages/Affiliate";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
-import FAQs from "@/pages/FAQs";
 import CompanyLegal from "@/pages/CompanyLegal";
 import Blogs from "@/pages/Blogs";
 import AlbumsGallery from "@/pages/AlbumsGallery";
@@ -172,7 +171,7 @@ function App() {
           <Route path="/thank-you" component={ThankYou} />
           <Route path="/about-us" component={AboutUs} />
           <Route path="/contact-us" component={ContactUs} />
-          <Route path="/faqs" component={FAQs} />
+
           <Route path="/blogs" component={Blogs} />
           <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
           <Route

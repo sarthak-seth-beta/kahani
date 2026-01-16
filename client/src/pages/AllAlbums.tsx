@@ -246,7 +246,7 @@ export default function AllAlbums() {
             {/* Page Header - Sticky on Desktop, Normal on Mobile */}
             <div className="text-center space-y-2 sticky top-0 md:static z-30 pt-4 pb-2 md:pt-0 md:pb-0 bg-[#EEE9DF]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1B2632] font-['Outfit']">
-                All Albums
+                All Themes
               </h1>
             </div>
 
