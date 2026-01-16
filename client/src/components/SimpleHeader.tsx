@@ -53,7 +53,7 @@ export default function SimpleHeader({
         {/* Navigation / CTA */}
         <div className="flex items-center gap-2 md:gap-4">
           <span className="text-[#1B2632] font-medium text-xs md:text-base whitespace-nowrap sm:inline">
-            Get started for
+            Make a book for
           </span>
 
           {onRecordClick && (

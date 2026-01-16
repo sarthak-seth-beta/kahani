@@ -13,25 +13,11 @@ const ACTIVE_RELATIONS = [
   { id: "nanu", label: "Nanu", type: "active", image: imgURL },
   { id: "nani", label: "Nani", type: "active", image: imgURL },
   { id: "dadi", label: "Dadi", type: "active", image: imgURL },
-  { id: "mom_2", label: "Mom", type: "active", image: imgURL },
-  { id: "dad_2", label: "Dad", type: "active", image: imgURL },
+  { id: "brother", label: "Brother", type: "active", image: imgURL },
+  { id: "sister", label: "Sister", type: "active", image: imgURL },
 ];
 
-const LOCKED_RELATIONS = [
-  { id: "husband", label: "Husband", type: "coming-soon", image: imgURL },
-  { id: "wife", label: "Wife", type: "coming-soon", image: imgURL },
-  { id: "nana", label: "Nana", type: "coming-soon", image: imgURL },
-  { id: "dada", label: "Dada", type: "coming-soon", image: imgURL },
-  { id: "mentor", label: "Mentor", type: "coming-soon", image: imgURL },
-  { id: "teacher", label: "Teacher", type: "coming-soon", image: imgURL },
-  {
-    id: "best_friend",
-    label: "Best Friend",
-    type: "coming-soon",
-    image: imgURL,
-  },
-  { id: "grandchild", label: "Grandchild", type: "coming-soon", image: imgURL },
-];
+const LOCKED_RELATIONS: any[] = [];
 
 const ITEMS_ROW_1 = [...ACTIVE_RELATIONS, ...LOCKED_RELATIONS];
 const ITEMS_ROW_2 = [...LOCKED_RELATIONS, ...ACTIVE_RELATIONS];
@@ -111,7 +97,7 @@ export default function GetStartedSection() {
 
       <div className="relative z-20 container mx-auto px-4 md:px-6 mb-10 text-center">
         <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider">
-          Get Started For
+          Make a book for
         </h2>
       </div>
 
@@ -186,8 +172,8 @@ function Card({ item, setLocation }: { item: any; setLocation: any }) {
 
     // Female relations (Warm): Truffle Trouble -> Burning Flame
     if (
-      ["mom", "nani", "dadi", "mom_2", "wife", "grandchild"].some((k) =>
-        id.includes(k),
+      ["mom", "nani", "dadi", "mom_2", "wife", "grandchild", "sister"].some(
+        (k) => id.includes(k),
       )
     ) {
       return "bg-gradient-to-br from-[#A35139] to-[#FFB162]";

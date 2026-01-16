@@ -3,14 +3,20 @@ import { useLocation } from "wouter";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowLeft, Play, Globe, ChevronDown } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { FreeTrialForm } from "@/components/FreeTrialForm";
+import { ProductSelection } from "@/components/ProductSelection";
 import type { Album } from "@shared/schema";
 
 export default function FreeTrial() {
@@ -39,7 +45,7 @@ export default function FreeTrial() {
   });
 
   // Determine selected album details
-  // Determine selected album details
+
   const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albums) {
       return albums.find((a) => a.id === albumIdFromUrl);
@@ -126,7 +132,7 @@ export default function FreeTrial() {
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
-                What you'll cover
+                Inside This Book
               </h2>
 
               {selectedAlbum.questions_hn?.length > 0 && (
@@ -264,20 +270,45 @@ export default function FreeTrial() {
             {/* What's Included */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-[#1B2632]/90">
-                What's Included
+                In your Kahani, you get:
               </h3>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-4">
                 {[
-                  "Private digital voice album (shareable link)",
-                  "Listen anytime (replay forever)",
-                  "Download anytime",
-                  "WhatsApp prompts + support",
-                  "No deadlines (record at your pace)",
-                  "Gift plaque with QR (coming soon)",
+                  {
+                    title: "A real book of their stories",
+                    desc: "Their voice notes are turned into a clean, readable book you can keep and come back to.",
+                  },
+                  {
+                    title: "Their voice stays with the book",
+                    desc: "Every chapter includes their original voice, so it is not just text. It is them.",
+                  },
+                  {
+                    title: "Guided WhatsApp storytelling",
+                    desc: "Vaani sends prompts to your loved one and keeps the flow moving, one story at a time.",
+                  },
+                  {
+                    title: "A private link to replay and share",
+                    desc: "You get one private link to listen anytime and share with your family.",
+                  },
+                  {
+                    title: "Pause anytime, resume anytime",
+                    desc: "No deadlines. No pressure. Pick up exactly where you left off.",
+                  },
+                  {
+                    title: "WhatsApp support from Vaani",
+                    desc: "If anyone gets stuck, help is right there on WhatsApp.",
+                  },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <Check className="h-4 w-4 text-[#A35139]" />
-                    <span className="text-sm text-[#1B2632]/70">{item}</span>
+                  <div key={i} className="flex items-start gap-3">
+                    <Check className="h-4 w-4 text-[#A35139] mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-[#1B2632]">
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-[#1B2632]/70 leading-relaxed mt-0.5">
+                        {item.desc}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -289,25 +320,24 @@ export default function FreeTrial() {
                 {/* How It Works (Moved & Collapsible) */}
                 <AccordionItem value="how-it-works" className="border-b">
                   <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-4">
-                    How It Works
+                    How This Works
                   </AccordionTrigger>
                   <AccordionContent className="pt-0 pb-4">
                     <div className="space-y-4">
                       {[
                         {
                           step: 1,
-                          title: "You message us on WhatsApp",
-                          desc: "No app. Just WhatsApp.",
+                          title:
+                            "You share an invite to them on WhatsApp after completing registration",
                         },
                         {
                           step: 2,
-                          title: "Your loved one shares voice notes",
-                          desc: "One story at a time",
+                          title:
+                            "We send questions to them and your loved one replies in voice notes",
                         },
                         {
                           step: 3,
-                          title: "You get a private album link",
-                          desc: "And you can track progress live",
+                          title: "We turn it into a book",
                         },
                       ].map((item) => (
                         <div key={item.step} className="flex items-start gap-3">
@@ -318,27 +348,27 @@ export default function FreeTrial() {
                             <p className="text-sm font-medium text-[#1B2632]">
                               {item.title}
                             </p>
-                            <p className="text-xs text-[#1B2632]/60">
-                              {item.desc}
-                            </p>
                           </div>
                         </div>
                       ))}
+                      <p className="text-md text-[#1B2632]/60">
+                        You do not record. They do.
+                      </p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="ethos" className="border-b-0">
                   <AccordionTrigger className="text-lg font-semibold text-[#1B2632]/90 hover:no-underline py-4">
-                    Our Ethos
+                    Privacy
                   </AccordionTrigger>
                   <AccordionContent className="pt-0 pb-0">
                     <div className="space-y-2 text-sm text-[#1B2632]/70 leading-relaxed">
-                      <p>We keep this safe and simple.</p>
-                      <p>That is why I do not message your loved one first.</p>
-                      <p>You share the link. They choose to start.</p>
+                      <p>We never message your loved one first.</p>
+                      <p>You share the invite.</p>
+                      <p>They choose to start.</p>
                       <p className="font-medium text-[#A35139]">
-                        Your stories stay private. Always.
+                        Their stories stay private. Always.
                       </p>
                     </div>
                   </AccordionContent>
@@ -364,7 +394,7 @@ export default function FreeTrial() {
       {/* Floating Bottom Bar (Mobile/Desktop) */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#C9C1B1]/30 z-50 flex items-center justify-between md:justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="md:w-full md:max-w-2xl flex items-center justify-between w-full gap-4">
-          <div className="flex flex-col items-start">
+          <div className="hidden sm:flex flex-col items-start">
             <span className="text-xs text-[#1B2632]/60 font-medium ml-1">
               Total
             </span>
@@ -380,19 +410,21 @@ export default function FreeTrial() {
             <DialogTrigger asChild>
               <Button
                 size="lg"
-                className="flex-none w-auto px-8 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12 max-w-[200px]"
+                className="flex-none w-full px-8 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12 md:max-w-[200px]"
               >
-                Place an Order
+                Get Started
               </Button>
             </DialogTrigger>
             <DialogContent
               data-lenis-prevent
               className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded"
             >
-              <FreeTrialForm
+              <VisuallyHidden>
+                <DialogTitle>Choose Your Package</DialogTitle>
+              </VisuallyHidden>
+              <ProductSelection
                 albumId={selectedAlbum.id}
-                albumTitle={selectedAlbum.title}
-                onSuccess={() => setIsFormOpen(false)}
+                onContinue={() => setIsFormOpen(false)}
               />
             </DialogContent>
           </Dialog>

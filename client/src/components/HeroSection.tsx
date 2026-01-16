@@ -45,7 +45,7 @@ export default function HeroSection({
           className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl mx-auto"
           data-testid="text-hero-headline"
         >
-          Your family’s voice. <br className="block md:hidden" /> In an album.
+          Turn your loved one’s stories and voice into a book.
         </h1>
 
         {/* Removed: "They speak on WhatsApp. You keep it forever." */}
@@ -55,11 +55,11 @@ export default function HeroSection({
             onClick={onHearKahaniClick}
             className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300"
           >
-            Hear a Kahani
+            Hear a Sample Kahani
           </Button>
 
           <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
-            No app download. Verified by grandparents.
+            You invite them on WhatsApp. They speak. We make the book
           </p>
         </div>
       </div>

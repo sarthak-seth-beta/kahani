@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ArrowRight } from "lucide-react";
-import { useLocation } from "wouter";
+import { ChevronDown } from "lucide-react";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface FAQItem {
@@ -14,61 +13,60 @@ interface SectionFiveFAQsProps {
 
 const defaultFAQs: FAQItem[] = [
   {
-    question: "Why can't I just record my parents myself?",
+    question: "Why can I not just record them myself?",
     answer:
-      "You absolutely can… but you never will. Life gets busy, parents get shy, recordings stay unfinished. Kahani makes it effortless - we ask the right questions, at the right pace, and turn everything into a real album your family can keep forever.",
+      "You can. Most people do not finish it. Life gets busy, it feels awkward, and the recordings stay scattered. Kahani makes it easy: we guide them on WhatsApp and turn it into one clean book.",
   },
   {
-    question: "Will they understand how to use this? They're not tech-savvy.",
+    question: "So, what exactly is Kahani?",
     answer:
-      "If they can send a WhatsApp voice note, they can create a Kahani. No app. No login. No password. Just open, talk, done.",
-  },
-  {
-    question: "What language can they speak in?",
-    answer:
-      "Any language they live in - Hindi, English, Tamil, Bengali, Kannada, Gujarati, Punjabi… everything works. Their natural voice is the point.",
-  },
-  {
-    question: "So… what exactly is Kahani?",
-    answer:
-      "Kahani captures your loved ones' stories and voice through simple WhatsApp messages and turns them into a private audio album your whole family can listen to forever.",
+      "Kahani helps you turn your loved one’s WhatsApp voice notes into a book you can keep and come back to.",
   },
   {
     question: "What do I receive at the end?",
     answer:
-      "A beautiful Spotify-style album with 5–20 short stories, custom cover, and a private link you can share with your entire family. No app needed - just press play.",
+      "A private link with their recorded stories. Based on what you choose, you can also get an e-book and a printed book.",
   },
   {
-    question: "How does Kahani talk to my parents/grandparents?",
+    question: "Who records the stories? Me or them?",
     answer:
-      "Exactly like family. Warm WhatsApp questions, gentle pacing, no pressure. They tap the mic, speak in their own way, and we do everything else.",
+      "They do. You only share the WhatsApp invite. Once they start, we guide them.",
   },
   {
-    question: "Is everything private?",
+    question: "Will they understand how to use this?",
     answer:
-      "Completely. Your album has no public page, no search, no listing. Only people with your private link can hear it. You can delete everything anytime.",
+      "They are not tech-savvy. If they can send a WhatsApp voice note, they can do this. No app, no login—just tap mic and speak.",
+  },
+  {
+    question: "What language can they speak in?",
+    answer:
+      "Whatever you select at checkout (for now: Hindi / English / Hinglish in Devanagari).",
+  },
+  {
+    question: "Is it private?",
+    answer:
+      "Yes. We do not message your loved one first. They choose to start by clicking your invite link. The final album/book link is private and shareable.",
   },
   {
     question: "What if they stop halfway or skip days?",
     answer:
-      "We pause gently. Continue whenever they want. This is not a course - it's a conversation.",
+      "That is okay. You can pause and resume. This is meant to feel like a conversation, not a deadline.",
   },
   {
-    question: "Will this be too emotional or heavy for them?",
+    question: "Will this be too emotional or heavy?",
     answer:
-      "Not unless they want it to be. Most Kahani albums are sweet, funny, nostalgic - the kind of stories that come out over chai, not therapy sessions.",
+      "Only if they want it to be. It can be light, funny, nostalgic—everyday stories also make the best books.",
   },
   {
     question: "Why should I pay for this?",
     answer:
-      "Because one day, these stories will be the only way to hear them again - their laugh, their pauses, their way of telling a moment. You are not buying an album. You are preserving a piece of your family.",
+      "Because this is not just a recording. It is their voice, their stories, shaped into something you can keep—so you can hear them again years later.",
   },
 ];
 
 export default function SectionFiveFAQs({
   faqs = defaultFAQs,
 }: SectionFiveFAQsProps) {
-  const [, setLocation] = useLocation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
@@ -99,7 +97,7 @@ export default function SectionFiveFAQs({
 
         {/* FAQ Accordion */}
         <div className="space-y-4">
-          {faqs.slice(0, 3).map((faq, index) => (
+          {faqs.map((faq, index) => (
             <div
               key={index}
               className="bg-[#EEE9DF]/50 rounded-2xl overflow-hidden shadow-sm"
@@ -108,11 +106,11 @@ export default function SectionFiveFAQs({
               {/* Question Header */}
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex items-center justify-between p-5 sm:p-6 text-left hover-elevate active-elevate-2"
+                className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover-elevate active-elevate-2 gap-4"
                 aria-expanded={openIndex === index}
                 data-testid={`faq-question-${index + 1}`}
               >
-                <span className="text-base sm:text-lg font-semibold text-[#1B2632] pr-4">
+                <span className="text-sm sm:text-base md:text-lg font-semibold text-[#1B2632] flex-1">
                   {faq.question}
                 </span>
                 <ChevronDown
@@ -143,19 +141,6 @@ export default function SectionFiveFAQs({
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Contact Us & View All Links */}
-        <div className="text-center space-y-4 flex flex-col items-center">
-          <button
-            onClick={() => setLocation("/faqs")}
-            className="group inline-flex items-center gap-2 text-sm font-medium text-[#1B2632] hover:text-[#A35139] transition-colors"
-          >
-            <span className="border-b border-transparent group-hover:border-[#A35139] transition-all">
-              View all FAQs
-            </span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </button>
         </div>
       </div>
     </section>
