@@ -715,8 +715,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         languagePreference || trial.storytellerLanguagePreference;
       const questions =
         finalLanguagePreference === "hn" &&
-        album.questionsHn &&
-        album.questionsHn.length > 0
+          album.questionsHn &&
+          album.questionsHn.length > 0
           ? album.questionsHn
           : album.questions;
 
@@ -751,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trial.customCoverImageUrl || trialAny.custom_cover_image_url;
       const customCoverImage =
         customCoverImageUrlValue &&
-        String(customCoverImageUrlValue).trim() !== ""
+          String(customCoverImageUrlValue).trim() !== ""
           ? String(customCoverImageUrlValue).trim()
           : null;
       const albumCoverImage =
@@ -845,7 +845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const timestamp = Date.now();
         const extension =
           compressedMimeType.includes("jpeg") ||
-          compressedMimeType.includes("jpg")
+            compressedMimeType.includes("jpg")
             ? "jpg"
             : compressedMimeType.includes("png")
               ? "png"
@@ -1555,6 +1555,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error submitting custom album:", error);
       res.status(500).json({ error: "Failed to submit request" });
+    }
+  });
+
+  // Premium package order email notification
+  app.post("/api/premium-order-email", async (req, res) => {
+
+    try {
+      const {
+        packageType,
+        buyerName,
+        customerPhone,
+        storytellerName,
+        languagePreference,
+        albumId,
+        albumTitle,
+      } = req.body;
+
+      // Validate required fields
+      if (!packageType || !buyerName || !customerPhone || !storytellerName) {
+        console.error("Missing required fields");
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Only send email for premium packages (ebook and printed)
+      if (packageType !== "ebook" && packageType !== "printed") {
+        console.log("Not a premium package, skipping email");
+        return res.json({ success: true, message: "No email needed for this package" });
+      }
+
+      console.log("Premium package confirmed, preparing email...");
+      const { sendEmail } = await import("./email");
+
+      // Map package types to display names and prices
+      const packageDetails: Record<string, { name: string; price: string }> = {
+        ebook: { name: "Voice Album + E-Book", price: "₹599" },
+        printed: { name: "Voice Album + E-Book + Printed Book", price: "₹999" },
+      };
+
+      const selectedPackage = packageDetails[packageType];
+      console.log("Selected package details:", selectedPackage);
+
+      const emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #A35139;">New Premium Package Order</h1>
+          <p>You have received a new order for a premium Kahani package!</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Package</td><td style="padding: 10px;">${selectedPackage.name}</td></tr>
+            <tr><td style="padding: 10px; font-weight: bold;">Price</td><td style="padding: 10px;">${selectedPackage.price}</td></tr>
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Buyer Name</td><td style="padding: 10px;">${buyerName}</td></tr>
+            <tr><td style="padding: 10px; font-weight: bold;">WhatsApp Number</td><td style="padding: 10px;">${customerPhone}</td></tr>
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Storyteller Name</td><td style="padding: 10px;">${storytellerName}</td></tr>
+            <tr><td style="padding: 10px; font-weight: bold;">Language Preference</td><td style="padding: 10px;">${languagePreference === "hn" ? "हिंदी (Hindi)" : "English"}</td></tr>
+            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Album</td><td style="padding: 10px;">${albumTitle || albumId || "N/A"}</td></tr>
+          </table>
+
+          <div style="margin-top: 30px; font-size: 12px; color: #888;">
+            Sent from Kahani Web Platform
+          </div>
+        </div>
+      `;
+
+      // Send to Admin
+      const emailSent = await sendEmail({
+        to: "sarthakseth021@gmail.com",
+        subject: `New Premium Order: ${selectedPackage.name} - ${buyerName}`,
+        html: emailHtml,
+      });
+
+      if (!emailSent) {
+        console.error("sendEmail returned false");
+        throw new Error(
+          "Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.",
+        );
+      }
+
+      console.log("Email sent successfully!");
+      res.json({ success: true, message: "Email sent successfully" });
+    } catch (error: any) {
+      console.error("Error sending premium order email:", error);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ error: "Failed to send email", details: error.message });
     }
   });
 

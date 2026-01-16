@@ -3,14 +3,15 @@ import { useLocation } from "wouter";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowLeft, Play, Globe, ChevronDown } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { FreeTrialForm } from "@/components/FreeTrialForm";
+import { ProductSelection } from "@/components/ProductSelection";
 import type { Album } from "@shared/schema";
 
 export default function FreeTrial() {
@@ -39,7 +40,7 @@ export default function FreeTrial() {
   });
 
   // Determine selected album details
-  // Determine selected album details
+
   const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albums) {
       return albums.find((a) => a.id === albumIdFromUrl);
@@ -409,10 +410,12 @@ export default function FreeTrial() {
               data-lenis-prevent
               className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded"
             >
-              <FreeTrialForm
+              <VisuallyHidden>
+                <DialogTitle>Choose Your Package</DialogTitle>
+              </VisuallyHidden>
+              <ProductSelection
                 albumId={selectedAlbum.id}
-                albumTitle={selectedAlbum.title}
-                onSuccess={() => setIsFormOpen(false)}
+                onContinue={() => setIsFormOpen(false)}
               />
             </DialogContent>
           </Dialog>

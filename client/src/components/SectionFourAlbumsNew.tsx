@@ -133,7 +133,7 @@ export default function SectionFourAlbumsNew({
             onClick={() => setLocation("/all-albums")}
             className="px-6 py-2 bg-transparent border-2 border-[#A35139] text-[#A35139] hover:bg-[#A35139] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            View All Albums
+            View All Themes
           </Button>
         </div>
       </div>

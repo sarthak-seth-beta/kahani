@@ -27,6 +27,7 @@ import DataDeletion from "@/pages/DataDeletion";
 import Affiliate from "@/pages/Affiliate";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
+import OrderDetails from "@/pages/OrderDetails";
 import CompanyLegal from "@/pages/CompanyLegal";
 import Blogs from "@/pages/Blogs";
 import AlbumsGallery from "@/pages/AlbumsGallery";
@@ -170,6 +171,7 @@ function App() {
           <Route path="/free-trial" component={FreeTrial} />
           <Route path="/thank-you" component={ThankYou} />
           <Route path="/about-us" component={AboutUs} />
+          <Route path="/order-details" component={OrderDetails} />
           <Route path="/contact-us" component={ContactUs} />
 
           <Route path="/blogs" component={Blogs} />

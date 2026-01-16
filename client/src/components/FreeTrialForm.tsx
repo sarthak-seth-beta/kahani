@@ -43,6 +43,10 @@ export function FreeTrialForm({
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
+  // Extract package from URL query parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const selectedPackage = urlParams.get("package") || "digital";
+
   const form = useForm<FreeTrialFormData>({
     resolver: zodResolver(insertFreeTrialSchema),
     defaultValues: {
@@ -72,7 +76,7 @@ export function FreeTrialForm({
       }
       return response.json();
     },
-    onSuccess: (trial) => {
+    onSuccess: async (trial) => {
       queryClient.invalidateQueries({ queryKey: ["/api/free-trial"] });
 
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
@@ -81,6 +85,37 @@ export function FreeTrialForm({
         album_title: albumTitle,
         language_preference: form.getValues("storytellerLanguagePreference"),
       });
+
+      // Send email for premium packages (ebook or printed)
+      if (selectedPackage === "ebook" || selectedPackage === "printed") {
+        try {
+          const emailPayload = {
+            packageType: selectedPackage,
+            buyerName: form.getValues("buyerName"),
+            customerPhone: form.getValues("customerPhone"),
+            storytellerName: form.getValues("storytellerName"),
+            languagePreference: form.getValues("storytellerLanguagePreference"),
+            albumId: form.getValues("albumId"),
+            albumTitle: albumTitle,
+          };
+
+          const emailResponse = await apiRequest("POST", "/api/premium-order-email", emailPayload);
+
+          if (!emailResponse.ok) {
+            const errorData = await emailResponse.json();
+            console.error("Failed to send premium order email:", errorData);
+            // Don't block the user flow if email fails
+          } else {
+            const successData = await emailResponse.json();
+            console.log("Email sent successfully:", successData);
+          }
+        } catch (emailError) {
+          console.error("Error sending premium order email:", emailError);
+          // Don't block the user flow if email fails
+        }
+      } else {
+        console.log("Digital package selected, skipping email notification");
+      }
 
       form.reset();
       if (onSuccess) onSuccess();
@@ -98,13 +133,14 @@ export function FreeTrialForm({
   const onSubmit = (data: FreeTrialFormData) => {
     // Ensure albumId is set
     if (!data.albumId) data.albumId = albumId;
+
     freeTrialMutation.mutate(data);
   };
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-lg sm:text-xl font-bold mb-2 text-[#1B2632]">
+        <h2 className="text-md sm:text-xl font-bold mb-2 text-[#1B2632]">
           Ready to record some Kahani?
         </h2>
         <p className="text-muted-foreground text-xs sm:text-sm">
@@ -153,6 +189,9 @@ export function FreeTrialForm({
                     data-testid="input-customer-phone"
                   />
                 </FormControl>
+                <p className="text-xs text-[#1B2632]/60 mt-1">
+                  We will send you an invite message to copy and share
+                </p>
                 <FormMessage />
               </FormItem>
             )}
@@ -231,7 +270,7 @@ export function FreeTrialForm({
                   Starting...
                 </>
               ) : (
-                "Record Now"
+                "Continue to Whatsapp"
               )}
             </Button>
           </div>
