@@ -715,8 +715,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         languagePreference || trial.storytellerLanguagePreference;
       const questions =
         finalLanguagePreference === "hn" &&
-          album.questionsHn &&
-          album.questionsHn.length > 0
+        album.questionsHn &&
+        album.questionsHn.length > 0
           ? album.questionsHn
           : album.questions;
 
@@ -751,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trial.customCoverImageUrl || trialAny.custom_cover_image_url;
       const customCoverImage =
         customCoverImageUrlValue &&
-          String(customCoverImageUrlValue).trim() !== ""
+        String(customCoverImageUrlValue).trim() !== ""
           ? String(customCoverImageUrlValue).trim()
           : null;
       const albumCoverImage =
@@ -845,7 +845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const timestamp = Date.now();
         const extension =
           compressedMimeType.includes("jpeg") ||
-            compressedMimeType.includes("jpg")
+          compressedMimeType.includes("jpg")
             ? "jpg"
             : compressedMimeType.includes("png")
               ? "png"
@@ -1560,7 +1560,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Premium package order email notification
   app.post("/api/premium-order-email", async (req, res) => {
-
     try {
       const {
         packageType,
@@ -1581,7 +1580,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Only send email for premium packages (ebook and printed)
       if (packageType !== "ebook" && packageType !== "printed") {
         console.log("Not a premium package, skipping email");
-        return res.json({ success: true, message: "No email needed for this package" });
+        return res.json({
+          success: true,
+          message: "No email needed for this package",
+        });
       }
 
       console.log("Premium package confirmed, preparing email...");
@@ -1636,7 +1638,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error sending premium order email:", error);
       console.error("Error stack:", error.stack);
-      res.status(500).json({ error: "Failed to send email", details: error.message });
+      res
+        .status(500)
+        .json({ error: "Failed to send email", details: error.message });
     }
   });
 

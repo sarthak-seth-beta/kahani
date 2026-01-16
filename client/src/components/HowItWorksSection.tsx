@@ -25,15 +25,15 @@ const defaultSteps: Step[] = [
   {
     number: "2",
     title: "Invite them on WhatsApp",
-    description: "We send gentle prompts on Whatsapp. They reply with voice notes.",
+    description:
+      "We send gentle prompts on Whatsapp. They reply with voice notes.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_2.jpg",
   },
   {
     number: "3",
     title: "You get the book",
-    description:
-      "Their stories, saved as a book you can read and listen to.",
+    description: "Their stories, saved as a book you can read and listen to.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_3.jpg",
   },
@@ -161,8 +161,9 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-              }`}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+            }`}
           />
         ))}
       </div>

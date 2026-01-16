@@ -3,7 +3,12 @@ import { useLocation } from "wouter";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowLeft, Play, Globe, ChevronDown } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Accordion,
@@ -157,10 +162,11 @@ export default function FreeTrial() {
                             setLang("en");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en"
-                            ? "bg-[#A35139]/10 text-black"
-                            : "text-black hover:bg-black/5"
-                            }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${
+                            lang === "en"
+                              ? "bg-[#A35139]/10 text-black"
+                              : "text-black hover:bg-black/5"
+                          }`}
                         >
                           English
                         </button>
@@ -169,10 +175,11 @@ export default function FreeTrial() {
                             setLang("hn");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn"
-                            ? "bg-[#A35139]/10 text-black"
-                            : "text-black hover:bg-black/5"
-                            }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${
+                            lang === "hn"
+                              ? "bg-[#A35139]/10 text-black"
+                              : "text-black hover:bg-black/5"
+                          }`}
                         >
                           हिंदी
                         </button>
@@ -320,11 +327,13 @@ export default function FreeTrial() {
                       {[
                         {
                           step: 1,
-                          title: "You share an invite to them on WhatsApp after completing registration",
+                          title:
+                            "You share an invite to them on WhatsApp after completing registration",
                         },
                         {
                           step: 2,
-                          title: "We send questions to them and your loved one replies in voice notes",
+                          title:
+                            "We send questions to them and your loved one replies in voice notes",
                         },
                         {
                           step: 3,

@@ -885,13 +885,8 @@ export async function sendFreeTrialConfirmation(
 
   if (isProduction) {
     const message = `Hello ${customerName}.
-
-${albumName} is a lovely choice for your ${relation}. ✨
-I will help you collect their stories in their own voice, the kind you will want to come back to years later.
-
-Next, I will share a short message.
-Please copy it and send it to your ${relation}.
-Once they message me, I will begin.`;
+I am Vaani from Kahani. I will help you collect your ${relation}'s stories in their own voice, the kind you will want to come back to years later.
+${albumName} is a lovely choice.`;
 
     return sendTextMessageWithRetry(recipientNumber, message);
   } else {
@@ -1107,24 +1102,21 @@ export async function sendVoiceNoteAcknowledgment(
   storytellerName: string,
   languagePreference?: string | null,
 ): Promise<boolean> {
-  // const isProduction = process.env.NODE_ENV === "production";
-  const isProduction = true;
-  // const isProduction = false;
+  const messageEnglish = `Thank you, ${storytellerName}. 🙏
 
-  if (isProduction) {
-    const templateParams = [{ type: "text", text: storytellerName }];
-    const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
-    const templateName = `thanks_vaani${languageSuffix}`;
-    return sendTemplateMessageWithRetry(
-      recipientNumber,
-      templateName,
-      templateParams,
-    );
-  } else {
-    const message = `Thank you for sharing your story! It's been saved and recorded safely. We will send you the next question very soon.`;
+That was lovely to hear.
 
-    return sendTextMessageWithRetry(recipientNumber, message);
-  }
+I will come back tomorrow for more stories.`;
+
+  const messageHindi = `शुक्रिया ${storytellerName}। 🙏
+
+आपकी बात सुनकर बहुत अच्छा लगा।
+
+मैं कल फिर आऊँगी, और कहानियाँ सुनने।`;
+
+  const message = languagePreference === "hn" ? messageHindi : messageEnglish;
+
+  return sendTextMessageWithRetry(recipientNumber, message);
 }
 
 export async function sendStorytellerCheckin(

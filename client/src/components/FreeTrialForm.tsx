@@ -99,7 +99,11 @@ export function FreeTrialForm({
             albumTitle: albumTitle,
           };
 
-          const emailResponse = await apiRequest("POST", "/api/premium-order-email", emailPayload);
+          const emailResponse = await apiRequest(
+            "POST",
+            "/api/premium-order-email",
+            emailPayload,
+          );
 
           if (!emailResponse.ok) {
             const errorData = await emailResponse.json();
