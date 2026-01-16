@@ -885,13 +885,8 @@ export async function sendFreeTrialConfirmation(
 
   if (isProduction) {
     const message = `Hello ${customerName}.
-
-${albumName} is a lovely choice for your ${relation}. ✨
-I will help you collect their stories in their own voice, the kind you will want to come back to years later.
-
-Next, I will share a short message.
-Please copy it and send it to your ${relation}.
-Once they message me, I will begin.`;
+I am Vaani from Kahani. I will help you collect your ${relation}'s stories in their own voice, the kind you will want to come back to years later.
+${albumName} is a lovely choice.`;
 
     return sendTextMessageWithRetry(recipientNumber, message);
   } else {
