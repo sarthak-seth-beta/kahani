@@ -7,6 +7,7 @@ import {
   sendBuyerCheckin,
   sendBuyerFeedbackRequest,
   sendStorytellerFeedbackRequest,
+  sendBuyerNudgeForNoStoryteller,
   getStorytellerLanguageSuffix,
 } from "./whatsapp";
 import {
@@ -252,6 +253,69 @@ export async function sendBuyerRemindersForNoStorytellerContact(): Promise<void>
     } catch (error) {
       console.error(
         "Error sending buyer reminder for no storyteller contact:",
+        trial.id,
+        error,
+      );
+    }
+  }
+}
+
+export async function sendBuyerNudgesForNoStoryteller(): Promise<void> {
+  const trials = await storage.getTrialsNeedingBuyerNudge();
+
+  console.log(
+    `Found ${trials.length} trials needing buyer nudge for no storyteller`,
+  );
+
+  for (const trial of trials) {
+    if (!trial.customerPhone) {
+      console.log("Skipping trial without customer phone:", trial.id);
+      continue;
+    }
+
+    // Double-check that storyteller_phone is still null (race condition protection)
+    const currentTrial = await storage.getFreeTrialDb(trial.id);
+    if (!currentTrial) {
+      console.log("Trial no longer exists, skipping:", trial.id);
+      continue;
+    }
+
+    // Skip if storyteller_phone is no longer null (storyteller has responded)
+    if (currentTrial.storytellerPhone) {
+      console.log(
+        "Storyteller phone now exists for trial, skipping nudge:",
+        trial.id,
+      );
+      continue;
+    }
+
+    // Skip if storyteller_phone is already set to 1234567890 (nudge already sent)
+    if (currentTrial.storytellerPhone === "1234567890") {
+      console.log("Buyer nudge already sent for trial, skipping:", trial.id);
+      continue;
+    }
+
+    try {
+      const nudgeSent = await sendBuyerNudgeForNoStoryteller(
+        trial.customerPhone,
+        trial.buyerName,
+        trial.storytellerName,
+        trial.id,
+      );
+
+      if (nudgeSent) {
+        // Update storyteller_phone to 1234567890 to mark that nudge was sent
+        await storage.updateFreeTrialDb(trial.id, {
+          storytellerPhone: "1234567890",
+        });
+
+        console.log("Sent buyer nudge for no storyteller to trial:", trial.id);
+      } else {
+        console.log("Failed to send buyer nudge template for trial:", trial.id);
+      }
+    } catch (error) {
+      console.error(
+        "Error sending buyer nudge for no storyteller:",
         trial.id,
         error,
       );
@@ -749,6 +813,8 @@ export async function processScheduledTasks(): Promise<void> {
     await processRetryReminders();
 
     await sendBuyerRemindersForNoStorytellerContact();
+
+    await sendBuyerNudgesForNoStoryteller();
 
     await sendStorytellerCheckins();
 

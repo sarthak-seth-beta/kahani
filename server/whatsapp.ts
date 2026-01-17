@@ -1170,6 +1170,42 @@ export async function sendBuyerCheckin(
   }
 }
 
+export async function sendBuyerNudgeForNoStoryteller(
+  recipientNumber: string,
+  buyerName: string,
+  storytellerName: string,
+  orderId: string,
+): Promise<boolean> {
+  const businessPhone = process.env.WHATSAPP_BUSINESS_NUMBER_E164;
+
+  const prefilledMessage = `Hi, ${buyerName} has placed an order st_${orderId} for me.`;
+
+  const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
+
+  // const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = true;
+
+  if (isProduction) {
+    const templateParams = [
+      { type: "text", text: buyerName },
+      { type: "text", text: storytellerName },
+      { type: "text", text: whatsappLink },
+      { type: "text", text: storytellerName },
+    ];
+
+    return sendTemplateMessageWithRetry(
+      recipientNumber,
+      "no_storyteller_buyer_nudge",
+      templateParams,
+      { orderId },
+    );
+  } else {
+    const message = `Hello ${buyerName}.\n\nRecording has not started yet as no confirmation message received from ${storytellerName}.\n\n*Action required:* Please send this link ${whatsappLink} to ${storytellerName} for us to get started.`;
+
+    return sendTextMessageWithRetry(recipientNumber, message, { orderId });
+  }
+}
+
 export async function sendIntermediateAcknowledgment(
   recipientNumber: string,
   storytellerName: string,

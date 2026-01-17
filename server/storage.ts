@@ -66,6 +66,7 @@ export interface IStorage {
   getScheduledQuestionsDue(): Promise<FreeTrialRow[]>;
   getPendingReminders(): Promise<FreeTrialRow[]>;
   getTrialsNeedingBuyerReminder(): Promise<FreeTrialRow[]>;
+  getTrialsNeedingBuyerNudge(): Promise<FreeTrialRow[]>;
   getTrialsNeedingCheckin(): Promise<FreeTrialRow[]>;
   getTrialsNeedingBuyerCheckin(): Promise<FreeTrialRow[]>;
   getTrialsNeedingBuyerFeedback(): Promise<FreeTrialRow[]>;
@@ -612,6 +613,24 @@ export class DatabaseStorage implements IStorage {
           lte(freeTrials.forwardLinkSentAt, fortyEightHoursAgo),
           sql`(${freeTrials.storytellerPhone} IS NULL OR ${freeTrials.conversationState} = 'awaiting_initial_contact')`,
           sql`${freeTrials.buyerNoContactReminderSentAt} IS NULL`,
+        ),
+      );
+
+    return trials;
+  }
+
+  async getTrialsNeedingBuyerNudge(): Promise<FreeTrialRow[]> {
+    const now = new Date();
+    const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+    const trials = await db
+      .select()
+      .from(freeTrials)
+      .where(
+        and(
+          isNotNull(freeTrials.customerPhone),
+          isNull(freeTrials.storytellerPhone),
+          lte(freeTrials.createdAt, fortyEightHoursAgo),
         ),
       );
 
