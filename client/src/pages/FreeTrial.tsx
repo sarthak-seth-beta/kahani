@@ -265,7 +265,7 @@ export default function FreeTrial() {
           </div>
 
           {/* 5. Less Prominent Info (Included / How it works) */}
-          <div className="pt-8 space-y-8 pb-8 border-t border-[#C9C1B1]/30">
+          <div className="pt-8 space-y-8 pb-8 border-t border-[#C9C1B1]">
             {/* What's Included */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-[#1B2632]/90">
