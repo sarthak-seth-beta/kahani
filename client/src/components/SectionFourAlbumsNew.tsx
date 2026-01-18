@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Loader2, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
@@ -15,6 +15,7 @@ export default function SectionFourAlbumsNew({
 }: SectionFourAlbumsNewProps) {
   const [, setLocation] = useLocation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const {
     data: fetchedAlbums,
     isLoading,
@@ -26,16 +27,57 @@ export default function SectionFourAlbumsNew({
 
   const allAlbums = propAlbums || fetchedAlbums || [];
   const displayAlbums = allAlbums;
+  // Total cards = albums + "View All" card
+  const totalCards = displayAlbums.length + 1;
+
+  // Calculate the width of a single card including gap
+  const getCardScrollWidth = () => {
+    const isMobile = window.innerWidth < 640; // sm breakpoint
+    // Card width is 85vw on mobile, 320px on desktop
+    const cardWidth = isMobile ? window.innerWidth * 0.85 : 320;
+    const gap = 24; // gap-6 = 24px
+    return cardWidth + gap;
+  };
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 340; // Approx card width + gap
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      const newIndex =
+        direction === "left"
+          ? Math.max(0, activeIndex - 1)
+          : Math.min(totalCards - 1, activeIndex + 1);
+
+      if (newIndex !== activeIndex) {
+        const scrollAmount = getCardScrollWidth();
+        const targetScrollLeft = newIndex * scrollAmount;
+
+        scrollContainerRef.current.scrollTo({
+          left: targetScrollLeft,
+          behavior: "smooth",
+        });
+        setActiveIndex(newIndex);
+      }
     }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const { scrollLeft } = scrollContainerRef.current;
+        const scrollAmount = getCardScrollWidth();
+        const newIndex = Math.round(scrollLeft / scrollAmount);
+        const clampedIndex = Math.min(Math.max(newIndex, 0), totalCards - 1);
+        if (clampedIndex !== activeIndex) {
+          setActiveIndex(clampedIndex);
+        }
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
+      return () => container.removeEventListener("scroll", handleScroll);
+    }
+  }, [totalCards, activeIndex]);
 
   if (isLoading && !propAlbums) {
     return (
