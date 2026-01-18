@@ -1267,15 +1267,25 @@ export async function sendQuestion(
     if (freshTrial && freshTrial.lastQuestionSentAt) {
       const timeSinceLastQuestion =
         Date.now() - new Date(freshTrial.lastQuestionSentAt).getTime();
-      const twoMinutesInMs = 2 * 60 * 1000;
+      const thirtySecondsInMs = 30 * 1000;
 
       // Check if we're trying to send the same question index that was just sent
       // Compare against the fresh trial's currentQuestionIndex to catch concurrent updates
       const freshCurrentIndex = freshTrial.currentQuestionIndex ?? 0;
-      if (
-        timeSinceLastQuestion < twoMinutesInMs &&
-        freshCurrentIndex === targetQuestionIndex
-      ) {
+
+      // Block duplicate sends:
+      // - If trying to send an old question (target < current) within 30 seconds
+      // - If trying to send the same question (target === current) within 30 seconds
+      // BUT allow if target is exactly one more than current (next question after voice note)
+      // This handles the case where handleVoiceNote updates currentQuestionIndex before calling sendQuestion
+      const isOldQuestion = targetQuestionIndex < freshCurrentIndex;
+      const isSameQuestion = freshCurrentIndex === targetQuestionIndex;
+      const isNextQuestion = targetQuestionIndex === freshCurrentIndex + 1;
+
+      // Only block if it's an old question OR the same question (but not if it's the next question)
+      const shouldBlock = (isOldQuestion || isSameQuestion) && !isNextQuestion;
+
+      if (timeSinceLastQuestion < thirtySecondsInMs && shouldBlock) {
         console.warn("Skipping duplicate question send (idempotency check):", {
           trialId: trial.id,
           targetQuestionIndex,
