@@ -204,11 +204,7 @@ export function BottomHomeNavbar({
             ) : isPlaying ? (
               <Pause size={20} fill="currentColor" />
             ) : (
-              <Play
-                size={20}
-                fill="currentColor"
-                className="ml-0.5 md:ml-1"
-              />
+              <Play size={20} fill="currentColor" className="ml-0.5 md:ml-1" />
             )}
           </button>
           {/* Progress Bar (Desktop Only) */}

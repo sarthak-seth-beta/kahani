@@ -85,10 +85,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-    questionIndex: number;
-    questionText: string;
-    mediaUrl: string | null;
-  }> {
+      questionIndex: number;
+      questionText: string;
+      mediaUrl: string | null;
+    }> {
   if (!isConversational) {
     return tracks;
   }
@@ -318,9 +318,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => { });
-        currentAudioRef.current.removeEventListener("pause", () => { });
-        currentAudioRef.current.removeEventListener("play", () => { });
+        currentAudioRef.current.removeEventListener("ended", () => {});
+        currentAudioRef.current.removeEventListener("pause", () => {});
+        currentAudioRef.current.removeEventListener("play", () => {});
         currentAudioRef.current = null;
       }
 

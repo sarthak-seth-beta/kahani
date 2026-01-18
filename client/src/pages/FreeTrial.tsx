@@ -163,10 +163,11 @@ export default function FreeTrial() {
                             setLang("en");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en"
-                            ? "bg-[#A35139]/10 text-black"
-                            : "text-black hover:bg-black/5"
-                            }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${
+                            lang === "en"
+                              ? "bg-[#A35139]/10 text-black"
+                              : "text-black hover:bg-black/5"
+                          }`}
                         >
                           English
                         </button>
@@ -175,10 +176,11 @@ export default function FreeTrial() {
                             setLang("hn");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn"
-                            ? "bg-[#A35139]/10 text-black"
-                            : "text-black hover:bg-black/5"
-                            }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${
+                            lang === "hn"
+                              ? "bg-[#A35139]/10 text-black"
+                              : "text-black hover:bg-black/5"
+                          }`}
                         >
                           हिंदी
                         </button>

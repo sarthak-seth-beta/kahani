@@ -70,8 +70,6 @@ export function ProductSelection({
                   : "border-[#1B2632]/10 hover:border-[#1B2632]/20 bg-white",
               )}
             >
-
-
               <div className="flex-1 space-y-0.5">
                 <div className="flex items-center justify-between">
                   <span
@@ -106,6 +104,6 @@ export function ProductSelection({
       >
         Continue
       </Button>
-    </div >
+    </div>
   );
 }

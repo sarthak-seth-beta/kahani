@@ -13,12 +13,12 @@ const storyTexts = [
   "MUMMY'S",
 ];
 
-const LargeImage = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section.jpg";
-const SmallImage = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section_mobile.jpg";
+const LargeImage =
+  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section.jpg";
+const SmallImage =
+  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section_mobile.jpg";
 
-export default function HeroSection({
-  onHearKahaniClick,
-}: HeroSectionProps) {
+export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
   return (
     <section className="relative w-full h-screen flex flex-col overflow-hidden">
       {/* Full Screen Background Image */}

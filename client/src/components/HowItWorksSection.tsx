@@ -74,23 +74,46 @@ export default function HowItWorksSection({
   const [activeStep, setActiveStep] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Calculate the width of a single card including gap
+  const getCardScrollWidth = () => {
+    // Card width is 85vw on mobile, gap is 16px (gap-4)
+    const cardWidth = window.innerWidth * 0.85;
+    const gap = 16;
+    // Connector width is approximately 64px (w-16)
+    const connectorWidth = 64;
+    return cardWidth + gap + connectorWidth;
+  };
+
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 340; // Approx card width + gap
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      const newStep =
+        direction === "left"
+          ? Math.max(0, activeStep - 1)
+          : Math.min(steps.length - 1, activeStep + 1);
+
+      if (newStep !== activeStep) {
+        const scrollAmount = getCardScrollWidth();
+        const targetScrollLeft = newStep * scrollAmount;
+
+        scrollContainerRef.current.scrollTo({
+          left: targetScrollLeft,
+          behavior: "smooth",
+        });
+        setActiveStep(newStep);
+      }
     }
   };
 
   useEffect(() => {
     const handleScroll = () => {
       if (scrollContainerRef.current) {
-        const { scrollLeft, clientWidth } = scrollContainerRef.current;
-        const newIndex = Math.round(scrollLeft / clientWidth);
+        const { scrollLeft } = scrollContainerRef.current;
+        const scrollAmount = getCardScrollWidth();
+        const newIndex = Math.round(scrollLeft / scrollAmount);
         const clampedIndex = Math.min(Math.max(newIndex, 0), steps.length - 1);
-        setActiveStep(clampedIndex);
+        if (clampedIndex !== activeStep) {
+          setActiveStep(clampedIndex);
+        }
       }
     };
 
@@ -99,7 +122,7 @@ export default function HowItWorksSection({
       container.addEventListener("scroll", handleScroll);
       return () => container.removeEventListener("scroll", handleScroll);
     }
-  }, [steps.length]);
+  }, [steps.length, activeStep]);
 
   return (
     <section
@@ -201,8 +224,9 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-              }`}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+            }`}
           />
         ))}
       </div>
