@@ -138,7 +138,7 @@ export function BottomHomeNavbar({
         }}
       >
         {/* Left: Album Art & Info */}
-        <div className="flex items-center gap-3 flex-1 md:flex-none md:w-1/3 min-w-0 z-10">
+        <div className="flex items-center gap-3 flex-1 min-w-0 z-10">
           <div
             className="relative group cursor-pointer shrink-0"
             onClick={() =>
@@ -187,80 +187,37 @@ export function BottomHomeNavbar({
           </div>
         </div>
 
-        {/* Center: Main Action (Play) & Progress */}
-        {/* Desktop: Absolute Centered. Mobile: Flex Item on Right */}
-        <div className="flex flex-col items-center justify-center gap-1 flex-none md:absolute md:left-1/2 md:-translate-x-1/2 md:w-auto z-20">
-          <div className="flex items-center gap-3 md:gap-5">
-            <button
-              className="text-gray-400 hover:text-gray-800 transition-colors p-1"
-              aria-label="Previous"
-            >
-              <SkipBack size={20} fill="currentColor" />
-            </button>
-
-            <button
-              onClick={togglePlay}
-              className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#A35139] text-white shadow-md hover:bg-[#8B4430] hover:scale-105 transition-all active:scale-95"
-              aria-label={isPlaying ? "Pause" : isEnded ? "Replay" : "Play"}
-            >
-              {isEnded ? (
-                <RotateCcw
-                  size={20}
-                  fill="none"
-                  className="ml-0"
-                  strokeWidth={2.5}
-                />
-              ) : isPlaying ? (
-                <Pause size={20} fill="currentColor" />
-              ) : (
-                <Play
-                  size={20}
-                  fill="currentColor"
-                  className="ml-0.5 md:ml-1"
-                />
-              )}
-            </button>
-
-            <button
-              className="text-gray-400 hover:text-gray-800 transition-colors p-1"
-              aria-label="Next"
-            >
-              <SkipForward size={20} fill="currentColor" />
-            </button>
-          </div>
-
+        {/* Right: Play Button */}
+        <div className="flex items-center justify-end flex-none z-20">
+          <button
+            onClick={togglePlay}
+            className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#A35139] text-white shadow-md hover:bg-[#8B4430] hover:scale-105 transition-all active:scale-95"
+            aria-label={isPlaying ? "Pause" : isEnded ? "Replay" : "Play"}
+          >
+            {isEnded ? (
+              <RotateCcw
+                size={20}
+                fill="none"
+                className="ml-0"
+                strokeWidth={2.5}
+              />
+            ) : isPlaying ? (
+              <Pause size={20} fill="currentColor" />
+            ) : (
+              <Play
+                size={20}
+                fill="currentColor"
+                className="ml-0.5 md:ml-1"
+              />
+            )}
+          </button>
           {/* Progress Bar (Desktop Only) */}
-          <div className="hidden md:flex w-32 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
+          {/* <div className="hidden md:flex w-32 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
             <div
               className="h-full bg-[#A35139] rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
-          </div>
-        </div>
-
-        {/* Right: Secondary Actions (Nav) - Hidden on Mobile */}
-        <div className="hidden md:flex items-center justify-end gap-1 md:w-1/3 md:gap-2 z-10">
-          <button
-            onClick={() => setLocation("/")}
-            className="p-3 text-gray-500 hover:text-black hover:bg-black/5 rounded-full transition-colors hidden sm:block"
-            aria-label="Home"
-          >
-            <Home size={20} />
-          </button>
-          <button
-            onClick={() => setLocation("/how-to-use")}
-            className="p-3 text-gray-500 hover:text-black hover:bg-black/5 rounded-full transition-colors"
-            aria-label="How it works"
-          >
-            <Search size={20} />
-          </button>
-          <button
-            onClick={() => setLocation("/contact-us")}
-            className="p-3 text-gray-500 hover:text-black hover:bg-black/5 rounded-full transition-colors hidden sm:block"
-            aria-label="Contact"
-          >
-            <User size={20} />
-          </button>
+          </div> */}
         </div>
       </div>
 
