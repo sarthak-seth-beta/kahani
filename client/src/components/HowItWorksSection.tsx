@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Step {
   number: string;
@@ -73,6 +74,16 @@ export default function HowItWorksSection({
   const [activeStep, setActiveStep] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const scroll = (direction: "left" | "right") => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 340; // Approx card width + gap
+      scrollContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       if (scrollContainerRef.current) {
@@ -109,50 +120,79 @@ export default function HowItWorksSection({
 
       {/* 2. Content Middle - Centered vertically in remaining space */}
       <div className="flex-1 flex flex-col justify-center w-full max-w-7xl mx-auto relative z-20">
-        <div
-          ref={scrollContainerRef}
-          className="flex flex-row items-start md:items-start justify-start md:justify-center gap-4 md:gap-4 lg:gap-6 w-full overflow-x-auto snap-x snap-mandatory pb-6 no-scrollbar"
-        >
-          {steps.map((step, index) => (
-            <React.Fragment key={index}>
-              {/* Step Card */}
-              <div
-                className="w-[85vw] md:w-full max-w-sm flex-none md:flex-1 snap-center flex flex-col items-start text-left md:items-center md:text-center space-y-4 md:space-y-6 relative z-10"
-                style={{ scrollSnapStop: "always" }}
-                data-testid={`step-${index + 1}`}
-              >
-                {/* Image Container */}
-                <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden bg-[#1B2632] shadow-xl hover:scale-[1.02] transition-transform duration-300">
-                  <img
-                    src={step.imageSrc}
-                    alt={step.title}
-                    className="w-full h-full object-cover opacity-90"
-                  />
-                  {/* Step Number */}
-                  <div className="absolute top-4 left-4 sm:top-6 sm:left-6 w-10 h-10 sm:w-12 sm:h-12 bg-[#A35139] rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg sm:text-xl">
-                      {step.number}
-                    </span>
+        <div className="relative">
+          {/* Navigation Arrows - Mobile Only */}
+          <button
+            onClick={() => scroll("left")}
+            className="md:hidden absolute left-2 -bottom-8 -translate-y-1/2 z-30 w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1B2632] transition-all duration-300"
+            aria-label="Previous step"
+          >
+            <ChevronLeft />
+          </button>
+
+          <button
+            onClick={() => scroll("right")}
+            className="md:hidden absolute right-2 -bottom-8 -translate-y-1/2 z-30 w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1B2632] transition-all duration-300"
+            aria-label="Next step"
+          >
+            <ChevronRight />
+          </button>
+
+          <div
+            ref={scrollContainerRef}
+            className="flex flex-row items-start md:items-start justify-start md:justify-center gap-4 md:gap-4 lg:gap-6 w-full overflow-x-auto snap-x snap-mandatory pb-6 no-scrollbar"
+            style={{
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {/* Spacer for centering first card on mobile */}
+            <div className="flex-shrink-0 w-[calc((100vw-85vw)/2)] md:w-0" />
+
+            {steps.map((step, index) => (
+              <React.Fragment key={index}>
+                {/* Step Card */}
+                <div
+                  className="w-[85vw] md:w-full max-w-sm flex-none md:flex-1 snap-center flex flex-col items-start text-left md:items-center md:text-center space-y-4 md:space-y-6 relative z-10"
+                  style={{ scrollSnapStop: "always" }}
+                  data-testid={`step-${index + 1}`}
+                >
+                  {/* Image Container */}
+                  <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden bg-[#1B2632] shadow-xl hover:scale-[1.02] transition-transform duration-300">
+                    <img
+                      src={step.imageSrc}
+                      alt={step.title}
+                      className="w-full h-full object-cover opacity-90"
+                    />
+                    {/* Step Number */}
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 w-10 h-10 sm:w-12 sm:h-12 bg-[#A35139] rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-lg sm:text-xl">
+                        {step.number}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="px-2 w-full">
+                    <h3 className="text-xl sm:text-2xl font-bold text-[#1B2632] mb-3 sm:mb-4 font-['Outfit']">
+                      {step.title}
+                    </h3>
+                    <p className="text-[#1B2632]/70 leading-loose text-sm sm:text-base">
+                      {step.description}
+                    </p>
                   </div>
                 </div>
 
-                {/* Text Content */}
-                <div className="px-2 w-full">
-                  <h3 className="text-xl sm:text-2xl font-bold text-[#1B2632] mb-3 sm:mb-4 font-['Outfit']">
-                    {step.title}
-                  </h3>
-                  <p className="text-[#1B2632]/70 leading-loose text-sm sm:text-base">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
+                {/* Connector */}
+                {index < steps.length - 1 && (
+                  <FlowConnector className="flex flex-shrink-0 mt-[35vw] md:mt-[11%] relative z-0" />
+                )}
+              </React.Fragment>
+            ))}
 
-              {/* Connector */}
-              {index < steps.length - 1 && (
-                <FlowConnector className="flex flex-shrink-0 mt-[35vw] md:mt-[11%] relative z-0" />
-              )}
-            </React.Fragment>
-          ))}
+            {/* Spacer for centering last card on mobile */}
+            <div className="flex-shrink-0 w-[calc((100vw-85vw)/2)] md:w-0" />
+          </div>
         </div>
       </div>
 
@@ -161,9 +201,8 @@ export default function HowItWorksSection({
         {steps.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#A35139]" : "w-2 bg-[#1B2632]/20"
+              }`}
           />
         ))}
       </div>

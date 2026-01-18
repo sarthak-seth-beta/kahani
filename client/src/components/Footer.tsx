@@ -19,7 +19,7 @@ export function Footer() {
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center space-y-6">
         {/* Main Heading */}
         <h2 className="text-3xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-tight tracking-tight">
-          We ask the questions you have always wanted to ask <br /> <br />
+          We ask the questions you have always wanted to ask <br />
           <span>- and life got busy</span>
         </h2>
 

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/accordion";
 import ProfilePictureDialog from "@/components/ProfilePictureDialog";
 import { useToast } from "@/hooks/use-toast";
+import { Footer } from "@/components/Footer";
 
 const FALLBACK_AUDIO_URL =
   "https://bvkaurviswhrjldeuabx.supabase.co/storage/v1/object/public/voice-notes/demo_audio.m4a";
@@ -84,10 +85,10 @@ function groupTracksIntoBatches(
 ):
   | TrackBatch[]
   | Array<{
-      questionIndex: number;
-      questionText: string;
-      mediaUrl: string | null;
-    }> {
+    questionIndex: number;
+    questionText: string;
+    mediaUrl: string | null;
+  }> {
   if (!isConversational) {
     return tracks;
   }
@@ -317,9 +318,9 @@ export default function PlaylistAlbumsGallery() {
       // Stop and cleanup current audio if playing
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
-        currentAudioRef.current.removeEventListener("ended", () => {});
-        currentAudioRef.current.removeEventListener("pause", () => {});
-        currentAudioRef.current.removeEventListener("play", () => {});
+        currentAudioRef.current.removeEventListener("ended", () => { });
+        currentAudioRef.current.removeEventListener("pause", () => { });
+        currentAudioRef.current.removeEventListener("play", () => { });
         currentAudioRef.current = null;
       }
 
@@ -1513,6 +1514,9 @@ export default function PlaylistAlbumsGallery() {
           onAutoplayChange={handleAutoplayChange}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
