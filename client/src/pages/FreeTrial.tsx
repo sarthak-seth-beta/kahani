@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/accordion";
 import { ProductSelection } from "@/components/ProductSelection";
 import type { Album } from "@shared/schema";
+import { Footer } from "@/components/Footer";
 
 export default function FreeTrial() {
   const [, setLocation] = useLocation();
@@ -86,7 +87,7 @@ export default function FreeTrial() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EEE9DF] relative pb-24">
+    <div className="min-h-screen bg-[#EEE9DF] relative pb-20">
       {/* Container - Constrained but full width on mobile for image */}
       <div className="container mx-auto px-0 md:px-4 max-w-2xl md:pt-4">
         {/* 1. Cover Photo with Back Button Overlay */}
@@ -162,11 +163,10 @@ export default function FreeTrial() {
                             setLang("en");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${
-                            lang === "en"
-                              ? "bg-[#A35139]/10 text-black"
-                              : "text-black hover:bg-black/5"
-                          }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${lang === "en"
+                            ? "bg-[#A35139]/10 text-black"
+                            : "text-black hover:bg-black/5"
+                            }`}
                         >
                           English
                         </button>
@@ -175,11 +175,10 @@ export default function FreeTrial() {
                             setLang("hn");
                             setIsLanguageDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${
-                            lang === "hn"
-                              ? "bg-[#A35139]/10 text-black"
-                              : "text-black hover:bg-black/5"
-                          }`}
+                          className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-black/10 transition-colors ${lang === "hn"
+                            ? "bg-[#A35139]/10 text-black"
+                            : "text-black hover:bg-black/5"
+                            }`}
                         >
                           हिंदी
                         </button>
@@ -430,6 +429,9 @@ export default function FreeTrial() {
           </Dialog>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
