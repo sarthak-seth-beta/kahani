@@ -1,10 +1,6 @@
-import { useState, useEffect } from "react";
-import heroImage from "@assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
 import { Button } from "@/components/ui/button";
-import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface HeroSectionProps {
-  imageSrc?: string;
   onHearKahaniClick?: () => void;
 }
 
@@ -17,8 +13,10 @@ const storyTexts = [
   "MUMMY'S",
 ];
 
+const LargeImage = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section.jpg";
+const SmallImage = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section_mobile.jpg";
+
 export default function HeroSection({
-  imageSrc = heroImage,
   onHearKahaniClick,
 }: HeroSectionProps) {
   return (
@@ -26,9 +24,14 @@ export default function HeroSection({
       {/* Full Screen Background Image */}
       <div className="absolute inset-0 w-full h-full">
         <img
-          src={imageSrc}
+          src={LargeImage}
           alt="Kahani storytelling experience"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="hidden md:block absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <img
+          src={SmallImage}
+          alt="Kahani storytelling experience"
+          className="md:hidden absolute inset-0 w-full h-full object-cover object-center"
         />
 
         {/* Dark gradient overlay for text readability (Centered) */}
@@ -38,8 +41,36 @@ export default function HeroSection({
         <div className="absolute bottom-0 left-0 right-0 h-[50vh] bg-gradient-to-t from-[#1C2632] via-[#1C2632]/80 to-transparent" />
       </div>
 
+      {/* Large Devices */}
+      {/* Content - Left-Middle */}
+      <div className="hidden md:flex flex-col relative z-10 flex-1 items-left justify-center px-4 sm:px-10 text-left pb-24 w-1/2">
+        {/* Text Overlay */}
+        <h1
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl"
+          data-testid="text-hero-headline"
+        >
+          Turn your loved one’s stories and voice into a book.
+        </h1>
+
+        {/* Removed: "They speak on WhatsApp. You keep it forever." */}
+
+        <div className="flex flex-col items-left gap-4">
+          <Button
+            onClick={onHearKahaniClick}
+            className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300 w-fit"
+          >
+            Hear a Sample Kahani
+          </Button>
+
+          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
+            You invite them on WhatsApp. They speak. We make the book
+          </p>
+        </div>
+      </div>
+
+      {/* Small Devices */}
       {/* Content - Center-Middle */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-24">
+      <div className="md:hidden relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-24 gap-60">
         {/* Text Overlay */}
         <h1
           className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl mx-auto"
@@ -50,7 +81,7 @@ export default function HeroSection({
 
         {/* Removed: "They speak on WhatsApp. You keep it forever." */}
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 z-50">
           <Button
             onClick={onHearKahaniClick}
             className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-2xl text-lg font-semibold shadow-md hover:scale-105 transition-all duration-300"
