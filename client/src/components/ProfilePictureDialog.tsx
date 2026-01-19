@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 
 interface ProfilePictureDialogProps {
   children: React.ReactNode;
+  trialId: string;
   initialImage?: string;
   onSave?: (croppedBlob: Blob) => Promise<void>;
 }
@@ -23,6 +24,7 @@ const ProfilePictureDialog = ({
   children,
   initialImage,
   onSave,
+  trialId,
 }: ProfilePictureDialogProps) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -31,7 +33,7 @@ const ProfilePictureDialog = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const YAJUR_NANI_TRIAL_ID = "f6258c48-043e-4b23-883b-dfb4ace3b43c";
   // When dialog opens, reset state or load initial image
   useEffect(() => {
     if (isOpen) {
@@ -146,54 +148,56 @@ const ProfilePictureDialog = ({
                 />
               </div>
 
-              <div className="px-6 py-5 flex flex-col gap-5 bg-white border-t border-gray-100">
-                {/* Zoom Slider */}
-                <div className="flex items-center gap-4">
-                  <IoRemove className="text-gray-400" />
-                  <input
-                    type="range"
-                    value={zoom}
-                    min={1}
-                    max={3}
-                    step={0.1}
-                    aria-labelledby="Zoom"
-                    onChange={(e) => setZoom(Number(e.target.value))}
-                    className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#A35139]"
-                  />
-                  <IoAdd className="text-gray-400" />
-                </div>
-
-                <div className="flex justify-between mt-2 gap-3">
-                  <Button
-                    variant="ghost"
-                    onClick={triggerUpload}
-                    className="text-gray-600 hover:text-[#A35139] hover:bg-gray-50"
-                  >
-                    Change Photo
+              {trialId !== YAJUR_NANI_TRIAL_ID && (
+                <div className="px-6 py-5 flex flex-col gap-5 bg-white border-t border-gray-100">
+                  {/* Zoom Slider */}
+                  <div className="flex items-center gap-4">
+                    <IoRemove className="text-gray-400" />
                     <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={onFileChange}
-                      className="hidden"
+                      type="range"
+                      value={zoom}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      aria-labelledby="Zoom"
+                      onChange={(e) => setZoom(Number(e.target.value))}
+                      className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#A35139]"
                     />
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-[#A35139] hover:bg-[#8B4229] text-white rounded-full px-8 min-w-[120px]"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save"
-                    )}
-                  </Button>
+                    <IoAdd className="text-gray-400" />
+                  </div>
+
+                  <div className="flex justify-between mt-2 gap-3">
+                    <Button
+                      variant="ghost"
+                      onClick={triggerUpload}
+                      className="text-gray-600 hover:text-[#A35139] hover:bg-gray-50"
+                    >
+                      Change Photo
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={onFileChange}
+                        className="hidden"
+                      />
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="bg-[#A35139] hover:bg-[#8B4229] text-white rounded-full px-8 min-w-[120px]"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
