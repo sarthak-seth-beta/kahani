@@ -7,7 +7,7 @@ export default function ValueProposition() {
         </h2>
 
         <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white leading-relaxed">
-          Kahani helps you turn your loved one’s voice notes into a book you can
+          Kahani helps you turn your parents' voice notes into a book you can
           read and listen to.
         </p>
       </div>

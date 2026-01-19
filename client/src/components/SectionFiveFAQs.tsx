@@ -20,7 +20,7 @@ const defaultFAQs: FAQItem[] = [
   {
     question: "So, what exactly is Kahani?",
     answer:
-      "Kahani helps you turn your loved one’s WhatsApp voice notes into a book you can keep and come back to.",
+      "Kahani helps you turn your parents' WhatsApp voice notes into a book you can keep and come back to.",
   },
   {
     question: "What do I receive at the end?",

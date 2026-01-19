@@ -19,7 +19,7 @@ const defaultSteps: Step[] = [
   {
     number: "1",
     title: "Pick a theme",
-    description: "Choose the best theme for your loved one.",
+    description: "Choose the best theme for your parents.",
     imageSrc:
       "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/how_it_works_1.jpg",
   },

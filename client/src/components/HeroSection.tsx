@@ -49,7 +49,7 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
           className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl"
           data-testid="text-hero-headline"
         >
-          Turn your loved one’s stories and voice into a book.
+          Turn your parents stories into a book.
         </h1>
 
         {/* Removed: "They speak on WhatsApp. You keep it forever." */}
@@ -62,9 +62,12 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
             Hear a Sample Kahani
           </Button>
 
-          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
-            You invite them on WhatsApp. They speak. We make the book
-          </p>
+          <div className="flex flex-col items-left gap-1">
+            <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
+              You invite them on WhatsApp. They speak. <br />
+              We make the book
+            </p>
+          </div>
         </div>
       </div>
 
@@ -76,7 +79,7 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
           className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-8 max-w-6xl mx-auto"
           data-testid="text-hero-headline"
         >
-          Turn your loved one’s stories and voice into a book.
+          Turn your parents stories into a book.
         </h1>
 
         {/* Removed: "They speak on WhatsApp. You keep it forever." */}
@@ -89,9 +92,14 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
             Hear a Sample Kahani
           </Button>
 
-          <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
-            You invite them on WhatsApp. They speak. We make the book
-          </p>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
+              You invite them on WhatsApp. They speak.
+            </p>
+            <p className="text-sm sm:text-lg text-white/70 font-medium tracking-normal sm:tracking-wider uppercase whitespace-nowrap">
+              We make the book
+            </p>
+          </div>
         </div>
       </div>
 
