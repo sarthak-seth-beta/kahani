@@ -633,11 +633,11 @@ export default function PlaylistAlbumsGallery() {
     (sum, duration) => sum + duration,
     0,
   );
-
+    const YAJUR_NANI_TRIAL_ID = "f6258c48-043e-4b23-883b-dfb4ace3b43c";
   const showToast = () => {
     const TOAST_MESSAGE =
       "Not recorded yet. If you share a quick note with them about what you loved, they will record this with even more heart. 🤍";
-    const YAJUR_NANI_TRIAL_ID = "f6258c48-043e-4b23-883b-dfb4ace3b43c";
+
     if (trialId !== YAJUR_NANI_TRIAL_ID) {
       toast({
         description: TOAST_MESSAGE,
@@ -1051,7 +1051,7 @@ export default function PlaylistAlbumsGallery() {
                   }}
                 />
                 {/* Pencil Icon Overlay */}
-                <div
+                {trialId !== YAJUR_NANI_TRIAL_ID &&<div
                   style={{
                     position: "absolute",
                     bottom: "10%",
@@ -1067,7 +1067,7 @@ export default function PlaylistAlbumsGallery() {
                   }}
                 >
                   <Edit2 size={12} color="#000" />
-                </div>
+                </div>}
               </div>
             </ProfilePictureDialog>
           </div>
