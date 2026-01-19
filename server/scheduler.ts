@@ -289,8 +289,8 @@ export async function sendBuyerNudgesForNoStoryteller(): Promise<void> {
       continue;
     }
 
-    // Skip if storyteller_phone is already set to 1234567890 (nudge already sent)
-    if (currentTrial.storytellerPhone === "1234567890") {
+    // Skip if nudge already sent
+    if (currentTrial.noStorytellerBuyerNudgeSentAt) {
       console.log("Buyer nudge already sent for trial, skipping:", trial.id);
       continue;
     }
@@ -304,9 +304,9 @@ export async function sendBuyerNudgesForNoStoryteller(): Promise<void> {
       );
 
       if (nudgeSent) {
-        // Update storyteller_phone to 1234567890 to mark that nudge was sent
+        // Mark that nudge was sent
         await storage.updateFreeTrialDb(trial.id, {
-          storytellerPhone: "1234567890",
+          noStorytellerBuyerNudgeSentAt: new Date(),
         });
 
         console.log("Sent buyer nudge for no storyteller to trial:", trial.id);

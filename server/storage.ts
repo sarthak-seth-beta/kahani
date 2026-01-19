@@ -630,6 +630,7 @@ export class DatabaseStorage implements IStorage {
         and(
           isNotNull(freeTrials.customerPhone),
           isNull(freeTrials.storytellerPhone),
+          isNull(freeTrials.noStorytellerBuyerNudgeSentAt),
           lte(freeTrials.createdAt, fortyEightHoursAgo),
         ),
       );

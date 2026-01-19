@@ -344,6 +344,10 @@ export const freeTrials = pgTable(
     buyerCheckinSentAt: timestamp("buyer_checkin_sent_at", {
       withTimezone: true,
     }),
+    noStorytellerBuyerNudgeSentAt: timestamp(
+      "no_storyteller_buyer_nudge_sent_at",
+      { withTimezone: true },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
