@@ -22,7 +22,7 @@ const DadiImage =
   "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/dadi-image_bottomNav.png";
 
 const DUMMY_AUDIO_URL =
-  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/nani_wedding_day.ogg";
+  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/voice-notes/nani_wedding_day.mp3";
 
 export function BottomHomeNavbar({
   isActive,
