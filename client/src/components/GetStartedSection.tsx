@@ -1,78 +1,48 @@
-import { useRef, useState, useEffect } from "react";
-import { Lock } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 import { useLocation } from "wouter";
-
-const imgURL =
-  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/family_image.png";
 
 const ACTIVE_RELATIONS = [
   // Active
-  { id: "mom", label: "Mom", type: "active", image: imgURL },
-  { id: "dad", label: "Dad", type: "active", image: imgURL },
-  { id: "dadu", label: "Dadu", type: "active", image: imgURL },
-  { id: "nanu", label: "Nanu", type: "active", image: imgURL },
-  { id: "nani", label: "Nani", type: "active", image: imgURL },
-  { id: "dadi", label: "Dadi", type: "active", image: imgURL },
-  { id: "brother", label: "Brother", type: "active", image: imgURL },
-  { id: "sister", label: "Sister", type: "active", image: imgURL },
+  { id: "mom", label: "Mom" },
+  { id: "dad", label: "Dad" },
+  { id: "dadu", label: "Dadu" },
+  { id: "dadi", label: "Dadi" },
+  { id: "nanu", label: "Nanu" },
+  { id: "nani", label: "Nani" },
+  { id: "brother", label: "Brother" },
+  { id: "sister", label: "Sister" },
 ];
 
-const LOCKED_RELATIONS: any[] = [];
-
-const ITEMS_ROW_1 = [...ACTIVE_RELATIONS, ...LOCKED_RELATIONS];
-const ITEMS_ROW_2 = [...LOCKED_RELATIONS, ...ACTIVE_RELATIONS];
-
-export default function GetStartedSection() {
+export default function GetStartedSection2() {
   const [, setLocation] = useLocation();
-  const scrollRef1 = useRef<HTMLDivElement>(null);
-  const scrollRef2 = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const resumeTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Duplicate arrays to create seamless loop
-  const SCROLL_ITEMS_1 = [
-    ...ITEMS_ROW_1,
-    ...ITEMS_ROW_1,
-    ...ITEMS_ROW_1,
-    ...ITEMS_ROW_1,
+  // Duplicate array to ensure seamless infinite scroll
+  // 4x duplication to fill wide screens and ensure no gaps during loop reset
+  const marqueeItems = ACTIVE_RELATIONS.slice(2);
+  const SCROLL_ITEMS = [
+    ...marqueeItems,
+    ...marqueeItems,
+    ...marqueeItems,
+    ...marqueeItems,
   ];
-  const SCROLL_ITEMS_2 = [
-    ...ITEMS_ROW_2,
-    ...ITEMS_ROW_2,
-    ...ITEMS_ROW_2,
-    ...ITEMS_ROW_2,
-  ];
+
+  const STATIC_ITEMS = [ACTIVE_RELATIONS[0], ACTIVE_RELATIONS[1]]; // Mom and Dad
 
   useEffect(() => {
     let animationFrameId: number;
-
-    // Initialize Row 2 scroll position to the middle so it can scroll "left" (visually moving right)
-    if (scrollRef2.current) {
-      // We set it to half the scroll width to start in the middle of our duplicated content
-      scrollRef2.current.scrollLeft = scrollRef2.current.scrollWidth / 2;
-    }
+    const scrollContainer = scrollRef.current;
 
     const animate = () => {
-      // Only run JS animation on mobile/tablet (below md breakpoint)
-      if (window.innerWidth < 768 && !isPaused) {
-        // Row 1: Move Left (Viewport moves Right, Content moves Left)
-        if (scrollRef1.current) {
-          scrollRef1.current.scrollLeft += 1;
-          // Reset when we've scrolled past half (since we have 4x duplication, half is safe)
-          if (
-            scrollRef1.current.scrollLeft >=
-            scrollRef1.current.scrollWidth / 2
-          ) {
-            scrollRef1.current.scrollLeft = 0;
-          }
-        }
+      if (scrollContainer && !isPaused) {
+        // Move Left (Viewport moves Right, Content moves Left)
+        scrollContainer.scrollLeft += 1; // Adjust speed as needed
 
-        // Row 2: Move Right (Viewport moves Left, Content moves Right)
-        if (scrollRef2.current) {
-          scrollRef2.current.scrollLeft -= 1;
-          // Reset when we hit the start
-          if (scrollRef2.current.scrollLeft <= 0) {
-            scrollRef2.current.scrollLeft = scrollRef2.current.scrollWidth / 2;
-          }
+        // Reset scroll position to create infinite effect
+        if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
+          scrollContainer.scrollLeft = 0;
         }
       }
       animationFrameId = requestAnimationFrame(animate);
@@ -83,83 +53,66 @@ export default function GetStartedSection() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [isPaused]);
 
-  // Pause on interaction
-  const handleInteractionStart = () => setIsPaused(true);
+  // Interaction Handlers
+  const handleInteractionStart = () => {
+    setIsPaused(true);
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current);
+    }
+  };
+
   const handleInteractionEnd = () => {
-    // Resume after a short delay to prevent instant movement after swipe
-    setTimeout(() => setIsPaused(false), 1500);
+    resumeTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 2000);
   };
 
   return (
-    <section className="relative py-12 bg-white overflow-hidden">
-      {/* Top Fade Gradient from Previous Section Color (#FAFAFA) to White */}
-      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#FAFAFA] via-[#FAFAFA]/40 to-white pointer-events-none z-10" />
+    <section className="py-12 bg-white overflow-hidden flex flex-col items-center">
+      {/* Heading */}
+      <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider mb-8 text-center">
+        Make a book for
+      </h2>
 
-      <div className="relative z-20 container mx-auto px-4 md:px-6 mb-10 text-center">
-        <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider">
-          Make a book for
-        </h2>
+      {/* Static Cards */}
+      <div className="flex flex-wrap justify-center gap-4 mb-8">
+        {STATIC_ITEMS.map((item, index) => (
+          <Card key={`static-${index}`} item={item} setLocation={setLocation} />
+        ))}
       </div>
 
-      <div className="space-y-6 relative z-10 w-full">
-        {/* Row 1: Left Scroll */}
-        <div
-          ref={scrollRef1}
-          className="relative w-full overflow-x-auto md:overflow-hidden no-scrollbar group"
-          onTouchStart={handleInteractionStart}
-          onTouchEnd={handleInteractionEnd}
-          onMouseEnter={handleInteractionStart}
-          onMouseLeave={handleInteractionEnd}
-        >
-          <div className="flex gap-4 w-max md:w-max md:animate-marquee-left group-hover:[animation-play-state:paused] pl-4 md:pl-4">
-            {SCROLL_ITEMS_1.map((item, index) => (
-              <Card key={`r1-${index}`} item={item} setLocation={setLocation} />
-            ))}
-          </div>
-        </div>
-
-        {/* Row 2: Right Scroll */}
-        <div
-          ref={scrollRef2}
-          className="relative w-full overflow-x-auto md:overflow-hidden no-scrollbar group"
-          onTouchStart={handleInteractionStart}
-          onTouchEnd={handleInteractionEnd}
-          onMouseEnter={handleInteractionStart}
-          onMouseLeave={handleInteractionEnd}
-        >
-          <div className="flex gap-4 w-max md:w-max md:animate-marquee-right group-hover:[animation-play-state:paused] pl-4 md:pl-4">
-            {SCROLL_ITEMS_2.map((item, index) => (
-              <Card key={`r2-${index}`} item={item} setLocation={setLocation} />
-            ))}
-          </div>
+      {/* Marquee Container */}
+      <div
+        ref={scrollRef}
+        className="relative w-full overflow-x-auto no-scrollbar"
+        onTouchStart={handleInteractionStart}
+        onTouchEnd={handleInteractionEnd}
+        onMouseDown={handleInteractionStart}
+        onMouseUp={handleInteractionEnd}
+        onMouseLeave={handleInteractionEnd}
+      >
+        <div className="flex gap-4 w-max px-4">
+          {SCROLL_ITEMS.map((item, index) => (
+            <Card
+              key={`${item.id}-${index}`}
+              item={item}
+              setLocation={setLocation}
+            />
+          ))}
         </div>
       </div>
 
       <style>{`
-                @keyframes marquee-left {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
-                }
-                @keyframes marquee-right {
-                    0% { transform: translateX(-50%); }
-                    100% { transform: translateX(0); }
-                }
-                .animate-marquee-left {
-                    animation: marquee-left 75s linear infinite;
-                }
-                .animate-marquee-right {
-                    animation: marquee-right 75s linear infinite;
-                }
-                /* Hide scrollbar for Chrome, Safari and Opera */
-                .no-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                /* Hide scrollbar for IE, Edge and Firefox */
-                .no-scrollbar {
-                    -ms-overflow-style: none;  /* IE and Edge */
-                    scrollbar-width: none;  /* Firefox */
-                }
-            `}</style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
     </section>
   );
 }
@@ -191,34 +144,20 @@ function Card({ item, setLocation }: { item: any; setLocation: any }) {
         }
       }}
       className={`
-                relative flex-none w-[200px] h-[120px] md:w-[240px] md:h-[150px]
-                rounded-xl overflow-hidden cursor-pointer transition-all duration-300
-                ${item.type === "coming-soon" ? "opacity-90 cursor-not-allowed" : "hover:scale-105 shadow-md hover:shadow-xl"}
-                ${getGradient(item.id, item.type)}
-            `}
+        relative flex-none 
+        w-[160px] h-[80px] 
+        rounded-lg shadow-sm 
+        flex items-center justify-center 
+        cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-300
+        ${getGradient(item.id, item.type)}
+        ${item.type === "coming-soon" ? "opacity-90 cursor-not-allowed" : ""}
+      `}
     >
-      {/* Background Image - Commented out as requested
-            <img
-                src={item.image}
-                alt={item.label}
-                className="absolute inset-0 w-full h-full object-cover"
-            />
-            */}
-
-      {/* Content - Centered Middle */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-        <span
-          className={`font-['Outfit'] font-bold text-xl md:text-2xl tracking-wide ${item.type === "coming-soon" ? "text-gray-400" : "text-white"}`}
-        >
-          {item.label}
-        </span>
-
-        {item.type === "coming-soon" && (
-          <div className="absolute top-2 right-2 bg-gray-200/50 p-1.5 rounded-full">
-            <Lock className="w-3 h-3 text-gray-500" />
-          </div>
-        )}
-      </div>
+      <span
+        className={`font-['Outfit'] font-medium text-lg ${item.type === "coming-soon" ? "text-gray-400" : "text-white"}`}
+      >
+        {item.label}
+      </span>
     </div>
   );
 }
