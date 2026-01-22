@@ -1525,15 +1525,9 @@ async function handleVoiceNote(
 
       await sendWhatsappButtonTemplate(
         trial.customerPhone,
-        "order_update_day_1",
+        "day_1_order_update",
         "en",
-        [
-          trial.id.slice(-4),
-          trial.buyerName,
-          trial.storytellerName,
-          questionSetTitle,
-          trial.storytellerName,
-        ],
+        [trial.buyerName, trial.storytellerName],
         `playlist-albums/${trial.id}`,
         "0",
         {
