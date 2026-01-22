@@ -228,16 +228,11 @@ export async function sendBuyerRemindersForNoStorytellerContact(): Promise<void>
     }
 
     try {
-      const templateParams = [
-        { type: "text", text: trial.buyerName },
-        { type: "text", text: trial.storytellerName },
-      ];
-
-      const reminderSent = await sendTemplateMessageWithRetry(
+      const reminderSent = await sendBuyerNudgeForNoStoryteller(
         trial.customerPhone,
-        "storyteller_no_contact_buyer_reminder_en",
-        templateParams,
-        { orderId: trial.id },
+        trial.buyerName,
+        trial.storytellerName,
+        trial.id,
       );
 
       if (reminderSent) {
