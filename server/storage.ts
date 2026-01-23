@@ -954,10 +954,17 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAlbums(): Promise<AlbumRow[]> {
     try {
+      // Filter by isActive AND isConversationalAlbum for UI listing
+      // This ensures only conversational albums are shown in homepage and all-albums page
       const allAlbums = await db
         .select()
         .from(albums)
-        .where(eq(albums.isActive, true));
+        .where(
+          and(
+            eq(albums.isActive, true),
+            eq(albums.isConversationalAlbum, true),
+          ),
+        );
       return allAlbums;
     } catch (error: any) {
       // If table doesn't exist, return empty array with helpful error message
