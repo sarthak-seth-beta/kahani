@@ -1482,6 +1482,9 @@ async function handleVoiceNote(
         voiceNote.id,
         audioId,
         mimeType || "audio/ogg",
+        trial.id,
+        trial.albumId,
+        trial.currentQuestionIndex,
       ).catch(console.error);
     } catch (error) {
       console.error("Error saving voice note (may be duplicate):", error);
@@ -1820,8 +1823,14 @@ async function downloadAndStoreVoiceNote(
   voiceNoteId: string,
   mediaId: string,
   mimeType: string,
+  trialId: string,
+  albumId: string,
+  questionIndex: number,
 ): Promise<void> {
   try {
+    // Construct file name: ${trialId}_${albumId}_${questionIndex}
+    const fileName = `${trialId}_${albumId}_${questionIndex}`;
+
     // Step 1: Get media info (URL) from WhatsApp
     const mediaInfo = await downloadVoiceNoteMedia(mediaId);
 
@@ -1869,10 +1878,10 @@ async function downloadAndStoreVoiceNote(
     const mp3Buffer = await convertToMp3(fileBuffer, finalMimeType);
     const finalMp3MimeType = "audio/mp3";
 
-    // Step 5: Upload to Cloudflare R2 Storage
+    // Step 5: Upload to Cloudflare R2 Storage with new naming format
     const r2Url = await uploadVoiceNoteToR2(
       mp3Buffer,
-      voiceNoteId,
+      fileName,
       finalMp3MimeType,
     );
 
@@ -1897,7 +1906,7 @@ async function downloadAndStoreVoiceNote(
 
     await storage.updateVoiceNote(voiceNoteId, {
       mediaUrl: r2Url, // Store R2 URL instead of temporary WhatsApp URL
-      localFilePath: `${voiceNoteId}.${fileExtension}`, // Store file path
+      localFilePath: `${fileName}.${fileExtension}`, // Store file path with new naming format
       mimeType: finalMp3MimeType, // Store MP3 MIME type
       mediaSha256: mediaInfo.sha256,
       sizeBytes: mp3Buffer.length, // Store compressed file size

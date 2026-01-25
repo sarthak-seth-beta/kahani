@@ -88,6 +88,7 @@ export interface IStorage {
   ): Promise<UserFeedbackRow>;
 
   createVoiceNote(voiceNote: InsertVoiceNoteRow): Promise<VoiceNoteRow>;
+  getVoiceNoteById(id: string): Promise<VoiceNoteRow | undefined>;
   getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]>;
   updateVoiceNote(
     id: string,
@@ -829,6 +830,15 @@ export class DatabaseStorage implements IStorage {
       .values(insertVoiceNote)
       .returning();
     return voiceNote;
+  }
+
+  async getVoiceNoteById(id: string): Promise<VoiceNoteRow | undefined> {
+    const [note] = await db
+      .select()
+      .from(voiceNotes)
+      .where(eq(voiceNotes.id, id))
+      .limit(1);
+    return note;
   }
 
   async getVoiceNotesByTrialId(freeTrialId: string): Promise<VoiceNoteRow[]> {
