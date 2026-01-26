@@ -1084,11 +1084,10 @@ export async function sendReadinessCheck(
       { type: "text", text: trial.storytellerName },
     ];
 
-    const languageSuffix = getStorytellerLanguageSuffix(
-      trial.storytellerLanguagePreference,
-    );
     const templateName =
-      languageSuffix === "hn" ? "check_readiness_hn" : "readiness_check_en";
+      trial.storytellerLanguagePreference === "hn"
+        ? "check_readiness_hn"
+        : "readiness_check_en";
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
