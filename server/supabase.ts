@@ -65,14 +65,14 @@ export async function ensureBucketExists(
     console.log(`Creating bucket ${bucketName}...`);
 
     // Determine file size limit and allowed MIME types based on bucket
-    let fileSizeLimit = 5242880; // 5MB default
+    let fileSizeLimit = 10485760; // 10MB default
     let allowedMimeTypes: string[] = [];
 
     if (bucketName === VOICE_NOTES_BUCKET) {
       fileSizeLimit = 10485760; // 10MB for voice notes
       allowedMimeTypes = ["audio/ogg", "audio/mp3", "audio/m4a"];
     } else if (bucketName === ALBUM_COVERS_BUCKET) {
-      fileSizeLimit = 5242880; // 5MB for images
+      fileSizeLimit = 10485760; // 10MB for images
       allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     } else if (bucketName === WEBHOOK_AUDIO_BUCKET) {
       fileSizeLimit = 10485760; // 10MB for audio
@@ -87,7 +87,7 @@ export async function ensureBucketExists(
       fileSizeLimit = 52428800; // 50MB for video
       allowedMimeTypes = ["video/mp4", "video/3gpp", "video/quicktime"];
     } else if (bucketName === WEBHOOK_IMAGE_BUCKET) {
-      fileSizeLimit = 5242880; // 5MB for images
+      fileSizeLimit = 10485760; // 10MB for images
       allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     } else if (bucketName === WEBHOOK_DOCUMENT_BUCKET) {
       fileSizeLimit = 10485760; // 10MB for documents

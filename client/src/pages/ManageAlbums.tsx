@@ -427,8 +427,8 @@ export default function ManageAlbums() {
                               const file = e.target.files?.[0];
                               if (!file) return;
 
-                              // Validate file size (5MB)
-                              if (file.size > 5 * 1024 * 1024) {
+                              // Validate file size (10MB)
+                              if (file.size > 10 * 1024 * 1024) {
                                 toast({
                                   title: "Error",
                                   description: "File size exceeds 5MB limit",

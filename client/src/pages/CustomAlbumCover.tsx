@@ -61,12 +61,12 @@ export default function CustomAlbumCover() {
       return;
     }
 
-    // Validate file size (5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 5MB",
+        description: "Please select an image smaller than 10MB",
         variant: "destructive",
       });
       return;
@@ -248,7 +248,7 @@ export default function CustomAlbumCover() {
                         Click to select an image
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        JPEG, PNG, GIF, or WebP (max 5MB)
+                        JPEG, PNG, GIF, or WebP (max 10MB)
                       </p>
                     </div>
                   </label>
@@ -319,7 +319,7 @@ export default function CustomAlbumCover() {
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
             <li>Select a high-quality image for the best results</li>
             <li>Recommended size: Square or landscape orientation</li>
-            <li>Maximum file size: 5MB</li>
+            <li>Maximum file size: 10MB</li>
             <li>Supported formats: JPEG, PNG, GIF, WebP</li>
           </ul>
         </div>

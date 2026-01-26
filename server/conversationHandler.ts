@@ -772,11 +772,7 @@ export async function askReadiness(
   trial: any,
   fromNumber: string,
 ): Promise<void> {
-  await sendReadinessCheck(
-    fromNumber,
-    trial.storytellerName,
-    trial.storytellerLanguagePreference,
-  );
+  await sendReadinessCheck(fromNumber, trial);
 
   // Set retryReadinessAt if not already set (for initial readiness checks)
   // This ensures ignored readiness checks get retried after 24 hours
@@ -828,12 +824,16 @@ async function handleReadinessResponse(
     "yes lets begin",
     "yes let's begin",
     "yes, let us begin",
+    "Start", // utility
     "हाँ, शुरू करते हैं", // Hindi button text
     "हाँ शुरू करते हैं", // Hindi without comma
+    "अब रिकॉर्ड करें", // utility
   ];
   const maybeButtonPatterns = [
     "maybe later",
+    "Later", // utility
     "थोड़ी देर में", // Hindi button text
+    "बाद में", // utility
   ];
 
   // Normalize patterns too

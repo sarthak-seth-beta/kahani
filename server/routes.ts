@@ -19,7 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
+      fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
       // Accept only image files
@@ -273,10 +273,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Validate file size
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 10 * 1024 * 1024; // 10MB
         if (req.file.size > maxSize) {
           return res.status(400).json({
-            error: "File size exceeds 5MB limit",
+            error: "File size exceeds 10MB limit",
           });
         }
 
@@ -689,26 +689,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? "en"
             : undefined;
 
-      const trial = await storage.getFreeTrialDb(trialId);
+      // Parallelize independent queries for better performance
+      const [trial, voiceNotes] = await Promise.all([
+        storage.getFreeTrialDb(trialId),
+        storage.getVoiceNotesByTrialId(trialId),
+      ]);
+
       if (!trial) {
         return res.status(404).json({ error: "Album not found" });
       }
 
-      // Fetch album ONCE at the beginning
+      // Fetch album using optimized single query (by ID or title)
       // Use albumId if available, fallback to selectedAlbum for backward compatibility
       const albumIdentifier = trial.albumId;
       if (!albumIdentifier) {
         return res.status(404).json({ error: "Album not found" });
       }
-      let album = await storage.getAlbumById(albumIdentifier);
-      if (!album) {
-        album = await storage.getAlbumByTitle(albumIdentifier);
-      }
+
+      // Use optimized single query instead of two sequential queries
+      const album = await storage.getAlbumByIdOrTitle(albumIdentifier);
       if (!album) {
         return res.status(404).json({ error: "Album not found" });
       }
-
-      const voiceNotes = await storage.getVoiceNotesByTrialId(trialId);
 
       // Use in-memory album data instead of querying
       const finalLanguagePreference =
@@ -770,6 +772,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         finalCoverImage: albumCoverImage,
       });
 
+      // Add cache headers for better performance (cache for 5 minutes)
+      res.set({
+        "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
+      });
+
       res.json({
         trial: {
           id: trial.id,
@@ -828,10 +835,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Validate file size (multer should have caught this, but double-check)
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 10 * 1024 * 1024; // 10MB
         if (req.file.size > maxSize) {
           return res.status(400).json({
-            error: "File size exceeds 5MB limit",
+            error: "File size exceeds 10MB limit",
           });
         }
 

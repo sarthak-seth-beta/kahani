@@ -37,6 +37,7 @@ import {
   isNull,
   sql,
   gte,
+  or,
 } from "drizzle-orm";
 
 export interface IStorage {
@@ -999,6 +1000,23 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(albums)
       .where(and(eq(albums.id, id), eq(albums.isActive, true)));
+    return album;
+  }
+
+  /**
+   * Get album by ID or title in a single query (optimized for performance)
+   */
+  async getAlbumByIdOrTitle(identifier: string): Promise<AlbumRow | undefined> {
+    const [album] = await db
+      .select()
+      .from(albums)
+      .where(
+        and(
+          or(eq(albums.id, identifier), eq(albums.title, identifier)),
+          eq(albums.isActive, true),
+        ),
+      )
+      .limit(1);
     return album;
   }
 

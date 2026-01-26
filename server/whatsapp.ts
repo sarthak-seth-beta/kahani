@@ -1073,17 +1073,22 @@ A new WhatsApp chat will open - please press Send.`;
 
 export async function sendReadinessCheck(
   recipientNumber: string,
-  relation: string,
-  languagePreference?: string | null,
+  trial: any,
 ): Promise<boolean> {
   // const isProduction = process.env.NODE_ENV === "production";
   const isProduction = true;
 
   if (isProduction) {
-    const templateParams = [{ type: "text", text: relation }];
+    const templateParams = [
+      { type: "text", text: String(trial.id.slice(-4) || "") },
+      { type: "text", text: trial.storytellerName },
+    ];
 
-    const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
-    const templateName = `ready_vaani${languageSuffix}`;
+    const languageSuffix = getStorytellerLanguageSuffix(
+      trial.storytellerLanguagePreference,
+    );
+    const templateName =
+      languageSuffix === "hn" ? "check_readiness_hn" : "readiness_check_en";
 
     return sendTemplateMessageWithRetry(
       recipientNumber,
@@ -1091,7 +1096,7 @@ export async function sendReadinessCheck(
       templateParams,
     );
   } else {
-    const message = `Hi ${relation}, are you ready to share your Kahani?`;
+    const message = `Hi ${trial.storytellerName}, are you ready to share your Kahani?`;
 
     return sendTextMessageWithRetry(recipientNumber, message);
   }
