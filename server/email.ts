@@ -168,6 +168,114 @@ export async function sendWhatsAppFailureAlertEmail({
   }
 }
 
+export async function sendUserNeedsHelpEmail(
+  fromNumber: string,
+  messageText: string,
+  trials: any[],
+): Promise<void> {
+  // Check if API key is configured
+  if (!resend || !process.env.RESEND_API_KEY) {
+    console.error(
+      "RESEND_API_KEY is not configured. Cannot send user needs help email.",
+    );
+    return;
+  }
+
+  try {
+    // Build trials section HTML
+    let trialsHtml = "";
+    if (trials.length === 0) {
+      trialsHtml = `
+        <tr>
+          <td colspan="2" style="padding: 12px; text-align: center; color: #666;">
+            No associated trials found
+          </td>
+        </tr>
+      `;
+    } else {
+      trials.forEach((trial, index) => {
+        const isEven = index % 2 === 0;
+        const bgColor = isEven ? "#f9f9f9" : "#ffffff";
+        trialsHtml += `
+          <tr style="background: ${bgColor};">
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #ddd; width: 40%; vertical-align: top;">Trial ${index + 1}:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+              <div style="margin-bottom: 8px;">
+                <strong>Trial ID:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px;">${trial.id || "N/A"}</code>
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong>Storyteller:</strong> ${trial.storytellerName || "N/A"} (${trial.storytellerPhone || "N/A"})
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong>Customer/Buyer:</strong> ${trial.buyerName || "N/A"} (${trial.customerPhone || "N/A"})
+              </div>
+              <div>
+                <strong>Conversation State:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px;">${trial.conversationState || "N/A"}</code>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    const emailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #A35139;">User Needs Help</h2>
+        
+        <p style="font-size: 16px; color: #333;">
+          A user has sent a message that may require assistance.
+        </p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9f9f9;">
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #ddd; width: 40%;">Phone Number:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #ddd;">${fromNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #ddd;">Message:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #ddd; word-break: break-word;">${messageText || "(empty message)"}</td>
+          </tr>
+        </table>
+
+        <h3 style="color: #333; margin-top: 30px; margin-bottom: 15px;">Associated Trials:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9f9f9;">
+          ${trialsHtml}
+        </table>
+        
+        <div style="margin-top: 30px; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 20px;">
+          <p>This is an automated alert from the Kahani WhatsApp messaging system.</p>
+          <p>Timestamp: ${new Date().toISOString()}</p>
+        </div>
+      </div>
+    `;
+
+    const subject = "User Needs Help";
+
+    for (const email of ALERT_EMAILS) {
+      await resend.emails.send({
+        from: "Kahani Alerts <onboarding@resend.dev>",
+        to: email,
+        subject,
+        html: emailHtml,
+      });
+    }
+
+    console.log("Sent user needs help email for:", {
+      fromNumber,
+      messageText,
+      trialCount: trials.length,
+    });
+  } catch (error: any) {
+    // Log error but don't throw - webhook processing should continue
+    console.error("Failed to send user needs help email:", {
+      error: error.message,
+      errorStack: error.stack,
+      fromNumber,
+      messageText,
+    });
+  }
+}
+
 export async function sendEmail({
   to,
   subject,

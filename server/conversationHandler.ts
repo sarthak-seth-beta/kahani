@@ -19,6 +19,7 @@ import {
   sendFeedbackThankYou,
   sendWhatsappButtonTemplate,
 } from "./whatsapp";
+import { sendUserNeedsHelpEmail } from "./email";
 import { uploadVoiceNoteToR2, uploadImageToR2 } from "./r2";
 import ffmpeg from "fluent-ffmpeg";
 import { Readable } from "stream";
@@ -148,6 +149,43 @@ async function resolveTrial(
 }
 
 /**
+ * Helper function to collect all trials associated with a phone number
+ * Checks both storyteller and buyer phone numbers
+ */
+async function getAllTrialsForPhone(phoneNumber: string): Promise<any[]> {
+  const normalizedPhone = normalizePhoneNumber(phoneNumber);
+
+  // Get all active trials where sender is storyteller
+  const storytellerActiveTrials =
+    await storage.getAllActiveTrialsByStorytellerPhone(normalizedPhone);
+
+  // Get any trial where sender is storyteller (including non-active)
+  const storytellerTrial =
+    await storage.getFreeTrialByStorytellerPhone(normalizedPhone);
+
+  // Get trial where sender is buyer
+  const buyerTrial = await storage.getFreeTrialByBuyerPhone(normalizedPhone);
+
+  // Combine and deduplicate by trial ID
+  const allTrials: any[] = [...storytellerActiveTrials];
+
+  // Add storyteller trial if not already included
+  if (
+    storytellerTrial &&
+    !allTrials.find((t) => t.id === storytellerTrial.id)
+  ) {
+    allTrials.push(storytellerTrial);
+  }
+
+  // Add buyer trial if not already included
+  if (buyerTrial && !allTrials.find((t) => t.id === buyerTrial.id)) {
+    allTrials.push(buyerTrial);
+  }
+
+  return allTrials;
+}
+
+/**
  * Handles case when no trial is found
  */
 async function handleNoTrialFound(
@@ -163,6 +201,12 @@ async function handleNoTrialFound(
     "MessageType:",
     messageType,
   );
+
+  // Collect all trials associated with this phone number
+  const allTrials = await getAllTrialsForPhone(fromNumber);
+
+  // Send email notification
+  await sendUserNeedsHelpEmail(fromNumber, messageText, allTrials);
 
   // Check if this is a support query (text message with no order ID)
   const orderIdResult = extractOrderId(messageText);
@@ -365,6 +409,12 @@ async function handleInProgressTextMessage(
   await cancelScheduledCheckin(trial.id);
   // Cancel buyer check-in if storyteller responds
   await cancelBuyerCheckin(trial.id);
+
+  // Collect all trials associated with this phone number
+  const allTrials = await getAllTrialsForPhone(fromNumber);
+
+  // Send email notification
+  await sendUserNeedsHelpEmail(fromNumber, messageText, allTrials);
 
   const { orderId } = extractOrderId(messageText);
 
