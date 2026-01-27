@@ -689,25 +689,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? "en"
             : undefined;
 
-      // Parallelize independent queries for better performance
-      const [trial, voiceNotes] = await Promise.all([
-        storage.getFreeTrialDb(trialId),
+      // Optimized: Fetch trial+album and voice notes in parallel (2 queries instead of 3)
+      const [trialWithAlbum, voiceNotes] = await Promise.all([
+        storage.getTrialWithAlbum(trialId),
         storage.getVoiceNotesByTrialId(trialId),
       ]);
 
-      if (!trial) {
+      if (!trialWithAlbum || !trialWithAlbum.trial) {
         return res.status(404).json({ error: "Album not found" });
       }
 
-      // Fetch album using optimized single query (by ID or title)
-      // Use albumId if available, fallback to selectedAlbum for backward compatibility
-      const albumIdentifier = trial.albumId;
-      if (!albumIdentifier) {
-        return res.status(404).json({ error: "Album not found" });
-      }
+      const { trial, album } = trialWithAlbum;
 
-      // Use optimized single query instead of two sequential queries
-      const album = await storage.getAlbumByIdOrTitle(albumIdentifier);
       if (!album) {
         return res.status(404).json({ error: "Album not found" });
       }

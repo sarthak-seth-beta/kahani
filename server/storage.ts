@@ -114,6 +114,9 @@ export interface IStorage {
   createAlbum(album: InsertAlbumRow): Promise<AlbumRow>;
   updateAlbum(id: string, album: Partial<InsertAlbumRow>): Promise<AlbumRow>;
   deleteAlbum(id: string): Promise<void>;
+  getTrialWithAlbum(
+    trialId: string,
+  ): Promise<{ trial: FreeTrialRow; album: AlbumRow | null } | null>;
   getQuestionByIndex(
     albumId: string,
     index: number,
@@ -1018,6 +1021,23 @@ export class DatabaseStorage implements IStorage {
       )
       .limit(1);
     return album;
+  }
+
+  /**
+   * Optimized method to fetch trial and album together
+   * Uses getAlbumById instead of getAlbumByIdOrTitle for better performance (no OR condition)
+   */
+  async getTrialWithAlbum(
+    trialId: string,
+  ): Promise<{ trial: FreeTrialRow; album: AlbumRow | null } | null> {
+    const trial = await this.getFreeTrialDb(trialId);
+    if (!trial || !trial.albumId) {
+      return null;
+    }
+
+    // Use getAlbumById instead of getAlbumByIdOrTitle - faster since we know it's an ID
+    const album = await this.getAlbumById(trial.albumId);
+    return { trial, album: album || null };
   }
 
   async getAllAlbumsAdmin(): Promise<AlbumRow[]> {
