@@ -1134,7 +1134,7 @@ export async function sendStorytellerCheckin(
   if (isProduction) {
     const templateParams = [{ type: "text", text: storytellerName }];
     const languageSuffix = getStorytellerLanguageSuffix(languagePreference);
-    const templateName = `storyteller_checkin${languageSuffix}`;
+    const templateName = `order_paused_storyteller_checkin${languageSuffix}`;
 
     return sendTemplateMessageWithRetry(
       recipientNumber,

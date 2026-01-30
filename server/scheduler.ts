@@ -404,7 +404,7 @@ export async function sendStorytellerCheckins(): Promise<void> {
       // Check for recent failed attempts to prevent infinite loops
       const languageSuffix =
         trial.storytellerLanguagePreference === "hn" ? "_hn" : "_en";
-      const templateName = `storyteller_checkin${languageSuffix}`;
+      const templateName = `order_paused_storyteller_checkin${languageSuffix}`;
       const hasRecentFailures = await storage.hasRecentFailedAttempts(
         trial.storytellerPhone,
         templateName,
@@ -431,7 +431,7 @@ export async function sendStorytellerCheckins(): Promise<void> {
           templateName,
           phoneNumber: trial.storytellerPhone,
           trialId: trial.id,
-          messageType: "storyteller_checkin",
+          messageType: "order_paused_storyteller_checkin",
           failureCount: failureDetails.count,
           lastError: failureDetails.lastError,
         });
@@ -503,7 +503,7 @@ export async function sendStorytellerCheckins(): Promise<void> {
             templateName,
             phoneNumber: trial.storytellerPhone,
             trialId: trial.id,
-            messageType: "storyteller_checkin",
+            messageType: "order_paused_storyteller_checkin",
             failureCount: failureDetails.count,
             lastError: failureDetails.lastError,
           });

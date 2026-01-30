@@ -1048,7 +1048,7 @@ async function handleReadinessResponse(
 }
 
 /**
- * Handles check-in button responses from storyteller_checkin template
+ * Handles check-in button responses from order_paused_storyteller_checkin template
  * Returns true if the response was a check-in button, false otherwise
  */
 async function handleCheckinResponse(
@@ -1066,9 +1066,9 @@ async function handleCheckinResponse(
   // Normalize response: lowercase, trim, and normalize apostrophes/quotes
   let normalizedResponse = response.toLowerCase().trim();
 
-  // Define button patterns for check-in responses
-  const continueButtonPatterns = ["continue", "जारी रखें"];
-  const laterButtonPatterns = ["later", "बाद में"];
+  // Define button patterns for check-in responses (Continue Now / Sometime Later)
+  const continueButtonPatterns = ["continue now", "अभी जारी रखें"];
+  const laterButtonPatterns = ["sometime later", "अभी नहीं, बाद में"];
 
   // Check for button responses (exact match)
   const isContinueButton = continueButtonPatterns.some(
