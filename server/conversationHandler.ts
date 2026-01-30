@@ -1788,8 +1788,12 @@ async function handleVoiceNote(
   }
 }
 
+/** Output sample rate for voice-note MP3s (must match download-transcribe script SAMPLE_RATE_HZ). */
+const VOICE_NOTE_MP3_SAMPLE_RATE_HZ = 16000;
+
 /**
- * Converts an audio buffer to MP3 format with 96kbps compression
+ * Converts an audio buffer to MP3 format with 16kbps compression.
+ * Output is 16 kHz mono so Speech-to-Text and download-transcribe script can use sampleRateHertz: 16000.
  * @param buffer - The input audio buffer
  * @param inputMimeType - The MIME type of the input audio
  * @returns Promise<Buffer> - The converted MP3 buffer, or original buffer if conversion fails
@@ -1820,6 +1824,8 @@ export async function convertToMp3(
       .inputFormat(inputFormat)
       .audioCodec("libmp3lame")
       .audioBitrate(16)
+      .audioFrequency(VOICE_NOTE_MP3_SAMPLE_RATE_HZ)
+      .audioChannels(1)
       .format("mp3")
       .on("error", (err) => {
         console.error("Error converting audio to MP3:", err);
