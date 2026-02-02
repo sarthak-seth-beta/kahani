@@ -10,7 +10,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProfilePictureDialogProps {
@@ -29,6 +29,7 @@ const ProfilePictureDialog = ({
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +48,7 @@ const ProfilePictureDialog = ({
       }
       setZoom(1);
       setCrop({ x: 0, y: 0 });
+      setRotation(0);
     }
   }, [isOpen, initialImage]);
 
@@ -64,7 +66,7 @@ const ProfilePictureDialog = ({
         const croppedBlob = await getCroppedImg(
           imageSrc,
           croppedAreaPixels,
-          0, // rotation
+          rotation,
         );
         if (croppedBlob) {
           await onSave(croppedBlob);
@@ -76,7 +78,7 @@ const ProfilePictureDialog = ({
         setIsSaving(false);
       }
     }
-  }, [imageSrc, croppedAreaPixels, onSave]);
+  }, [imageSrc, croppedAreaPixels, rotation, onSave]);
 
   function readFile(file: File): Promise<string> {
     return new Promise((resolve) => {
@@ -139,20 +141,32 @@ const ProfilePictureDialog = ({
                   image={imageSrc}
                   crop={crop}
                   zoom={zoom}
+                  rotation={rotation}
                   aspect={1}
                   cropShape="round"
                   showGrid={false}
                   onCropChange={setCrop}
                   onCropComplete={onCropComplete}
                   onZoomChange={setZoom}
+                  onRotationChange={setRotation}
                 />
               </div>
 
               {trialId !== YAJUR_NANI_TRIAL_ID && (
                 <div className="px-6 py-5 flex flex-col gap-5 bg-white border-t border-gray-100">
-                  {/* Zoom Slider */}
+                  {/* Rotate & Zoom */}
                   <div className="flex items-center gap-4">
-                    <IoRemove className="text-gray-400" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setRotation((r) => (r + 90) % 360)}
+                      className="h-9 w-9 shrink-0 rounded-full text-gray-400 hover:text-[#A35139] hover:bg-gray-100"
+                      aria-label="Rotate 90° clockwise"
+                    >
+                      <RotateCw className="h-5 w-5" />
+                    </Button>
+                    <IoRemove className="text-gray-400 shrink-0" />
                     <input
                       type="range"
                       value={zoom}
