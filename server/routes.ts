@@ -1498,51 +1498,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      const { sendEmail } = await import("./email");
-
-      // Format Questions List
-      const questionsList =
-        questions
-          ?.map(
-            (q: any, i: number) =>
-              `<li><strong>Q${i + 1}:</strong> ${q.text}</li>`,
-          )
-          .join("") || "<li>No custom questions provided</li>";
-
-      const emailHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #A35139;">New Custom Album Request</h1>
-          <p>You have received a new request for a custom album!</p>
-          
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Title</td><td style="padding: 10px;">${title}</td></tr>
-            <tr><td style="padding: 10px; font-weight: bold;">Sender Name</td><td style="padding: 10px;">${yourName}</td></tr>
-            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Acc for</td><td style="padding: 10px;">${recipientName}</td></tr>
-            <tr><td style="padding: 10px; font-weight: bold;">Occasion</td><td style="padding: 10px;">${occasion}</td></tr>
-            <tr><td style="padding: 10px; font-weight: bold;">Language</td><td style="padding: 10px;">${language}</td></tr>
-            <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Contact Email</td><td style="padding: 10px;">${email || "N/A"}</td></tr>
-            <tr><td style="padding: 10px; font-weight: bold;">Phone</td><td style="padding: 10px;">${phone}</td></tr>
-             <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Instructions</td><td style="padding: 10px;">${instructions || "N/A"}</td></tr>
-          </table>
-
-          <h3>Custom Questions:</h3>
-          <ul>
-            ${questionsList}
-          </ul>
-
-          <div style="margin-top: 30px; font-size: 12px; color: #888;">
-            Sent from Kahani Web Platform
-          </div>
-        </div>
-      `;
-
-      // Send to Admin
-      // IMPORTANT: In "Test Mode" on Resend, you can ONLY send to your verified email.
-      // If sarthakseth021@gmail.com is not your verified email, this will fail.
-      const emailSent = await sendEmail({
-        to: "sarthakseth021@gmail.com",
-        subject: `New Album Request: ${title}`,
-        html: emailHtml,
+      const { sendCustomAlbumRequestEmail } = await import("./email");
+      const emailSent = await sendCustomAlbumRequestEmail({
+        title,
+        yourName,
+        recipientName,
+        occasion,
+        language,
+        instructions,
+        email,
+        phone,
+        questions,
       });
 
       if (!emailSent) {
@@ -1555,6 +1521,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error submitting custom album:", error);
       res.status(500).json({ error: "Failed to submit request" });
+    }
+  });
+
+  // Generate album preview via Gemini API
+  app.post("/api/generate-album", async (req, res) => {
+    try {
+      const {
+        yourName,
+        phone,
+        recipientName,
+        occasion,
+        instructions,
+        title,
+        email,
+        language,
+        questions,
+      } = req.body;
+
+      // Validate required fields (everything except advanced customization)
+      if (!yourName || !phone || !recipientName || !occasion) {
+        return res.status(400).json({
+          error: "Missing required fields: yourName, phone, recipientName, occasion",
+        });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({
+          error: "Gemini API key not configured. Add GEMINI_API_KEY to .env",
+        });
+      }
+
+      const { GoogleGenAI } = await import("@google/genai");
+      const { z } = await import("zod");
+
+      const generatedAlbumSchema = z.object({
+        title: z.string(),
+        description: z.string(),
+        questions: z.array(z.string()).min(15).max(15),
+        questionSetTitles: z.object({
+          en: z.array(z.string()).length(5),
+        }),
+      });
+
+      const responseJsonSchema = {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Album title" },
+          description: { type: "string", description: "Album description" },
+          questions: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 15,
+            maxItems: 15,
+            description:
+              "Exactly 15 thoughtful prompts for voice recording, 3 per section",
+          },
+          questionSetTitles: {
+            type: "object",
+            properties: {
+              en: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 5,
+                maxItems: 5,
+                description: "Exactly 5 chapter names, one per section",
+              },
+            },
+            required: ["en"],
+            description: "Chapter titles for the 5 question sections",
+          },
+        },
+        required: ["title", "description", "questions", "questionSetTitles"],
+      };
+
+      const customQuestionsText =
+        questions?.filter((q: { text?: string }) => q?.text?.trim()).map((q: { text: string }) => q.text).join("\n- ") || "None";
+
+      const prompt = `Generate a Kahani album (audio story collection) for the following request.
+
+Recipient: ${recipientName}
+Occasion/Theme: ${occasion}
+Sender name: ${yourName}
+${instructions ? `Special instructions: ${instructions}` : ""}
+${customQuestionsText !== "None" ? `Custom questions to incorporate or inspire from:\n- ${customQuestionsText}` : ""}
+${title ? `Preferred title (use or adapt): ${title}` : ""}
+${language ? `Preferred language: ${language}` : ""}
+
+Return a JSON object with:
+- title: A warm, personalized album title
+- description: 2-3 sentences describing what this album captures
+- questions: Exactly 15 thoughtful, open-ended prompts suitable for voice recording (stories, memories, wisdom), organized in 5 sections of 3 questions each
+- questionSetTitles: { en: [exactly 5 chapter names] } - one name per section (e.g. "Childhood Memories", "Wedding Stories", "Life Lessons", "Family Traditions", "Words of Wisdom")`;
+
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-lite",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseJsonSchema,
+        },
+      });
+
+      const text = response.text;
+      if (!text) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      const parsed = JSON.parse(text);
+      const validated = generatedAlbumSchema.safeParse(parsed);
+      if (!validated.success) {
+        console.error("Gemini response validation failed:", validated.error);
+        throw new Error("Invalid album structure from Gemini");
+      }
+
+      res.json(validated.data);
+    } catch (error: any) {
+      console.error("Error generating album:", error);
+      res.status(500).json({
+        error: error.message || "Failed to generate album",
+      });
+    }
+  });
+
+  const GENERATED_ALBUM_COVER =
+    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80";
+
+  // Request generated album: seed to DB (is_active=false) + send email (reuses custom-album email flow)
+  app.post("/api/request-generated-album", async (req, res) => {
+    try {
+      const { album, formData } = req.body;
+      if (!album || !formData) {
+        return res.status(400).json({ error: "Missing album or formData" });
+      }
+      const { yourName, phone, recipientName, occasion } = formData;
+      if (!yourName || !phone || !recipientName || !occasion) {
+        return res.status(400).json({
+          error: "Missing required formData: yourName, phone, recipientName, occasion",
+        });
+      }
+      const { title, description, questions, questionSetTitles } = album;
+      if (!title || !description || !Array.isArray(questions)) {
+        return res.status(400).json({
+          error: "Invalid album: title, description, and questions required",
+        });
+      }
+
+      let finalTitle = title;
+      const allAlbums = await storage.getAllAlbumsAdmin();
+      if (allAlbums.some((a) => a.title.toLowerCase() === finalTitle.toLowerCase())) {
+        finalTitle = `${finalTitle} (Custom ${crypto.randomUUID().slice(0, 8)})`;
+      }
+
+      await storage.createAlbum({
+        title: finalTitle,
+        description,
+        questions,
+        questionsHn: null,
+        coverImage: GENERATED_ALBUM_COVER,
+        bestFitFor: null,
+        isActive: false,
+        isConversationalAlbum: true,
+        questionSetTitles: questionSetTitles
+          ? { en: questionSetTitles.en || [], hn: [] }
+          : { en: [], hn: [] },
+        questionSetPremise: null,
+      });
+
+      const { sendCustomAlbumRequestEmail } = await import("./email");
+      const emailSent = await sendCustomAlbumRequestEmail({
+        title: finalTitle,
+        yourName,
+        recipientName,
+        occasion,
+        language: formData.language || "en",
+        instructions: formData.instructions || "",
+        email: formData.email || "",
+        phone,
+        questions: questions.map((q: string) => ({ text: q })),
+      });
+      if (!emailSent) {
+        throw new Error("Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.");
+      }
+
+      res.json({ success: true, message: "Request received successfully" });
+    } catch (error: any) {
+      console.error("Error requesting generated album:", error);
+      res.status(500).json({ error: error.message || "Failed to submit request" });
     }
   });
 
