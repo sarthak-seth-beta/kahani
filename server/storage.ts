@@ -1024,20 +1024,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Optimized method to fetch trial and album together
-   * Uses getAlbumById instead of getAlbumByIdOrTitle for better performance (no OR condition)
+   * Optimized method to fetch trial and album together in a single query
+   * Uses LEFT JOIN to get both trial and album in one DB round-trip
    */
   async getTrialWithAlbum(
     trialId: string,
   ): Promise<{ trial: FreeTrialRow; album: AlbumRow | null } | null> {
-    const trial = await this.getFreeTrialDb(trialId);
-    if (!trial || !trial.albumId) {
+    const result = await db
+      .select({
+        trial: freeTrials,
+        album: albums,
+      })
+      .from(freeTrials)
+      .leftJoin(
+        albums,
+        and(eq(freeTrials.albumId, albums.id), eq(albums.isActive, true)),
+      )
+      .where(eq(freeTrials.id, trialId))
+      .limit(1);
+
+    if (result.length === 0) {
       return null;
     }
 
-    // Use getAlbumById instead of getAlbumByIdOrTitle - faster since we know it's an ID
-    const album = await this.getAlbumById(trial.albumId);
-    return { trial, album: album || null };
+    const { trial, album } = result[0];
+    return { trial, album };
   }
 
   async getAllAlbumsAdmin(): Promise<AlbumRow[]> {
