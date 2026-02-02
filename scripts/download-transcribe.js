@@ -30,14 +30,14 @@ function getSupabase() {
 }
 
 const LANGUAGE_MAP = {
-  en: "en-US",
+  en: "en-IN",
   hn: "hi-IN",
-  other: "en-US",
+  other: "en-IN",
 };
-const DEFAULT_LANGUAGE_CODE = "en-US";
+const DEFAULT_LANGUAGE_CODE = "en-IN";
 
 /** Languages to try when auto-detecting (en + Hindi for Kahani albums). */
-const AUTO_DETECT_LANGUAGES = ["en-US", "hi-IN"];
+const AUTO_DETECT_LANGUAGES = ["en-IN", "hi-IN"];
 
 /**
  * @typedef {{ languageCode: string, alternativeLanguageCodes?: string[] }} LanguageConfig
