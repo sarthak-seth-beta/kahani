@@ -6,6 +6,8 @@ import speech from "@google-cloud/speech";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+// cmd- node scripts/download-transcribe.js 302be10b-0f18-44ba-9d67-60de7c5e4488 ./my-transcripts sarthakseth021@gmail.com
+
 // Use v1p1beta1 for MP3 support (MP3 encoding is beta and only in v1p1beta1).
 const speechClient = new speech.v1p1beta1.SpeechClient();
 
