@@ -6,6 +6,8 @@ import speech from "@google-cloud/speech";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+// cmd- node scripts/download-transcribe.js 302be10b-0f18-44ba-9d67-60de7c5e4488 ./my-transcripts sarthakseth021@gmail.com
+
 // Use v1p1beta1 for MP3 support (MP3 encoding is beta and only in v1p1beta1).
 const speechClient = new speech.v1p1beta1.SpeechClient();
 
@@ -30,17 +32,17 @@ function getSupabase() {
 }
 
 const LANGUAGE_MAP = {
-  en: "en-US",
+  en: "en-IN",
   hn: "hi-IN",
-  other: "en-US",
+  other: "en-IN",
 };
-const DEFAULT_LANGUAGE_CODE = "en-US";
+const DEFAULT_LANGUAGE_CODE = "en-IN";
 
 /** Languages to try when auto-detecting (en + Hindi for Kahani albums). */
-const AUTO_DETECT_LANGUAGES = ["en-US", "hi-IN"];
+const AUTO_DETECT_LANGUAGES = ["en-IN", "hi-IN"];
 
 /**
- * @typedef {{ languageCode: string, alternativeLanguageCodes?: string[] }} LanguageConfig
+ * @typedef {{ languageCode: string, alternativeLanguageCodes?: string[], transcribeBothHindiAndEnglish?: boolean }} LanguageConfig
  */
 
 /**
@@ -90,6 +92,10 @@ async function getTrialLanguagePreference(trialId) {
   }
 
   console.log(`  Trial language preference: ${pref} → ${languageCode}`);
+  // For Hindi preference: transcribe each voice note in both Hindi and English.
+  if (pref === "hn") {
+    return { languageCode, transcribeBothHindiAndEnglish: true };
+  }
   return { languageCode };
 }
 
@@ -194,16 +200,14 @@ async function sendTranscriptEmail({ to, trialId, trial, album, mergedPath }) {
 
   const pref = trial.storyteller_language_preference || "en";
   const isHn = pref === "hn";
-  const questions = isHn ? album.questions_hn : album.questions;
-  const setTitles = album.question_set_titles
-    ? isHn
-      ? album.question_set_titles.hn
-      : album.question_set_titles.en
-    : [];
-  const questionsList = Array.isArray(questions) ? questions : [];
-  const titlesList = Array.isArray(setTitles) ? setTitles : [];
+  const questionsEn = Array.isArray(album.questions) ? album.questions : [];
+  const questionsHn = Array.isArray(album.questions_hn) ? album.questions_hn : [];
+  const setTitlesEn = album.question_set_titles?.en ?? [];
+  const setTitlesHn = album.question_set_titles?.hn ?? [];
+  const titlesEnList = Array.isArray(setTitlesEn) ? setTitlesEn : [];
+  const titlesHnList = Array.isArray(setTitlesHn) ? setTitlesHn : [];
 
-  const body = [
+  const bodyParts = [
     `Storyteller Name: ${trial.storyteller_name}`,
     `Storyteller Phone: ${trial.storyteller_phone || "(none)"}`,
     `Buyer Name: ${trial.buyer_name}`,
@@ -211,11 +215,34 @@ async function sendTranscriptEmail({ to, trialId, trial, album, mergedPath }) {
     `Album Name: ${album.title}`,
     `Language Preference: ${pref}`,
     "\n\n",
-    "Questions:",
-    ...questionsList.map((q, i) => `  ${i + 1}. ${q}`),
-    "\n\n",
-    "Question set titles:",
-    ...titlesList.map((t, i) => `  ${i + 1}. ${t}`),
+  ];
+
+  if (isHn) {
+    bodyParts.push(
+      "Questions (English):",
+      ...questionsEn.map((q, i) => `  ${i + 1}. ${q}`),
+      "\n\n",
+      "Questions (Hindi):",
+      ...questionsHn.map((q, i) => `  ${i + 1}. ${q}`),
+      "\n\n",
+      "Question set titles (English):",
+      ...titlesEnList.map((t, i) => `  ${i + 1}. ${t}`),
+      "\n\n",
+      "Question set titles (Hindi):",
+      ...titlesHnList.map((t, i) => `  ${i + 1}. ${t}`),
+    );
+  } else {
+    bodyParts.push(
+      "Questions:",
+      ...questionsEn.map((q, i) => `  ${i + 1}. ${q}`),
+      "\n\n",
+      "Question set titles:",
+      ...titlesEnList.map((t, i) => `  ${i + 1}. ${t}`),
+    );
+  }
+
+  const body = [
+    ...bodyParts,
     "\n\n ",
     `Link: ${KAHANI_PLAYLIST_BASE}/${trialId}`,
     "\n\n ",
@@ -327,17 +354,50 @@ async function transcribeMp3(filePath, languageConfig, logPrefix = "") {
   return transcript;
 }
 
+const BILINGUAL_EN_LABEL = "English:";
+const BILINGUAL_HI_LABEL = "Hindi (हिंदी):";
+const QUESTION_EN_LABEL = "Question (English):";
+const QUESTION_HN_LABEL = "Question (Hindi):";
+
 /**
- * Write a transcript file: question text, separator, then transcript.
+ * Write a transcript file: question text, separator, then transcript(s).
+ * When transcriptHindi is provided (Hindi preference), writes both English and Hindi.
+ * When questionTextHindi is provided (Hindi preference), question header shows both English and Hindi.
  * @param {string} filePath - Path for the .txt file
- * @param {string} questionText - Question text from the album
- * @param {string} transcript - Transcribed audio text
+ * @param {string} questionText - Question text (English) from the album
+ * @param {string} transcript - Transcribed audio text (English)
+ * @param {string} [transcriptHindi] - Optional Hindi transcript (when preferred language is Hindi)
+ * @param {string} [questionTextHindi] - Optional Hindi question text (when preferred language is Hindi)
  */
-function writeTranscriptFile(filePath, questionText, transcript) {
-  const transcriptPart = transcript.trim() || "(no speech detected)";
-  const content = [questionText.trim(), transcriptPart].join(
-    TRANSCRIPT_SEPARATOR,
-  );
+function writeTranscriptFile(
+  filePath,
+  questionText,
+  transcript,
+  transcriptHindi,
+  questionTextHindi,
+) {
+  let questionPart = (questionText || "").trim();
+  if (questionTextHindi !== undefined && transcriptHindi != null) {
+    const enQ = (questionText || "").trim() || "(none)";
+    const hnQ = (questionTextHindi || "").trim() || "(none)";
+    questionPart = [
+      `${QUESTION_EN_LABEL}\n${enQ}`,
+      `${QUESTION_HN_LABEL}\n${hnQ}`,
+    ].join("\n\n");
+  }
+
+  let transcriptPart;
+  if (transcriptHindi != null && String(transcriptHindi).trim() !== "") {
+    const enPart = (transcript || "").trim() || "(no speech detected)";
+    const hiPart = (transcriptHindi || "").trim() || "(no speech detected)";
+    transcriptPart = [
+      `${BILINGUAL_EN_LABEL}\n${enPart}`,
+      `${BILINGUAL_HI_LABEL}\n${hiPart}`,
+    ].join("\n\n");
+  } else {
+    transcriptPart = (transcript || "").trim() || "(no speech detected)";
+  }
+  const content = [questionPart, transcriptPart].join(TRANSCRIPT_SEPARATOR);
   fs.writeFileSync(filePath, content, "utf8");
 }
 
@@ -437,9 +497,16 @@ async function runWithConcurrency(items, concurrency, fn) {
 
 /**
  * Process a single voice note: download, transcribe, write txt, delete mp3.
+ * When preferred language is Hindi, transcribes in both English and Hindi and uses both en/hn questions.
  * Logs are prefixed with [Q{questionIndex}] for parallel runs.
  */
-async function processOneVoiceNote(note, languageConfig, outDir, trialId) {
+async function processOneVoiceNote(
+  note,
+  languageConfig,
+  album,
+  outDir,
+  trialId,
+) {
   const { questionIndex, questionText, mediaUrl } = note;
   const prefix = () => `[Q${questionIndex}]`;
 
@@ -447,16 +514,47 @@ async function processOneVoiceNote(note, languageConfig, outDir, trialId) {
   const mp3Path = path.join(outDir, `${baseName}.mp3`);
   const txtPath = path.join(outDir, `${baseName}.txt`);
 
+  const questionsEn = Array.isArray(album.questions) ? album.questions : [];
+  const questionsHn = Array.isArray(album.questions_hn) ? album.questions_hn : [];
+  const questionTextEn =
+    questionsEn[questionIndex] ?? questionsEn[questionIndex - 1] ?? questionText;
+  const questionTextHn =
+    questionsHn[questionIndex] ?? questionsHn[questionIndex - 1] ?? "";
+
   console.log(`${prefix()} Downloading...`);
   await downloadAudio(mediaUrl, mp3Path, prefix());
 
-  const langLabel = languageConfig.alternativeLanguageCodes?.length
-    ? `auto-detect (${[languageConfig.languageCode, ...languageConfig.alternativeLanguageCodes].join(", ")})`
-    : languageConfig.languageCode;
-  console.log(`${prefix()} Transcribing (${langLabel})...`);
-  const transcript = await transcribeMp3(mp3Path, languageConfig, prefix());
+  let transcript = "";
+  let transcriptHindi = undefined;
 
-  writeTranscriptFile(txtPath, questionText, transcript);
+  if (languageConfig.transcribeBothHindiAndEnglish) {
+    console.log(`${prefix()} Transcribing (en-IN)...`);
+    transcript = await transcribeMp3(
+      mp3Path,
+      { languageCode: "en-IN" },
+      prefix(),
+    );
+    console.log(`${prefix()} Transcribing (hi-IN)...`);
+    transcriptHindi = await transcribeMp3(
+      mp3Path,
+      { languageCode: "hi-IN" },
+      prefix(),
+    );
+  } else {
+    const langLabel = languageConfig.alternativeLanguageCodes?.length
+      ? `auto-detect (${[languageConfig.languageCode, ...languageConfig.alternativeLanguageCodes].join(", ")})`
+      : languageConfig.languageCode;
+    console.log(`${prefix()} Transcribing (${langLabel})...`);
+    transcript = await transcribeMp3(mp3Path, languageConfig, prefix());
+  }
+
+  writeTranscriptFile(
+    txtPath,
+    questionTextEn,
+    transcript,
+    transcriptHindi,
+    languageConfig.transcribeBothHindiAndEnglish ? questionTextHn : undefined,
+  );
   console.log(`${prefix()} Wrote ${baseName}.txt`);
   try {
     fs.unlinkSync(mp3Path);
@@ -488,6 +586,7 @@ async function run(trialId, outputDir, emailTo) {
   console.log("--- Supabase ---");
   const languageConfig = await getTrialLanguagePreference(trialId);
   const voiceNotes = await getVoiceNotesByTrialId(trialId);
+  const { trial, album } = await getTrialAndAlbum(trialId);
   console.log("");
 
   const total = voiceNotes.length;
@@ -505,7 +604,7 @@ async function run(trialId, outputDir, emailTo) {
       `Processing ${toProcess.length} voice note(s) with concurrency ${CONCURRENCY}...\n`,
     );
     await runWithConcurrency(toProcess, CONCURRENCY, (note) =>
-      processOneVoiceNote(note, languageConfig, outDir, trialId),
+      processOneVoiceNote(note, languageConfig, album, outDir, trialId),
     );
   }
 
@@ -515,7 +614,6 @@ async function run(trialId, outputDir, emailTo) {
   const recipient = emailTo || process.env.TRANSCRIPT_EMAIL_TO;
   let emailSent = false;
   if (recipient) {
-    const { trial, album } = await getTrialAndAlbum(trialId);
     emailSent = await sendTranscriptEmail({
       to: recipient,
       trialId,
