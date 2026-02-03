@@ -35,6 +35,7 @@ import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
 import AllAlbums from "@/pages/AllAlbums";
 import CreateAlbum from "@/pages/CreateAlbum";
+import GeneratedAlbum from "@/pages/GeneratedAlbum";
 import CustomAlbumCover from "@/pages/CustomAlbumCover";
 import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import Admin from "@/pages/Admin";
@@ -43,6 +44,7 @@ import SampleAlbum from "@/pages/SampleAlbum";
 import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
+import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -161,6 +163,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <GeneratedAlbumProvider>
       <TooltipProvider>
         <ScrollToTop />
         <SmoothScroll />
@@ -183,6 +186,7 @@ function App() {
           <Route path="/all-albums" component={AllAlbums} />
           <Route path="/sample-album" component={SampleAlbum} />
           <Route path="/create-album" component={CreateAlbum} />
+          <Route path="/generated-album" component={GeneratedAlbum} />
           <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
           <Route
             path="/custom-album-cover/:trialId"
@@ -208,6 +212,7 @@ function App() {
         </Switch>
         <Toaster />
       </TooltipProvider>
+      </GeneratedAlbumProvider>
     </QueryClientProvider>
   );
 }

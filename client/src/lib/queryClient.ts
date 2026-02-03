@@ -7,6 +7,30 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+/** Fetch JSON from API, handling HTML responses (e.g. SPA fallback) gracefully */
+export async function apiFetchJson<T = unknown>(
+  url: string,
+  options?: RequestInit,
+): Promise<T> {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  let data: T;
+  try {
+    data = JSON.parse(text) as T;
+  } catch {
+    if (text.trim().toLowerCase().startsWith("<!doctype") || text.trim().toLowerCase().startsWith("<html")) {
+      throw new Error(
+        "API returned HTML instead of JSON. Ensure the backend is running (npm run dev).",
+      );
+    }
+    throw new Error(text || `Request failed: ${res.status}`);
+  }
+  if (!res.ok) {
+    throw new Error((data as { error?: string }).error || `Request failed: ${res.status}`);
+  }
+  return data;
+}
+
 export async function apiRequest(
   method: string,
   url: string,

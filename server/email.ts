@@ -276,6 +276,64 @@ export async function sendUserNeedsHelpEmail(
   }
 }
 
+const ADMIN_EMAIL = "sarthakseth021@gmail.com";
+
+export async function sendCustomAlbumRequestEmail({
+  title,
+  yourName,
+  recipientName,
+  occasion,
+  language,
+  instructions,
+  email,
+  phone,
+  questions,
+}: {
+  title: string;
+  yourName?: string;
+  recipientName: string;
+  occasion?: string;
+  language?: string;
+  instructions?: string;
+  email?: string;
+  phone?: string;
+  questions?: Array<{ text?: string } | string>;
+}): Promise<boolean> {
+  const questionsList =
+    questions
+      ?.map((q, i) => {
+        const text = typeof q === "string" ? q : q?.text ?? "";
+        return `<li><strong>Q${i + 1}:</strong> ${text}</li>`;
+      })
+      .join("") || "<li>No questions</li>";
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #A35139;">New Custom Album Request</h1>
+      <p>You have received a new request for a custom album!</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Title</td><td style="padding: 10px;">${title}</td></tr>
+        <tr><td style="padding: 10px; font-weight: bold;">Sender Name</td><td style="padding: 10px;">${yourName || "N/A"}</td></tr>
+        <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Acc for</td><td style="padding: 10px;">${recipientName}</td></tr>
+        <tr><td style="padding: 10px; font-weight: bold;">Occasion</td><td style="padding: 10px;">${occasion || "N/A"}</td></tr>
+        <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Language</td><td style="padding: 10px;">${language || "N/A"}</td></tr>
+        <tr><td style="padding: 10px; font-weight: bold;">Contact Email</td><td style="padding: 10px;">${email || "N/A"}</td></tr>
+        <tr><td style="padding: 10px; font-weight: bold;">Phone</td><td style="padding: 10px;">${phone || "N/A"}</td></tr>
+        <tr style="background: #f5f5f5;"><td style="padding: 10px; font-weight: bold;">Instructions</td><td style="padding: 10px;">${instructions || "N/A"}</td></tr>
+      </table>
+      <h3>Custom Questions:</h3>
+      <ul>${questionsList}</ul>
+      <div style="margin-top: 30px; font-size: 12px; color: #888;">Sent from Kahani Web Platform</div>
+    </div>
+  `;
+
+  return sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `New Album Request: ${title}`,
+    html,
+  });
+}
+
 export async function sendEmail({
   to,
   subject,

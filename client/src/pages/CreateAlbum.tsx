@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Loader2,
   Sparkles,
+  Wand2,
   Plus,
   Trash2,
   Mail,
@@ -33,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useGeneratedAlbum } from "@/stores/generatedAlbumStore";
+import { getOrCreateSessionId } from "@/lib/sessionId";
 
 // Schema for the form
 const createAlbumSchema = z.object({
@@ -64,7 +67,9 @@ type CreateAlbumFormValues = z.infer<typeof createAlbumSchema>;
 export default function CreateAlbum() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { setGeneratedAlbum } = useGeneratedAlbum();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   const form = useForm<CreateAlbumFormValues>({
@@ -86,6 +91,68 @@ export default function CreateAlbum() {
     control: form.control,
     name: "questions",
   });
+
+  const handleGenerateAlbum = async () => {
+    const valid = await form.trigger([
+      "yourName",
+      "phone",
+      "recipientName",
+      "occasion",
+    ]);
+    if (!valid) {
+      toast({
+        title: "Please fill required fields",
+        description: "Your name, phone, recipient, and occasion are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const data = form.getValues();
+    const validQuestions = data.questions?.filter(
+      (q) => q.text.trim().length > 0,
+    );
+    const payload = {
+      ...data,
+      title: data.title || undefined,
+      questions: validQuestions,
+    };
+
+    setIsGenerating(true);
+    try {
+      const isDevMode =
+        new URLSearchParams(window.location.search).get("mode") === "enzo";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Session-Id": getOrCreateSessionId(),
+      };
+      if (isDevMode) headers["X-Dev-Mode"] = "enzo";
+
+      const response = await fetch("/api/generate-album", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to generate album");
+      }
+
+      setGeneratedAlbum(result, payload);
+      setLocation("/generated-album");
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Generation Failed",
+        description:
+          error instanceof Error ? error.message : "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const onSubmit = async (data: CreateAlbumFormValues) => {
     setIsSubmitting(true);
@@ -414,11 +481,32 @@ export default function CreateAlbum() {
               </div>
             )}
 
+            {/* Generate Album Button */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerateAlbum}
+              disabled={isSubmitting || isGenerating}
+              className="w-full h-11 sm:h-12 text-base border-[#A35139] text-[#A35139] hover:bg-[#A35139]/10 rounded-xl mt-4"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-5 w-5" />
+                  Generate an Album
+                </>
+              )}
+            </Button>
+
             {/* Submit Button */}
             <Button
               type="submit"
               className="w-full h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 mt-4"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGenerating}
             >
               {isSubmitting ? (
                 <>
