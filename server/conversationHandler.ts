@@ -1381,7 +1381,7 @@ export async function sendQuestion(
     if (freshTrial && freshTrial.lastQuestionSentAt) {
       const timeSinceLastQuestion =
         Date.now() - new Date(freshTrial.lastQuestionSentAt).getTime();
-      const thirtySecondsInMs = 30 * 1000;
+      const fiveSecondsInMs = 5 * 1000;
 
       // Check if we're trying to send the same question index that was just sent
       // Compare against the fresh trial's currentQuestionIndex to catch concurrent updates
@@ -1399,7 +1399,7 @@ export async function sendQuestion(
       // Only block if it's an old question OR the same question (but not if it's the next question)
       const shouldBlock = (isOldQuestion || isSameQuestion) && !isNextQuestion;
 
-      if (timeSinceLastQuestion < thirtySecondsInMs && shouldBlock) {
+      if (timeSinceLastQuestion < fiveSecondsInMs && shouldBlock) {
         console.warn("Skipping duplicate question send (idempotency check):", {
           trialId: trial.id,
           targetQuestionIndex,
