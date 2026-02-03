@@ -201,7 +201,9 @@ async function sendTranscriptEmail({ to, trialId, trial, album, mergedPath }) {
   const pref = trial.storyteller_language_preference || "en";
   const isHn = pref === "hn";
   const questionsEn = Array.isArray(album.questions) ? album.questions : [];
-  const questionsHn = Array.isArray(album.questions_hn) ? album.questions_hn : [];
+  const questionsHn = Array.isArray(album.questions_hn)
+    ? album.questions_hn
+    : [];
   const setTitlesEn = album.question_set_titles?.en ?? [];
   const setTitlesHn = album.question_set_titles?.hn ?? [];
   const titlesEnList = Array.isArray(setTitlesEn) ? setTitlesEn : [];
@@ -515,9 +517,13 @@ async function processOneVoiceNote(
   const txtPath = path.join(outDir, `${baseName}.txt`);
 
   const questionsEn = Array.isArray(album.questions) ? album.questions : [];
-  const questionsHn = Array.isArray(album.questions_hn) ? album.questions_hn : [];
+  const questionsHn = Array.isArray(album.questions_hn)
+    ? album.questions_hn
+    : [];
   const questionTextEn =
-    questionsEn[questionIndex] ?? questionsEn[questionIndex - 1] ?? questionText;
+    questionsEn[questionIndex] ??
+    questionsEn[questionIndex - 1] ??
+    questionText;
   const questionTextHn =
     questionsHn[questionIndex] ?? questionsHn[questionIndex - 1] ?? "";
 

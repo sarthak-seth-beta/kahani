@@ -4,7 +4,7 @@ import {
   sendStorytellerOnboarding,
   sendReadinessCheck,
   sendVoiceNoteAcknowledgment,
-  sendIntermediateAcknowledgment,
+  sendThanksFFTemplate,
   downloadVoiceNoteMedia,
   downloadMediaFile,
   sendPhotoRequestToBuyer,
@@ -13,7 +13,6 @@ import {
   sendShareableLink,
   normalizePhoneNumber,
   sendTemplateMessageWithRetry,
-  sendInteractiveMessageWithCTA,
   sendHowToUseKahani,
   sendQuestionnairePremise,
   sendFeedbackThankYou,
@@ -730,25 +729,29 @@ export async function handleIncomingMessage(
     case "in_progress":
       if (messageType === "audio") {
         await handleVoiceNote(trial, fromNumber, message);
-      } else if (messageType === "text") {
-        await handleInProgressTextMessage(trial, fromNumber, messageText);
-      } else if (messageType === "button" || messageType === "interactive") {
-        // Handle button clicks during in_progress - treat as text message
-        // This can happen if user clicks a button after state has changed
-        console.log(
-          "Received button/interactive message in in_progress state, treating as text:",
-          {
-            trialId: trial.id,
-            messageType,
-            interactiveText,
-            currentQuestionIndex: trial.currentQuestionIndex,
-          },
-        );
+      } else if (
+        messageType === "text" ||
+        messageType === "button" ||
+        messageType === "interactive"
+      ) {
         const responseText =
           messageType === "button" || messageType === "interactive"
             ? interactiveText
             : messageText;
-        await handleInProgressTextMessage(trial, fromNumber, responseText);
+        const handledThanksFF = await handleThanksFFResponseOrFallback(
+          trial,
+          fromNumber,
+          responseText,
+        );
+        if (!handledThanksFF) {
+          if (messageType === "button" || messageType === "interactive") {
+            console.log(
+              "Button/interactive in in_progress, not thanks-FF, treating as text:",
+              { trialId: trial.id, interactiveText },
+            );
+          }
+          await handleInProgressTextMessage(trial, fromNumber, responseText);
+        }
       } else {
         console.log(
           "Unhandled message type in in_progress state:",
@@ -1095,6 +1098,67 @@ async function handleCheckinResponse(
   }
 
   // Not a check-in response
+  return false;
+}
+
+/**
+ * Handles thanks_ff template button responses (Yes, let's talk / Not now, tomorrow).
+ * Returns true if we were in the thanks-FF window and handled the response; false to fall through.
+ */
+async function handleThanksFFResponseOrFallback(
+  trial: any,
+  fromNumber: string,
+  responseText: string,
+): Promise<boolean> {
+  const albumIdentifier = getAlbumIdentifier(trial);
+  if (!albumIdentifier) return false;
+
+  let album = await storage.getAlbumById(albumIdentifier);
+  if (!album) {
+    album = await storage.getAlbumByTitle(albumIdentifier);
+  }
+  const isConversationalAlbum = album?.isConversationalAlbum === true;
+  const isAtBatchStart = (trial.currentQuestionIndex ?? 0) % 3 === 0;
+  const hasScheduledNext = trial.nextQuestionScheduledFor != null;
+
+  if (!isConversationalAlbum || !isAtBatchStart || !hasScheduledNext) {
+    return false;
+  }
+
+  let normalized = responseText.toLowerCase().trim();
+  normalized = normalized.replace(/[''`]/g, "'").replace(/[–—]/g, "-");
+
+  const positivePatterns = ["yes, let's talk", "हाँ, बात करते हैं"];
+  const negativePatterns = ["not now, tomorrow", "अभी नहीं, कल"];
+  const normalizedPositive = positivePatterns.map((p) =>
+    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-"),
+  );
+  const normalizedNegative = negativePatterns.map((p) =>
+    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-"),
+  );
+
+  const isPositive = normalizedPositive.some((p) => normalized === p);
+  const isNegative = normalizedNegative.some((p) => normalized === p);
+
+  if (isPositive) {
+    await storage.updateFreeTrialDb(trial.id, {
+      nextQuestionScheduledFor: null,
+    });
+    const updatedTrial = await storage.getFreeTrialDb(trial.id);
+    if (updatedTrial) {
+      await sendQuestion(updatedTrial, fromNumber);
+    }
+    return true;
+  }
+  if (isNegative) {
+    await sendVoiceNoteAcknowledgment(
+      fromNumber,
+      trial.storytellerName,
+      trial.storytellerLanguagePreference,
+    );
+    return true;
+  }
+
   return false;
 }
 
@@ -1700,8 +1764,8 @@ async function handleVoiceNote(
         );
       }
     } else {
-      // 3rd question in batch: send full ack and schedule next batch after 23 hours
-      await sendVoiceNoteAcknowledgment(
+      // 3rd question in batch: send thanks_ff template and schedule next batch after 23 hours
+      await sendThanksFFTemplate(
         fromNumber,
         trial.storytellerName,
         trial.storytellerLanguagePreference,

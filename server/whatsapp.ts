@@ -1101,6 +1101,21 @@ export async function sendReadinessCheck(
   }
 }
 
+export async function sendThanksFFTemplate(
+  recipientNumber: string,
+  storytellerName: string,
+  languagePreference?: string | null,
+): Promise<boolean> {
+  const templateName =
+    languagePreference === "hn" ? "thanks_ff_hn" : "thanks_ff_en";
+  const templateParams = [{ type: "text", text: storytellerName }];
+  return sendTemplateMessageWithRetry(
+    recipientNumber,
+    templateName,
+    templateParams,
+  );
+}
+
 export async function sendVoiceNoteAcknowledgment(
   recipientNumber: string,
   storytellerName: string,
@@ -1108,13 +1123,10 @@ export async function sendVoiceNoteAcknowledgment(
 ): Promise<boolean> {
   const messageEnglish = `Thank you, ${storytellerName}. 🙏
 
-That was lovely to hear.
-
 I will come back tomorrow for more stories.`;
 
   const messageHindi = `शुक्रिया ${storytellerName}। 🙏
 
-आपकी बात सुनकर बहुत अच्छा लगा।
 
 मैं कल फिर आऊँगी, और कहानियाँ सुनने।`;
 
