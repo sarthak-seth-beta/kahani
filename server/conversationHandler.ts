@@ -1110,40 +1110,69 @@ async function handleThanksFFResponseOrFallback(
   fromNumber: string,
   responseText: string,
 ): Promise<boolean> {
-  const albumIdentifier = getAlbumIdentifier(trial);
-  if (!albumIdentifier) return false;
-
-  let album = await storage.getAlbumById(albumIdentifier);
-  if (!album) {
-    album = await storage.getAlbumByTitle(albumIdentifier);
-  }
-  const isConversationalAlbum = album?.isConversationalAlbum === true;
-
-  // First, check if the response matches thanks_ff button patterns
-  // We check this BEFORE the other conditions to handle late button clicks
-  let normalized = responseText.toLowerCase().trim();
-  normalized = normalized.replace(/[''`]/g, "'").replace(/[–—]/g, "-");
+  // Match thanks_ff button text FIRST, before any album lookup.
+  // Otherwise we return false when albumIdentifier is missing and never recognize the button.
+  let normalized = responseText
+    .toLowerCase()
+    .trim()
+    .replace(/[\u2018\u2019''`]/g, "'")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ");
 
   const positivePatterns = ["yes, let's talk", "हाँ, बात करते हैं"];
   const negativePatterns = ["not now, tomorrow", "अभी नहीं, कल"];
   const normalizedPositive = positivePatterns.map((p) =>
-    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-"),
+    p
+      .toLowerCase()
+      .replace(/[\u2018\u2019''`]/g, "'")
+      .replace(/[–—]/g, "-")
+      .replace(/\s+/g, " "),
   );
   const normalizedNegative = negativePatterns.map((p) =>
-    p.toLowerCase().replace(/[''`]/g, "'").replace(/[–—]/g, "-"),
+    p
+      .toLowerCase()
+      .replace(/[\u2018\u2019''`]/g, "'")
+      .replace(/[–—]/g, "-")
+      .replace(/\s+/g, " "),
   );
 
   const isPositive = normalizedPositive.some((p) => normalized === p);
   const isNegative = normalizedNegative.some((p) => normalized === p);
 
-  // If it's a thanks_ff button response, handle it for conversational albums
-  // even if we're not at batch start or scheduled time has passed
-  if (isConversationalAlbum && (isPositive || isNegative)) {
+  if (!isPositive && !isNegative) {
+    // Log why we didn't match so we can debug (e.g. Unicode apostrophe, album not needed for match)
+    const albumIdentifier = getAlbumIdentifier(trial);
+    console.log("thanks_ff: text did not match, treating as regular message:", {
+      trialId: trial.id,
+      responseText,
+      normalized,
+      normalizedLength: normalized.length,
+      expectedPositive: "yes, let's talk",
+      albumId: trial.albumId ?? null,
+      selectedAlbum: trial.selectedAlbum ?? null,
+      albumIdentifier: albumIdentifier ?? null,
+      // Char codes help spot invisible Unicode differences (e.g. apostrophe in "let's")
+      normalizedCharCodes: Array.from(normalized)
+        .slice(0, 20)
+        .map((c) => c.charCodeAt(0)),
+    });
+  }
+
+  if (isPositive || isNegative) {
+    const albumIdentifier = getAlbumIdentifier(trial);
+    let isConversationalAlbum = false;
+    if (albumIdentifier) {
+      let album = await storage.getAlbumById(albumIdentifier);
+      if (!album) album = await storage.getAlbumByTitle(albumIdentifier);
+      isConversationalAlbum = album?.isConversationalAlbum === true;
+    }
     console.log("Handling thanks_ff button response:", {
       trialId: trial.id,
       response: responseText,
+      normalized,
       isPositive,
       isNegative,
+      isConversationalAlbum,
       currentQuestionIndex: trial.currentQuestionIndex,
       nextQuestionScheduledFor: trial.nextQuestionScheduledFor,
     });

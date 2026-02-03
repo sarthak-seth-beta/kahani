@@ -11,7 +11,8 @@
     "db:push": "drizzle-kit push",
     "tunnel": "ngrok http 3000",
     "upload-test-audio": "tsx server/scripts/upload-test-audio.ts",
-    "download-transcribe": "node scripts/download-transcribe.js"
+    "download-transcribe": "node scripts/download-transcribe.js",
+    "replay-webhook": "tsx server/scripts/replay-webhook-message.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
