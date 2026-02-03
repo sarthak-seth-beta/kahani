@@ -42,7 +42,7 @@ const DEFAULT_LANGUAGE_CODE = "en-IN";
 const AUTO_DETECT_LANGUAGES = ["en-IN", "hi-IN"];
 
 /**
- * @typedef {{ languageCode: string, alternativeLanguageCodes?: string[] }} LanguageConfig
+ * @typedef {{ languageCode: string, alternativeLanguageCodes?: string[], transcribeBothHindiAndEnglish?: boolean }} LanguageConfig
  */
 
 /**
@@ -92,6 +92,10 @@ async function getTrialLanguagePreference(trialId) {
   }
 
   console.log(`  Trial language preference: ${pref} → ${languageCode}`);
+  // For Hindi preference: transcribe each voice note in both Hindi and English.
+  if (pref === "hn") {
+    return { languageCode, transcribeBothHindiAndEnglish: true };
+  }
   return { languageCode };
 }
 
@@ -329,14 +333,29 @@ async function transcribeMp3(filePath, languageConfig, logPrefix = "") {
   return transcript;
 }
 
+const BILINGUAL_EN_LABEL = "English:";
+const BILINGUAL_HI_LABEL = "Hindi (हिंदी):";
+
 /**
- * Write a transcript file: question text, separator, then transcript.
+ * Write a transcript file: question text, separator, then transcript(s).
+ * When transcriptHindi is provided (Hindi preference), writes both English and Hindi.
  * @param {string} filePath - Path for the .txt file
  * @param {string} questionText - Question text from the album
- * @param {string} transcript - Transcribed audio text
+ * @param {string} transcript - Transcribed audio text (English)
+ * @param {string} [transcriptHindi] - Optional Hindi transcript (when preferred language is Hindi)
  */
-function writeTranscriptFile(filePath, questionText, transcript) {
-  const transcriptPart = transcript.trim() || "(no speech detected)";
+function writeTranscriptFile(filePath, questionText, transcript, transcriptHindi) {
+  let transcriptPart;
+  if (transcriptHindi != null && String(transcriptHindi).trim() !== "") {
+    const enPart = (transcript || "").trim() || "(no speech detected)";
+    const hiPart = (transcriptHindi || "").trim() || "(no speech detected)";
+    transcriptPart = [
+      `${BILINGUAL_EN_LABEL}\n${enPart}`,
+      `${BILINGUAL_HI_LABEL}\n${hiPart}`,
+    ].join("\n\n");
+  } else {
+    transcriptPart = (transcript || "").trim() || "(no speech detected)";
+  }
   const content = [questionText.trim(), transcriptPart].join(
     TRANSCRIPT_SEPARATOR,
   );
@@ -439,6 +458,7 @@ async function runWithConcurrency(items, concurrency, fn) {
 
 /**
  * Process a single voice note: download, transcribe, write txt, delete mp3.
+ * When preferred language is Hindi, transcribes in both English and Hindi.
  * Logs are prefixed with [Q{questionIndex}] for parallel runs.
  */
 async function processOneVoiceNote(note, languageConfig, outDir, trialId) {
@@ -452,13 +472,31 @@ async function processOneVoiceNote(note, languageConfig, outDir, trialId) {
   console.log(`${prefix()} Downloading...`);
   await downloadAudio(mediaUrl, mp3Path, prefix());
 
-  const langLabel = languageConfig.alternativeLanguageCodes?.length
-    ? `auto-detect (${[languageConfig.languageCode, ...languageConfig.alternativeLanguageCodes].join(", ")})`
-    : languageConfig.languageCode;
-  console.log(`${prefix()} Transcribing (${langLabel})...`);
-  const transcript = await transcribeMp3(mp3Path, languageConfig, prefix());
+  let transcript = "";
+  let transcriptHindi = undefined;
 
-  writeTranscriptFile(txtPath, questionText, transcript);
+  if (languageConfig.transcribeBothHindiAndEnglish) {
+    console.log(`${prefix()} Transcribing (en-IN)...`);
+    transcript = await transcribeMp3(
+      mp3Path,
+      { languageCode: "en-IN" },
+      prefix(),
+    );
+    console.log(`${prefix()} Transcribing (hi-IN)...`);
+    transcriptHindi = await transcribeMp3(
+      mp3Path,
+      { languageCode: "hi-IN" },
+      prefix(),
+    );
+  } else {
+    const langLabel = languageConfig.alternativeLanguageCodes?.length
+      ? `auto-detect (${[languageConfig.languageCode, ...languageConfig.alternativeLanguageCodes].join(", ")})`
+      : languageConfig.languageCode;
+    console.log(`${prefix()} Transcribing (${langLabel})...`);
+    transcript = await transcribeMp3(mp3Path, languageConfig, prefix());
+  }
+
+  writeTranscriptFile(txtPath, questionText, transcript, transcriptHindi);
   console.log(`${prefix()} Wrote ${baseName}.txt`);
   try {
     fs.unlinkSync(mp3Path);
