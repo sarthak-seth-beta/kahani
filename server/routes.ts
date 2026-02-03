@@ -1600,8 +1600,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: z.string(),
         description: z.string(),
         questions: z.array(z.string()).min(15).max(15),
+        questionsHn: z.array(z.string()).min(15).max(15),
         questionSetTitles: z.object({
           en: z.array(z.string()).length(5),
+        }),
+        questionSetPremise: z.object({
+          en: z.array(z.string()).length(5),
+          hn: z.array(z.string()).length(5),
         }),
       });
 
@@ -1616,7 +1621,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             minItems: 15,
             maxItems: 15,
             description:
-              "Exactly 15 thoughtful prompts for voice recording, 3 per section",
+              "Exactly 15 thoughtful prompts for voice recording in English, 3 per section",
+          },
+          questionsHn: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 15,
+            maxItems: 15,
+            description:
+              "Exactly 15 Hindi translations of the questions, matching the order of the English questions",
           },
           questionSetTitles: {
             type: "object",
@@ -1626,14 +1639,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 items: { type: "string" },
                 minItems: 5,
                 maxItems: 5,
-                description: "Exactly 5 chapter names, one per section",
+                description: "Exactly 5 chapter names in English, one per section",
               },
             },
             required: ["en"],
             description: "Chapter titles for the 5 question sections",
           },
+          questionSetPremise: {
+            type: "object",
+            properties: {
+              en: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 5,
+                maxItems: 5,
+                description:
+                  "Exactly 5 premises in English, one per question set, describing the theme/purpose of each section",
+              },
+              hn: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 5,
+                maxItems: 5,
+                description:
+                  "Exactly 5 premises in Hindi, matching the English premises",
+              },
+            },
+            required: ["en", "hn"],
+            description:
+              "Premises explaining the theme/purpose of each question set section",
+          },
         },
-        required: ["title", "description", "questions", "questionSetTitles"],
+        required: [
+          "title",
+          "description",
+          "questions",
+          "questionsHn",
+          "questionSetTitles",
+          "questionSetPremise",
+        ],
       };
 
       const customQuestionsText =
@@ -1652,8 +1696,10 @@ ${language ? `Preferred language: ${language}` : ""}
 Return a JSON object with:
 - title: A warm, personalized album title
 - description: 2-3 sentences describing what this album captures
-- questions: Exactly 15 thoughtful, open-ended prompts suitable for voice recording (stories, memories, wisdom), organized in 5 sections of 3 questions each
-- questionSetTitles: { en: [exactly 5 chapter names] } - one name per section (e.g. "Childhood Memories", "Wedding Stories", "Life Lessons", "Family Traditions", "Words of Wisdom")`;
+- questions: Exactly 15 thoughtful, open-ended prompts in English suitable for voice recording (stories, memories, wisdom), organized in 5 sections of 3 questions each
+- questionsHn: Exactly 15 Hindi translations of the questions, matching the exact order of the English questions. Use natural, conversational Hindi suitable for voice recording.
+- questionSetTitles: { en: [exactly 5 chapter names] } - one name per section (e.g. "Childhood Memories", "Wedding Stories", "Life Lessons", "Family Traditions", "Words of Wisdom")
+- questionSetPremise: { en: [exactly 5 premises], hn: [exactly 5 premises] } - Each premise is a brief description (1-2 sentences) explaining the theme/purpose of each question set section. The Hindi premises should be natural translations of the English ones. These premises help guide the conversation flow in WhatsApp.`;
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
@@ -1702,7 +1748,19 @@ Return a JSON object with:
           error: "Missing required formData: yourName, phone, recipientName, occasion",
         });
       }
-      const { title, description, questions, questionSetTitles } = album;
+      // Normalize album keys (support both camelCase and snake_case from client)
+      const title = album.title;
+      const description = album.description;
+      const questions = album.questions;
+      const questionsHn =
+        album.questionsHn ?? (album as { questions_hn?: string[] }).questions_hn;
+      const questionSetTitles =
+        album.questionSetTitles ??
+        (album as { question_set_titles?: { en?: string[] } }).question_set_titles;
+      const questionSetPremise =
+        album.questionSetPremise ??
+        (album as { question_set_premise?: { en?: string[]; hn?: string[] } })
+          .question_set_premise;
       if (!title || !description || !Array.isArray(questions)) {
         return res.status(400).json({
           error: "Invalid album: title, description, and questions required",
@@ -1719,7 +1777,7 @@ Return a JSON object with:
         title: finalTitle,
         description,
         questions,
-        questionsHn: null,
+        questionsHn: Array.isArray(questionsHn) ? questionsHn : null,
         coverImage: GENERATED_ALBUM_COVER,
         bestFitFor: null,
         isActive: false,
@@ -1727,7 +1785,12 @@ Return a JSON object with:
         questionSetTitles: questionSetTitles
           ? { en: questionSetTitles.en || [], hn: [] }
           : { en: [], hn: [] },
-        questionSetPremise: null,
+        questionSetPremise: questionSetPremise
+          ? {
+              en: questionSetPremise.en || [],
+              hn: questionSetPremise.hn || [],
+            }
+          : null,
       });
 
       const { sendCustomAlbumRequestEmail } = await import("./email");

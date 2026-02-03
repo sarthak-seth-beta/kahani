@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2, Play, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Sparkles, Globe, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -46,6 +46,8 @@ export default function GeneratedAlbum() {
   const { album, formData, setGeneratedAlbum } = useGeneratedAlbum();
   const { toast } = useToast();
   const [isRequesting, setIsRequesting] = useState(false);
+  const [lang, setLang] = useState<"en" | "hn">("en");
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (album && !formData) {
@@ -84,6 +86,21 @@ export default function GeneratedAlbum() {
     }
   }, [album, formData, setGeneratedAlbum]);
 
+  const currentQuestions = useMemo(() => {
+    if (!album) return [];
+    if (lang === "hn" && album.questionsHn?.length) return album.questionsHn;
+    return album.questions;
+  }, [album, lang]);
+
+  const chapters = useMemo(() => {
+    const chunkSize = 3;
+    const out: string[][] = [];
+    for (let i = 0; i < currentQuestions.length; i += chunkSize) {
+      out.push(currentQuestions.slice(i, i + chunkSize));
+    }
+    return out;
+  }, [currentQuestions]);
+
   const handleRequestAlbum = async () => {
     if (!album || !formData) {
       toast({
@@ -101,7 +118,9 @@ export default function GeneratedAlbum() {
           title: album.title,
           description: album.description,
           questions: album.questions,
+          questionsHn: album.questionsHn,
           questionSetTitles: album.questionSetTitles,
+          questionSetPremise: album.questionSetPremise,
         },
         formData: {
           yourName: formData.yourName,
@@ -159,12 +178,6 @@ export default function GeneratedAlbum() {
     );
   }
 
-  const chunkSize = 3;
-  const chapters: string[][] = [];
-  for (let i = 0; i < album.questions.length; i += chunkSize) {
-    chapters.push(album.questions.slice(i, i + chunkSize));
-  }
-
   return (
     <div className="min-h-screen bg-[#EEE9DF] relative pb-20">
       <div className="container mx-auto px-4 max-w-2xl pt-4">
@@ -194,15 +207,73 @@ export default function GeneratedAlbum() {
           <div className="flex items-center gap-4 mt-4 text-xs font-semibold text-[#1B2632]/60 uppercase tracking-wider">
             <span>{chapters.length} Chapters</span>
             <span>•</span>
-            <span>{album.questions.length} Questions</span>
+            <span>{currentQuestions.length} Questions</span>
           </div>
         </div>
 
         {/* Inside This Book */}
         <div className="space-y-4">
-          <h3 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
-            Inside This Book
-          </h3>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
+              Inside This Book
+            </h3>
+            {album.questionsHn?.length ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
+                  }
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-transparent border border-[#1B2632]/20 rounded-lg min-w-[100px] transition-all duration-200 hover:bg-[#1B2632]/5"
+                >
+                  <Globe className="w-4 h-4 text-[#1B2632]" />
+                  <span className="font-['Outfit'] text-sm text-[#1B2632]">
+                    {lang === "hn" ? "हिंदी" : "English"}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-[#1B2632]/60 ml-1" />
+                </button>
+                {isLanguageDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      aria-hidden
+                      onClick={() => setIsLanguageDropdownOpen(false)}
+                    />
+                    <div className="absolute top-full right-0 mt-2 bg-white border border-[#C9C1B1]/20 rounded-lg shadow-lg z-50 min-w-[140px] overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("en");
+                          setIsLanguageDropdownOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center transition-colors ${
+                          lang === "en"
+                            ? "bg-[#A35139]/10 text-[#1B2632]"
+                            : "text-[#1B2632] hover:bg-black/5"
+                        }`}
+                      >
+                        English
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("hn");
+                          setIsLanguageDropdownOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left font-['Outfit'] text-sm flex items-center border-t border-[#C9C1B1]/20 transition-colors ${
+                          lang === "hn"
+                            ? "bg-[#A35139]/10 text-[#1B2632]"
+                            : "text-[#1B2632] hover:bg-black/5"
+                        }`}
+                      >
+                        हिंदी
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : null}
+          </div>
 
           <Accordion type="single" collapsible className="w-full space-y-3">
             {chapters.map((chapterQuestions, idx) => {

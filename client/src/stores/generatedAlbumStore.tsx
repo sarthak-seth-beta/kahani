@@ -12,7 +12,9 @@ export interface GeneratedAlbumData {
   title: string;
   description: string;
   questions: string[];
+  questionsHn?: string[];
   questionSetTitles?: { en: string[] };
+  questionSetPremise?: { en: string[]; hn: string[] };
 }
 
 export interface GeneratedAlbumFormData {
