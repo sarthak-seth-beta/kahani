@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useGeneratedAlbum } from "@/stores/generatedAlbumStore";
+import { getOrCreateSessionId } from "@/lib/sessionId";
 
 // Schema for the form
 const createAlbumSchema = z.object({
@@ -119,9 +120,17 @@ export default function CreateAlbum() {
 
     setIsGenerating(true);
     try {
+      const isDevMode =
+        new URLSearchParams(window.location.search).get("mode") === "enzo";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Session-Id": getOrCreateSessionId(),
+      };
+      if (isDevMode) headers["X-Dev-Mode"] = "enzo";
+
       const response = await fetch("/api/generate-album", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
 

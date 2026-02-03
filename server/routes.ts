@@ -1524,9 +1524,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rate limiter for Gemini API: 5 requests per 30 minutes per IP
+  const GEMINI_RATE_LIMIT = { max: 5, windowMs: 30 * 60 * 1000 };
+  const geminiRequestTimestamps = new Map<string, number[]>();
+
+  function getClientIp(req: Request): string {
+    const forwarded = req.headers["x-forwarded-for"];
+    if (typeof forwarded === "string") return forwarded.split(",")[0]?.trim() || req.ip || "unknown";
+    return req.ip || "unknown";
+  }
+
+  /** Rate limit key: prefer browsing session ID (per-tab) over IP. Same pattern as QR tracking. */
+  function getRateLimitKey(req: Request): string {
+    const sessionId = req.headers["x-session-id"];
+    if (typeof sessionId === "string" && /^[a-f0-9-]{36}$/i.test(sessionId)) {
+      return `session:${sessionId}`;
+    }
+    return `ip:${getClientIp(req)}`;
+  }
+
+  function checkGeminiRateLimit(key: string): boolean {
+    const now = Date.now();
+    const cutoff = now - GEMINI_RATE_LIMIT.windowMs;
+    let timestamps = geminiRequestTimestamps.get(key) ?? [];
+    timestamps = timestamps.filter((t) => t > cutoff);
+    if (timestamps.length >= GEMINI_RATE_LIMIT.max) return false;
+    timestamps.push(now);
+    geminiRequestTimestamps.set(key, timestamps);
+    return true;
+  }
+
   // Generate album preview via Gemini API
   app.post("/api/generate-album", async (req, res) => {
     try {
+      const isDevMode = req.headers["x-dev-mode"] === "enzo";
+      if (!isDevMode) {
+        const rateLimitKey = getRateLimitKey(req);
+        if (!checkGeminiRateLimit(rateLimitKey)) {
+          return res.status(429).json({
+            error: "limit exceeded. Try Again after 30 minutes.",
+          });
+        }
+      }
+
       const {
         yourName,
         phone,
