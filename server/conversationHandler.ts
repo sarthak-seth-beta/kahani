@@ -1118,13 +1118,9 @@ async function handleThanksFFResponseOrFallback(
     album = await storage.getAlbumByTitle(albumIdentifier);
   }
   const isConversationalAlbum = album?.isConversationalAlbum === true;
-  const isAtBatchStart = (trial.currentQuestionIndex ?? 0) % 3 === 0;
-  const hasScheduledNext = trial.nextQuestionScheduledFor != null;
 
-  if (!isConversationalAlbum || !isAtBatchStart || !hasScheduledNext) {
-    return false;
-  }
-
+  // First, check if the response matches thanks_ff button patterns
+  // We check this BEFORE the other conditions to handle late button clicks
   let normalized = responseText.toLowerCase().trim();
   normalized = normalized.replace(/[''`]/g, "'").replace(/[–—]/g, "-");
 
@@ -1140,23 +1136,36 @@ async function handleThanksFFResponseOrFallback(
   const isPositive = normalizedPositive.some((p) => normalized === p);
   const isNegative = normalizedNegative.some((p) => normalized === p);
 
-  if (isPositive) {
-    await storage.updateFreeTrialDb(trial.id, {
-      nextQuestionScheduledFor: null,
+  // If it's a thanks_ff button response, handle it for conversational albums
+  // even if we're not at batch start or scheduled time has passed
+  if (isConversationalAlbum && (isPositive || isNegative)) {
+    console.log("Handling thanks_ff button response:", {
+      trialId: trial.id,
+      response: responseText,
+      isPositive,
+      isNegative,
+      currentQuestionIndex: trial.currentQuestionIndex,
+      nextQuestionScheduledFor: trial.nextQuestionScheduledFor,
     });
-    const updatedTrial = await storage.getFreeTrialDb(trial.id);
-    if (updatedTrial) {
-      await sendQuestion(updatedTrial, fromNumber);
+
+    if (isPositive) {
+      await storage.updateFreeTrialDb(trial.id, {
+        nextQuestionScheduledFor: null,
+      });
+      const updatedTrial = await storage.getFreeTrialDb(trial.id);
+      if (updatedTrial) {
+        await sendQuestion(updatedTrial, fromNumber);
+      }
+      return true;
     }
-    return true;
-  }
-  if (isNegative) {
-    await sendVoiceNoteAcknowledgment(
-      fromNumber,
-      trial.storytellerName,
-      trial.storytellerLanguagePreference,
-    );
-    return true;
+    if (isNegative) {
+      await sendVoiceNoteAcknowledgment(
+        fromNumber,
+        trial.storytellerName,
+        trial.storytellerLanguagePreference,
+      );
+      return true;
+    }
   }
 
   return false;
