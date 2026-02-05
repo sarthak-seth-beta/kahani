@@ -111,6 +111,7 @@ export interface IStorage {
   getAllAlbumsAdmin(): Promise<AlbumRow[]>; // Get all albums including inactive
   getAlbumByTitle(title: string): Promise<AlbumRow | undefined>;
   getAlbumById(id: string): Promise<AlbumRow | undefined>;
+  getAlbumByIdIncludeInactive(id: string): Promise<AlbumRow | undefined>;
   createAlbum(album: InsertAlbumRow): Promise<AlbumRow>;
   updateAlbum(id: string, album: Partial<InsertAlbumRow>): Promise<AlbumRow>;
   deleteAlbum(id: string): Promise<void>;
@@ -1003,6 +1004,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(albums)
       .where(and(eq(albums.id, id), eq(albums.isActive, true)));
+    return album;
+  }
+
+  async getAlbumByIdIncludeInactive(id: string): Promise<AlbumRow | undefined> {
+    const [album] = await db
+      .select()
+      .from(albums)
+      .where(eq(albums.id, id));
     return album;
   }
 

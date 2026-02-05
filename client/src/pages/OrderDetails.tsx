@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FreeTrialForm } from "@/components/FreeTrialForm";
 import { Footer } from "@/components/Footer";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 interface Album {
@@ -15,20 +15,34 @@ interface Album {
 export default function OrderDetails() {
   const [, setLocation] = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
-  const albumId = urlParams.get("albumId") || "";
+  let albumId = urlParams.get("albumId") || "";
+  
+  // Clean up albumId - remove any trailing query params or fragments
+  if (albumId.includes("&")) {
+    albumId = albumId.split("&")[0];
+  }
+  if (albumId.includes("#")) {
+    albumId = albumId.split("#")[0];
+  }
+  albumId = albumId.trim();
 
   const { data: albums } = useQuery<Album[]>({
     queryKey: ["/api/albums"],
   });
 
-  const [albumTitle, setAlbumTitle] = useState("");
+  const { data: albumById } = useQuery<Album>({
+    queryKey: ["/api/album", albumId],
+    enabled: !!albumId,
+  });
 
-  useEffect(() => {
+  const albumTitle = useMemo(() => {
+    if (albumId && albumById) return albumById.title;
     if (albums && albumId) {
       const found = albums.find((a) => a.id === albumId);
-      if (found) setAlbumTitle(found.title);
+      return found?.title ?? "";
     }
-  }, [albums, albumId]);
+    return "";
+  }, [albumId, albumById, albums]);
 
   return (
     <div className="min-h-screen bg-[#EEE9DF]">

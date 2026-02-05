@@ -621,18 +621,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a single album by ID (includes inactive, for free-trial flow with generated albums)
+  app.get("/api/album/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const album = await storage.getAlbumByIdIncludeInactive(id);
+      if (!album) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+      res.json({
+        id: album.id,
+        title: album.title,
+        description: album.description,
+        cover_image: album.coverImage,
+        questions: album.questions || [],
+        questions_hn: album.questionsHn || [],
+        question_set_titles: album.questionSetTitles || null,
+        best_fit_for: album.bestFitFor || null,
+      });
+    } catch (error: any) {
+      console.error("Error fetching album:", error);
+      res.status(500).json({ error: "Failed to fetch album" });
+    }
+  });
+
   app.post("/api/free-trial", async (req, res) => {
     try {
-      const validatedData = insertFreeTrialSchema.parse(req.body);
+      const body = req.body as Record<string, unknown>;
+      const albumIdRaw = (body.albumId ?? body.album_id) as string | undefined;
+      let albumId = typeof albumIdRaw === "string" ? albumIdRaw.trim() : "";
+      
+      // Remove any trailing query params or fragments that might have been included
+      if (albumId.includes("&")) {
+        albumId = albumId.split("&")[0];
+      }
+      if (albumId.includes("#")) {
+        albumId = albumId.split("#")[0];
+      }
+      
+      // Final trim after cleaning
+      albumId = albumId.trim();
+      
+      if (!albumId) {
+        console.error("[FreeTrial] Empty albumId after cleaning. Raw value:", albumIdRaw);
+        return res.status(400).json({ error: "Album ID is required" });
+      }
+      
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(albumId)) {
+        console.error("[FreeTrial] Invalid UUID format:", albumId, "Raw:", albumIdRaw);
+        return res.status(400).json({ error: "Invalid album ID format" });
+      }
+      
+      const validatedData = insertFreeTrialSchema.parse({ ...body, albumId });
 
       const { normalizePhoneNumber } = await import("./whatsapp");
       const normalizedPhone = normalizePhoneNumber(validatedData.customerPhone);
 
-      // Get album to verify it exists and get title for tracking
-      const album = await storage.getAlbumById(validatedData.albumId);
+      // Get album to verify it exists and get title for tracking (include inactive e.g. generated albums)
+      let album = await storage.getAlbumByIdIncludeInactive(validatedData.albumId);
       if (!album) {
+        const allAlbums = await storage.getAllAlbumsAdmin();
+        album = allAlbums.find((a) => a.id === validatedData.albumId) ?? undefined;
+      }
+      if (!album) {
+        console.error("[FreeTrial] Album not found for ID:", validatedData.albumId, "Checked inactive albums: true");
         return res.status(400).json({ error: "Invalid album ID" });
       }
+      
+      console.log("[FreeTrial] Album found:", { 
+        albumId: album.id, 
+        title: album.title, 
+        isActive: album.isActive 
+      });
 
       const trial = await storage.createFreeTrialDb({
         customerPhone: normalizedPhone,
@@ -1558,6 +1620,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/generate-album", async (req, res) => {
     try {
       const isDevMode = req.headers["x-dev-mode"] === "enzo";
+      if (isDevMode) {
+        console.log("dev mode activated!");
+      }
       if (!isDevMode) {
         const rateLimitKey = getRateLimitKey(req);
         if (!checkGeminiRateLimit(rateLimitKey)) {
@@ -1773,7 +1838,7 @@ Return a JSON object with:
         finalTitle = `${finalTitle} (Custom ${crypto.randomUUID().slice(0, 8)})`;
       }
 
-      await storage.createAlbum({
+      const newAlbum = await storage.createAlbum({
         title: finalTitle,
         description,
         questions,
@@ -1793,6 +1858,19 @@ Return a JSON object with:
           : null,
       });
 
+      // Validate album creation succeeded and returned a valid ID
+      if (!newAlbum || !newAlbum.id) {
+        console.error("[RequestGeneratedAlbum] Failed to create album - no ID returned");
+        throw new Error("Failed to create album in database");
+      }
+
+      const albumId = newAlbum.id;
+      console.log("[RequestGeneratedAlbum] Album created successfully:", { 
+        albumId, 
+        title: finalTitle,
+        isActive: false 
+      });
+
       const { sendCustomAlbumRequestEmail } = await import("./email");
       const emailSent = await sendCustomAlbumRequestEmail({
         title: finalTitle,
@@ -1809,7 +1887,7 @@ Return a JSON object with:
         throw new Error("Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.");
       }
 
-      res.json({ success: true, message: "Request received successfully" });
+      res.json({ success: true, message: "Request received successfully", albumId });
     } catch (error: any) {
       console.error("Error requesting generated album:", error);
       res.status(500).json({ error: error.message || "Failed to submit request" });
