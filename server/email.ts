@@ -302,7 +302,7 @@ export async function sendCustomAlbumRequestEmail({
   const questionsList =
     questions
       ?.map((q, i) => {
-        const text = typeof q === "string" ? q : q?.text ?? "";
+        const text = typeof q === "string" ? q : (q?.text ?? "");
         return `<li><strong>Q${i + 1}:</strong> ${text}</li>`;
       })
       .join("") || "<li>No questions</li>";

@@ -18,7 +18,10 @@ export async function apiFetchJson<T = unknown>(
   try {
     data = JSON.parse(text) as T;
   } catch {
-    if (text.trim().toLowerCase().startsWith("<!doctype") || text.trim().toLowerCase().startsWith("<html")) {
+    if (
+      text.trim().toLowerCase().startsWith("<!doctype") ||
+      text.trim().toLowerCase().startsWith("<html")
+    ) {
       throw new Error(
         "API returned HTML instead of JSON. Ensure the backend is running (npm run dev).",
       );
@@ -26,7 +29,9 @@ export async function apiFetchJson<T = unknown>(
     throw new Error(text || `Request failed: ${res.status}`);
   }
   if (!res.ok) {
-    throw new Error((data as { error?: string }).error || `Request failed: ${res.status}`);
+    throw new Error(
+      (data as { error?: string }).error || `Request failed: ${res.status}`,
+    );
   }
   return data;
 }

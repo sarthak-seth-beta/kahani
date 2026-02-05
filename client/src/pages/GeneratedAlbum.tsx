@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2, Play, Sparkles, Globe, ChevronDown, Wand2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Play,
+  Sparkles,
+  Globe,
+  ChevronDown,
+  Wand2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -56,7 +64,9 @@ export default function GeneratedAlbum() {
       try {
         const raw = sessionStorage.getItem(STORAGE_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw) as { formData?: Record<string, unknown> };
+          const parsed = JSON.parse(raw) as {
+            formData?: Record<string, unknown>;
+          };
           const fd = parsed?.formData;
           if (
             fd &&
@@ -74,10 +84,14 @@ export default function GeneratedAlbum() {
               phone: fd.phone,
               recipientName: fd.recipientName,
               occasion: fd.occasion,
-              instructions: typeof fd.instructions === "string" ? fd.instructions : undefined,
+              instructions:
+                typeof fd.instructions === "string"
+                  ? fd.instructions
+                  : undefined,
               title: typeof fd.title === "string" ? fd.title : undefined,
               email: typeof fd.email === "string" ? fd.email : undefined,
-              language: typeof fd.language === "string" ? fd.language : undefined,
+              language:
+                typeof fd.language === "string" ? fd.language : undefined,
               questions: Array.isArray(fd.questions) ? fd.questions : undefined,
             });
           }
@@ -107,7 +121,8 @@ export default function GeneratedAlbum() {
     if (!formData) {
       toast({
         title: "Missing form data",
-        description: "Please generate an album from the Create Album page first.",
+        description:
+          "Please generate an album from the Create Album page first.",
         variant: "destructive",
       });
       return;
@@ -165,7 +180,8 @@ export default function GeneratedAlbum() {
     if (!album || !formData) {
       toast({
         title: "Missing form data",
-        description: "Please generate an album from the Create Album page first.",
+        description:
+          "Please generate an album from the Create Album page first.",
         variant: "destructive",
       });
       return;
@@ -195,7 +211,10 @@ export default function GeneratedAlbum() {
         },
       };
 
-      const result = await apiFetchJson<{ success?: boolean; albumId?: string }>("/api/request-generated-album", {
+      const result = await apiFetchJson<{
+        success?: boolean;
+        albumId?: string;
+      }>("/api/request-generated-album", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -204,20 +223,22 @@ export default function GeneratedAlbum() {
       setGeneratedAlbum(null, null);
 
       const albumId = result?.albumId;
-      
+
       // Validate albumId exists
       if (!albumId) {
         console.error("No albumId returned from API:", result);
         toast({
           title: "Album Creation Failed",
-          description: "The album was created but we couldn't retrieve its ID. Please try again.",
+          description:
+            "The album was created but we couldn't retrieve its ID. Please try again.",
           variant: "destructive",
         });
         return;
       }
 
       // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(albumId)) {
         console.error("Invalid albumId format:", albumId);
         toast({
