@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+const pdfFile = "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/sample.pdf";
+
 export default function PdfViewerSection() {
     const [numPages, setNumPages] = useState<number>(0);
     const [pageNumber, setPageNumber] = useState<number>(1);
@@ -107,7 +109,8 @@ export default function PdfViewerSection() {
                 )}
                 
                 <Document
-                    file="/sample.pdf"
+                    // file="/sample.pdf"
+                    file={pdfFile}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading=""
                     className={isLoading ? 'hidden' : ''}
