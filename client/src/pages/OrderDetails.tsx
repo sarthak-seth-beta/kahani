@@ -16,7 +16,7 @@ export default function OrderDetails() {
   const [, setLocation] = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
   let albumId = urlParams.get("albumId") || "";
-  
+
   // Clean up albumId - remove any trailing query params or fragments
   if (albumId.includes("&")) {
     albumId = albumId.split("&")[0];

@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const body = req.body as Record<string, unknown>;
       const albumIdRaw = (body.albumId ?? body.album_id) as string | undefined;
       let albumId = typeof albumIdRaw === "string" ? albumIdRaw.trim() : "";
-      
+
       // Remove any trailing query params or fragments that might have been included
       if (albumId.includes("&")) {
         albumId = albumId.split("&")[0];
@@ -658,42 +658,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (albumId.includes("#")) {
         albumId = albumId.split("#")[0];
       }
-      
+
       // Final trim after cleaning
       albumId = albumId.trim();
-      
+
       if (!albumId) {
-        console.error("[FreeTrial] Empty albumId after cleaning. Raw value:", albumIdRaw);
+        console.error(
+          "[FreeTrial] Empty albumId after cleaning. Raw value:",
+          albumIdRaw,
+        );
         return res.status(400).json({ error: "Album ID is required" });
       }
-      
+
       // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(albumId)) {
-        console.error("[FreeTrial] Invalid UUID format:", albumId, "Raw:", albumIdRaw);
+        console.error(
+          "[FreeTrial] Invalid UUID format:",
+          albumId,
+          "Raw:",
+          albumIdRaw,
+        );
         return res.status(400).json({ error: "Invalid album ID format" });
       }
-      
+
       const validatedData = insertFreeTrialSchema.parse({ ...body, albumId });
 
       const { normalizePhoneNumber } = await import("./whatsapp");
       const normalizedPhone = normalizePhoneNumber(validatedData.customerPhone);
 
       // Get album to verify it exists and get title for tracking (include inactive e.g. generated albums)
-      let album = await storage.getAlbumByIdIncludeInactive(validatedData.albumId);
+      let album = await storage.getAlbumByIdIncludeInactive(
+        validatedData.albumId,
+      );
       if (!album) {
         const allAlbums = await storage.getAllAlbumsAdmin();
-        album = allAlbums.find((a) => a.id === validatedData.albumId) ?? undefined;
+        album =
+          allAlbums.find((a) => a.id === validatedData.albumId) ?? undefined;
       }
       if (!album) {
-        console.error("[FreeTrial] Album not found for ID:", validatedData.albumId, "Checked inactive albums: true");
+        console.error(
+          "[FreeTrial] Album not found for ID:",
+          validatedData.albumId,
+          "Checked inactive albums: true",
+        );
         return res.status(400).json({ error: "Invalid album ID" });
       }
-      
-      console.log("[FreeTrial] Album found:", { 
-        albumId: album.id, 
-        title: album.title, 
-        isActive: album.isActive 
+
+      console.log("[FreeTrial] Album found:", {
+        albumId: album.id,
+        title: album.title,
+        isActive: album.isActive,
       });
 
       const trial = await storage.createFreeTrialDb({
@@ -1592,7 +1608,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   function getClientIp(req: Request): string {
     const forwarded = req.headers["x-forwarded-for"];
-    if (typeof forwarded === "string") return forwarded.split(",")[0]?.trim() || req.ip || "unknown";
+    if (typeof forwarded === "string")
+      return forwarded.split(",")[0]?.trim() || req.ip || "unknown";
     return req.ip || "unknown";
   }
 
@@ -1647,7 +1664,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate required fields (everything except advanced customization)
       if (!yourName || !phone || !recipientName || !occasion) {
         return res.status(400).json({
-          error: "Missing required fields: yourName, phone, recipientName, occasion",
+          error:
+            "Missing required fields: yourName, phone, recipientName, occasion",
         });
       }
 
@@ -1704,7 +1722,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 items: { type: "string" },
                 minItems: 5,
                 maxItems: 5,
-                description: "Exactly 5 chapter names in English, one per section",
+                description:
+                  "Exactly 5 chapter names in English, one per section",
               },
             },
             required: ["en"],
@@ -1746,7 +1765,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const customQuestionsText =
-        questions?.filter((q: { text?: string }) => q?.text?.trim()).map((q: { text: string }) => q.text).join("\n- ") || "None";
+        questions
+          ?.filter((q: { text?: string }) => q?.text?.trim())
+          .map((q: { text: string }) => q.text)
+          .join("\n- ") || "None";
 
       const prompt = `Generate a Kahani album (audio story collection) for the following request.
 
@@ -1810,7 +1832,8 @@ Return a JSON object with:
       const { yourName, phone, recipientName, occasion } = formData;
       if (!yourName || !phone || !recipientName || !occasion) {
         return res.status(400).json({
-          error: "Missing required formData: yourName, phone, recipientName, occasion",
+          error:
+            "Missing required formData: yourName, phone, recipientName, occasion",
         });
       }
       // Normalize album keys (support both camelCase and snake_case from client)
@@ -1818,10 +1841,12 @@ Return a JSON object with:
       const description = album.description;
       const questions = album.questions;
       const questionsHn =
-        album.questionsHn ?? (album as { questions_hn?: string[] }).questions_hn;
+        album.questionsHn ??
+        (album as { questions_hn?: string[] }).questions_hn;
       const questionSetTitles =
         album.questionSetTitles ??
-        (album as { question_set_titles?: { en?: string[] } }).question_set_titles;
+        (album as { question_set_titles?: { en?: string[] } })
+          .question_set_titles;
       const questionSetPremise =
         album.questionSetPremise ??
         (album as { question_set_premise?: { en?: string[]; hn?: string[] } })
@@ -1834,7 +1859,11 @@ Return a JSON object with:
 
       let finalTitle = title;
       const allAlbums = await storage.getAllAlbumsAdmin();
-      if (allAlbums.some((a) => a.title.toLowerCase() === finalTitle.toLowerCase())) {
+      if (
+        allAlbums.some(
+          (a) => a.title.toLowerCase() === finalTitle.toLowerCase(),
+        )
+      ) {
         finalTitle = `${finalTitle} (Custom ${crypto.randomUUID().slice(0, 8)})`;
       }
 
@@ -1860,15 +1889,17 @@ Return a JSON object with:
 
       // Validate album creation succeeded and returned a valid ID
       if (!newAlbum || !newAlbum.id) {
-        console.error("[RequestGeneratedAlbum] Failed to create album - no ID returned");
+        console.error(
+          "[RequestGeneratedAlbum] Failed to create album - no ID returned",
+        );
         throw new Error("Failed to create album in database");
       }
 
       const albumId = newAlbum.id;
-      console.log("[RequestGeneratedAlbum] Album created successfully:", { 
-        albumId, 
+      console.log("[RequestGeneratedAlbum] Album created successfully:", {
+        albumId,
         title: finalTitle,
-        isActive: false 
+        isActive: false,
       });
 
       const { sendCustomAlbumRequestEmail } = await import("./email");
@@ -1884,13 +1915,21 @@ Return a JSON object with:
         questions: questions.map((q: string) => ({ text: q })),
       });
       if (!emailSent) {
-        throw new Error("Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.");
+        throw new Error(
+          "Failed to send email. Check RESEND_API_KEY and verified sender/receiver addresses.",
+        );
       }
 
-      res.json({ success: true, message: "Request received successfully", albumId });
+      res.json({
+        success: true,
+        message: "Request received successfully",
+        albumId,
+      });
     } catch (error: any) {
       console.error("Error requesting generated album:", error);
-      res.status(500).json({ error: error.message || "Failed to submit request" });
+      res
+        .status(500)
+        .json({ error: error.message || "Failed to submit request" });
     }
   });
 

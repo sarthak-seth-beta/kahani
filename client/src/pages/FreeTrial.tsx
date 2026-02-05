@@ -46,10 +46,11 @@ export default function FreeTrial() {
   });
 
   // When albumId is in URL (e.g. from generated-album Continue), fetch that album (includes inactive)
-  const { data: albumById, isLoading: isLoadingAlbumById } = useQuery<AlbumListItem>({
-    queryKey: ["/api/album", albumIdFromUrl],
-    enabled: !!albumIdFromUrl,
-  });
+  const { data: albumById, isLoading: isLoadingAlbumById } =
+    useQuery<AlbumListItem>({
+      queryKey: ["/api/album", albumIdFromUrl],
+      enabled: !!albumIdFromUrl,
+    });
 
   const selectedAlbum = useMemo(() => {
     if (albumIdFromUrl && albumById) {
@@ -97,7 +98,9 @@ export default function FreeTrial() {
   if (!selectedAlbum) {
     return (
       <div className="min-h-screen bg-[#EEE9DF] flex items-center justify-center">
-        <p>{albumIdFromUrl ? "Album not found." : "Loading album details..."}</p>
+        <p>
+          {albumIdFromUrl ? "Album not found." : "Loading album details..."}
+        </p>
       </div>
     );
   }

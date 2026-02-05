@@ -73,10 +73,12 @@ export function GeneratedAlbumProvider({ children }: { children: ReactNode }) {
     const s = loadFromStorage();
     return s.album;
   });
-  const [formData, setFormData] = useState<GeneratedAlbumFormData | null>(() => {
-    const s = loadFromStorage();
-    return s.formData;
-  });
+  const [formData, setFormData] = useState<GeneratedAlbumFormData | null>(
+    () => {
+      const s = loadFromStorage();
+      return s.formData;
+    },
+  );
 
   const setGeneratedAlbum = useCallback(
     (

@@ -168,54 +168,54 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <GeneratedAlbumProvider>
-      <TooltipProvider>
-        <ScrollToTop />
-        <SmoothScroll />
-        <Switch>
-          {/* foundational pages */}
-          <Route path="/" component={HomePage} />
-          <Route path="/checkout" component={Checkout} />
-          <Route path="/free-trial" component={FreeTrial} />
-          <Route path="/thank-you" component={ThankYou} />
-          <Route path="/about-us" component={AboutUs} />
-          <Route path="/order-details" component={OrderDetails} />
-          <Route path="/contact-us" component={ContactUs} />
+        <TooltipProvider>
+          <ScrollToTop />
+          <SmoothScroll />
+          <Switch>
+            {/* foundational pages */}
+            <Route path="/" component={HomePage} />
+            <Route path="/checkout" component={Checkout} />
+            <Route path="/free-trial" component={FreeTrial} />
+            <Route path="/thank-you" component={ThankYou} />
+            <Route path="/about-us" component={AboutUs} />
+            <Route path="/order-details" component={OrderDetails} />
+            <Route path="/contact-us" component={ContactUs} />
 
-          <Route path="/blogs" component={Blogs} />
-          <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
-          <Route
-            path="/playlist-albums/:trialId"
-            component={PlaylistAlbumsGallery}
-          />
-          <Route path="/all-albums" component={AllAlbums} />
-          <Route path="/sample-album" component={SampleAlbum} />
-          <Route path="/create-album" component={CreateAlbum} />
-          <Route path="/generated-album" component={GeneratedAlbum} />
-          <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
-          <Route
-            path="/custom-album-cover/:trialId"
-            component={CustomAlbumCover}
-          />
-          <Route path="/yl-personal-support" component={YlPersonalSupport} />
+            <Route path="/blogs" component={Blogs} />
+            <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
+            <Route
+              path="/playlist-albums/:trialId"
+              component={PlaylistAlbumsGallery}
+            />
+            <Route path="/all-albums" component={AllAlbums} />
+            <Route path="/sample-album" component={SampleAlbum} />
+            <Route path="/create-album" component={CreateAlbum} />
+            <Route path="/generated-album" component={GeneratedAlbum} />
+            <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
+            <Route
+              path="/custom-album-cover/:trialId"
+              component={CustomAlbumCover}
+            />
+            <Route path="/yl-personal-support" component={YlPersonalSupport} />
 
-          {/* static pages */}
-          <Route path="/how-to-use" component={HowToUse} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/refund-policy" component={RefundPolicy} />
-          <Route path="/terms-of-service" component={TermsOfService} />
-          <Route path="/data-deletion" component={DataDeletion} />
-          <Route path="/affiliate" component={Affiliate} />
-          <Route path="/company-legal" component={CompanyLegal} />
+            {/* static pages */}
+            <Route path="/how-to-use" component={HowToUse} />
+            <Route path="/privacy-policy" component={PrivacyPolicy} />
+            <Route path="/refund-policy" component={RefundPolicy} />
+            <Route path="/terms-of-service" component={TermsOfService} />
+            <Route path="/data-deletion" component={DataDeletion} />
+            <Route path="/affiliate" component={Affiliate} />
+            <Route path="/company-legal" component={CompanyLegal} />
 
-          {/* admin pages */}
-          <Route path="/enzo-xyz" component={Admin} />
-          <Route path="/enzo-xyz/albums" component={ManageAlbums} />
+            {/* admin pages */}
+            <Route path="/enzo-xyz" component={Admin} />
+            <Route path="/enzo-xyz/albums" component={ManageAlbums} />
 
-          {/* 404 */}
-          <Route component={NotFound} />
-        </Switch>
-        <Toaster />
-      </TooltipProvider>
+            {/* 404 */}
+            <Route component={NotFound} />
+          </Switch>
+          <Toaster />
+        </TooltipProvider>
       </GeneratedAlbumProvider>
     </QueryClientProvider>
   );

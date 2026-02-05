@@ -1008,10 +1008,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAlbumByIdIncludeInactive(id: string): Promise<AlbumRow | undefined> {
-    const [album] = await db
-      .select()
-      .from(albums)
-      .where(eq(albums.id, id));
+    const [album] = await db.select().from(albums).where(eq(albums.id, id));
     return album;
   }
 
@@ -1119,10 +1116,10 @@ export class DatabaseStorage implements IStorage {
     languagePreference?: string | null,
   ): Promise<string | undefined> {
     // Try to find by title first (for backward compatibility)
-    let album = await this.getAlbumByTitle(albumTitleOrId);
+    let album = await this.getAlbumByIdIncludeInactive(albumTitleOrId);
     // If not found by title, try by ID
     if (!album) {
-      album = await this.getAlbumById(albumTitleOrId);
+      album = await this.getAlbumByTitle(albumTitleOrId);
     }
     if (!album) {
       return undefined;
