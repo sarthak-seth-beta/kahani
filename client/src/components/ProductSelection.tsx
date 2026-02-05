@@ -81,12 +81,12 @@ export function ProductSelection({
                     {product.title}
                   </span>
                   <div className="flex flex-col items-end leading-none">
-                    <span className="text-xs text-gray-400 line-through decoration-gray-400">
+                    <span className="text-xs text-gray-400 decoration-gray-400">
                       {product.price}
                     </span>
-                    <span className="font-bold text-xs text-[#A35139]">
+                    {/* <span className="font-bold text-xs text-[#A35139]">
                       FREE
-                    </span>
+                    </span> */}
                   </div>
                 </div>
                 <p className="text-xs text-[#1B2632]/70 leading-normal">

@@ -400,10 +400,10 @@ export default function FreeTrial() {
               Total
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-[#1B2632]/40 line-through">
-                ₹499
+              <span className="text-sm font-medium text-[#1B2632]/40">
+                ₹199
               </span>
-              <span className="text-xl font-bold text-[#A35139]">Free</span>
+              {/* <span className="text-xl font-bold text-[#A35139]">Free</span> */}
             </div>
           </div>
 
