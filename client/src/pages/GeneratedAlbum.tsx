@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2, Play, Sparkles, Globe, ChevronDown } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Sparkles, Globe, ChevronDown, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -11,6 +11,7 @@ import {
 import { useGeneratedAlbum } from "@/stores/generatedAlbumStore";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetchJson } from "@/lib/queryClient";
+import { getOrCreateSessionId } from "@/lib/sessionId";
 
 const STORAGE_KEY = "generatedAlbum";
 
@@ -46,6 +47,7 @@ export default function GeneratedAlbum() {
   const { album, formData, setGeneratedAlbum } = useGeneratedAlbum();
   const { toast } = useToast();
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [lang, setLang] = useState<"en" | "hn">("en");
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
 
@@ -101,6 +103,64 @@ export default function GeneratedAlbum() {
     return out;
   }, [currentQuestions]);
 
+  const handleRegenerateAlbum = async () => {
+    if (!formData) {
+      toast({
+        title: "Missing form data",
+        description: "Please generate an album from the Create Album page first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRegenerating(true);
+    try {
+      const validQuestions = formData.questions?.filter(
+        (q) => q.text.trim().length > 0,
+      );
+      const payload = {
+        ...formData,
+        title: formData.title || undefined,
+        questions: validQuestions,
+      };
+
+      const isDevMode =
+        new URLSearchParams(window.location.search).get("mode") === "enzo";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Session-Id": getOrCreateSessionId(),
+      };
+      if (isDevMode) headers["X-Dev-Mode"] = "enzo";
+
+      const response = await fetch("/api/generate-album", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to generate album");
+      }
+
+      setGeneratedAlbum(result, formData);
+      toast({
+        title: "Album Regenerated!",
+        description: "Your album has been regenerated with new content.",
+      });
+    } catch (error) {
+      console.error("Regenerate album error:", error);
+      toast({
+        title: "Regeneration Failed",
+        description:
+          error instanceof Error ? error.message : "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   const handleRequestAlbum = async () => {
     if (!album || !formData) {
       toast({
@@ -135,18 +195,41 @@ export default function GeneratedAlbum() {
         },
       };
 
-      await apiFetchJson<{ success?: boolean }>("/api/request-generated-album", {
+      const result = await apiFetchJson<{ success?: boolean; albumId?: string }>("/api/request-generated-album", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       setGeneratedAlbum(null, null);
-      toast({
-        title: "Request Received!",
-        description: "We'll start crafting your custom album shortly.",
-      });
-      setLocation("/all-albums");
+
+      const albumId = result?.albumId;
+      
+      // Validate albumId exists
+      if (!albumId) {
+        console.error("No albumId returned from API:", result);
+        toast({
+          title: "Album Creation Failed",
+          description: "The album was created but we couldn't retrieve its ID. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(albumId)) {
+        console.error("Invalid albumId format:", albumId);
+        toast({
+          title: "Invalid Album ID",
+          description: "The album ID format is invalid. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Redirecting to free-trial with albumId:", albumId);
+      window.location.href = `/free-trial?albumId=${encodeURIComponent(albumId)}`;
     } catch (error) {
       console.error("Request album error:", error);
       toast({
@@ -314,25 +397,45 @@ export default function GeneratedAlbum() {
           </Accordion>
         </div>
 
-        {/* Request My Album CTA */}
-        <div className="mt-8">
-          <Button
-            onClick={handleRequestAlbum}
-            disabled={!formData || isRequesting}
-            className="w-full h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300"
-          >
-            {isRequesting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                Request My Album
-              </>
-            )}
-          </Button>
+        {/* CTA Buttons */}
+        <div className="mt-8 space-y-3">
+          <div className="flex gap-3">
+            <Button
+              onClick={handleRegenerateAlbum}
+              disabled={!formData || isRegenerating || isRequesting}
+              variant="outline"
+              className="flex-1 h-12 sm:h-14 text-base sm:text-lg border-[#A35139] text-[#A35139] hover:bg-[#A35139]/10 rounded-xl transition-all duration-300"
+            >
+              {isRegenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-5 w-5" />
+                  Regenerate Album
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleRequestAlbum}
+              disabled={!formData || isRequesting || isRegenerating}
+              className="flex-1 h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300"
+            >
+              {isRequesting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Continue
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -484,10 +484,9 @@ export default function CreateAlbum() {
             {/* Generate Album Button */}
             <Button
               type="button"
-              variant="outline"
               onClick={handleGenerateAlbum}
               disabled={isSubmitting || isGenerating}
-              className="w-full h-11 sm:h-12 text-base border-[#A35139] text-[#A35139] hover:bg-[#A35139]/10 rounded-xl mt-4"
+              className="w-full h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 mt-4"
             >
               {isGenerating ? (
                 <>
@@ -505,7 +504,8 @@ export default function CreateAlbum() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 mt-4"
+              variant="outline"
+              className="w-full h-11 sm:h-12 text-base border-[#A35139] text-[#A35139] hover:bg-[#A35139]/10 rounded-xl mt-4"
               disabled={isSubmitting || isGenerating}
             >
               {isSubmitting ? (

@@ -30,33 +30,39 @@ export default function FreeTrial() {
   const albumIdFromUrl = urlParams.get("albumId") || "";
   const albumTitleFromUrl = urlParams.get("album") || ""; // Backward compatibility
 
+  type AlbumListItem = {
+    id: string;
+    title: string;
+    cover_image: string;
+    description: string;
+    questions: string[];
+    questions_hn: string[];
+    question_set_titles?: Album["questionSetTitles"];
+  };
+
   // Fetch albums to get full album data including questions
-  const { data: albums } = useQuery<
-    Array<{
-      id: string;
-      title: string;
-      cover_image: string;
-      description: string;
-      questions: string[];
-      questions_hn: string[];
-      question_set_titles?: Album["questionSetTitles"];
-    }>
-  >({
+  const { data: albums } = useQuery<AlbumListItem[]>({
     queryKey: ["/api/albums"],
   });
 
-  // Determine selected album details
+  // When albumId is in URL (e.g. from generated-album Continue), fetch that album (includes inactive)
+  const { data: albumById, isLoading: isLoadingAlbumById } = useQuery<AlbumListItem>({
+    queryKey: ["/api/album", albumIdFromUrl],
+    enabled: !!albumIdFromUrl,
+  });
 
   const selectedAlbum = useMemo(() => {
-    if (albumIdFromUrl && albums) {
-      return albums.find((a) => a.id === albumIdFromUrl);
+    if (albumIdFromUrl && albumById) {
+      return albumById;
     }
-    // Fallback: try to find by title from URL (backward compatibility)
+    if (albumIdFromUrl && albums) {
+      return albums.find((a) => a.id === albumIdFromUrl) ?? null;
+    }
     if (albumTitleFromUrl && albums) {
-      return albums.find((a) => a.title === albumTitleFromUrl);
+      return albums.find((a) => a.title === albumTitleFromUrl) ?? null;
     }
     return null;
-  }, [albumIdFromUrl, albumTitleFromUrl, albums]);
+  }, [albumIdFromUrl, albumTitleFromUrl, albums, albumById]);
 
   // Determine current questions based on language
   const currentQuestions = useMemo(() => {
@@ -78,10 +84,20 @@ export default function FreeTrial() {
     return result;
   }, [currentQuestions]);
 
-  if (!selectedAlbum) {
+  const isLoadingAlbum = !!albumIdFromUrl && isLoadingAlbumById;
+
+  if (isLoadingAlbum) {
     return (
       <div className="min-h-screen bg-[#EEE9DF] flex items-center justify-center">
         <p>Loading album details...</p>
+      </div>
+    );
+  }
+
+  if (!selectedAlbum) {
+    return (
+      <div className="min-h-screen bg-[#EEE9DF] flex items-center justify-center">
+        <p>{albumIdFromUrl ? "Album not found." : "Loading album details..."}</p>
       </div>
     );
   }
