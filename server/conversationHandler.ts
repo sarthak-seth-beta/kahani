@@ -252,7 +252,7 @@ async function resendBuyerOnboardingTemplates(
     // Get album title from albumId
     let albumTitle = trial.selectedAlbum; // Fallback to selectedAlbum if available
     if (trial.albumId) {
-      const album = await storage.getAlbumById(trial.albumId);
+      const album = await storage.getAlbumByIdIncludeInactive(trial.albumId);
       if (album) {
         albumTitle = album.title;
       }
@@ -788,7 +788,7 @@ async function handleInitialContact(
     return;
   }
   // Get album to get title for display
-  let album = await storage.getAlbumById(albumIdentifier);
+  let album = await storage.getAlbumByIdIncludeInactive(albumIdentifier);
   if (!album) {
     album = await storage.getAlbumByTitle(albumIdentifier);
   }
@@ -1162,7 +1162,7 @@ async function handleThanksFFResponseOrFallback(
     const albumIdentifier = getAlbumIdentifier(trial);
     let isConversationalAlbum = false;
     if (albumIdentifier) {
-      let album = await storage.getAlbumById(albumIdentifier);
+      let album = await storage.getAlbumByIdIncludeInactive(albumIdentifier);
       if (!album) album = await storage.getAlbumByTitle(albumIdentifier);
       isConversationalAlbum = album?.isConversationalAlbum === true;
     }
@@ -1472,7 +1472,7 @@ export async function sendQuestion(
 
   // Check if this is a conversational album and first question in a batch
   // For conversational albums, batches are every 3 questions (0, 3, 6, 9, etc.)
-  let album = await storage.getAlbumById(albumIdentifier);
+  let album = await storage.getAlbumByIdIncludeInactive(albumIdentifier);
   if (!album) {
     album = await storage.getAlbumByTitle(albumIdentifier);
   }
@@ -1648,7 +1648,7 @@ async function handleVoiceNote(
     console.error("No album identifier found for trial:", trial.id);
     return;
   }
-  let album = await storage.getAlbumById(albumIdentifier);
+  let album = await storage.getAlbumByIdIncludeInactive(albumIdentifier);
   if (!album) {
     album = await storage.getAlbumByTitle(albumIdentifier);
   }

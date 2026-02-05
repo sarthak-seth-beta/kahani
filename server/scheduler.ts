@@ -133,7 +133,7 @@ export async function sendPendingReminders(): Promise<void> {
       console.error("No album identifier found for trial:", trial.id);
       continue;
     }
-    let album = await storage.getAlbumById(albumIdentifier);
+    let album = await storage.getAlbumByIdIncludeInactive(albumIdentifier);
     if (!album) {
       album = await storage.getAlbumByTitle(albumIdentifier);
     }
