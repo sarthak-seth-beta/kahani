@@ -12,6 +12,7 @@ import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import GetStartedSection from "@/components/GetStartedSection";
+import PdfViewerSection from "@/components/PdfViewerSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
 import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
@@ -140,6 +141,9 @@ function HomePage() {
 
       {/* Get Started Section */}
       <GetStartedSection />
+
+      {/* PDF Viewer Section */}
+      <PdfViewerSection />
 
       {/* Section 4 - Albums (Moved above Testimonials) */}
       <SectionFourAlbumsNew />
