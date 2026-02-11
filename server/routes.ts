@@ -720,6 +720,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedAlbum: album.title, // Populate for backward compatibility
         storytellerLanguagePreference:
           validatedData.storytellerLanguagePreference,
+        // Persist PhonePe payment metadata when present so that free_trials
+        // reflects the same payment state as the transactions table.
+        paymentGateway:
+          validatedData.paymentGateway ??
+          (validatedData.paymentOrderId ? "phonepe" : "none"),
+        paymentOrderId: validatedData.paymentOrderId,
+        paymentTransactionId: validatedData.paymentTransactionId,
+        paymentStatus:
+          validatedData.paymentStatus ??
+          (validatedData.paymentOrderId ? "pending" : "pending"),
+        paymentAmount: validatedData.paymentAmount,
+        packageType: validatedData.packageType,
       });
 
       // Track free trial creation on server side
@@ -817,31 +829,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         album?.description ||
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
       // Use custom cover image if available, otherwise use album cover image
-      // Check for both null/undefined and empty string
-      // Also check snake_case version in case Drizzle didn't map it (fallback)
-      const trialAny = trial as any;
-      const customCoverImageUrlValue =
-        trial.customCoverImageUrl || trialAny.custom_cover_image_url;
       const customCoverImage =
-        customCoverImageUrlValue &&
-        String(customCoverImageUrlValue).trim() !== ""
-          ? String(customCoverImageUrlValue).trim()
+        trial.customCoverImageUrl && String(trial.customCoverImageUrl).trim() !== ""
+          ? String(trial.customCoverImageUrl).trim()
           : null;
       const albumCoverImage =
         customCoverImage ||
         album?.coverImage ||
         "/attached_assets/Generated Image November 08, 2025 - 8_27PM_1762623023120.png";
-
-      // Debug logging
-      console.log("Album cover image selection:", {
-        trialId: trial.id,
-        customCoverImageUrl: trial.customCoverImageUrl,
-        custom_cover_image_url: trialAny.custom_cover_image_url,
-        customCoverImageUrlValue,
-        customCoverImage,
-        albumCoverImage: album?.coverImage,
-        finalCoverImage: albumCoverImage,
-      });
 
       // Add cache headers for better performance (cache for 5 minutes)
       res.set({
@@ -1094,204 +1089,402 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/webhooks/payment", async (req, res) => {
+  // Transaction Management Endpoints
+  // Create transaction record (one per payment attempt)
+  app.post("/api/transactions", async (req, res) => {
     try {
-      // Razorpay signature verification (required in production)
-      const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-      const razorpaySignature = req.headers["x-razorpay-signature"] as string;
+      const { name, phone, phoneE164, albumId, packageType } = req.body;
 
-      if (webhookSecret) {
-        // Production mode: Verify signature using raw request body
-        if (!razorpaySignature) {
-          console.error("Missing Razorpay signature header");
-          return res.status(401).json({ error: "Missing signature" });
-        }
-
-        if (!req.rawBody || !Buffer.isBuffer(req.rawBody)) {
-          console.error("Raw body not available for signature verification");
-          return res.status(500).json({ error: "Server misconfiguration" });
-        }
-
-        const crypto = await import("crypto");
-        const rawBodyString = req.rawBody.toString("utf8");
-        const expectedSignature = crypto
-          .createHmac("sha256", webhookSecret)
-          .update(rawBodyString)
-          .digest("hex");
-
-        if (razorpaySignature !== expectedSignature) {
-          console.error("Invalid Razorpay signature");
-          return res.status(401).json({ error: "Invalid signature" });
-        }
-
-        console.log("Razorpay signature verified successfully");
-      } else {
-        // Development mode: Log warning
-        console.warn(
-          "⚠️  DEVELOPMENT MODE: RAZORPAY_WEBHOOK_SECRET not set - skipping signature verification",
-        );
-        console.warn(
-          "⚠️  DO NOT USE IN PRODUCTION WITHOUT SIGNATURE VERIFICATION",
-        );
+      // Validate request
+      if (!name || !phone || !albumId || !packageType) {
+        return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Parse Razorpay webhook payload structure
-      // Razorpay sends: { event: "payment.captured", payload: { payment: { entity: { ... } } } }
-      // Extract the relevant fields from the nested structure
-      const event = req.body.event;
-      const paymentEntity = req.body.payload?.payment?.entity;
+      // Always create a fresh transaction record for every payment attempt
+      const transaction = await storage.createTransaction({
+        name,
+        phone,
+        phoneE164: phoneE164 || phone,
+        albumId,
+        packageType,
+        paymentStatus: "pending",
+      });
 
-      if (!paymentEntity) {
-        console.error("Invalid webhook payload structure:", req.body);
+      res.json(transaction);
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      res.status(500).json({ 
+        error: "Failed to create transaction record",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get transaction by payment order ID
+  app.get("/api/transactions/by-payment-order/:paymentOrderId", async (req, res) => {
+    try {
+      const { paymentOrderId } = req.params;
+      let txn = await storage.getTransactionByPaymentOrderId(paymentOrderId);
+      
+      if (!txn) {
+        // Fallback: Try to find the most recent pending transaction
+        const recentTxns = await storage.getRecentPendingTransactions(1);
+        if (recentTxns.length > 0) {
+          const fallbackTxn = recentTxns[0];
+          await storage.updateTransactionPayment(fallbackTxn.id, {
+            paymentOrderId,
+            paymentStatus: "pending",
+          });
+          txn = fallbackTxn;
+        } else {
+          return res.status(404).json({ error: "Transaction not found" });
+        }
+      }
+
+      res.json(txn);
+    } catch (error) {
+      console.error("Error fetching transaction:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch transaction",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update transaction payment information (after successful payment)
+  app.put("/api/transactions/payment/:paymentOrderId", async (req, res) => {
+    try {
+      const { paymentOrderId } = req.params;
+      const { paymentStatus, paymentId, paymentTransactionId, paymentAmount } = req.body;
+
+      if (!paymentStatus) {
+        return res.status(400).json({ error: "Missing payment status" });
+      }
+
+      // Fetch transaction to verify package type and expected amount
+      const txn = await storage.getTransactionByPaymentOrderId(paymentOrderId);
+      if (!txn) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Verify amount matches expected amount for package type
+      const expectedAmounts: Record<string, number> = {
+        digital: 19900,
+        ebook: 59900,
+        printed: 99900,
+      };
+      
+      const expectedAmount = expectedAmounts[txn.packageType || ""];
+
+      if (paymentStatus === "success") {
+        if (!paymentId || !paymentTransactionId || typeof paymentAmount !== "number" || paymentAmount <= 0) {
+          return res.status(500).json({ error: "Incomplete payment details for successful payment" });
+        }
+        if (!expectedAmount) {
+          return res.status(500).json({ error: "Unknown package type for amount verification" });
+        }
+        if (expectedAmount !== paymentAmount) {
+          console.error("SECURITY: Amount mismatch!", { transactionId: txn.id, expected: expectedAmount, received: paymentAmount });
+          return res.status(400).json({ error: "Payment amount verification failed" });
+        }
+      } else if (paymentAmount !== undefined && expectedAmount && paymentAmount !== expectedAmount) {
+        console.error("SECURITY: Amount mismatch!", { transactionId: txn.id, expected: expectedAmount, received: paymentAmount });
+        return res.status(400).json({ error: "Payment amount verification failed" });
+      }
+
+      const updatedTxn = await storage.updateTransactionPaymentByOrderId(paymentOrderId, {
+        paymentStatus,
+        paymentId,
+        paymentTransactionId,
+        paymentOrderId,
+        paymentAmount,
+      });
+
+      if (!updatedTxn) {
+        return res.status(500).json({ error: "Failed to update transaction" });
+      }
+
+      res.json(updatedTxn);
+    } catch (error) {
+      console.error("Error updating transaction payment:", error);
+      res.status(500).json({ 
+        error: "Failed to update payment info",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get transaction payment status (for verification)
+  app.get("/api/transactions/:transactionId/payment-status", async (req, res) => {
+    try {
+      const { transactionId } = req.params;
+
+      const txn = await storage.getTransactionById(transactionId);
+      if (!txn) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      res.json({
+        paymentStatus: txn.paymentStatus,
+        paymentOrderId: txn.paymentOrderId,
+        paymentTransactionId: txn.paymentTransactionId,
+        paymentAmount: txn.paymentAmount,
+      });
+    } catch (error) {
+      console.error("Error fetching payment status:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch payment status",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // PhonePe Payment Gateway Endpoints
+  // PhonePe: Create payment order
+  app.post("/api/phonepe/create-order", async (req, res) => {
+    try {
+      const { albumId, packageType, amount, transactionId } = req.body;
+
+      if (!albumId || !packageType || !amount) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Validate transactionId if provided
+      if (transactionId) {
+        const txn = await storage.getTransactionById(transactionId);
+        if (!txn) {
+          return res.status(404).json({ error: "Transaction not found" });
+        }
+      }
+
+      // Validate package prices
+      const packagePrices = {
+        digital: 19900,   // ₹199
+        ebook: 59900,     // ₹599
+        printed: 99900,   // ₹999
+      };
+
+      if (amount !== packagePrices[packageType as keyof typeof packagePrices]) {
+        return res.status(400).json({ error: "Invalid package or amount" });
+      }
+
+      // Verify album exists
+      const album = await storage.getAlbumByIdIncludeInactive(albumId);
+      if (!album) {
+        return res.status(404).json({ error: "Album not found" });
+      }
+
+      // Generate order IDs
+      const { randomUUID } = await import("crypto");
+      const merchantOrderId = `ORD_${Date.now()}_${randomUUID().slice(0, 8)}`;
+      const merchantUserId = randomUUID();
+
+      // Create PhonePe order
+      const { phonePeService } = await import("./phonepe");
+      const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ''}`;
+      
+      const orderResponse = await phonePeService.createOrder({
+        amount,
+        merchantOrderId,
+        merchantUserId,
+        redirectUrl,
+        metadata: { albumId, packageType },
+      });
+
+      if (!orderResponse.success || !orderResponse.data?.instrumentResponse?.redirectInfo?.url) {
+        return res.status(500).json({ error: "Failed to create payment order" });
+      }
+
+      // Update transaction record with payment order ID
+      if (transactionId) {
+        try {
+          await storage.updateTransactionPayment(transactionId, {
+            paymentOrderId: merchantOrderId,
+            paymentStatus: "pending",
+          });
+        } catch (updateError) {
+          console.error("Failed to update transaction with payment order ID:", updateError);
+        }
+      }
+
+      return res.json({
+        success: true,
+        merchantOrderId,
+        transactionId: orderResponse.data.transactionId,
+        redirectUrl: orderResponse.data.instrumentResponse.redirectInfo.url,
+        amount,
+        packageType,
+        albumId,
+      });
+    } catch (error: any) {
+      console.error("PhonePe order error:", error.message);
+      return res.status(500).json({ 
+        error: "Failed to create payment order",
+        message: error.message,
+      });
+    }
+  });
+
+  // PhonePe: Check payment status
+  app.post("/api/phonepe/check-status", async (req, res) => {
+    try {
+      const { merchantOrderId } = req.body;
+
+      if (!merchantOrderId) {
+        return res.status(400).json({ error: "merchantOrderId is required" });
+      }
+
+      // Check payment status with PhonePe
+      const { phonePeService } = await import("./phonepe");
+      const statusResponse = await phonePeService.checkPaymentStatus(merchantOrderId);
+
+      if (!statusResponse.success) {
+        return res.status(500).json({ error: "Failed to check payment status" });
+      }
+
+      const data = statusResponse.data;
+      const isSuccess = data?.state === "COMPLETED";
+
+      return res.json({
+        success: true,
+        merchantOrderId: data?.merchantOrderId,
+        transactionId: data?.transactionId, // PhonePe's payment ID
+        amount: data?.amount,
+        state: data?.state,
+        isSuccess,
+      });
+    } catch (error: any) {
+      console.error("Payment status error:", error.message);
+      return res.status(500).json({ 
+        error: "Failed to check payment status",
+        message: error.message,
+      });
+    }
+  });
+
+  // PhonePe: Payment callback (fallback - client-side routing handles this)
+  // This route is kept as a backup in case client-side routing fails
+  app.get("/payment/callback", async (req, res) => {
+    try {
+      const { merchantOrderId, albumId, packageType, transactionId } = req.query;
+      
+      if (!merchantOrderId) {
+        return res.redirect(`${process.env.APP_BASE_URL}/free-trial?error=missing_order_id`);
+      }
+
+      // Verify payment with PhonePe
+      const { phonePeService } = await import("./phonepe");
+      const statusResponse = await phonePeService.checkPaymentStatus(merchantOrderId as string);
+      const isSuccess = statusResponse.success && statusResponse.data?.state === "COMPLETED";
+
+      // Redirect based on payment status
+      const baseUrl = process.env.APP_BASE_URL || '';
+      if (isSuccess && statusResponse.data) {
+        // UPDATE TRANSACTIONS TABLE WITH PAYMENT INFO
+        try {
+          // Verify amount matches expected amount for package type (SECURITY CHECK)
+          const expectedAmounts: Record<string, number> = {
+            digital: 19900,
+            ebook: 59900,
+            printed: 99900,
+          };
+          
+          const expectedAmount = expectedAmounts[packageType as string];
+          const receivedAmount = statusResponse.data.amount;
+          
+          if (expectedAmount !== receivedAmount) {
+            console.error("SECURITY: Amount mismatch!", { expected: expectedAmount, received: receivedAmount });
+            return res.redirect(`${baseUrl}/free-trial?error=amount_mismatch&albumId=${albumId || ''}`);
+          }
+
+          const paymentData = {
+            paymentStatus: "success" as const,
+            paymentId: statusResponse.data.transactionId,
+            paymentTransactionId: statusResponse.data.transactionId,
+            paymentOrderId: merchantOrderId as string,
+            paymentAmount: statusResponse.data.amount,
+          };
+          
+          // Try to update by paymentOrderId first
+          let updatedTxn = await storage.updateTransactionPaymentByOrderId(merchantOrderId as string, paymentData);
+          
+          // Fallback: if transaction not found by paymentOrderId, try by transactionId from redirect URL
+          if (!updatedTxn && transactionId) {
+            try {
+              updatedTxn = await storage.updateTransactionPayment(transactionId as string, paymentData);
+            } catch (fallbackError) {
+              console.error("transactionId fallback failed:", fallbackError);
+            }
+          }
+        } catch (updateError) {
+          console.error("Failed to update user payment info:", updateError);
+          // Continue anyway - user can still see order details
+        }
+        
+        const params = new URLSearchParams({
+          albumId: (albumId as string) || '',
+          paymentOrderId: merchantOrderId as string,
+          paymentTransactionId: statusResponse.data.transactionId || '',
+          paymentStatus: 'success',
+          paymentAmount: statusResponse.data.amount?.toString() || '',
+          packageType: (packageType as string) || '',
+        });
+        return res.redirect(`${baseUrl}/order-details?${params.toString()}`);
+      } else {
+        return res.redirect(`${baseUrl}/free-trial?error=payment_failed&albumId=${albumId || ''}`);
+      }
+    } catch (error: any) {
+      console.error("Payment callback error:", error.message);
+      return res.redirect(`${process.env.APP_BASE_URL}/free-trial?error=callback_error`);
+    }
+  });
+
+  // PhonePe: Webhook handler (v2 - uses Authorization header with SHA256(username:password))
+  app.post("/webhooks/payment", async (req, res) => {
+    try {
+      const authHeader = req.headers["authorization"] as string;
+
+      // Validate Authorization header
+      if (!authHeader) {
+        return res.status(400).json({ error: "Missing authorization header" });
+      }
+
+      // Verify authorization (SHA256 of username:password configured on PhonePe dashboard)
+      const { phonePeService } = await import("./phonepe");
+      const isValid = phonePeService.verifyWebhookAuthorization(authHeader);
+      
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid authorization" });
+      }
+
+      // v2 webhook payload: { event, payload: { merchantOrderId, state, ... } }
+      const { event, payload } = req.body;
+      const merchantOrderId = payload?.merchantOrderId;
+      const state = payload?.state;
+
+      if (!merchantOrderId) {
         return res.status(400).json({ error: "Invalid payload" });
       }
 
-      const payment_id = paymentEntity.id;
-      const order_id = paymentEntity.order_id;
-      const amount = paymentEntity.amount;
-      const status = paymentEntity.status;
-
-      // Map Razorpay event to internal status
-      // payment.captured → payment_succeeded
-      // payment.failed → payment_failed
-      const internalStatus =
-        event === "payment.captured"
-          ? "payment_succeeded"
-          : event === "payment.failed"
-            ? "payment_failed"
-            : status;
-
-      // Use event-specific idempotency key since Razorpay sends multiple events per payment
-      // (e.g., payment.authorized, then payment.captured for the same payment.id)
-      const idempotencyKey = `${payment_id}_${event}`;
-
-      const alreadyProcessed = await storage.isWebhookProcessed(idempotencyKey);
-      if (alreadyProcessed) {
-        console.log("Webhook already processed:", idempotencyKey);
+      // Check idempotency
+      const idempotencyKey = `phonepe_${merchantOrderId}_${state}`;
+      if (await storage.isWebhookProcessed(idempotencyKey)) {
         return res.status(200).json({ message: "Already processed" });
       }
 
-      // Only process terminal events (payment.captured or payment.failed)
-      if (internalStatus !== "payment_succeeded") {
-        // For non-success terminal events, mark as processed
-        if (event === "payment.failed") {
-          await storage.markWebhookProcessed(idempotencyKey);
-        }
-        // For non-terminal events (e.g., payment.authorized), just acknowledge without processing
-        return res.status(200).json({ message: "Event acknowledged", event });
-      }
-
-      const order = await storage.getOrder(order_id);
-      if (!order) {
-        console.error("Order not found:", order_id);
-        return res.status(404).json({ error: "Order not found" });
-      }
-
-      // Validate payment amount matches order total
-      // Razorpay sends amount in paise (smallest currency unit), order.total is in rupees
-      if (amount !== undefined && amount !== null) {
-        if (typeof amount !== "number" || !Number.isFinite(amount)) {
-          console.error("Invalid amount type:", {
-            orderId: order_id,
-            amount,
-            type: typeof amount,
-          });
-          return res.status(400).json({ error: "Invalid amount" });
-        }
-
-        const amountInRupees = amount / 100;
-        if (amountInRupees !== order.total) {
-          console.error("Payment amount mismatch:", {
-            orderId: order_id,
-            expectedRupees: order.total,
-            receivedPaise: amount,
-            receivedRupees: amountInRupees,
-          });
-          return res.status(400).json({ error: "Amount mismatch" });
-        }
-      }
-
-      if (order.lastConfirmationSentAt) {
-        console.log("Confirmation already sent for order:", order_id);
+      // Process based on event type
+      if (event === "checkout.order.completed" || state === "COMPLETED") {
+        console.log("[PhonePe] Webhook: Payment completed", merchantOrderId);
         await storage.markWebhookProcessed(idempotencyKey);
-        return res.status(200).json({ message: "Already sent" });
+      } else if (event === "checkout.order.failed" || state === "FAILED") {
+        console.log("[PhonePe] Webhook: Payment failed", merchantOrderId);
+        await storage.markWebhookProcessed(idempotencyKey);
       }
 
-      const {
-        normalizePhoneNumber,
-        validateE164,
-        sendTemplateMessageWithRetry,
-        sendTextMessageWithRetry,
-      } = await import("./whatsapp");
-      const customerPhoneE164 = normalizePhoneNumber(order.customerPhone);
-
-      if (!validateE164(customerPhoneE164)) {
-        console.error("Invalid phone number:", customerPhoneE164);
-        return res.status(400).json({ error: "Invalid phone number" });
-      }
-
-      await storage.updateOrder(order_id, {
-        paymentId: payment_id,
-        status: "paid",
-        customerPhoneE164,
-      });
-
-      const orderConfirmationSent = await sendTemplateMessageWithRetry(
-        customerPhoneE164,
-        "hello_world",
-        [],
-      );
-
-      if (!orderConfirmationSent) {
-        console.warn("Failed to send order confirmation for:", order_id);
-      }
-
-      const { randomUUID } = await import("crypto");
-      const token = randomUUID();
-      const expiresAt = new Date(
-        Date.now() + 90 * 24 * 60 * 60 * 1000,
-      ).toISOString();
-
-      await storage.createWhatsappToken({
-        orderId: order_id,
-        token,
-        expiresAt,
-      });
-
-      const whatsappBusinessNumber =
-        process.env.WHATSAPP_BUSINESS_NUMBER_E164 || customerPhoneE164;
-      const appBaseUrl =
-        process.env.APP_BASE_URL || "https://your-domain.replit.app";
-      const inviteLink = `${appBaseUrl}/w/invite/${token}`;
-      const waLink = `https://wa.me/${whatsappBusinessNumber}?text=${encodeURIComponent(
-        `Hi, I'm contacting on behalf of order ${order.uniqueCode}. Token: ${token}`,
-      )}`;
-
-      const linkMessage = `Thank you for your order! Please forward this link to your elder for direct chat: ${inviteLink}`;
-
-      const linkMessageSent = await sendTextMessageWithRetry(
-        customerPhoneE164,
-        linkMessage,
-      );
-
-      if (!linkMessageSent) {
-        console.warn("Failed to send invite link for:", order_id);
-      }
-
-      await storage.updateOrder(order_id, {
-        lastConfirmationSentAt: new Date().toISOString(),
-      });
-
-      await storage.markWebhookProcessed(idempotencyKey);
-
-      res.status(200).json({
-        message: "Payment processed successfully",
-        confirmationSent: orderConfirmationSent,
-        inviteLinkSent: linkMessageSent,
-      });
+      return res.status(200).json({ message: "Webhook processed", state });
     } catch (error: any) {
-      console.error("Error processing payment webhook:", error);
-      res.status(500).json({ error: "Internal server error" });
+      console.error("Webhook error:", error.message);
+      return res.status(500).json({ error: "Internal server error" });
     }
   });
 

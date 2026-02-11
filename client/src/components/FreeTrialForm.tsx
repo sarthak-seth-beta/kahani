@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Lock } from "lucide-react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -42,10 +43,17 @@ export function FreeTrialForm({
 }: FreeTrialFormProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [phoneFromPayment, setPhoneFromPayment] = useState<string | null>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
-  // Extract package from URL query parameter
+  // Extract payment and package details from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const selectedPackage = urlParams.get("package") || "digital";
+  const selectedPackage = urlParams.get("package") || urlParams.get("packageType") || "digital";
+  const paymentOrderId = urlParams.get("paymentOrderId");
+  const paymentTransactionId = urlParams.get("paymentTransactionId");
+  const paymentStatus = urlParams.get("paymentStatus");
+  const paymentAmount = urlParams.get("paymentAmount");
 
   const form = useForm<FreeTrialFormData>({
     resolver: zodResolver(insertFreeTrialSchema),
@@ -55,8 +63,55 @@ export function FreeTrialForm({
       storytellerName: "",
       albumId: albumId || "",
       storytellerLanguagePreference: "en",
+      // Payment fields (optional)
+      paymentGateway: paymentOrderId ? "phonepe" : "none",
+      paymentOrderId: paymentOrderId || undefined,
+      paymentTransactionId: paymentTransactionId || undefined,
+      paymentStatus: paymentStatus === "success" ? "success" : "pending",
+      paymentAmount: paymentAmount ? parseInt(paymentAmount) : undefined,
+      packageType: selectedPackage as "digital" | "ebook" | "printed",
     },
   });
+
+  // Fetch user data if paymentOrderId is present
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!paymentOrderId) return;
+
+      setIsLoadingUserData(true);
+      try {
+        const response = await apiRequest("GET", `/api/transactions/by-payment-order/${paymentOrderId}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setUserId(userData.id);
+          setPhoneFromPayment(userData.phone);
+          
+          // Pre-fill form with user data
+          form.setValue("customerPhone", userData.phone);
+          if (userData.name) {
+            form.setValue("buyerName", userData.name);
+          }
+        } else {
+          toast({
+            title: "Warning",
+            description: "Could not load your saved information",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        toast({
+          title: "Warning",
+          description: "Could not load your saved information",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingUserData(false);
+      }
+    };
+
+    fetchUserData();
+  }, [paymentOrderId]);
 
   const freeTrialMutation = useMutation({
     mutationFn: async (data: FreeTrialFormData) => {
@@ -99,26 +154,11 @@ export function FreeTrialForm({
             albumTitle: albumTitle,
           };
 
-          const emailResponse = await apiRequest(
-            "POST",
-            "/api/premium-order-email",
-            emailPayload,
-          );
-
-          if (!emailResponse.ok) {
-            const errorData = await emailResponse.json();
-            console.error("Failed to send premium order email:", errorData);
-            // Don't block the user flow if email fails
-          } else {
-            const successData = await emailResponse.json();
-            console.log("Email sent successfully:", successData);
-          }
+          await apiRequest("POST", "/api/premium-order-email", emailPayload);
         } catch (emailError) {
           console.error("Error sending premium order email:", emailError);
           // Don't block the user flow if email fails
         }
-      } else {
-        console.log("Digital package selected, skipping email notification");
       }
 
       form.reset();
@@ -137,7 +177,6 @@ export function FreeTrialForm({
   const onSubmit = (data: FreeTrialFormData) => {
     // Ensure albumId is set
     if (!data.albumId) data.albumId = albumId;
-
     freeTrialMutation.mutate(data);
   };
 
@@ -182,8 +221,14 @@ export function FreeTrialForm({
             name="customerPhone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
+                <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632] flex items-center gap-2">
                   Your Whatsapp Number
+                  {phoneFromPayment && (
+                    <span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                      <Lock className="h-3 w-3" />
+                      Verified
+                    </span>
+                  )}
                 </FormLabel>
                 <FormControl>
                   <PhoneInput
@@ -191,10 +236,13 @@ export function FreeTrialForm({
                     onChange={field.onChange}
                     defaultCountry="IN"
                     data-testid="input-customer-phone"
+                    disabled={!!phoneFromPayment || isLoadingUserData}
                   />
                 </FormControl>
                 <p className="text-xs text-[#1B2632]/60 mt-1">
-                  We will send you an invite message to copy and share
+                  {phoneFromPayment 
+                    ? "This phone number was verified during payment"
+                    : "We will send you an invite message to copy and share"}
                 </p>
                 <FormMessage />
               </FormItem>

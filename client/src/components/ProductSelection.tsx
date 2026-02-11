@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Mic, Book } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UserInfoForm } from "@/components/UserInfoForm";
 
 interface ProductSelectionProps {
   albumId: string;
@@ -41,12 +42,29 @@ export function ProductSelection({
   const [, setLocation] = useLocation();
 
   const [selectedId, setSelectedId] = useState("digital");
+  const [showUserForm, setShowUserForm] = useState(false);
 
   const handleContinue = () => {
-    // Navigate to OrderDetails page with albumId and selected package
-    setLocation(`/order-details?albumId=${albumId}&package=${selectedId}`);
-    if (onContinue) onContinue();
+    setShowUserForm(true);
   };
+
+  const handleBack = () => {
+    setShowUserForm(false);
+  };
+
+  // If user info form should be shown, render it instead of package selection
+  if (showUserForm) {
+    return (
+      <div className="space-y-6">
+        <UserInfoForm
+          albumId={albumId}
+          packageType={selectedId as "digital" | "ebook" | "printed"}
+          onBack={handleBack}
+          onSuccess={onContinue}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -84,9 +102,6 @@ export function ProductSelection({
                     <span className="text-xs text-gray-400 decoration-gray-400">
                       {product.price}
                     </span>
-                    {/* <span className="font-bold text-xs text-[#A35139]">
-                      FREE
-                    </span> */}
                   </div>
                 </div>
                 <p className="text-xs text-[#1B2632]/70 leading-normal">

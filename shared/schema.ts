@@ -140,6 +140,14 @@ export const insertFreeTrialSchema = z.object({
     .min(2, "Storyteller name must be at least 2 characters"),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
   storytellerLanguagePreference: z.enum(["en", "hn", "other"]).default("en"),
+  // Payment fields (optional)
+  paymentGateway: z.enum(["phonepe", "none"]).default("none").optional(),
+  paymentOrderId: z.string().optional(),
+  paymentTransactionId: z.string().optional(),
+  paymentStatus: z.enum(["pending", "success", "failed"]).default("pending").optional(),
+  paymentAmount: z.number().optional(),
+  packageType: z.enum(["digital", "ebook", "printed"]).optional(),
+  userId: z.string().uuid("User ID must be a valid UUID").optional(),
 });
 
 export type InsertFreeTrial = z.infer<typeof insertFreeTrialSchema>;
@@ -348,6 +356,15 @@ export const freeTrials = pgTable(
       "no_storyteller_buyer_nudge_sent_at",
       { withTimezone: true },
     ),
+    // Payment fields for PhonePe integration
+    paymentGateway: varchar("payment_gateway", { length: 20 }).default("none"),
+    paymentOrderId: varchar("payment_order_id", { length: 255 }),
+    paymentTransactionId: varchar("payment_transaction_id", { length: 255 }),
+    paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
+    paymentAmount: integer("payment_amount"), // Amount in paise
+    packageType: varchar("package_type", { length: 20 }), // digital, ebook, printed
+    // Note: userId column doesn't exist in DB yet, keeping optional for now
+    // userId: varchar("user_id", { length: 255 }), // Link to transactions table
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -671,3 +688,75 @@ export const trafficSources = pgTable("traffic_sources", {
 
 export type TrafficSourceRow = typeof trafficSources.$inferSelect;
 export type InsertTrafficSourceRow = typeof trafficSources.$inferInsert;
+
+// Transactions Table for Payment Flow (one row per payment attempt)
+export const transactions = pgTable(
+  "transactions",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: varchar("name", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    phoneE164: varchar("phone_e164", { length: 20 }),
+    
+    // Payment tracking fields
+    paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
+    paymentId: varchar("payment_id", { length: 255 }),
+    paymentTransactionId: varchar("payment_transaction_id", { length: 255 }),
+    paymentOrderId: varchar("payment_order_id", { length: 255 }),
+    paymentAmount: integer("payment_amount"),
+    packageType: varchar("package_type", { length: 20 }),
+    albumId: varchar("album_id", { length: 255 }),
+    
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    phoneIdx: index("transactions_phone_idx").on(table.phone),
+    paymentOrderIdIdx: index("transactions_payment_order_id_idx").on(table.paymentOrderId),
+    paymentStatusIdx: index("transactions_payment_status_idx").on(table.paymentStatus),
+  }),
+);
+
+export type TransactionRow = typeof transactions.$inferSelect;
+export type InsertTransactionRow = typeof transactions.$inferInsert;
+
+// Zod schemas for transactions
+export const insertTransactionSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  phoneE164: z.string().optional(),
+  albumId: z.string().uuid("Album ID must be a valid UUID"),
+  packageType: z.enum(["digital", "ebook", "printed"]),
+});
+
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+export const transactionSchema = insertTransactionSchema.extend({
+  id: z.string(),
+  paymentStatus: z.enum(["pending", "success", "failed"]).default("pending"),
+  paymentId: z.string().optional(),
+  paymentTransactionId: z.string().optional(),
+  paymentOrderId: z.string().optional(),
+  paymentAmount: z.number().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type Transaction = z.infer<typeof transactionSchema>;
+
+export const updateTransactionPaymentSchema = z.object({
+  paymentStatus: z.enum(["pending", "success", "failed"]),
+  paymentId: z.string().optional(),
+  paymentTransactionId: z.string().optional(),
+  paymentOrderId: z.string().optional(),
+  paymentAmount: z.number().optional(),
+});
+
+export type UpdateTransactionPayment = z.infer<typeof updateTransactionPaymentSchema>;
