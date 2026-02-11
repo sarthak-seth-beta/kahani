@@ -779,9 +779,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? "en"
             : undefined;
 
-      // Optimized: Fetch trial+album and voice notes in parallel (2 queries instead of 3)
+      // Optimized: Fetch trial+album and voice notes in parallel (2 queries instead of 3).
+      // Use include-inactive so existing trial links work even if the album was deactivated.
       const [trialWithAlbum, voiceNotes] = await Promise.all([
-        storage.getTrialWithAlbum(trialId),
+        storage.getTrialWithAlbumIncludeInactive(trialId),
         storage.getVoiceNotesByTrialId(trialId),
       ]);
 
