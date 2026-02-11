@@ -118,6 +118,9 @@ export interface IStorage {
   getTrialWithAlbum(
     trialId: string,
   ): Promise<{ trial: FreeTrialRow; album: AlbumRow | null } | null>;
+  getTrialWithAlbumIncludeInactive(
+    trialId: string,
+  ): Promise<{ trial: FreeTrialRow; album: AlbumRow | null } | null>;
   getQuestionByIndex(
     albumId: string,
     index: number,
@@ -1046,6 +1049,32 @@ export class DatabaseStorage implements IStorage {
         albums,
         and(eq(freeTrials.albumId, albums.id), eq(albums.isActive, true)),
       )
+      .where(eq(freeTrials.id, trialId))
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    const { trial, album } = result[0];
+    return { trial, album };
+  }
+
+  /**
+   * Same as getTrialWithAlbum but includes inactive albums.
+   * Use when loading a trial by ID so existing trial links keep working
+   * even if the album template was deactivated.
+   */
+  async getTrialWithAlbumIncludeInactive(
+    trialId: string,
+  ): Promise<{ trial: FreeTrialRow; album: AlbumRow | null } | null> {
+    const result = await db
+      .select({
+        trial: freeTrials,
+        album: albums,
+      })
+      .from(freeTrials)
+      .leftJoin(albums, eq(freeTrials.albumId, albums.id))
       .where(eq(freeTrials.id, trialId))
       .limit(1);
 
