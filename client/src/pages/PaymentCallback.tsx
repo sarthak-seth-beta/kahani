@@ -45,49 +45,31 @@ export default function PaymentCallback() {
 
       const data = await response.json();
 
-      // Verify amount matches expected amount for package type (SECURITY CHECK)
-      const expectedAmounts: Record<string, number> = {
-        digital: 19900,  // ₹199 in paise
-        ebook: 59900,    // ₹599 in paise
-        printed: 99900,  // ₹999 in paise
-      };
-      
-      const expectedAmount = expectedAmounts[packageType || ""];
-      const amountMatches = expectedAmount === data.amount;
-      
-      if (!amountMatches) {
-        console.error("SECURITY ALERT: Amount mismatch!", {
-          expected: expectedAmount,
-          received: data.amount,
-        });
-        setState("failed");
-        setError("Payment amount verification failed");
-        toast({
-          title: "Payment Verification Failed",
-          description: "The payment amount doesn't match. Please contact support.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
+      // Amount verification is now handled server-side via stored expected_amount_paise
+      // The PUT endpoint below will reject mismatched amounts
+
       // Check if payment was successful
-      if (data.isSuccess && data.state === "COMPLETED" && amountMatches) {
+      if (data.isSuccess && data.state === "COMPLETED") {
         // Update transactions table with payment information
         try {
-          await apiRequest("PUT", `/api/transactions/payment/${merchantOrderId}`, {
-            paymentStatus: "success",
-            paymentId: data.transactionId,
-            paymentTransactionId: data.transactionId,
-            paymentOrderId: merchantOrderId,
-            paymentAmount: data.amount,
-          });
+          await apiRequest(
+            "PUT",
+            `/api/transactions/payment/${merchantOrderId}`,
+            {
+              paymentStatus: "success",
+              paymentId: data.transactionId,
+              paymentTransactionId: data.transactionId,
+              paymentOrderId: merchantOrderId,
+              paymentAmount: data.amount,
+            },
+          );
         } catch (updateError) {
           console.error("Failed to update payment info:", updateError);
           // Don't block the flow if this fails
         }
 
         setState("success");
-        
+
         toast({
           title: "Payment Successful!",
           description: "Redirecting to order details...",
@@ -108,7 +90,7 @@ export default function PaymentCallback() {
       } else {
         setState("failed");
         setError(data.message || "Payment was not successful");
-        
+
         toast({
           title: "Payment Failed",
           description: "Your payment could not be processed",
@@ -119,7 +101,7 @@ export default function PaymentCallback() {
       console.error("Payment verification error:", err);
       setState("failed");
       setError(err.message || "Failed to verify payment");
-      
+
       toast({
         title: "Verification Error",
         description: "Could not verify payment status",

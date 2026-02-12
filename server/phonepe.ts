@@ -90,7 +90,9 @@ export class PhonePeService {
 
     console.log("[PhonePe] Fetching new auth token...", {
       environment: this.config.environment,
-      clientId: this.config.clientId ? `${this.config.clientId.slice(0, 8)}...` : "(empty)",
+      clientId: this.config.clientId
+        ? `${this.config.clientId.slice(0, 8)}...`
+        : "(empty)",
       clientVersion: this.config.clientVersion,
     });
 
@@ -132,7 +134,9 @@ export class PhonePeService {
   }
 
   // Create payment order
-  public async createOrder(request: CreateOrderRequest): Promise<CreateOrderResponse> {
+  public async createOrder(
+    request: CreateOrderRequest,
+  ): Promise<CreateOrderResponse> {
     const accessToken = await this.getAuthToken();
     const url = `${this.getBaseUrl()}/checkout/v2/pay`;
 
@@ -170,7 +174,9 @@ export class PhonePeService {
 
     if (!response.ok || !data.orderId || !data.redirectUrl) {
       console.error("[PhonePe] Order creation failed:", data);
-      throw new Error(`PhonePe order failed: ${data.message || data.code || "Unknown error"}`);
+      throw new Error(
+        `PhonePe order failed: ${data.message || data.code || "Unknown error"}`,
+      );
     }
 
     console.log("[PhonePe] Order created:", {
@@ -192,7 +198,9 @@ export class PhonePeService {
   }
 
   // Check payment status
-  public async checkPaymentStatus(merchantOrderId: string): Promise<PaymentStatusResponse> {
+  public async checkPaymentStatus(
+    merchantOrderId: string,
+  ): Promise<PaymentStatusResponse> {
     const accessToken = await this.getAuthToken();
     const url = `${this.getBaseUrl()}/checkout/v2/order/${merchantOrderId}/status?details=true&errorContext=true`;
 
@@ -210,7 +218,9 @@ export class PhonePeService {
 
     if (!response.ok) {
       console.error("[PhonePe] Status check failed:", data);
-      throw new Error(`PhonePe status check failed: ${data.message || data.code || "Unknown error"}`);
+      throw new Error(
+        `PhonePe status check failed: ${data.message || data.code || "Unknown error"}`,
+      );
     }
 
     // Extract transaction ID from paymentDetails (primary) or fallback fields

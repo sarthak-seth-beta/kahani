@@ -34,6 +34,7 @@ type UserInfoFormData = z.infer<typeof insertTransactionSchema>;
 interface UserInfoFormProps {
   albumId: string;
   packageType: "digital" | "ebook" | "printed";
+  discountCode?: string;
   onBack?: () => void;
   onSuccess?: () => void;
 }
@@ -41,6 +42,7 @@ interface UserInfoFormProps {
 export function UserInfoForm({
   albumId,
   packageType,
+  discountCode,
   onBack,
   onSuccess,
 }: UserInfoFormProps) {
@@ -72,23 +74,32 @@ export function UserInfoForm({
     setIsSubmitting(true);
     try {
       const response = await apiRequest("POST", "/api/transactions", formData);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create transaction record");
+        throw new Error(
+          errorData.error || "Failed to create transaction record",
+        );
       }
 
       const transaction = await response.json();
-      
+
       toast({
         title: "Success",
         description: "Your information has been saved!",
       });
 
-      // Navigate to payment page with transactionId and phone (do this BEFORE closing dialog)
-      setLocation(
-        `/payment?transactionId=${transaction.id}&phone=${encodeURIComponent(formData.phone)}&albumId=${albumId}&packageType=${packageType}`
-      );
+      // Navigate to payment page with transactionId, phone, and optional discount code
+      const paymentParams = new URLSearchParams({
+        transactionId: transaction.id,
+        phone: formData.phone,
+        albumId,
+        packageType,
+      });
+      if (discountCode) {
+        paymentParams.set("discountCode", discountCode);
+      }
+      setLocation(`/payment?${paymentParams.toString()}`);
 
       // Call onSuccess to close the dialog if provided (after navigation starts)
       if (onSuccess) {
@@ -97,7 +108,8 @@ export function UserInfoForm({
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to save your information. Please try again.",
+        description:
+          error.message || "Failed to save your information. Please try again.",
         variant: "destructive",
       });
       setShowConfirmation(false);
@@ -110,12 +122,7 @@ export function UserInfoForm({
     <>
       <div className="space-y-6">
         {onBack && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mb-2"
-          >
+          <Button variant="ghost" size="sm" onClick={onBack} className="mb-2">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to packages
           </Button>
@@ -212,15 +219,14 @@ export function UserInfoForm({
                   <span className="font-semibold">Name:</span> {formData?.name}
                 </div>
                 <div>
-                  <span className="font-semibold">Phone:</span> {formData?.phone}
+                  <span className="font-semibold">Phone:</span>{" "}
+                  {formData?.phone}
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              Edit
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isSubmitting}>Edit</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               disabled={isSubmitting}

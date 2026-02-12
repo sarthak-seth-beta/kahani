@@ -6,6 +6,7 @@ import {
   insertOrderSchema,
   insertFreeTrialSchema,
   insertFeedbackSchema,
+  PACKAGE_PRICES,
 } from "@shared/schema";
 import { logWebhookEvent, correlateWebhookToMessage } from "./whatsappLogger";
 import { sendErrorAlertEmail } from "./email";
@@ -819,7 +820,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
       // Use custom cover image if available, otherwise use album cover image
       const customCoverImage =
-        trial.customCoverImageUrl && String(trial.customCoverImageUrl).trim() !== ""
+        trial.customCoverImageUrl &&
+        String(trial.customCoverImageUrl).trim() !== ""
           ? String(trial.customCoverImageUrl).trim()
           : null;
       const albumCoverImage =
@@ -1078,6 +1080,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Discount helpers & endpoints ───────────────────────────────────
+  const MIN_PAYMENT_PAISE = 100; // ₹1 floor — PhonePe won't accept ₹0
+
+  /**
+   * Look up & validate a discount code. Returns the discount row + computed
+   * amounts, or an error string.
+   */
+  type DiscountResult =
+    | {
+        ok: true;
+        discount: {
+          id: string;
+          code: string;
+          discountType: string;
+          discountValue: number;
+          usageLimitTotal: number | null;
+          usageLimitPerUser: number | null;
+        };
+        baseAmountPaise: number;
+        discountAmountPaise: number;
+        finalAmountPaise: number;
+      }
+    | { ok: false; error: string };
+
+  async function resolveDiscount(
+    code: string,
+    packageType: string,
+    userIdentifier?: string | null,
+  ): Promise<DiscountResult> {
+    const baseAmountPaise = PACKAGE_PRICES[packageType];
+    if (!baseAmountPaise) return { ok: false, error: "Invalid package type" };
+
+    const normalizedCode = code.trim().toUpperCase();
+    const discountResult =
+      await storage.getActiveDiscountByCode(normalizedCode);
+    if (!discountResult) {
+      return { ok: false, error: "Invalid or inactive discount code" };
+    }
+
+    // Usage limit — total
+    if (discountResult.usageLimitTotal !== null) {
+      const totalCount = await storage.getDiscountRedemptionCount(
+        discountResult.id,
+      );
+      if (totalCount >= discountResult.usageLimitTotal) {
+        return {
+          ok: false,
+          error: "This discount code has reached its usage limit",
+        };
+      }
+    }
+
+    // Usage limit — per user
+    if (discountResult.usageLimitPerUser !== null && userIdentifier) {
+      const userCount = await storage.getDiscountRedemptionCountForUser(
+        discountResult.id,
+        userIdentifier,
+      );
+      if (userCount >= discountResult.usageLimitPerUser) {
+        return { ok: false, error: "You have already used this discount code" };
+      }
+    }
+
+    // Compute discount
+    let discountAmountPaise: number;
+    if (discountResult.discountType === "percentage") {
+      discountAmountPaise = Math.floor(
+        (baseAmountPaise * discountResult.discountValue) / 100,
+      );
+    } else {
+      // fixed_amount (value is already in paise)
+      discountAmountPaise = Math.min(
+        discountResult.discountValue,
+        baseAmountPaise,
+      );
+    }
+
+    let finalAmountPaise = baseAmountPaise - discountAmountPaise;
+    // Enforce floor of ₹1 so PhonePe doesn't reject
+    if (finalAmountPaise < MIN_PAYMENT_PAISE) {
+      finalAmountPaise = MIN_PAYMENT_PAISE;
+      discountAmountPaise = baseAmountPaise - MIN_PAYMENT_PAISE;
+    }
+
+    return {
+      ok: true,
+      discount: discountResult,
+      baseAmountPaise,
+      discountAmountPaise,
+      finalAmountPaise,
+    };
+  }
+
+  // Validate a discount code (for UI preview — "You save ₹X")
+  app.post("/api/discounts/validate", async (req, res) => {
+    try {
+      const { code, packageType } = req.body;
+      if (!code || !packageType) {
+        return res.status(400).json({ error: "Missing code or packageType" });
+      }
+
+      const result = await resolveDiscount(code, packageType);
+      if (!result.ok) {
+        return res.status(400).json({ valid: false, error: result.error });
+      }
+
+      return res.json({
+        valid: true,
+        code: result.discount!.code,
+        discountType: result.discount!.discountType,
+        discountValue: result.discount!.discountValue,
+        baseAmountPaise: result.baseAmountPaise,
+        discountAmountPaise: result.discountAmountPaise,
+        finalAmountPaise: result.finalAmountPaise,
+      });
+    } catch (error) {
+      console.error("Error validating discount:", error);
+      return res
+        .status(500)
+        .json({ error: "Failed to validate discount code" });
+    }
+  });
+
   // Transaction Management Endpoints
   // Create transaction record (one per payment attempt)
   app.post("/api/transactions", async (req, res) => {
@@ -1102,92 +1227,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(transaction);
     } catch (error) {
       console.error("Error creating transaction:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to create transaction record",
-        message: error instanceof Error ? error.message : "Unknown error"
+        message: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
 
   // Get transaction by payment order ID
-  app.get("/api/transactions/by-payment-order/:paymentOrderId", async (req, res) => {
-    try {
-      const { paymentOrderId } = req.params;
-      let txn = await storage.getTransactionByPaymentOrderId(paymentOrderId);
-      
-      if (!txn) {
-        // Fallback: Try to find the most recent pending transaction
-        const recentTxns = await storage.getRecentPendingTransactions(1);
-        if (recentTxns.length > 0) {
-          const fallbackTxn = recentTxns[0];
-          await storage.updateTransactionPayment(fallbackTxn.id, {
-            paymentOrderId,
-            paymentStatus: "pending",
-          });
-          txn = fallbackTxn;
-        } else {
-          return res.status(404).json({ error: "Transaction not found" });
-        }
-      }
+  app.get(
+    "/api/transactions/by-payment-order/:paymentOrderId",
+    async (req, res) => {
+      try {
+        const { paymentOrderId } = req.params;
+        let txn = await storage.getTransactionByPaymentOrderId(paymentOrderId);
 
-      res.json(txn);
-    } catch (error) {
-      console.error("Error fetching transaction:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch transaction",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+        if (!txn) {
+          // Fallback: Try to find the most recent pending transaction
+          const recentTxns = await storage.getRecentPendingTransactions(1);
+          if (recentTxns.length > 0) {
+            const fallbackTxn = recentTxns[0];
+            await storage.updateTransactionPayment(fallbackTxn.id, {
+              paymentOrderId,
+              paymentStatus: "pending",
+            });
+            txn = fallbackTxn;
+          } else {
+            return res.status(404).json({ error: "Transaction not found" });
+          }
+        }
+
+        res.json(txn);
+      } catch (error) {
+        console.error("Error fetching transaction:", error);
+        res.status(500).json({
+          error: "Failed to fetch transaction",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  );
 
   // Update transaction payment information (after successful payment)
   app.put("/api/transactions/payment/:paymentOrderId", async (req, res) => {
     try {
       const { paymentOrderId } = req.params;
-      const { paymentStatus, paymentId, paymentTransactionId, paymentAmount } = req.body;
+      const { paymentStatus, paymentId, paymentTransactionId, paymentAmount } =
+        req.body;
 
       if (!paymentStatus) {
         return res.status(400).json({ error: "Missing payment status" });
       }
 
-      // Fetch transaction to verify package type and expected amount
+      // Fetch transaction to verify expected amount (stored at create-order time)
       const txn = await storage.getTransactionByPaymentOrderId(paymentOrderId);
       if (!txn) {
         return res.status(404).json({ error: "Transaction not found" });
       }
 
-      // Verify amount matches expected amount for package type
-      const expectedAmounts: Record<string, number> = {
-        digital: 19900,
-        ebook: 59900,
-        printed: 99900,
-      };
-      
-      const expectedAmount = expectedAmounts[txn.packageType || ""];
+      // Use stored expected_amount_paise (set at create-order, includes discount).
+      // Fall back to hardcoded package price for older transactions without it.
+      const expectedAmount =
+        txn.expectedAmountPaise ?? PACKAGE_PRICES[txn.packageType || ""];
 
       if (paymentStatus === "success") {
-        if (!paymentId || !paymentTransactionId || typeof paymentAmount !== "number" || paymentAmount <= 0) {
-          return res.status(500).json({ error: "Incomplete payment details for successful payment" });
+        if (
+          !paymentId ||
+          !paymentTransactionId ||
+          typeof paymentAmount !== "number" ||
+          paymentAmount <= 0
+        ) {
+          return res
+            .status(500)
+            .json({
+              error: "Incomplete payment details for successful payment",
+            });
         }
         if (!expectedAmount) {
-          return res.status(500).json({ error: "Unknown package type for amount verification" });
+          return res
+            .status(500)
+            .json({ error: "Unknown package type for amount verification" });
         }
         if (expectedAmount !== paymentAmount) {
-          console.error("SECURITY: Amount mismatch!", { transactionId: txn.id, expected: expectedAmount, received: paymentAmount });
-          return res.status(400).json({ error: "Payment amount verification failed" });
+          console.error("SECURITY: Amount mismatch!", {
+            transactionId: txn.id,
+            expected: expectedAmount,
+            received: paymentAmount,
+          });
+          return res
+            .status(400)
+            .json({ error: "Payment amount verification failed" });
         }
-      } else if (paymentAmount !== undefined && expectedAmount && paymentAmount !== expectedAmount) {
-        console.error("SECURITY: Amount mismatch!", { transactionId: txn.id, expected: expectedAmount, received: paymentAmount });
-        return res.status(400).json({ error: "Payment amount verification failed" });
+      } else if (
+        paymentAmount !== undefined &&
+        expectedAmount &&
+        paymentAmount !== expectedAmount
+      ) {
+        console.error("SECURITY: Amount mismatch!", {
+          transactionId: txn.id,
+          expected: expectedAmount,
+          received: paymentAmount,
+        });
+        return res
+          .status(400)
+          .json({ error: "Payment amount verification failed" });
       }
 
-      const updatedTxn = await storage.updateTransactionPaymentByOrderId(paymentOrderId, {
-        paymentStatus,
-        paymentId,
-        paymentTransactionId,
+      const updatedTxn = await storage.updateTransactionPaymentByOrderId(
         paymentOrderId,
-        paymentAmount,
-      });
+        {
+          paymentStatus,
+          paymentId,
+          paymentTransactionId,
+          paymentOrderId,
+          paymentAmount,
+        },
+      );
 
       if (!updatedTxn) {
         return res.status(500).json({ error: "Failed to update transaction" });
@@ -1196,65 +1351,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedTxn);
     } catch (error) {
       console.error("Error updating transaction payment:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to update payment info",
-        message: error instanceof Error ? error.message : "Unknown error"
+        message: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
 
   // Get transaction payment status (for verification)
-  app.get("/api/transactions/:transactionId/payment-status", async (req, res) => {
-    try {
-      const { transactionId } = req.params;
+  app.get(
+    "/api/transactions/:transactionId/payment-status",
+    async (req, res) => {
+      try {
+        const { transactionId } = req.params;
 
-      const txn = await storage.getTransactionById(transactionId);
-      if (!txn) {
-        return res.status(404).json({ error: "Transaction not found" });
+        const txn = await storage.getTransactionById(transactionId);
+        if (!txn) {
+          return res.status(404).json({ error: "Transaction not found" });
+        }
+
+        res.json({
+          paymentStatus: txn.paymentStatus,
+          paymentOrderId: txn.paymentOrderId,
+          paymentTransactionId: txn.paymentTransactionId,
+          paymentAmount: txn.paymentAmount,
+        });
+      } catch (error) {
+        console.error("Error fetching payment status:", error);
+        res.status(500).json({
+          error: "Failed to fetch payment status",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-
-      res.json({
-        paymentStatus: txn.paymentStatus,
-        paymentOrderId: txn.paymentOrderId,
-        paymentTransactionId: txn.paymentTransactionId,
-        paymentAmount: txn.paymentAmount,
-      });
-    } catch (error) {
-      console.error("Error fetching payment status:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch payment status",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+    },
+  );
 
   // PhonePe Payment Gateway Endpoints
   // PhonePe: Create payment order
   app.post("/api/phonepe/create-order", async (req, res) => {
     try {
-      const { albumId, packageType, amount, transactionId } = req.body;
+      const { albumId, packageType, transactionId, discountCode } = req.body;
 
-      if (!albumId || !packageType || !amount) {
+      if (!albumId || !packageType) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Validate transactionId if provided
+      // Validate transactionId
+      let txn:
+        | Awaited<ReturnType<typeof storage.getTransactionById>>
+        | undefined;
       if (transactionId) {
-        const txn = await storage.getTransactionById(transactionId);
+        txn = await storage.getTransactionById(transactionId);
         if (!txn) {
           return res.status(404).json({ error: "Transaction not found" });
         }
       }
 
-      // Validate package prices
-      const packagePrices = {
-        digital: 19900,   // ₹199
-        ebook: 59900,     // ₹599
-        printed: 99900,   // ₹999
-      };
+      // Server computes amount — never trust client-supplied amount
+      const baseAmountPaise = PACKAGE_PRICES[packageType];
+      if (!baseAmountPaise) {
+        return res.status(400).json({ error: "Invalid package type" });
+      }
 
-      if (amount !== packagePrices[packageType as keyof typeof packagePrices]) {
-        return res.status(400).json({ error: "Invalid package or amount" });
+      let finalAmountPaise = baseAmountPaise;
+      let discountApplied: { id: string; code: string } | null = null;
+
+      // Apply discount if provided
+      if (discountCode) {
+        const userIdentifier = txn?.phoneE164 || txn?.phone || null;
+        const result = await resolveDiscount(
+          discountCode,
+          packageType,
+          userIdentifier,
+        );
+
+        if (!result.ok) {
+          return res.status(400).json({ error: result.error });
+        }
+
+        finalAmountPaise = result.finalAmountPaise;
+        discountApplied = {
+          id: result.discount!.id,
+          code: result.discount!.code,
+        };
       }
 
       // Verify album exists
@@ -1270,29 +1449,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create PhonePe order
       const { phonePeService } = await import("./phonepe");
-      const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ''}`;
-      
+      const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ""}`;
+
       const orderResponse = await phonePeService.createOrder({
-        amount,
+        amount: finalAmountPaise,
         merchantOrderId,
         merchantUserId,
         redirectUrl,
         metadata: { albumId, packageType },
       });
 
-      if (!orderResponse.success || !orderResponse.data?.instrumentResponse?.redirectInfo?.url) {
-        return res.status(500).json({ error: "Failed to create payment order" });
+      if (
+        !orderResponse.success ||
+        !orderResponse.data?.instrumentResponse?.redirectInfo?.url
+      ) {
+        return res
+          .status(500)
+          .json({ error: "Failed to create payment order" });
       }
 
-      // Update transaction record with payment order ID
+      // Update transaction record with payment order ID + expected amount + discount info
       if (transactionId) {
         try {
           await storage.updateTransactionPayment(transactionId, {
             paymentOrderId: merchantOrderId,
             paymentStatus: "pending",
+            expectedAmountPaise: finalAmountPaise,
+            discountCodeApplied: discountApplied?.code || undefined,
           });
         } catch (updateError) {
-          console.error("Failed to update transaction with payment order ID:", updateError);
+          console.error(
+            "Failed to update transaction with payment order ID:",
+            updateError,
+          );
+        }
+      }
+
+      // Record discount redemption (counted at create-order time)
+      if (discountApplied && transactionId) {
+        try {
+          await storage.createDiscountRedemption({
+            discountId: discountApplied.id,
+            transactionId,
+            userIdentifier: txn?.phoneE164 || txn?.phone || null,
+          });
+        } catch (redemptionError) {
+          console.error(
+            "Failed to record discount redemption:",
+            redemptionError,
+          );
+          // Non-blocking — payment can still proceed
         }
       }
 
@@ -1301,13 +1507,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         merchantOrderId,
         transactionId: orderResponse.data.transactionId,
         redirectUrl: orderResponse.data.instrumentResponse.redirectInfo.url,
-        amount,
+        amount: finalAmountPaise,
         packageType,
         albumId,
+        discountApplied: discountApplied?.code || null,
       });
     } catch (error: any) {
       console.error("PhonePe order error:", error.message);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: "Failed to create payment order",
         message: error.message,
       });
@@ -1325,10 +1532,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check payment status with PhonePe
       const { phonePeService } = await import("./phonepe");
-      const statusResponse = await phonePeService.checkPaymentStatus(merchantOrderId);
+      const statusResponse =
+        await phonePeService.checkPaymentStatus(merchantOrderId);
 
       if (!statusResponse.success) {
-        return res.status(500).json({ error: "Failed to check payment status" });
+        return res
+          .status(500)
+          .json({ error: "Failed to check payment status" });
       }
 
       const data = statusResponse.data;
@@ -1344,7 +1554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Payment status error:", error.message);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: "Failed to check payment status",
         message: error.message,
       });
@@ -1355,35 +1565,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This route is kept as a backup in case client-side routing fails
   app.get("/payment/callback", async (req, res) => {
     try {
-      const { merchantOrderId, albumId, packageType, transactionId } = req.query;
-      
+      const { merchantOrderId, albumId, packageType, transactionId } =
+        req.query;
+
       if (!merchantOrderId) {
-        return res.redirect(`${process.env.APP_BASE_URL}/free-trial?error=missing_order_id`);
+        return res.redirect(
+          `${process.env.APP_BASE_URL}/free-trial?error=missing_order_id`,
+        );
       }
 
       // Verify payment with PhonePe
       const { phonePeService } = await import("./phonepe");
-      const statusResponse = await phonePeService.checkPaymentStatus(merchantOrderId as string);
-      const isSuccess = statusResponse.success && statusResponse.data?.state === "COMPLETED";
+      const statusResponse = await phonePeService.checkPaymentStatus(
+        merchantOrderId as string,
+      );
+      const isSuccess =
+        statusResponse.success && statusResponse.data?.state === "COMPLETED";
 
       // Redirect based on payment status
-      const baseUrl = process.env.APP_BASE_URL || '';
+      const baseUrl = process.env.APP_BASE_URL || "";
       if (isSuccess && statusResponse.data) {
         // UPDATE TRANSACTIONS TABLE WITH PAYMENT INFO
         try {
-          // Verify amount matches expected amount for package type (SECURITY CHECK)
-          const expectedAmounts: Record<string, number> = {
-            digital: 19900,
-            ebook: 59900,
-            printed: 99900,
-          };
-          
-          const expectedAmount = expectedAmounts[packageType as string];
+          // Look up the transaction to get stored expected amount (includes any discount)
+          const callbackTxn = await storage.getTransactionByPaymentOrderId(
+            merchantOrderId as string,
+          );
+          const expectedAmount =
+            callbackTxn?.expectedAmountPaise ??
+            PACKAGE_PRICES[packageType as string];
           const receivedAmount = statusResponse.data.amount;
-          
+
           if (expectedAmount !== receivedAmount) {
-            console.error("SECURITY: Amount mismatch!", { expected: expectedAmount, received: receivedAmount });
-            return res.redirect(`${baseUrl}/free-trial?error=amount_mismatch&albumId=${albumId || ''}`);
+            console.error("SECURITY: Amount mismatch!", {
+              expected: expectedAmount,
+              received: receivedAmount,
+            });
+            return res.redirect(
+              `${baseUrl}/free-trial?error=amount_mismatch&albumId=${albumId || ""}`,
+            );
           }
 
           const paymentData = {
@@ -1393,14 +1613,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             paymentOrderId: merchantOrderId as string,
             paymentAmount: statusResponse.data.amount,
           };
-          
+
           // Try to update by paymentOrderId first
-          let updatedTxn = await storage.updateTransactionPaymentByOrderId(merchantOrderId as string, paymentData);
-          
+          let updatedTxn = await storage.updateTransactionPaymentByOrderId(
+            merchantOrderId as string,
+            paymentData,
+          );
+
           // Fallback: if transaction not found by paymentOrderId, try by transactionId from redirect URL
           if (!updatedTxn && transactionId) {
             try {
-              updatedTxn = await storage.updateTransactionPayment(transactionId as string, paymentData);
+              updatedTxn = await storage.updateTransactionPayment(
+                transactionId as string,
+                paymentData,
+              );
             } catch (fallbackError) {
               console.error("transactionId fallback failed:", fallbackError);
             }
@@ -1409,22 +1635,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Failed to update user payment info:", updateError);
           // Continue anyway - user can still see order details
         }
-        
+
         const params = new URLSearchParams({
-          albumId: (albumId as string) || '',
+          albumId: (albumId as string) || "",
           paymentOrderId: merchantOrderId as string,
-          paymentTransactionId: statusResponse.data.transactionId || '',
-          paymentStatus: 'success',
-          paymentAmount: statusResponse.data.amount?.toString() || '',
-          packageType: (packageType as string) || '',
+          paymentTransactionId: statusResponse.data.transactionId || "",
+          paymentStatus: "success",
+          paymentAmount: statusResponse.data.amount?.toString() || "",
+          packageType: (packageType as string) || "",
         });
         return res.redirect(`${baseUrl}/order-details?${params.toString()}`);
       } else {
-        return res.redirect(`${baseUrl}/free-trial?error=payment_failed&albumId=${albumId || ''}`);
+        return res.redirect(
+          `${baseUrl}/free-trial?error=payment_failed&albumId=${albumId || ""}`,
+        );
       }
     } catch (error: any) {
       console.error("Payment callback error:", error.message);
-      return res.redirect(`${process.env.APP_BASE_URL}/free-trial?error=callback_error`);
+      return res.redirect(
+        `${process.env.APP_BASE_URL}/free-trial?error=callback_error`,
+      );
     }
   });
 
@@ -1441,7 +1671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify authorization (SHA256 of username:password configured on PhonePe dashboard)
       const { phonePeService } = await import("./phonepe");
       const isValid = phonePeService.verifyWebhookAuthorization(authHeader);
-      
+
       if (!isValid) {
         return res.status(401).json({ error: "Invalid authorization" });
       }

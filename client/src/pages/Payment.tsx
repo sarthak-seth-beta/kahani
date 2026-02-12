@@ -13,17 +13,17 @@ export default function Payment() {
     // Prevent duplicate order creation (React StrictMode calls useEffect twice in dev)
     if (hasCreatedRef.current) return;
     hasCreatedRef.current = true;
-    
+
     createPaymentOrder();
   }, []);
 
   const createPaymentOrder = async () => {
-    
     try {
       const params = new URLSearchParams(window.location.search);
       const albumId = params.get("albumId");
       const packageType = params.get("packageType");
       const transactionId = params.get("transactionId");
+      const discountCode = params.get("discountCode");
 
       if (!albumId || !packageType) {
         throw new Error("Missing album or package information");
@@ -33,25 +33,21 @@ export default function Payment() {
         throw new Error("Missing transaction information");
       }
 
-      // Calculate amount based on package type
-      const packagePrices: Record<string, number> = {
-        digital: 19900,   // ₹199
-        ebook: 59900,     // ₹599
-        printed: 99900,   // ₹999
-      };
-
-      const amount = packagePrices[packageType];
-      if (!amount) {
-        throw new Error("Invalid package type");
-      }
-
-      // Create PhonePe order
-      const response = await apiRequest("POST", "/api/phonepe/create-order", {
+      // Create PhonePe order — server computes the amount (including any discount)
+      const orderBody: Record<string, string> = {
         albumId,
         packageType,
-        amount,
         transactionId,
-      });
+      };
+      if (discountCode) {
+        orderBody.discountCode = discountCode;
+      }
+
+      const response = await apiRequest(
+        "POST",
+        "/api/phonepe/create-order",
+        orderBody,
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -70,7 +66,7 @@ export default function Payment() {
       console.error("Payment order error:", err);
       setError(err.message || "Failed to initiate payment");
       hasCreatedRef.current = false; // Allow retry on error
-      
+
       // Redirect back after 3 seconds
       setTimeout(() => {
         setLocation("/free-trial");

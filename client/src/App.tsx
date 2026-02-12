@@ -182,7 +182,7 @@ function App() {
             <Route path="/about-us" component={AboutUs} />
             <Route path="/order-details" component={OrderDetails} />
             <Route path="/contact-us" component={ContactUs} />
-            
+
             {/* payment pages */}
             <Route path="/payment" component={Payment} />
             <Route path="/payment/callback" component={PaymentCallback} />

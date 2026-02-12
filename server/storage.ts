@@ -20,12 +20,18 @@ import {
   type TransactionRow,
   type InsertTransactionRow,
   type UpdateTransactionPayment,
+  type DiscountRow,
+  type InsertDiscountRow,
+  type DiscountRedemptionRow,
+  type InsertDiscountRedemptionRow,
   freeTrials,
   voiceNotes,
   albums,
   userFeedbacks,
   whatsappMessages,
   transactions,
+  discounts,
+  discountRedemptions,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -139,10 +145,29 @@ export interface IStorage {
   // Transaction methods
   createTransaction(txn: InsertTransactionRow): Promise<TransactionRow>;
   getTransactionById(id: string): Promise<TransactionRow | undefined>;
-  getTransactionByPaymentOrderId(paymentOrderId: string): Promise<TransactionRow | undefined>;
+  getTransactionByPaymentOrderId(
+    paymentOrderId: string,
+  ): Promise<TransactionRow | undefined>;
   getRecentPendingTransactions(limit: number): Promise<TransactionRow[]>;
-  updateTransactionPayment(transactionId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow>;
-  updateTransactionPaymentByOrderId(paymentOrderId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow | undefined>;
+  updateTransactionPayment(
+    transactionId: string,
+    paymentData: UpdateTransactionPayment,
+  ): Promise<TransactionRow>;
+  updateTransactionPaymentByOrderId(
+    paymentOrderId: string,
+    paymentData: UpdateTransactionPayment,
+  ): Promise<TransactionRow | undefined>;
+
+  // Discount methods
+  getActiveDiscountByCode(code: string): Promise<DiscountRow | undefined>;
+  getDiscountRedemptionCount(discountId: string): Promise<number>;
+  getDiscountRedemptionCountForUser(
+    discountId: string,
+    userIdentifier: string,
+  ): Promise<number>;
+  createDiscountRedemption(
+    redemption: InsertDiscountRedemptionRow,
+  ): Promise<DiscountRedemptionRow>;
 }
 
 const initialProducts: Product[] = [
@@ -1233,12 +1258,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTransactionById(id: string): Promise<TransactionRow | undefined> {
-    const [txn] = await db.select().from(transactions).where(eq(transactions.id, id));
+    const [txn] = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.id, id));
     return txn;
   }
 
-  async getTransactionByPaymentOrderId(paymentOrderId: string): Promise<TransactionRow | undefined> {
-    const [txn] = await db.select().from(transactions).where(eq(transactions.paymentOrderId, paymentOrderId));
+  async getTransactionByPaymentOrderId(
+    paymentOrderId: string,
+  ): Promise<TransactionRow | undefined> {
+    const [txn] = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.paymentOrderId, paymentOrderId));
     return txn;
   }
 
@@ -1251,7 +1284,10 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async updateTransactionPayment(transactionId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow> {
+  async updateTransactionPayment(
+    transactionId: string,
+    paymentData: UpdateTransactionPayment,
+  ): Promise<TransactionRow> {
     const [updated] = await db
       .update(transactions)
       .set({
@@ -1263,14 +1299,26 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateTransactionPaymentByOrderId(paymentOrderId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow | undefined> {
+  async updateTransactionPaymentByOrderId(
+    paymentOrderId: string,
+    paymentData: UpdateTransactionPayment,
+  ): Promise<TransactionRow | undefined> {
     const setData: Record<string, any> = { updatedAt: new Date() };
 
-    if (paymentData.paymentStatus !== undefined) setData.paymentStatus = paymentData.paymentStatus;
-    if (paymentData.paymentId !== undefined) setData.paymentId = paymentData.paymentId;
-    if (paymentData.paymentTransactionId !== undefined) setData.paymentTransactionId = paymentData.paymentTransactionId;
-    if (paymentData.paymentOrderId !== undefined) setData.paymentOrderId = paymentData.paymentOrderId;
-    if (paymentData.paymentAmount !== undefined) setData.paymentAmount = paymentData.paymentAmount;
+    if (paymentData.paymentStatus !== undefined)
+      setData.paymentStatus = paymentData.paymentStatus;
+    if (paymentData.paymentId !== undefined)
+      setData.paymentId = paymentData.paymentId;
+    if (paymentData.paymentTransactionId !== undefined)
+      setData.paymentTransactionId = paymentData.paymentTransactionId;
+    if (paymentData.paymentOrderId !== undefined)
+      setData.paymentOrderId = paymentData.paymentOrderId;
+    if (paymentData.paymentAmount !== undefined)
+      setData.paymentAmount = paymentData.paymentAmount;
+    if (paymentData.expectedAmountPaise !== undefined)
+      setData.expectedAmountPaise = paymentData.expectedAmountPaise;
+    if (paymentData.discountCodeApplied !== undefined)
+      setData.discountCodeApplied = paymentData.discountCodeApplied;
 
     const [updated] = await db
       .update(transactions)
@@ -1279,6 +1327,54 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return updated;
+  }
+
+  // Discount methods implementation
+  async getActiveDiscountByCode(
+    code: string,
+  ): Promise<DiscountRow | undefined> {
+    const normalizedCode = code.trim().toUpperCase();
+    const [discount] = await db
+      .select()
+      .from(discounts)
+      .where(
+        and(eq(discounts.code, normalizedCode), eq(discounts.isActive, true)),
+      );
+    return discount;
+  }
+
+  async getDiscountRedemptionCount(discountId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(discountRedemptions)
+      .where(eq(discountRedemptions.discountId, discountId));
+    return result[0]?.count ?? 0;
+  }
+
+  async getDiscountRedemptionCountForUser(
+    discountId: string,
+    userIdentifier: string,
+  ): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(discountRedemptions)
+      .where(
+        and(
+          eq(discountRedemptions.discountId, discountId),
+          eq(discountRedemptions.userIdentifier, userIdentifier),
+        ),
+      );
+    return result[0]?.count ?? 0;
+  }
+
+  async createDiscountRedemption(
+    redemption: InsertDiscountRedemptionRow,
+  ): Promise<DiscountRedemptionRow> {
+    const [created] = await db
+      .insert(discountRedemptions)
+      .values(redemption)
+      .returning();
+    return created;
   }
 }
 

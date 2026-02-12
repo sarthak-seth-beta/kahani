@@ -49,7 +49,8 @@ export function FreeTrialForm({
 
   // Extract payment and package details from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const selectedPackage = urlParams.get("package") || urlParams.get("packageType") || "digital";
+  const selectedPackage =
+    urlParams.get("package") || urlParams.get("packageType") || "digital";
   const paymentOrderId = urlParams.get("paymentOrderId");
 
   const form = useForm<FreeTrialFormData>({
@@ -70,12 +71,15 @@ export function FreeTrialForm({
 
       setIsLoadingUserData(true);
       try {
-        const response = await apiRequest("GET", `/api/transactions/by-payment-order/${paymentOrderId}`);
+        const response = await apiRequest(
+          "GET",
+          `/api/transactions/by-payment-order/${paymentOrderId}`,
+        );
         if (response.ok) {
           const userData = await response.json();
           setUserId(userData.id);
           setPhoneFromPayment(userData.phone);
-          
+
           // Pre-fill form with user data
           form.setValue("customerPhone", userData.phone);
           if (userData.name) {
@@ -230,7 +234,7 @@ export function FreeTrialForm({
                   />
                 </FormControl>
                 <p className="text-xs text-[#1B2632]/60 mt-1">
-                  {phoneFromPayment 
+                  {phoneFromPayment
                     ? "This phone number was verified during payment"
                     : "We will send you an invite message to copy and share"}
                 </p>

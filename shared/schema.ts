@@ -672,6 +672,68 @@ export const trafficSources = pgTable("traffic_sources", {
 export type TrafficSourceRow = typeof trafficSources.$inferSelect;
 export type InsertTrafficSourceRow = typeof trafficSources.$inferInsert;
 
+// Discounts Table
+export const discounts = pgTable(
+  "discounts",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    code: varchar("code", { length: 50 }).notNull(),
+    discountType: varchar("discount_type", { length: 20 }).notNull(), // 'percentage' | 'fixed_amount'
+    discountValue: integer("discount_value").notNull(), // percentage (e.g. 20) or paise (e.g. 10000 = ₹100)
+    isActive: boolean("is_active").notNull().default(true),
+    usageLimitTotal: integer("usage_limit_total"), // NULL = unlimited
+    usageLimitPerUser: integer("usage_limit_per_user"), // NULL = unlimited
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex("discounts_code_idx").on(table.code),
+    isActiveIdx: index("discounts_is_active_idx").on(table.isActive),
+  }),
+);
+
+export type DiscountRow = typeof discounts.$inferSelect;
+export type InsertDiscountRow = typeof discounts.$inferInsert;
+
+// Discount Redemptions Table (tracks usage for limits)
+export const discountRedemptions = pgTable(
+  "discount_redemptions",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    discountId: varchar("discount_id")
+      .notNull()
+      .references(() => discounts.id, { onDelete: "restrict" }),
+    transactionId: varchar("transaction_id")
+      .notNull()
+      .references(() => transactions.id, { onDelete: "restrict" }),
+    userIdentifier: varchar("user_identifier", { length: 50 }), // phone_e164 for per-user limits
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    discountIdIdx: index("discount_redemptions_discount_id_idx").on(
+      table.discountId,
+    ),
+    discountUserIdx: index("discount_redemptions_discount_user_idx").on(
+      table.discountId,
+      table.userIdentifier,
+    ),
+  }),
+);
+
+export type DiscountRedemptionRow = typeof discountRedemptions.$inferSelect;
+export type InsertDiscountRedemptionRow =
+  typeof discountRedemptions.$inferInsert;
+
 // Transactions Table for Payment Flow (one row per payment attempt)
 export const transactions = pgTable(
   "transactions",
@@ -692,6 +754,10 @@ export const transactions = pgTable(
     packageType: varchar("package_type", { length: 20 }),
     albumId: varchar("album_id", { length: 255 }),
 
+    // Discount tracking
+    expectedAmountPaise: integer("expected_amount_paise"),
+    discountCodeApplied: varchar("discount_code_applied", { length: 50 }),
+
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -702,8 +768,12 @@ export const transactions = pgTable(
   },
   (table) => ({
     phoneIdx: index("transactions_phone_idx").on(table.phone),
-    paymentOrderIdIdx: index("transactions_payment_order_id_idx").on(table.paymentOrderId),
-    paymentStatusIdx: index("transactions_payment_status_idx").on(table.paymentStatus),
+    paymentOrderIdIdx: index("transactions_payment_order_id_idx").on(
+      table.paymentOrderId,
+    ),
+    paymentStatusIdx: index("transactions_payment_status_idx").on(
+      table.paymentStatus,
+    ),
   }),
 );
 
@@ -728,6 +798,8 @@ export const transactionSchema = insertTransactionSchema.extend({
   paymentTransactionId: z.string().optional(),
   paymentOrderId: z.string().optional(),
   paymentAmount: z.number().optional(),
+  expectedAmountPaise: z.number().optional().nullable(),
+  discountCodeApplied: z.string().optional().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -740,6 +812,25 @@ export const updateTransactionPaymentSchema = z.object({
   paymentTransactionId: z.string().optional(),
   paymentOrderId: z.string().optional(),
   paymentAmount: z.number().optional(),
+  expectedAmountPaise: z.number().optional(),
+  discountCodeApplied: z.string().optional(),
 });
 
-export type UpdateTransactionPayment = z.infer<typeof updateTransactionPaymentSchema>;
+export type UpdateTransactionPayment = z.infer<
+  typeof updateTransactionPaymentSchema
+>;
+
+// Package prices (single source of truth)
+export const PACKAGE_PRICES: Record<string, number> = {
+  digital: 19900, // ₹199
+  ebook: 59900, // ₹599
+  printed: 99900, // ₹999
+};
+
+// Discount validation schema
+export const validateDiscountSchema = z.object({
+  code: z.string().min(1, "Discount code is required"),
+  packageType: z.enum(["digital", "ebook", "printed"]),
+});
+
+export type ValidateDiscount = z.infer<typeof validateDiscountSchema>;
