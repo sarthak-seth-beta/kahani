@@ -35,6 +35,8 @@ export default function Payment() {
 
       // Calculate amount based on package type
       const packagePrices: Record<string, number> = {
+        // remove krde bhai test ko
+        test: 100,        // ₹1
         digital: 19900,   // ₹199
         ebook: 59900,     // ₹599
         printed: 99900,   // ₹999

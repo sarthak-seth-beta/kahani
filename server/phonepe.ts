@@ -67,10 +67,18 @@ export class PhonePeService {
     };
   }
 
+  // Base URL for payment/status APIs
   private getBaseUrl(): string {
     return this.config.environment === "production"
       ? "https://api.phonepe.com/apis/pg"
       : "https://api-preprod.phonepe.com/apis/pg-sandbox";
+  }
+
+  // Auth URL uses a different path in production (identity-manager)
+  private getAuthUrl(): string {
+    return this.config.environment === "production"
+      ? "https://api.phonepe.com/apis/identity-manager/v1/oauth/token"
+      : `${this.getBaseUrl()}/v1/oauth/token`;
   }
 
   // Get OAuth access token (cached for 15 minutes)
@@ -84,7 +92,7 @@ export class PhonePeService {
 
     console.log("[PhonePe] Fetching new auth token...");
 
-    const authUrl = `${this.getBaseUrl()}/v1/oauth/token`;
+    const authUrl = this.getAuthUrl();
     const formData = new URLSearchParams({
       grant_type: "client_credentials",
       client_id: this.config.clientId,

@@ -716,7 +716,8 @@ export const insertTransactionSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   phoneE164: z.string().optional(),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
-  packageType: z.enum(["digital", "ebook", "printed"]),
+  // remove krde bhai test ko
+  packageType: z.enum(["test", "digital", "ebook", "printed"]),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
