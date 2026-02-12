@@ -1158,8 +1158,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verify amount matches expected amount for package type
       const expectedAmounts: Record<string, number> = {
-        // remove krde bhai test ko
-        test: 100,
         digital: 19900,
         ebook: 59900,
         printed: 99900,
@@ -1250,8 +1248,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate package prices
       const packagePrices = {
-        // remove krde bhai test ko
-        test: 100,        // ₹1
         digital: 19900,   // ₹199
         ebook: 59900,     // ₹599
         printed: 99900,   // ₹999
@@ -1377,8 +1373,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Verify amount matches expected amount for package type (SECURITY CHECK)
           const expectedAmounts: Record<string, number> = {
-            // remove krde bhai test ko
-            test: 100,
             digital: 19900,
             ebook: 59900,
             printed: 99900,

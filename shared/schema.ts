@@ -682,7 +682,7 @@ export const transactions = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     phone: varchar("phone", { length: 20 }).notNull(),
     phoneE164: varchar("phone_e164", { length: 20 }),
-    
+
     // Payment tracking fields
     paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
     paymentId: varchar("payment_id", { length: 255 }),
@@ -691,7 +691,7 @@ export const transactions = pgTable(
     paymentAmount: integer("payment_amount"),
     packageType: varchar("package_type", { length: 20 }),
     albumId: varchar("album_id", { length: 255 }),
-    
+
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -716,8 +716,7 @@ export const insertTransactionSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   phoneE164: z.string().optional(),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
-  // remove krde bhai test ko
-  packageType: z.enum(["test", "digital", "ebook", "printed"]),
+  packageType: z.enum(["digital", "ebook", "printed"]),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

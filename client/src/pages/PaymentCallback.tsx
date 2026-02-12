@@ -47,8 +47,6 @@ export default function PaymentCallback() {
 
       // Verify amount matches expected amount for package type (SECURITY CHECK)
       const expectedAmounts: Record<string, number> = {
-        // remove krde bhai test ko
-        test: 100,       // ₹1 in paise
         digital: 19900,  // ₹199 in paise
         ebook: 59900,    // ₹599 in paise
         printed: 99900,  // ₹999 in paise

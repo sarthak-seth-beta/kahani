@@ -11,14 +11,6 @@ interface ProductSelectionProps {
 }
 
 const PRODUCTS = [
-  // remove krde bhai test ko
-  {
-    id: "test",
-    title: "Test Payment",
-    price: "₹1",
-    subtitle: "For testing the payment flow",
-    icon: Mic,
-  },
   {
     id: "digital",
     title: "Digital Voice Album",
@@ -66,8 +58,7 @@ export function ProductSelection({
       <div className="space-y-6">
         <UserInfoForm
           albumId={albumId}
-          // remove krde bhai test ko
-          packageType={selectedId as "test" | "digital" | "ebook" | "printed"}
+          packageType={selectedId as "digital" | "ebook" | "printed"}
           onBack={handleBack}
           onSuccess={onContinue}
         />

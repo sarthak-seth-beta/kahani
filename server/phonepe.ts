@@ -59,9 +59,7 @@ export class PhonePeService {
       merchantId: env.PHONEPE_MERCHANT_ID || "",
       clientId: env.PHONEPE_CLIENT_ID || "",
       clientSecret: env.PHONEPE_CLIENT_SECRET || "",
-      clientVersion: env.PHONEPE_CLIENT_VERSION?.startsWith("v")
-        ? env.PHONEPE_CLIENT_VERSION
-        : `v${env.PHONEPE_CLIENT_VERSION || "1"}`,
+      clientVersion: env.PHONEPE_CLIENT_VERSION || "1",
       webhookUsername: env.PHONEPE_WEBHOOK_USERNAME || "",
       webhookPassword: env.PHONEPE_WEBHOOK_PASSWORD || "",
     };

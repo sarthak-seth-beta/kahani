@@ -33,8 +33,7 @@ type UserInfoFormData = z.infer<typeof insertTransactionSchema>;
 
 interface UserInfoFormProps {
   albumId: string;
-  // remove krde bhai test ko
-  packageType: "test" | "digital" | "ebook" | "printed";
+  packageType: "digital" | "ebook" | "printed";
   onBack?: () => void;
   onSuccess?: () => void;
 }
