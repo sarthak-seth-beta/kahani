@@ -90,9 +90,15 @@ export class PhonePeService {
       return this.authToken.accessToken;
     }
 
-    console.log("[PhonePe] Fetching new auth token...");
+    console.log("[PhonePe] Fetching new auth token...", {
+      environment: this.config.environment,
+      clientId: this.config.clientId ? `${this.config.clientId.slice(0, 8)}...` : "(empty)",
+      clientVersion: this.config.clientVersion,
+    });
 
     const authUrl = this.getAuthUrl();
+    console.log("[PhonePe] Auth URL:", authUrl);
+
     const formData = new URLSearchParams({
       grant_type: "client_credentials",
       client_id: this.config.clientId,
