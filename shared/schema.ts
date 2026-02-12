@@ -140,14 +140,6 @@ export const insertFreeTrialSchema = z.object({
     .min(2, "Storyteller name must be at least 2 characters"),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
   storytellerLanguagePreference: z.enum(["en", "hn", "other"]).default("en"),
-  // Payment fields (optional)
-  paymentGateway: z.enum(["phonepe", "none"]).default("none").optional(),
-  paymentOrderId: z.string().optional(),
-  paymentTransactionId: z.string().optional(),
-  paymentStatus: z.enum(["pending", "success", "failed"]).default("pending").optional(),
-  paymentAmount: z.number().optional(),
-  packageType: z.enum(["digital", "ebook", "printed"]).optional(),
-  userId: z.string().uuid("User ID must be a valid UUID").optional(),
 });
 
 export type InsertFreeTrial = z.infer<typeof insertFreeTrialSchema>;
@@ -356,15 +348,6 @@ export const freeTrials = pgTable(
       "no_storyteller_buyer_nudge_sent_at",
       { withTimezone: true },
     ),
-    // Payment fields for PhonePe integration
-    paymentGateway: varchar("payment_gateway", { length: 20 }).default("none"),
-    paymentOrderId: varchar("payment_order_id", { length: 255 }),
-    paymentTransactionId: varchar("payment_transaction_id", { length: 255 }),
-    paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
-    paymentAmount: integer("payment_amount"), // Amount in paise
-    packageType: varchar("package_type", { length: 20 }), // digital, ebook, printed
-    // Note: userId column doesn't exist in DB yet, keeping optional for now
-    // userId: varchar("user_id", { length: 255 }), // Link to transactions table
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

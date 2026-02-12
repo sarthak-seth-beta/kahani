@@ -51,9 +51,6 @@ export function FreeTrialForm({
   const urlParams = new URLSearchParams(window.location.search);
   const selectedPackage = urlParams.get("package") || urlParams.get("packageType") || "digital";
   const paymentOrderId = urlParams.get("paymentOrderId");
-  const paymentTransactionId = urlParams.get("paymentTransactionId");
-  const paymentStatus = urlParams.get("paymentStatus");
-  const paymentAmount = urlParams.get("paymentAmount");
 
   const form = useForm<FreeTrialFormData>({
     resolver: zodResolver(insertFreeTrialSchema),
@@ -63,13 +60,6 @@ export function FreeTrialForm({
       storytellerName: "",
       albumId: albumId || "",
       storytellerLanguagePreference: "en",
-      // Payment fields (optional)
-      paymentGateway: paymentOrderId ? "phonepe" : "none",
-      paymentOrderId: paymentOrderId || undefined,
-      paymentTransactionId: paymentTransactionId || undefined,
-      paymentStatus: paymentStatus === "success" ? "success" : "pending",
-      paymentAmount: paymentAmount ? parseInt(paymentAmount) : undefined,
-      packageType: selectedPackage as "digital" | "ebook" | "printed",
     },
   });
 

@@ -720,18 +720,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedAlbum: album.title, // Populate for backward compatibility
         storytellerLanguagePreference:
           validatedData.storytellerLanguagePreference,
-        // Persist PhonePe payment metadata when present so that free_trials
-        // reflects the same payment state as the transactions table.
-        paymentGateway:
-          validatedData.paymentGateway ??
-          (validatedData.paymentOrderId ? "phonepe" : "none"),
-        paymentOrderId: validatedData.paymentOrderId,
-        paymentTransactionId: validatedData.paymentTransactionId,
-        paymentStatus:
-          validatedData.paymentStatus ??
-          (validatedData.paymentOrderId ? "pending" : "pending"),
-        paymentAmount: validatedData.paymentAmount,
-        packageType: validatedData.packageType,
       });
 
       // Track free trial creation on server side
