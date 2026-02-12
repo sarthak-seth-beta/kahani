@@ -42,6 +42,8 @@ import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import Admin from "@/pages/Admin";
 import ManageAlbums from "@/pages/ManageAlbums";
 import SampleAlbum from "@/pages/SampleAlbum";
+import Payment from "@/pages/Payment";
+import PaymentCallback from "@/pages/PaymentCallback";
 import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
@@ -180,6 +182,10 @@ function App() {
             <Route path="/about-us" component={AboutUs} />
             <Route path="/order-details" component={OrderDetails} />
             <Route path="/contact-us" component={ContactUs} />
+            
+            {/* payment pages */}
+            <Route path="/payment" component={Payment} />
+            <Route path="/payment/callback" component={PaymentCallback} />
 
             <Route path="/blogs" component={Blogs} />
             <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />

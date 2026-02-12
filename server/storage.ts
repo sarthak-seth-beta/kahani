@@ -17,11 +17,15 @@ import {
   type InsertAlbumRow,
   type UserFeedbackRow,
   type InsertUserFeedbackRow,
+  type TransactionRow,
+  type InsertTransactionRow,
+  type UpdateTransactionPayment,
   freeTrials,
   voiceNotes,
   albums,
   userFeedbacks,
   whatsappMessages,
+  transactions,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -32,6 +36,7 @@ import {
   lt,
   inArray,
   asc,
+  desc,
   getTableColumns,
   isNotNull,
   isNull,
@@ -130,6 +135,14 @@ export interface IStorage {
     albumId: string,
     languagePreference?: string | null,
   ): Promise<number>;
+
+  // Transaction methods
+  createTransaction(txn: InsertTransactionRow): Promise<TransactionRow>;
+  getTransactionById(id: string): Promise<TransactionRow | undefined>;
+  getTransactionByPaymentOrderId(paymentOrderId: string): Promise<TransactionRow | undefined>;
+  getRecentPendingTransactions(limit: number): Promise<TransactionRow[]>;
+  updateTransactionPayment(transactionId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow>;
+  updateTransactionPaymentByOrderId(paymentOrderId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow | undefined>;
 }
 
 const initialProducts: Product[] = [
@@ -374,34 +387,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFreeTrialDb(id: string): Promise<FreeTrialRow | undefined> {
-    // Use getTableColumns to select all fields, ensuring customCoverImageUrl is included
     const [trial] = await db
       .select(getTableColumns(freeTrials))
       .from(freeTrials)
       .where(eq(freeTrials.id, id));
-
-    // Debug logging to verify customCoverImageUrl is retrieved
-    if (trial) {
-      console.log("Retrieved trial from database:", {
-        id: trial.id,
-        customCoverImageUrl: trial.customCoverImageUrl,
-        customCoverImageUrlType: typeof trial.customCoverImageUrl,
-        customCoverImageUrlValue: trial.customCoverImageUrl,
-        hasCustomCover: !!trial.customCoverImageUrl,
-        // Log all keys to see if field exists with different name
-        trialKeys: Object.keys(trial),
-      });
-
-      // Also check if it exists as snake_case (in case Drizzle didn't map it)
-      const trialAny = trial as any;
-      if (trialAny.custom_cover_image_url) {
-        console.warn(
-          "Found custom_cover_image_url in snake_case format:",
-          trialAny.custom_cover_image_url,
-        );
-      }
-    }
-
     return trial;
   }
 
@@ -470,14 +459,6 @@ export class DatabaseStorage implements IStorage {
     id: string,
     updates: Partial<FreeTrialRow>,
   ): Promise<FreeTrialRow> {
-    // Debug logging for customCoverImageUrl updates
-    if (updates.customCoverImageUrl !== undefined) {
-      console.log("Updating customCoverImageUrl:", {
-        trialId: id,
-        newValue: updates.customCoverImageUrl,
-      });
-    }
-
     const [updatedTrial] = await db
       .update(freeTrials)
       .set(updates)
@@ -486,16 +467,6 @@ export class DatabaseStorage implements IStorage {
 
     if (!updatedTrial) {
       throw new Error(`Free trial with id ${id} not found`);
-    }
-
-    // Verify the update worked
-    if (updates.customCoverImageUrl !== undefined) {
-      console.log("Updated trial customCoverImageUrl:", {
-        trialId: id,
-        customCoverImageUrl: updatedTrial.customCoverImageUrl,
-        updateSuccessful:
-          updatedTrial.customCoverImageUrl === updates.customCoverImageUrl,
-      });
     }
 
     return updatedTrial;
@@ -1253,6 +1224,61 @@ export class DatabaseStorage implements IStorage {
       count: failedMessages.length,
       lastError,
     };
+  }
+
+  // Transaction methods implementation
+  async createTransaction(txn: InsertTransactionRow): Promise<TransactionRow> {
+    const [created] = await db.insert(transactions).values(txn).returning();
+    return created;
+  }
+
+  async getTransactionById(id: string): Promise<TransactionRow | undefined> {
+    const [txn] = await db.select().from(transactions).where(eq(transactions.id, id));
+    return txn;
+  }
+
+  async getTransactionByPaymentOrderId(paymentOrderId: string): Promise<TransactionRow | undefined> {
+    const [txn] = await db.select().from(transactions).where(eq(transactions.paymentOrderId, paymentOrderId));
+    return txn;
+  }
+
+  async getRecentPendingTransactions(limit: number): Promise<TransactionRow[]> {
+    return db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.paymentStatus, "pending"))
+      .orderBy(desc(transactions.createdAt))
+      .limit(limit);
+  }
+
+  async updateTransactionPayment(transactionId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow> {
+    const [updated] = await db
+      .update(transactions)
+      .set({
+        ...paymentData,
+        updatedAt: new Date(),
+      })
+      .where(eq(transactions.id, transactionId))
+      .returning();
+    return updated;
+  }
+
+  async updateTransactionPaymentByOrderId(paymentOrderId: string, paymentData: UpdateTransactionPayment): Promise<TransactionRow | undefined> {
+    const setData: Record<string, any> = { updatedAt: new Date() };
+
+    if (paymentData.paymentStatus !== undefined) setData.paymentStatus = paymentData.paymentStatus;
+    if (paymentData.paymentId !== undefined) setData.paymentId = paymentData.paymentId;
+    if (paymentData.paymentTransactionId !== undefined) setData.paymentTransactionId = paymentData.paymentTransactionId;
+    if (paymentData.paymentOrderId !== undefined) setData.paymentOrderId = paymentData.paymentOrderId;
+    if (paymentData.paymentAmount !== undefined) setData.paymentAmount = paymentData.paymentAmount;
+
+    const [updated] = await db
+      .update(transactions)
+      .set(setData)
+      .where(eq(transactions.paymentOrderId, paymentOrderId))
+      .returning();
+
+    return updated;
   }
 }
 
