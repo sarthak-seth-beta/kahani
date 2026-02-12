@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const pdfFile =
-  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/sample.pdf";
+  "https://pub-45c33f46725243019bfd4d1d3a471bea.r2.dev/sample.pdf";
 
 export default function PdfViewerSection() {
   const [numPages, setNumPages] = useState<number>(0);
