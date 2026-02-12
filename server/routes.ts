@@ -2232,7 +2232,7 @@ Return a JSON object with:
   });
 
   const GENERATED_ALBUM_COVER =
-    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80";
+    "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/fallaback_album_cover.png";
 
   // Request generated album: seed to DB (is_active=false) + send email (reuses custom-album email flow)
   app.post("/api/request-generated-album", async (req, res) => {
