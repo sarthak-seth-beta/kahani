@@ -1043,7 +1043,9 @@ export default function PlaylistAlbumsGallery() {
                 }}
               >
                 <img
-                  src={customProfileImage || "/attached_assets/dummy_avatar.webp"}
+                  src={
+                    customProfileImage || "/attached_assets/dummy_avatar.webp"
+                  }
                   alt={trial.selectedAlbum}
                   style={{
                     width: "100%",

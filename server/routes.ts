@@ -1297,11 +1297,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           typeof paymentAmount !== "number" ||
           paymentAmount <= 0
         ) {
-          return res
-            .status(500)
-            .json({
-              error: "Incomplete payment details for successful payment",
-            });
+          return res.status(500).json({
+            error: "Incomplete payment details for successful payment",
+          });
         }
         if (!expectedAmount) {
           return res
@@ -2098,6 +2096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         questionsHn: z.array(z.string()).min(15).max(15),
         questionSetTitles: z.object({
           en: z.array(z.string()).length(5),
+          hn: z.array(z.string()).length(5),
         }),
         questionSetPremise: z.object({
           en: z.array(z.string()).length(5),
@@ -2137,9 +2136,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 description:
                   "Exactly 5 chapter names in English, one per section",
               },
+              hn: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 5,
+                maxItems: 5,
+                description:
+                  "Exactly 5 chapter names in Hindi, matching the English chapter names. Use natural, conversational Hindi.",
+              },
             },
-            required: ["en"],
-            description: "Chapter titles for the 5 question sections",
+            required: ["en", "hn"],
+            description:
+              "Chapter titles for the 5 question sections in both English and Hindi",
           },
           questionSetPremise: {
             type: "object",
@@ -2197,7 +2205,7 @@ Return a JSON object with:
 - description: 2-3 sentences describing what this album captures
 - questions: Exactly 15 thoughtful, open-ended prompts in English suitable for voice recording (stories, memories, wisdom), organized in 5 sections of 3 questions each
 - questionsHn: Exactly 15 Hindi translations of the questions, matching the exact order of the English questions. Use natural, conversational Hindi suitable for voice recording.
-- questionSetTitles: { en: [exactly 5 chapter names] } - one name per section (e.g. "Childhood Memories", "Wedding Stories", "Life Lessons", "Family Traditions", "Words of Wisdom")
+- questionSetTitles: { en: [exactly 5 chapter names in English], hn: [exactly 5 chapter names in Hindi] } - one name per section (e.g. en: "Childhood Memories", hn: "बचपन की यादें"). The Hindi titles should be natural, conversational Hindi translations of the English titles.
 - questionSetPremise: { en: [exactly 5 premises], hn: [exactly 5 premises] } - Each premise is a brief description (1-2 sentences) explaining the theme/purpose of each question set section. The Hindi premises should be natural translations of the English ones. These premises help guide the conversation flow in WhatsApp.`;
 
       const ai = new GoogleGenAI({ apiKey });
@@ -2257,7 +2265,7 @@ Return a JSON object with:
         (album as { questions_hn?: string[] }).questions_hn;
       const questionSetTitles =
         album.questionSetTitles ??
-        (album as { question_set_titles?: { en?: string[] } })
+        (album as { question_set_titles?: { en?: string[]; hn?: string[] } })
           .question_set_titles;
       const questionSetPremise =
         album.questionSetPremise ??
@@ -2289,7 +2297,7 @@ Return a JSON object with:
         isActive: false,
         isConversationalAlbum: true,
         questionSetTitles: questionSetTitles
-          ? { en: questionSetTitles.en || [], hn: [] }
+          ? { en: questionSetTitles.en || [], hn: questionSetTitles.hn || [] }
           : { en: [], hn: [] },
         questionSetPremise: questionSetPremise
           ? {
