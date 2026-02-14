@@ -110,11 +110,9 @@ async function getTrialLanguagePreference(trialId) {
   }
 
   console.log(`  Trial language preference: ${pref} → ${languageCode}`);
-  // For Hindi preference: transcribe each voice note in both Hindi and English.
-  if (pref === "hn") {
+  
     return { languageCode, transcribeBothHindiAndEnglish: true };
-  }
-  return { languageCode };
+  
 }
 
 /**
