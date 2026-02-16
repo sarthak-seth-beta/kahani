@@ -65,10 +65,11 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
               Get Started
             </Button>
             <Button
-              onClick={onHearKahaniClick}
+              // onClick={onHearKahaniClick} // do not remove - existing functionality
+              onClick={() => setLocation("/sample")}
               className="px-10 py-3 border-2 bg-transparent border-[#A35139] rounded-2xl text-lg shadow-md hover:bg-[#A35139] transition-all duration-300 w-fit"
             >
-              Hear Sample
+              See Sample
             </Button>
           </div>
 
@@ -109,10 +110,11 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
               Get Started
             </Button>
             <Button
-              onClick={onHearKahaniClick}
+              // onClick={onHearKahaniClick} // do not remove - existing functionality
+              onClick={() => setLocation("/sample")}
               className="border-2 bg-transparent border-[#A35139] rounded-2xl text-lg shadow-md hover:bg-[#A35139] transition-all duration-300"
             >
-              Hear Sample
+              See Sample
             </Button>
           </div>
 

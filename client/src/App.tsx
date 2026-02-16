@@ -42,6 +42,7 @@ import YlPersonalSupport from "@/pages/YlPersonalSupport";
 import Admin from "@/pages/Admin";
 import ManageAlbums from "@/pages/ManageAlbums";
 import SampleAlbum from "@/pages/SampleAlbum";
+import SamplePage from "@/pages/SamplePage";
 import Payment from "@/pages/Payment";
 import PaymentCallback from "@/pages/PaymentCallback";
 import NotFound from "@/pages/not-found";
@@ -144,8 +145,7 @@ function HomePage() {
       {/* Get Started Section */}
       <GetStartedSection />
 
-      {/* PDF Viewer Section */}
-      <PdfViewerSection />
+
 
       {/* Section 4 - Albums (Moved above Testimonials) */}
       <SectionFourAlbumsNew />
@@ -195,6 +195,7 @@ function App() {
             />
             <Route path="/all-albums" component={AllAlbums} />
             <Route path="/sample-album" component={SampleAlbum} />
+            <Route path="/sample" component={SamplePage} />
             <Route path="/create-album" component={CreateAlbum} />
             <Route path="/generated-album" component={GeneratedAlbum} />
             <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />

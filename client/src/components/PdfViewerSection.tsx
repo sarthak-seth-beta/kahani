@@ -90,7 +90,7 @@ export default function PdfViewerSection() {
 
   return (
     <section
-      className="py-6 sm:py-8 md:py-12 lg:py-16 w-full flex flex-col items-center"
+      className="py-2 w-full flex flex-col items-center"
       id="pdf-viewer"
     >
       {/* Title */}
@@ -101,7 +101,7 @@ export default function PdfViewerSection() {
       {/* PDF Container */}
       <div
         ref={containerRef}
-        className="bg-white rounded-lg xs:rounded-xl shadow-2xl overflow-hidden w-[calc(100%-1rem)] xs:w-[calc(100%-2rem)] sm:w-full sm:max-w-[700px] md:max-w-[20rem] md:max-h-[30rem] lg:max-w-[20rem] lg:max-h-[30rem] mx-2 xs:mx-3 sm:mx-4 md:mx-auto lg:mx-auto relative"
+        className="bg-white rounded-lg xs:rounded-xl shadow-2xl overflow-hidden w-[75%] max-w-[280px] xs:max-w-[300px] sm:max-w-[340px] md:max-w-xs md:max-h-[60vh] lg:max-w-xs lg:max-h-[60vh] mx-auto relative"
         style={{ minHeight: isLoading ? "400px" : "auto" }}
       >
         {isLoading && (
@@ -117,7 +117,7 @@ export default function PdfViewerSection() {
           onLoadSuccess={onDocumentLoadSuccess}
           loading=""
           className={isLoading ? "hidden" : ""}
-          // style={{ margin: 0, padding: 0, display: 'block', lineHeight: 0 }}
+        // style={{ margin: 0, padding: 0, display: 'block', lineHeight: 0 }}
         >
           {containerWidth > 0 && (
             <>
@@ -132,11 +132,22 @@ export default function PdfViewerSection() {
                   lineHeight: 0,
                 }}
               >
+                <style>{`
+                  .react-pdf__Page__canvas {
+                    width: 100% !important;
+                    height: auto !important;
+                    max-width: 100%;
+                    display: block;
+                  }
+                  .react-pdf__Page__textContent, .react-pdf__Page__annotations {
+                    display: none !important;
+                  }
+                `}</style>
                 <Page
                   pageNumber={pageNumber}
                   width={containerWidth}
-                  renderTextLayer={true}
-                  renderAnnotationLayer={true}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
                   loading=""
                   onLoadSuccess={() => handlePageLoadSuccess(pageNumber)}
                 />
