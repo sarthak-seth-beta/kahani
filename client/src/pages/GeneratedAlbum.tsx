@@ -295,7 +295,7 @@ export default function GeneratedAlbum() {
           >
             <ArrowLeft className="h-5 w-5 text-[#1B2632]" />
           </Button>
-          <h1 className="text-xl font-bold text-[#1B2632] font-['Outfit']">
+          <h1 className="text-lg md:text-xl font-bold text-[#1B2632] font-['Outfit']">
             Generated Album Preview
           </h1>
         </div>
@@ -420,7 +420,24 @@ export default function GeneratedAlbum() {
 
         {/* CTA Buttons */}
         <div className="mt-8 space-y-3">
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={handleRequestAlbum}
+              disabled={!formData || isRequesting || isRegenerating}
+              className="flex-1 h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300"
+            >
+              {isRequesting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Continue
+                </>
+              )}
+            </Button>
             <Button
               onClick={handleRegenerateAlbum}
               disabled={!formData || isRegenerating || isRequesting}
@@ -436,23 +453,6 @@ export default function GeneratedAlbum() {
                 <>
                   <Wand2 className="mr-2 h-5 w-5" />
                   Regenerate Album
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleRequestAlbum}
-              disabled={!formData || isRequesting || isRegenerating}
-              className="flex-1 h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300"
-            >
-              {isRequesting ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Continue
                 </>
               )}
             </Button>

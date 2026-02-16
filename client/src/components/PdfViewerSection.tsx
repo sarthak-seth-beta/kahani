@@ -94,9 +94,9 @@ export default function PdfViewerSection() {
       id="pdf-viewer"
     >
       {/* Title */}
-      <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider mb-8 text-center">
+      {/* <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider mb-8 text-center">
         Our Album Book
-      </h2>
+      </h2> */}
 
       {/* PDF Container */}
       <div

@@ -2091,90 +2091,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { GoogleGenAI } = await import("@google/genai");
       const { z } = await import("zod");
 
-      const generatedAlbumSchema = z.object({
-        title: z.string(),
-        description: z.string(),
-        questions: z.array(z.string()).min(15).max(15),
-        questionsHn: z.array(z.string()).min(15).max(15),
-        questionSetTitles: z.object({
-          en: z.array(z.string()).length(5),
-        }),
-        questionSetPremise: z.object({
-          en: z.array(z.string()).length(5),
-          hn: z.array(z.string()).length(5),
-        }),
-      });
+      // Map language preference for the prompt
+      const langMap: Record<string, string> = { en: "English", hn: "Hindi", other: "Both" };
+      const langPref = langMap[language || ""] || "Both";
 
-      const responseJsonSchema = {
-        type: "object",
-        properties: {
-          title: { type: "string", description: "Album title" },
-          description: { type: "string", description: "Album description" },
-          questions: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 15,
-            maxItems: 15,
-            description:
-              "Exactly 15 thoughtful prompts for voice recording in English, 3 per section",
-          },
-          questionsHn: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 15,
-            maxItems: 15,
-            description:
-              "Exactly 15 Hindi translations of the questions, matching the order of the English questions",
-          },
-          questionSetTitles: {
-            type: "object",
-            properties: {
-              en: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 5,
-                maxItems: 5,
-                description:
-                  "Exactly 5 chapter names in English, one per section",
-              },
-            },
-            required: ["en"],
-            description: "Chapter titles for the 5 question sections",
-          },
-          questionSetPremise: {
-            type: "object",
-            properties: {
-              en: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 5,
-                maxItems: 5,
-                description:
-                  "Exactly 5 premises in English, one per question set, describing the theme/purpose of each section",
-              },
-              hn: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 5,
-                maxItems: 5,
-                description:
-                  "Exactly 5 premises in Hindi, matching the English premises",
-              },
-            },
-            required: ["en", "hn"],
-            description:
-              "Premises explaining the theme/purpose of each question set section",
-          },
-        },
-        required: [
-          "title",
-          "description",
-          "questions",
-          "questionsHn",
-          "questionSetTitles",
-          "questionSetPremise",
-        ],
-      };
+      // Always generate both English and Hindi content
+      const needsHindi = true;
+      const needsEnglish = true;
 
       const customQuestionsText =
         questions
@@ -2182,23 +2105,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .map((q: { text: string }) => q.text)
           .join("\n- ") || "None";
 
-      const prompt = `Generate a Kahani album (audio story collection) for the following request.
+      // Zod schema adapts based on language preference
+      const questionsShape: Record<string, any> = {};
+      const chapterNamesShape: Record<string, any> = {};
+      const chapterPremiseShape: Record<string, any> = {};
+      if (needsEnglish) {
+        questionsShape.en = z.array(z.string()).min(15).max(15);
+        chapterNamesShape.en = z.array(z.string()).length(5);
+        chapterPremiseShape.en = z.array(z.string()).length(5);
+      }
+      if (needsHindi) {
+        questionsShape.hi = z.array(z.string()).min(15).max(15);
+        chapterNamesShape.hi = z.array(z.string()).length(5);
+        chapterPremiseShape.hi = z.array(z.string()).length(5);
+      }
 
-Recipient: ${recipientName}
-Occasion/Theme: ${occasion}
-Sender name: ${yourName}
-${instructions ? `Special instructions: ${instructions}` : ""}
-${customQuestionsText !== "None" ? `Custom questions to incorporate or inspire from:\n- ${customQuestionsText}` : ""}
-${title ? `Preferred title (use or adapt): ${title}` : ""}
-${language ? `Preferred language: ${language}` : ""}
+      const generatedAlbumSchema = z.object({
+        title: z.string(),
+        description: z.string(),
+        chapterNames: z.object(chapterNamesShape),
+        chapterPremise: z.object(chapterPremiseShape),
+        questions: z.object(questionsShape),
+      });
 
-Return a JSON object with:
-- title: A warm, personalized album title
-- description: 2-3 sentences describing what this album captures
-- questions: Exactly 15 thoughtful, open-ended prompts in English suitable for voice recording (stories, memories, wisdom), organized in 5 sections of 3 questions each
-- questionsHn: Exactly 15 Hindi translations of the questions, matching the exact order of the English questions. Use natural, conversational Hindi suitable for voice recording.
-- questionSetTitles: { en: [exactly 5 chapter names] } - one name per section (e.g. "Childhood Memories", "Wedding Stories", "Life Lessons", "Family Traditions", "Words of Wisdom")
-- questionSetPremise: { en: [exactly 5 premises], hn: [exactly 5 premises] } - Each premise is a brief description (1-2 sentences) explaining the theme/purpose of each question set section. The Hindi premises should be natural translations of the English ones. These premises help guide the conversation flow in WhatsApp.`;
+      // Build JSON schema for Gemini structured output
+      const langKeys = [];
+      if (needsEnglish) langKeys.push("en");
+      if (needsHindi) langKeys.push("hi");
+
+      const arrayOf15 = (desc: string) => ({
+        type: "array" as const,
+        items: { type: "string" as const },
+        minItems: 15,
+        maxItems: 15,
+        description: desc,
+      });
+      const arrayOf5 = (desc: string) => ({
+        type: "array" as const,
+        items: { type: "string" as const },
+        minItems: 5,
+        maxItems: 5,
+        description: desc,
+      });
+
+      const questionsProps: Record<string, any> = {};
+      const chapterNamesProps: Record<string, any> = {};
+      const chapterPremiseProps: Record<string, any> = {};
+      if (needsEnglish) {
+        questionsProps.en = arrayOf15("15 questions in English");
+        chapterNamesProps.en = arrayOf5("5 chapter names in English");
+        chapterPremiseProps.en = arrayOf5("5 chapter premises in English");
+      }
+      if (needsHindi) {
+        questionsProps.hi = arrayOf15("15 questions in Hindi (conversational Devanagari)");
+        chapterNamesProps.hi = arrayOf5("5 chapter names in Hindi");
+        chapterPremiseProps.hi = arrayOf5("5 chapter premises in Hindi");
+      }
+
+      const responseJsonSchema = {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Album title (2-4 words, no names)" },
+          description: { type: "string", description: "Album description (2 short lines)" },
+          chapterNames: {
+            type: "object",
+            properties: chapterNamesProps,
+            required: langKeys,
+            description: "Chapter titles (1-3 words each, book-like)",
+          },
+          chapterPremise: {
+            type: "object",
+            properties: chapterPremiseProps,
+            required: langKeys,
+            description: "Brief premise for each chapter (1-2 sentences)",
+          },
+          questions: {
+            type: "object",
+            properties: questionsProps,
+            required: langKeys,
+            description: "Exactly 15 open-ended questions, 3 per chapter",
+          },
+        },
+        required: ["title", "description", "chapterNames", "chapterPremise", "questions"],
+      };
+
+      const prompt = `You are the Kahani Album Writer.
+
+Your job is to create a personalized story album from form inputs.
+The output must feel warm, human, conversational, and easy to answer on WhatsApp voice notes.
+
+CORE OBJECTIVE
+Understand the user's true intention first, then design the album flow around that intention.
+The flow should feel natural, emotionally progressive, and relevant to the selected theme.
+
+INPUTS
+- who_is_this_for: ${recipientName}
+- language_preference: ${langPref}
+- theme: ${occasion}
+- personal_hints: ${instructions || "None"}
+- tone: Warm and casual
+- album_goal: Capture stories
+${customQuestionsText !== "None" ? `- must_include_questions:\n  - ${customQuestionsText}` : ""}
+${title ? `- preferred_title: ${title}` : ""}
+
+NON-NEGOTIABLE RULES
+1) Keep language simple, conversational, and respectful.
+2) No jargon. No therapy tone. No interview-like phrasing.
+3) Questions must feel like caring prompts, not interrogation.
+4) Never use buyer name, storyteller name, or relation labels inside questions.
+5) Do not overuse names anywhere.
+6) Every question must be open-ended and voice-note friendly.
+7) Focus on experiences, beliefs, values, reflections, and advice.
+8) Keep each question short (max 18 words).
+
+ALBUM STYLE RULES
+A) Album title: 2-4 words. Simple, memorable, book-like. No names. No relation words. No emojis.
+B) Album description: 2 short lines. Warm and clear. No fluff.
+C) Structure: Exactly 15 questions. Exactly 5 chapters. Exactly 3 questions per chapter.
+D) Arc: Do NOT use a fixed pre-set arc. Infer the best narrative arc from theme + personal_hints + album_goal + tone. Ensure smooth progression (easy start -> meaningful depth -> thoughtful close).
+E) Chapter names: Short and catchy (1-3 words). Book-like and non-generic. Include Hindi chapter names in light, daily-use, conversational Devanagari.
+F) Question quality: Easy to understand in one read. Invite a real memory or point of view. Encourage detail naturally. No long, vague, or repetitive questions.
+
+LANGUAGE BEHAVIOR
+- English: Light conversational English.
+- Hindi: Light conversational Devanagari.
+Return both English and Hindi in exact matching order.
+
+FINAL QUALITY CHECK
+- Exactly 15 questions, 5 chapters, 3 questions per chapter.
+- Question length <= 18 words.
+- No buyer/storyteller/relation names in questions.
+- Arc is inferred from intent, not hardcoded.
+- Output is valid JSON only.`;
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
@@ -2222,7 +2260,21 @@ Return a JSON object with:
         throw new Error("Invalid album structure from Gemini");
       }
 
-      res.json(validated.data);
+      // Normalize to the format downstream code expects
+      const album = validated.data;
+      res.json({
+        title: album.title,
+        description: album.description,
+        questions: album.questions.en || album.questions.hi || [],
+        questionsHn: album.questions.hi || [],
+        questionSetTitles: {
+          en: album.chapterNames.en || album.chapterNames.hi || [],
+        },
+        questionSetPremise: {
+          en: album.chapterPremise.en || album.chapterPremise.hi || [],
+          hn: album.chapterPremise.hi || [],
+        },
+      });
     } catch (error: any) {
       console.error("Error generating album:", error);
       res.status(500).json({
