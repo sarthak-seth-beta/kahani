@@ -1,12 +1,30 @@
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import fetch from "node-fetch";
 import speech from "@google-cloud/speech";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-// cmd- node scripts/download-transcribe.js 302be10b-0f18-44ba-9d67-60de7c5e4488 ./my-transcripts sarthakseth021@gmail.com
+// cmd- node scripts/download-transcribe.js 7d4f4d64-c1bd-46ab-874c-0103d9370c2d ./my-transcripts sarthakseth021@gmail.com
+//
+// Auth: GOOGLE_APPLICATION_CREDENTIALS_JSON_B64 in .env (base64 of service account JSON),
+//       or GOOGLE_APPLICATION_CREDENTIALS = path to key file.
+
+(function applyCredentialsFromEnv() {
+  const b64 = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON_B64;
+  if (!b64) return;
+  const raw = Buffer.from(b64, "base64").toString("utf8");
+  try {
+    JSON.parse(raw);
+  } catch (e) {
+    throw new Error("Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON_B64: " + e.message);
+  }
+  const tmpPath = path.join(os.tmpdir(), `gcp-sa-${process.pid}.json`);
+  fs.writeFileSync(tmpPath, raw, "utf8");
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
+})();
 
 // Use v1p1beta1 for MP3 support (MP3 encoding is beta and only in v1p1beta1).
 const speechClient = new speech.v1p1beta1.SpeechClient();
@@ -92,11 +110,9 @@ async function getTrialLanguagePreference(trialId) {
   }
 
   console.log(`  Trial language preference: ${pref} → ${languageCode}`);
-  // For Hindi preference: transcribe each voice note in both Hindi and English.
-  if (pref === "hn") {
+  
     return { languageCode, transcribeBothHindiAndEnglish: true };
-  }
-  return { languageCode };
+  
 }
 
 /**

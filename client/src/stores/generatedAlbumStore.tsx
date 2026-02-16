@@ -13,7 +13,7 @@ export interface GeneratedAlbumData {
   description: string;
   questions: string[];
   questionsHn?: string[];
-  questionSetTitles?: { en: string[] };
+  questionSetTitles?: { en: string[]; hn: string[] };
   questionSetPremise?: { en: string[]; hn: string[] };
 }
 

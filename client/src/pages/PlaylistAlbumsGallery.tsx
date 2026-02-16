@@ -743,6 +743,11 @@ export default function PlaylistAlbumsGallery() {
   // Check if player ribbon is visible
   const isPlayerVisible = currentTrack !== null;
 
+  const profileImage =
+    customProfileImage || album.coverImage === album.cover_image
+      ? "/attached_assets/dummy_avatar.webp"
+      : album.coverImage;
+
   return (
     <div
       style={{
@@ -1030,7 +1035,7 @@ export default function PlaylistAlbumsGallery() {
             }}
           >
             <ProfilePictureDialog
-              initialImage={album.coverImage}
+              initialImage={profileImage}
               onSave={handleProfileImageSave}
               trialId={trialId}
             >
@@ -1043,7 +1048,7 @@ export default function PlaylistAlbumsGallery() {
                 }}
               >
                 <img
-                  src={customProfileImage || "/attached_assets/dummy_avatar.webp"}
+                  src={profileImage}
                   alt={trial.selectedAlbum}
                   style={{
                     width: "100%",

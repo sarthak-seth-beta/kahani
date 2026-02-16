@@ -1297,11 +1297,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           typeof paymentAmount !== "number" ||
           paymentAmount <= 0
         ) {
-          return res
-            .status(500)
-            .json({
-              error: "Incomplete payment details for successful payment",
-            });
+          return res.status(500).json({
+            error: "Incomplete payment details for successful payment",
+          });
         }
         if (!expectedAmount) {
           return res
@@ -2120,6 +2118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chapterPremiseShape.hi = z.array(z.string()).length(5);
       }
 
+      // Zod schema for validation (matches the new structure)
       const generatedAlbumSchema = z.object({
         title: z.string(),
         description: z.string(),
@@ -2309,7 +2308,7 @@ FINAL QUALITY CHECK
         (album as { questions_hn?: string[] }).questions_hn;
       const questionSetTitles =
         album.questionSetTitles ??
-        (album as { question_set_titles?: { en?: string[] } })
+        (album as { question_set_titles?: { en?: string[]; hn?: string[] } })
           .question_set_titles;
       const questionSetPremise =
         album.questionSetPremise ??
@@ -2341,7 +2340,7 @@ FINAL QUALITY CHECK
         isActive: false,
         isConversationalAlbum: true,
         questionSetTitles: questionSetTitles
-          ? { en: questionSetTitles.en || [], hn: [] }
+          ? { en: questionSetTitles.en || [], hn: questionSetTitles.hn || [] }
           : { en: [], hn: [] },
         questionSetPremise: questionSetPremise
           ? {
