@@ -49,6 +49,7 @@ import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
 import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
+import SectionYTTestimonials from "./components/SectionYTTestimonials";
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -137,7 +138,8 @@ function HomePage() {
       <ValueProposition />
 
       {/* Section 3 - Testimonials */}
-      <SectionThreeTestimonials onLearnMore={handleLearnMore} />
+      {/* <SectionThreeTestimonials onLearnMore={handleLearnMore} /> */}
+      <SectionYTTestimonials onLearnMore={handleLearnMore} />
 
       {/* How It Works Section */}
       <HowItWorksSection />
