@@ -2268,6 +2268,7 @@ FINAL QUALITY CHECK
         questionsHn: album.questions.hi || [],
         questionSetTitles: {
           en: album.chapterNames.en || album.chapterNames.hi || [],
+          hn: album.chapterNames.hi || [],
         },
         questionSetPremise: {
           en: album.chapterPremise.en || album.chapterPremise.hi || [],

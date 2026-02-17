@@ -381,8 +381,12 @@ export default function GeneratedAlbum() {
 
           <Accordion type="single" collapsible className="w-full space-y-3">
             {chapters.map((chapterQuestions, idx) => {
+              const titleEn = album.questionSetTitles?.en?.[idx];
+              const titleHn = album.questionSetTitles?.hn?.[idx];
               const chapterTitle =
-                album.questionSetTitles?.en?.[idx] || `Chapter ${idx + 1}`;
+                lang === "hn"
+                  ? titleHn || titleEn || `Chapter ${idx + 1}`
+                  : titleEn || titleHn || `Chapter ${idx + 1}`;
               return (
                 <AccordionItem
                   key={idx}
