@@ -12,15 +12,24 @@ export const SmoothScroll = () => {
       return;
     }
 
+    if (typeof window === "undefined") {
+      return;
+    }
+
     const lenis = new Lenis({
-      duration: 1.2,
+      // Keep the easing but lower \"intensity\" so it feels close
+      // to native scroll, just slightly smoothed.
+      duration: 0.8,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      // Vertical only; don't interfere with horizontal swipes.
       orientation: "vertical",
       gestureOrientation: "vertical",
-      wheelMultiplier: 1,
-      touchMultiplier: 1,
-      // @ts-ignore
-      syncTouch: true,
+      // Smooth wheel/trackpad scroll.
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 0.9,
+      // Leave syncTouch off to avoid iOS quirks; we let the browser
+      // handle most of the native feel and just nudge it.
     });
 
     function raf(time: number) {
