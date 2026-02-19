@@ -10,8 +10,6 @@ import {
   Wand2,
   Plus,
   Trash2,
-  Mail,
-  Phone,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -33,31 +31,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useGeneratedAlbum } from "@/stores/generatedAlbumStore";
 import { getOrCreateSessionId } from "@/lib/sessionId";
 
-// Schema for the form
-const createAlbumSchema = z.object({
-  yourName: z.string().min(2, "Your name is required"),
-  phone: z.string().min(10, "WhatsApp number is required"),
-  recipientName: z.string().min(2, "Recipient name is required"),
-  occasion: z.string().min(2, "Occasion is required"),
-  instructions: z.string().optional(),
+const toneEnum = z.enum(["warm", "respectful", "funny", "calm"]);
+const albumGoalEnum = z.enum([
+  "stories",
+  "family_history",
+  "values_lessons",
+  "voice_future",
+]);
 
-  // Advanced / Optional
-  title: z.string().optional(),
-  email: z
-    .string()
-    .email("Please enter a valid email")
-    .optional()
-    .or(z.literal("")),
-  language: z.enum(["en", "hn", "other"]).optional(),
+const createAlbumSchema = z.object({
+  recipientName: z.string().min(2, "Who is this for? is required"),
+  language: z.enum(["en", "hn"]),
+  theme: z.string().min(2, "Theme is required"),
+  personalHints: z.string().optional(),
+  tone: toneEnum,
+  albumGoal: z.array(albumGoalEnum).min(1, "Select at least one goal"),
+  makeItPersonal: z.boolean().optional(),
+  topicsToAvoid: z.string().optional(),
   questions: z
     .array(
       z.object({
         text: z.string(),
-      }),
+      })
     )
     .optional(),
 });
@@ -75,14 +75,14 @@ export default function CreateAlbum() {
   const form = useForm<CreateAlbumFormValues>({
     resolver: zodResolver(createAlbumSchema),
     defaultValues: {
-      yourName: "",
-      phone: "",
       recipientName: "",
-      occasion: "",
-      instructions: "",
-      title: "",
-      email: "",
       language: "en",
+      theme: "",
+      personalHints: "",
+      tone: "warm",
+      albumGoal: ["stories"],
+      makeItPersonal: false,
+      topicsToAvoid: "",
       questions: [{ text: "" }],
     },
   });
@@ -94,15 +94,16 @@ export default function CreateAlbum() {
 
   const handleGenerateAlbum = async () => {
     const valid = await form.trigger([
-      "yourName",
-      "phone",
       "recipientName",
-      "occasion",
+      "theme",
+      "tone",
+      "albumGoal",
     ]);
     if (!valid) {
       toast({
         title: "Please fill required fields",
-        description: "Your name, phone, recipient, and occasion are required.",
+        description:
+          "Who is this for, theme, tone, and at least one album goal are required.",
         variant: "destructive",
       });
       return;
@@ -113,8 +114,14 @@ export default function CreateAlbum() {
       (q) => q.text.trim().length > 0,
     );
     const payload = {
-      ...data,
-      title: data.title || undefined,
+      recipientName: data.recipientName,
+      language: data.language,
+      theme: data.theme,
+      personalHints: data.personalHints || undefined,
+      tone: data.tone,
+      albumGoal: data.albumGoal,
+      makeItPersonal: data.makeItPersonal,
+      topicsToAvoid: data.topicsToAvoid || undefined,
       questions: validQuestions,
     };
 
@@ -136,7 +143,14 @@ export default function CreateAlbum() {
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || "Failed to generate album");
+        const msg = result.error || "Failed to generate album";
+        // If server returns old validation message, suggest refresh/restart
+        if (typeof msg === "string" && /yourName|phone.*occasion|occasion.*phone/.test(msg)) {
+          throw new Error(
+            "Server is using an old version. Please restart the dev server (stop and run yarn dev again), then try again.",
+          );
+        }
+        throw new Error(msg);
       }
 
       setGeneratedAlbum(result, payload);
@@ -157,15 +171,21 @@ export default function CreateAlbum() {
   const onSubmit = async (data: CreateAlbumFormValues) => {
     setIsSubmitting(true);
     try {
-      // Filter out empty questions
       const validQuestions = data.questions?.filter(
         (q) => q.text.trim().length > 0,
       );
-
-      // Include default title if empty
       const submissionData = {
-        ...data,
-        title: data.title || `${data.recipientName}'s Album`,
+        title: `${data.recipientName}'s Album`,
+        recipientName: data.recipientName,
+        theme: data.theme,
+        occasion: data.theme,
+        language: data.language,
+        personalHints: data.personalHints,
+        instructions: data.personalHints,
+        tone: data.tone,
+        albumGoal: data.albumGoal,
+        makeItPersonal: data.makeItPersonal,
+        topicsToAvoid: data.topicsToAvoid,
         questions: validQuestions,
       };
 
@@ -225,19 +245,19 @@ export default function CreateAlbum() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* 1. Your Name */}
+            {/* 1. Who is this for? */}
             <FormField
               control={form.control}
-              name="yourName"
+              name="recipientName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Your Name
+                    Who is this for?
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="e.g. Rahul"
+                      placeholder="Mom / Dad / Nanu / Sister"
                       className="h-11 text-sm sm:text-base bg-white"
                     />
                   </FormControl>
@@ -246,87 +266,48 @@ export default function CreateAlbum() {
               )}
             />
 
-            {/* 2. WhatsApp Number */}
+            {/* 2. Language (for your storyteller) */}
             <FormField
               control={form.control}
-              name="phone"
+              name="language"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    WhatsApp Number
+                    Language (for your storyteller)
                   </FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        {...field}
-                        placeholder="+91 98765 43210"
-                        className="h-11 pl-10 text-sm sm:text-base bg-white"
-                      />
-                    </div>
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-11 bg-white">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="hn">Hindi</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* 3. Recipient & Occasion Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="recipientName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                      Who is this for? (Relation)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="e.g. Nani"
-                        className="h-11 text-sm sm:text-base bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="occasion"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                      What do you want to capture?
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="e.g. Childhood Stories"
-                        className="h-11 text-sm sm:text-base bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* 4. Instructions (Special Request) */}
+            {/* 3. Theme */}
             <FormField
               control={form.control}
-              name="instructions"
+              name="theme"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Any special request? (Optional)
+                    Theme
                   </FormLabel>
                   <FormControl>
-                    <Textarea
+                    <Input
                       {...field}
-                      placeholder="Specific memories or topics..."
-                      className="min-h-[100px] text-sm sm:text-base bg-white resize-none"
+                      placeholder="army life, cooking, childhood, career, family stories"
+                      className="h-11 text-sm sm:text-base bg-white"
                     />
                   </FormControl>
                   <FormMessage />
@@ -334,7 +315,108 @@ export default function CreateAlbum() {
               )}
             />
 
-            {/* 5. Advanced Customization Toggle */}
+            {/* 4. A few personal hints */}
+            <FormField
+              control={form.control}
+              name="personalHints"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
+                    A few personal hints
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Where they grew up, what they're known for, what you want to learn..."
+                      className="min-h-[100px] text-sm sm:text-base bg-white resize-none"
+                    />
+                  </FormControl>
+                  <p className="text-xs text-[#1B2632]/60">
+                    2–5 lines is enough. Examples: where they grew up, what
+                    they&apos;re known for, what you want to learn.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 5. Tone */}
+            <FormField
+              control={form.control}
+              name="tone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
+                    Tone
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-11 bg-white">
+                        <SelectValue placeholder="Select tone" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="warm">Warm & casual</SelectItem>
+                      <SelectItem value="respectful">Respectful & formal</SelectItem>
+                      <SelectItem value="funny">Funny & light</SelectItem>
+                      <SelectItem value="calm">Calm & emotional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 6. What should the album achieve? */}
+            <FormField
+              control={form.control}
+              name="albumGoal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
+                    What should the album achieve?
+                  </FormLabel>
+                  <div className="space-y-3 rounded-md border border-[#C9C1B1]/30 p-4 bg-white/50">
+                    {[
+                      { value: "stories" as const, label: "Capture stories" },
+                      { value: "family_history" as const, label: "Capture family history" },
+                      { value: "values_lessons" as const, label: "Capture values & lessons" },
+                      { value: "voice_future" as const, label: "Capture voice for the future" },
+                    ].map((option) => (
+                      <div
+                        key={option.value}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`albumGoal-${option.value}`}
+                          checked={field.value?.includes(option.value)}
+                          onCheckedChange={(checked) => {
+                            const next = checked
+                              ? [...(field.value || []), option.value]
+                              : (field.value || []).filter(
+                                  (v) => v !== option.value
+                                );
+                            field.onChange(next);
+                          }}
+                        />
+                        <label
+                          htmlFor={`albumGoal-${option.value}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {option.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Advanced Customization Toggle */}
             <div className="pt-4">
               <button
                 type="button"
@@ -353,19 +435,40 @@ export default function CreateAlbum() {
             {/* Collapsible Section */}
             {isAdvancedOpen && (
               <div className="space-y-6 pt-2 animate-in slide-in-from-top-2 duration-300 border-t border-[#C9C1B1]/30 mt-2">
-                {/* Title */}
+                {/* Make it more personal */}
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="makeItPersonal"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value ?? false}
+                          onCheckedChange={(v) =>
+                            field.onChange(v === true)
+                          }
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer">
+                        Make it more personal
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Topics to avoid */}
+                <FormField
+                  control={form.control}
+                  name="topicsToAvoid"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                        Album Title
+                        Topics to avoid
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="My Family Album"
+                          placeholder="e.g. health issues, financial struggles"
                           className="h-11 bg-white"
                         />
                       </FormControl>
@@ -374,64 +477,11 @@ export default function CreateAlbum() {
                   )}
                 />
 
-                {/* Email */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                        Email Address
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input
-                            {...field}
-                            placeholder="you@example.com"
-                            className="h-11 pl-10 bg-white"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Language */}
-                <FormField
-                  control={form.control}
-                  name="language"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                        Preferred Language
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-11 bg-white">
-                            <SelectValue placeholder="Select language" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="hn">हिंदी (Hindi)</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Custom Questions */}
+                {/* Any specific questions you want included? */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                      Custom Questions
+                      Any specific questions you want included?
                     </FormLabel>
                     <Button
                       type="button"

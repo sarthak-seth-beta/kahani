@@ -2060,22 +2060,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const {
-        yourName,
-        phone,
         recipientName,
-        occasion,
-        instructions,
-        title,
-        email,
         language,
+        theme,
+        personalHints,
+        tone,
+        albumGoal,
+        makeItPersonal,
+        topicsToAvoid,
         questions,
       } = req.body;
 
-      // Validate required fields (everything except advanced customization)
-      if (!yourName || !phone || !recipientName || !occasion) {
+      const validTones = ["warm", "respectful", "funny", "calm"];
+      const validGoals = [
+        "stories",
+        "family_history",
+        "values_lessons",
+        "voice_future",
+      ];
+
+      if (!recipientName || !theme || !tone || !Array.isArray(albumGoal)) {
         return res.status(400).json({
           error:
-            "Missing required fields: yourName, phone, recipientName, occasion",
+            "Missing required fields: recipientName, theme, tone, albumGoal",
+        });
+      }
+      if (!validTones.includes(tone)) {
+        return res.status(400).json({
+          error: `Invalid tone. Must be one of: ${validTones.join(", ")}`,
+        });
+      }
+      if (albumGoal.length < 1) {
+        return res.status(400).json({
+          error: "Select at least one album goal",
+        });
+      }
+      if (albumGoal.some((g: string) => !validGoals.includes(g))) {
+        return res.status(400).json({
+          error: `Invalid album goal. Must be one or more of: ${validGoals.join(", ")}`,
         });
       }
 
@@ -2089,13 +2111,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { GoogleGenAI } = await import("@google/genai");
       const { z } = await import("zod");
 
-      // Map language preference for the prompt
-      const langMap: Record<string, string> = {
-        en: "English",
-        hn: "Hindi",
-        other: "Both",
-      };
+      const langMap: Record<string, string> = { en: "English", hn: "Hindi" };
       const langPref = langMap[language || ""] || "Both";
+
+      const toneMap: Record<string, string> = {
+        warm: "Warm and casual",
+        respectful: "Respectful and formal",
+        funny: "Funny and light",
+        calm: "Calm and emotional",
+      };
+      const toneValue = toneMap[tone || "warm"] || "Warm and casual";
+
+      const goalMap: Record<string, string> = {
+        stories: "Capture stories",
+        family_history: "Capture family history",
+        values_lessons: "Capture values & lessons",
+        voice_future: "Capture voice for the future",
+      };
+      const albumGoalsText =
+        albumGoal?.map((g: string) => goalMap[g] || g).join(", ") ||
+        "Capture stories";
 
       // Always generate both English and Hindi content
       const needsHindi = true;
@@ -2218,12 +2253,13 @@ The flow should feel natural, emotionally progressive, and relevant to the selec
 INPUTS
 - who_is_this_for: ${recipientName}
 - language_preference: ${langPref}
-- theme: ${occasion}
-- personal_hints: ${instructions || "None"}
-- tone: Warm and casual
-- album_goal: Capture stories
+- theme: ${theme}
+- personal_hints: ${personalHints || "None"}
+- tone: ${toneValue}
+- album_goal: ${albumGoalsText}
+${topicsToAvoid ? `- topics_to_avoid: ${topicsToAvoid}` : ""}
+${makeItPersonal ? `- make_it_more_personal: true` : ""}
 ${customQuestionsText !== "None" ? `- must_include_questions:\n  - ${customQuestionsText}` : ""}
-${title ? `- preferred_title: ${title}` : ""}
 
 NON-NEGOTIABLE RULES
 1) Keep language simple, conversational, and respectful.
@@ -2234,6 +2270,10 @@ NON-NEGOTIABLE RULES
 6) Every question must be open-ended and voice-note friendly.
 7) Focus on experiences, beliefs, values, reflections, and advice.
 8) Keep each question short (max 18 words).
+9) Match the selected TONE (${toneValue}) in question phrasing and chapter premises.
+10) Shape questions to achieve the album goals: ${albumGoalsText}.
+${topicsToAvoid ? `11) DO NOT include any questions or prompts about: ${topicsToAvoid}.` : ""}
+${makeItPersonal ? `12) Add more intimate, personal questions that invite deeper sharing and emotional reflection.` : ""}
 
 ALBUM STYLE RULES
 A) Album title: 2-4 words. Simple, memorable, book-like. No names. No relation words. No emojis.
@@ -2311,11 +2351,18 @@ FINAL QUALITY CHECK
       if (!album || !formData) {
         return res.status(400).json({ error: "Missing album or formData" });
       }
-      const { yourName, phone, recipientName, occasion } = formData;
-      if (!yourName || !phone || !recipientName || !occasion) {
+      const {
+        recipientName,
+        theme,
+        occasion,
+        language,
+        personalHints,
+        instructions,
+      } = formData;
+      const themeOrOccasion = theme || occasion;
+      if (!recipientName || !themeOrOccasion) {
         return res.status(400).json({
-          error:
-            "Missing required formData: yourName, phone, recipientName, occasion",
+          error: "Missing required formData: recipientName, theme",
         });
       }
       // Normalize album keys (support both camelCase and snake_case from client)
@@ -2387,13 +2434,13 @@ FINAL QUALITY CHECK
       const { sendCustomAlbumRequestEmail } = await import("./email");
       const emailSent = await sendCustomAlbumRequestEmail({
         title: finalTitle,
-        yourName,
+        yourName: formData.yourName,
         recipientName,
-        occasion,
-        language: formData.language || "en",
-        instructions: formData.instructions || "",
-        email: formData.email || "",
-        phone,
+        occasion: themeOrOccasion,
+        language: language || formData.language || "en",
+        instructions: personalHints || instructions || "",
+        email: formData.email,
+        phone: formData.phone,
         questions: questions.map((q: string) => ({ text: q })),
       });
       if (!emailSent) {
