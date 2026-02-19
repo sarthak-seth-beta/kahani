@@ -22,6 +22,7 @@ interface MiniPlayerProps {
   hasPreviousTrack?: boolean;
   autoplay: boolean;
   onAutoplayChange: (enabled: boolean) => void;
+  isEmbedded?: boolean;
 }
 
 export function MiniPlayer({
@@ -43,6 +44,7 @@ export function MiniPlayer({
   hasPreviousTrack = false,
   autoplay,
   onAutoplayChange,
+  isEmbedded = false,
 }: MiniPlayerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const lastTrackInfoRef = useRef<{
@@ -102,10 +104,10 @@ export function MiniPlayer({
       <div
         onClick={handleExpand}
         style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
+          position: isEmbedded ? "relative" : "fixed",
+          bottom: isEmbedded ? undefined : 0,
+          left: isEmbedded ? undefined : 0,
+          right: isEmbedded ? undefined : 0,
           height: "80px",
           background: "#FDF4DC",
           borderTop: "1px solid rgba(0, 0, 0, 0.1)",
