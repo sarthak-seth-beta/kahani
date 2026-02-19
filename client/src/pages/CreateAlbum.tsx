@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -64,6 +64,14 @@ const createAlbumSchema = z.object({
 
 type CreateAlbumFormValues = z.infer<typeof createAlbumSchema>;
 
+const GENERATING_TEXTS = [
+  "Picking the best story arcs…",
+  "Creating chapter names…",
+  "Writing thoughtful questions…",
+  "Making it sound natural…",
+  "Final polishing…",
+];
+
 export default function CreateAlbum() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -71,6 +79,8 @@ export default function CreateAlbum() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [generatingText, setGeneratingText] = useState("");
+  const generatingTextIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const form = useForm<CreateAlbumFormValues>({
     resolver: zodResolver(createAlbumSchema),
@@ -91,6 +101,32 @@ export default function CreateAlbum() {
     control: form.control,
     name: "questions",
   });
+
+  // Rotate generating text while album is being generated
+  useEffect(() => {
+    if (isGenerating) {
+      let currentIndex = 0;
+      setGeneratingText(GENERATING_TEXTS[currentIndex]);
+
+      generatingTextIntervalRef.current = setInterval(() => {
+        currentIndex = (currentIndex + 1) % GENERATING_TEXTS.length;
+        setGeneratingText(GENERATING_TEXTS[currentIndex]);
+      }, 1500); // Change text every 1.5 seconds
+
+      return () => {
+        if (generatingTextIntervalRef.current) {
+          clearInterval(generatingTextIntervalRef.current);
+          generatingTextIntervalRef.current = null;
+        }
+      };
+    } else {
+      setGeneratingText("");
+      if (generatingTextIntervalRef.current) {
+        clearInterval(generatingTextIntervalRef.current);
+        generatingTextIntervalRef.current = null;
+      }
+    }
+  }, [isGenerating]);
 
   const handleGenerateAlbum = async () => {
     const valid = await form.trigger([
@@ -541,7 +577,7 @@ export default function CreateAlbum() {
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Generating...
+                  {generatingText || "Generating..."}
                 </>
               ) : (
                 <>
