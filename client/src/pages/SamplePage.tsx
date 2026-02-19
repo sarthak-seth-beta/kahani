@@ -5,6 +5,7 @@ import PdfViewerSection from "@/components/PdfViewerSection";
 import { ArrowLeft } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
 import AlbumGallery from "@/components/playlist/AlbumGallery";
+import { Footer } from "@/components/Footer";
 
 export default function SamplePage() {
   const [, setLocation] = useLocation();
@@ -62,7 +63,7 @@ export default function SamplePage() {
         className={`w-full max-w-7xl flex flex-col items-center justify-center flex-1 ${
           activeTab === "listen"
             ? "min-h-[calc(100dvh-8rem)] overflow-hidden"
-            : "mb-8"
+            : ""
         }`}
       >
         {activeTab === "read" ? (
@@ -117,12 +118,15 @@ export default function SamplePage() {
         )}
       </div>
 
+      {/* Separator */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-[#C9C1B1]/80 to-transparent mb-4 xs:mb-5 sm:mb-6" />
+
       {/* What you get - next section, mobile-first */}
-      <section className="w-full px-3 xs:px-4 sm:px-6 py-6 xs:py-8 sm:py-10 bg-[#EEE9DF]">
+      <section className="w-full px-3 xs:px-4 sm:px-6 pt-4 xs:pt-5 sm:pt-6 pb-6 xs:pb-8 sm:pb-10 bg-[#EEE9DF]">
         <h2 className="font-['Outfit'] font-semibold text-[#1B2632] text-lg xs:text-xl sm:text-2xl text-center mb-4 xs:mb-5 sm:mb-6">
           What you get
         </h2>
-        <ul className="list-none max-w-md mx-auto space-y-2.5 xs:space-y-3 sm:space-y-3.5 text-[#1B2632]/90 text-xs xs:text-sm sm:text-base font-['Outfit']">
+        <ul className="list-none max-w-md mx-auto space-y-2.5 xs:space-y-3 sm:space-y-3.5 text-[#1B2632]/90 text-sm xs:text-base sm:text-base font-['Outfit']">
           <li className="flex gap-2.5 xs:gap-3 items-start">
             <span className="text-[#A35139] mt-0.5 shrink-0" aria-hidden>
               •
@@ -166,7 +170,23 @@ export default function SamplePage() {
             <span>The freedom to pause and continue anytime</span>
           </li>
         </ul>
+
+        {/* CTA Button */}
+        <div className="mt-6 xs:mt-8 sm:mt-10 flex justify-center">
+          <Button
+            onClick={() => setLocation("/all-albums")}
+            className="px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 text-sm xs:text-base sm:text-lg font-semibold"
+          >
+            Start Your Story
+          </Button>
+        </div>
       </section>
+
+      {/* Separator */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-[#C9C1B1]/80 to-transparent my-6 xs:my-8 sm:my-10" />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
