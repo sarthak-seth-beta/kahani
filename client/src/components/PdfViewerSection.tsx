@@ -89,10 +89,7 @@ export default function PdfViewerSection() {
   }, []);
 
   return (
-    <section
-      className="py-2 w-full flex flex-col items-center"
-      id="pdf-viewer"
-    >
+    <section className="py-2 w-full flex flex-col items-center" id="pdf-viewer">
       {/* Title */}
       {/* <h2 className="text-3xl md:text-5xl font-bold font-['Outfit'] text-[#1B2632] tracking-wider mb-8 text-center">
         Our Album Book
@@ -117,7 +114,7 @@ export default function PdfViewerSection() {
           onLoadSuccess={onDocumentLoadSuccess}
           loading=""
           className={isLoading ? "hidden" : ""}
-        // style={{ margin: 0, padding: 0, display: 'block', lineHeight: 0 }}
+          // style={{ margin: 0, padding: 0, display: 'block', lineHeight: 0 }}
         >
           {containerWidth > 0 && (
             <>

@@ -7,7 +7,7 @@ import speech from "@google-cloud/speech";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-// cmd- node scripts/download-transcribe.js 7d4f4d64-c1bd-46ab-874c-0103d9370c2d ./my-transcripts sarthakseth021@gmail.com
+// cmd- node scripts/download-transcribe.js f76ea023-39c5-4309-a4e4-1b2e111e9dce ./my-transcripts sarthakseth021@gmail.com
 //
 // Auth: GOOGLE_APPLICATION_CREDENTIALS_JSON_B64 in .env (base64 of service account JSON),
 //       or GOOGLE_APPLICATION_CREDENTIALS = path to key file.
@@ -19,7 +19,9 @@ import { Resend } from "resend";
   try {
     JSON.parse(raw);
   } catch (e) {
-    throw new Error("Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON_B64: " + e.message);
+    throw new Error(
+      "Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON_B64: " + e.message,
+    );
   }
   const tmpPath = path.join(os.tmpdir(), `gcp-sa-${process.pid}.json`);
   fs.writeFileSync(tmpPath, raw, "utf8");
@@ -110,9 +112,8 @@ async function getTrialLanguagePreference(trialId) {
   }
 
   console.log(`  Trial language preference: ${pref} → ${languageCode}`);
-  
-    return { languageCode, transcribeBothHindiAndEnglish: true };
-  
+
+  return { languageCode, transcribeBothHindiAndEnglish: true };
 }
 
 /**

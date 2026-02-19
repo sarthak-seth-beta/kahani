@@ -2090,7 +2090,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { z } = await import("zod");
 
       // Map language preference for the prompt
-      const langMap: Record<string, string> = { en: "English", hn: "Hindi", other: "Both" };
+      const langMap: Record<string, string> = {
+        en: "English",
+        hn: "Hindi",
+        other: "Both",
+      };
       const langPref = langMap[language || ""] || "Both";
 
       // Always generate both English and Hindi content
@@ -2156,7 +2160,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chapterPremiseProps.en = arrayOf5("5 chapter premises in English");
       }
       if (needsHindi) {
-        questionsProps.hi = arrayOf15("15 questions in Hindi (conversational Devanagari)");
+        questionsProps.hi = arrayOf15(
+          "15 questions in Hindi (conversational Devanagari)",
+        );
         chapterNamesProps.hi = arrayOf5("5 chapter names in Hindi");
         chapterPremiseProps.hi = arrayOf5("5 chapter premises in Hindi");
       }
@@ -2164,8 +2170,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const responseJsonSchema = {
         type: "object",
         properties: {
-          title: { type: "string", description: "Album title (2-4 words, no names)" },
-          description: { type: "string", description: "Album description (2 short lines)" },
+          title: {
+            type: "string",
+            description: "Album title (2-4 words, no names)",
+          },
+          description: {
+            type: "string",
+            description: "Album description (2 short lines)",
+          },
           chapterNames: {
             type: "object",
             properties: chapterNamesProps,
@@ -2185,7 +2197,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             description: "Exactly 15 open-ended questions, 3 per chapter",
           },
         },
-        required: ["title", "description", "chapterNames", "chapterPremise", "questions"],
+        required: [
+          "title",
+          "description",
+          "chapterNames",
+          "chapterPremise",
+          "questions",
+        ],
       };
 
       const prompt = `You are the Kahani Album Writer.

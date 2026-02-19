@@ -162,7 +162,6 @@ export default function HowItWorksSection({
         </div>
 
         <div className="relative">
-
           <div
             ref={scrollContainerRef}
             className="flex flex-row items-start md:items-start justify-start md:justify-center gap-4 md:gap-4 lg:gap-6 w-full overflow-x-auto snap-x snap-mandatory pb-6 no-scrollbar"
@@ -231,8 +230,11 @@ export default function HowItWorksSection({
           {steps.map((_, index) => (
             <div
               key={index}
-              className={`h-2 rounded-full transition-all duration-300 ${index === activeStep ? "w-8 bg-[#1B2632]" : "w-2 bg-[#1B2632]/20"
-                }`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === activeStep
+                  ? "w-8 bg-[#1B2632]"
+                  : "w-2 bg-[#1B2632]/20"
+              }`}
             />
           ))}
         </div>

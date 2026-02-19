@@ -17,8 +17,8 @@ function buildEmbedUrl(id: string, autoplay: boolean, muted: boolean) {
     mute: muted ? "1" : "0",
     playsinline: "1",
     modestbranding: "1",
-    rel: "0",            // no related videos at end
-    controls: "1",       // show controls so user can unmute/play
+    rel: "0", // no related videos at end
+    controls: "1", // show controls so user can unmute/play
     fs: "0",
   });
   return `https://www.youtube.com/embed/${id}?${params.toString()}`;
@@ -133,4 +133,3 @@ export default function YouTubeTestimonials() {
     </section>
   );
 }
-

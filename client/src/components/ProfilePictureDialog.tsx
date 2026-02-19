@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import Cropper, { Point, Area } from "react-easy-crop";
-import getCroppedImg from "../utils/canvasUtils";
+import getCroppedImg, { normalizeImageOrientation } from "../utils/canvasUtils";
 import { IoAdd, IoRemove, IoCloudUploadOutline } from "react-icons/io5";
 import {
   Dialog,
@@ -80,18 +80,10 @@ const ProfilePictureDialog = ({
     }
   }, [imageSrc, croppedAreaPixels, rotation, onSave]);
 
-  function readFile(file: File): Promise<string> {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.addEventListener("load", () => resolve(reader.result as string));
-      reader.readAsDataURL(file);
-    });
-  }
-
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const imageDataUrl = await readFile(file);
+      const imageDataUrl = await normalizeImageOrientation(file);
       setImageSrc(imageDataUrl);
       setZoom(1);
     }

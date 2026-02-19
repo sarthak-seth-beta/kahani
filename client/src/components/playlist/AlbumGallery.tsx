@@ -99,7 +99,10 @@ interface AlbumGalleryProps {
   isEmbedded?: boolean;
 }
 
-export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalleryProps) {
+export default function AlbumGallery({
+  trialId,
+  isEmbedded = false,
+}: AlbumGalleryProps) {
   const actualTrialId = TRIAL_ID;
   const albumApiPath = `/api/albums/${actualTrialId}?locale=en`;
 
@@ -112,7 +115,9 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
     enabled: !!actualTrialId,
   });
 
-  const [playingTrackIndex, setPlayingTrackIndex] = useState<number | null>(null);
+  const [playingTrackIndex, setPlayingTrackIndex] = useState<number | null>(
+    null,
+  );
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [lastTrackIndex, setLastTrackIndex] = useState<number | null>(null);
@@ -224,7 +229,9 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
 
   const handlePlay = useCallback(() => {
     if (albumData?.tracks && albumData.tracks.length > 0) {
-      const firstPlayableIndex = albumData.tracks.findIndex((t: Track) => t.mediaUrl);
+      const firstPlayableIndex = albumData.tracks.findIndex(
+        (t: Track) => t.mediaUrl,
+      );
       if (firstPlayableIndex !== -1) {
         handlePlayPause(firstPlayableIndex);
       }
@@ -271,8 +278,10 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
 
   const { trial, album, tracks } = albumData;
   const trackCount = tracks.length;
-  const displayTrackIndex = playingTrackIndex !== null ? playingTrackIndex : lastTrackIndex;
-  const currentTrack = displayTrackIndex !== null ? tracks[displayTrackIndex] : null;
+  const displayTrackIndex =
+    playingTrackIndex !== null ? playingTrackIndex : lastTrackIndex;
+  const currentTrack =
+    displayTrackIndex !== null ? tracks[displayTrackIndex] : null;
 
   const groupedTracks = groupTracksIntoBatches(
     tracks,
@@ -294,8 +303,20 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
         background: "#FDF4DC",
         width: "100%",
         ...(isEmbedded
-          ? { height: "100%", minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }
-          : { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }),
+          ? {
+              height: "100%",
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }
+          : {
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }),
       }}
     >
       {/* Content */}
@@ -416,7 +437,8 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
                 color: "rgba(0, 0, 0, 0.6)",
               }}
             >
-              Recorded with love for {trial.buyerName} by {trial.storytellerName}.
+              Recorded with love for {trial.buyerName} by{" "}
+              {trial.storytellerName}.
             </span>
           </div>
 
@@ -520,7 +542,8 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
                     <AccordionContent className="py-2">
                       {batch.tracks.map((track, trackIndexInBatch) => {
                         const globalIndex = startIndex + trackIndexInBatch;
-                        const isCurrentTrack = playingTrackIndex === globalIndex;
+                        const isCurrentTrack =
+                          playingTrackIndex === globalIndex;
 
                         return (
                           <div
@@ -607,82 +630,86 @@ export default function AlbumGallery({ trialId, isEmbedded = false }: AlbumGalle
             </Accordion>
           ) : (
             <div>
-              {(groupedTracks as typeof tracks).map((track: any, index: number) => {
-                const isCurrentTrack = playingTrackIndex === index;
+              {(groupedTracks as typeof tracks).map(
+                (track: any, index: number) => {
+                  const isCurrentTrack = playingTrackIndex === index;
 
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0.75rem 0",
-                      borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-                      cursor: !track.mediaUrl ? "default" : "pointer",
-                      opacity: !track.mediaUrl ? 0.5 : 1,
-                    }}
-                    onClick={() => {
-                      if (!track.mediaUrl) return;
-                      handlePlayPause(index);
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontFamily: "Outfit, sans-serif",
-                          fontSize: "0.9375rem",
-                          fontWeight: isCurrentTrack ? "600" : "400",
-                          color: "#000",
-                          margin: 0,
-                          marginBottom: "0.25rem",
-                        }}
-                      >
-                        {track.questionText}
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
+                  return (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0.75rem 0",
+                        borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+                        cursor: !track.mediaUrl ? "default" : "pointer",
+                        opacity: !track.mediaUrl ? 0.5 : 1,
+                      }}
+                      onClick={() => {
                         if (!track.mediaUrl) return;
                         handlePlayPause(index);
                       }}
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        background: isCurrentTrack
-                          ? "#A35139"
-                          : "rgba(0, 0, 0, 0.1)",
-                        border: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        color: isCurrentTrack ? "#FFF" : "#000",
-                        transition: "all 0.2s ease",
-                        marginLeft: "1rem",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isCurrentTrack) {
-                          e.currentTarget.style.background = "rgba(0, 0, 0, 0.2)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isCurrentTrack) {
-                          e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
-                        }
-                      }}
-                      aria-label={`Play ${track.questionText}`}
                     >
-                      {isCurrentTrack && isPlaying ? (
-                        <Pause size={16} fill="currentColor" />
-                      ) : (
-                        <Play size={16} fill="currentColor" />
-                      )}
-                    </button>
-                  </div>
-                );
-              })}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontFamily: "Outfit, sans-serif",
+                            fontSize: "0.9375rem",
+                            fontWeight: isCurrentTrack ? "600" : "400",
+                            color: "#000",
+                            margin: 0,
+                            marginBottom: "0.25rem",
+                          }}
+                        >
+                          {track.questionText}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!track.mediaUrl) return;
+                          handlePlayPause(index);
+                        }}
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: isCurrentTrack
+                            ? "#A35139"
+                            : "rgba(0, 0, 0, 0.1)",
+                          border: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          color: isCurrentTrack ? "#FFF" : "#000",
+                          transition: "all 0.2s ease",
+                          marginLeft: "1rem",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isCurrentTrack) {
+                            e.currentTarget.style.background =
+                              "rgba(0, 0, 0, 0.2)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isCurrentTrack) {
+                            e.currentTarget.style.background =
+                              "rgba(0, 0, 0, 0.1)";
+                          }
+                        }}
+                        aria-label={`Play ${track.questionText}`}
+                      >
+                        {isCurrentTrack && isPlaying ? (
+                          <Pause size={16} fill="currentColor" />
+                        ) : (
+                          <Play size={16} fill="currentColor" />
+                        )}
+                      </button>
+                    </div>
+                  );
+                },
+              )}
             </div>
           )}
         </div>

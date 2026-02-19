@@ -147,8 +147,6 @@ function HomePage() {
       {/* Get Started Section */}
       <GetStartedSection />
 
-
-
       {/* Section 4 - Albums (Moved above Testimonials) */}
       <SectionFourAlbumsNew />
 
