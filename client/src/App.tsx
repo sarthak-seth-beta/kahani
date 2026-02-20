@@ -8,7 +8,6 @@ import ScrollToTop from "@/components/ScrollToTop";
 import SmoothScroll from "@/components/SmoothScroll";
 import SimpleHeader from "@/components/SimpleHeader";
 import HeroSection from "@/components/HeroSection";
-import { BottomHomeNavbar } from "@/components/BottomHomeNavbar";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import GetStartedSection from "@/components/GetStartedSection";
@@ -53,7 +52,6 @@ import SectionYTTestimonials from "./components/SectionYTTestimonials";
 
 function HomePage() {
   const [, setLocation] = useLocation();
-  const [isPlayerActive, setIsPlayerActive] = useState(false);
 
   // Track traffic source from URL parameter (e.g., ?source=qr)
   useEffect(() => {
@@ -102,11 +100,7 @@ function HomePage() {
   }, []); // Run only once on mount
 
   const handleHearKahaniClick = () => {
-    setIsPlayerActive(true);
-  };
-
-  const handlePlayerInactive = () => {
-    setIsPlayerActive(false);
+    // Handler for HeroSection
   };
 
   const handleRecordClick = () => {
@@ -122,11 +116,6 @@ function HomePage() {
       {/* Simple Header - Fixed at top (Restored) */}
       <SimpleHeader onRecordClick={handleRecordClick} />
 
-      {/* Bottom Home Navbar - Fixed at bottom */}
-      <BottomHomeNavbar
-        isActive={isPlayerActive}
-        onInactive={handlePlayerInactive}
-      />
 
       {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
       {/* <div className="h-20" /> */}

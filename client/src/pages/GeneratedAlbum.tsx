@@ -68,30 +68,37 @@ export default function GeneratedAlbum() {
             formData?: Record<string, unknown>;
           };
           const fd = parsed?.formData;
+          const hasTheme = typeof fd?.theme === "string" && fd.theme.trim();
+          const hasOccasion = typeof fd?.occasion === "string" && fd.occasion.trim();
           if (
             fd &&
-            typeof fd.yourName === "string" &&
-            fd.yourName.trim() &&
-            typeof fd.phone === "string" &&
-            fd.phone.trim() &&
             typeof fd.recipientName === "string" &&
             fd.recipientName.trim() &&
-            typeof fd.occasion === "string" &&
-            fd.occasion.trim()
+            (hasTheme || hasOccasion)
           ) {
             setGeneratedAlbum(album, {
-              yourName: fd.yourName,
-              phone: fd.phone,
-              recipientName: fd.recipientName,
-              occasion: fd.occasion,
-              instructions:
-                typeof fd.instructions === "string"
-                  ? fd.instructions
-                  : undefined,
-              title: typeof fd.title === "string" ? fd.title : undefined,
-              email: typeof fd.email === "string" ? fd.email : undefined,
+              recipientName: fd.recipientName as string,
+              theme: (fd.theme || fd.occasion || "") as string,
               language:
                 typeof fd.language === "string" ? fd.language : undefined,
+              personalHints:
+                typeof fd.personalHints === "string"
+                  ? fd.personalHints
+                  : typeof fd.instructions === "string"
+                    ? fd.instructions
+                    : undefined,
+              tone: typeof fd.tone === "string" ? fd.tone : undefined,
+              albumGoal: Array.isArray(fd.albumGoal)
+                ? fd.albumGoal
+                : undefined,
+              makeItPersonal:
+                typeof fd.makeItPersonal === "boolean"
+                  ? fd.makeItPersonal
+                  : undefined,
+              topicsToAvoid:
+                typeof fd.topicsToAvoid === "string"
+                  ? fd.topicsToAvoid
+                  : undefined,
               questions: Array.isArray(fd.questions) ? fd.questions : undefined,
             });
           }
@@ -134,8 +141,14 @@ export default function GeneratedAlbum() {
         (q) => q.text.trim().length > 0,
       );
       const payload = {
-        ...formData,
-        title: formData.title || undefined,
+        recipientName: formData.recipientName,
+        language: formData.language ?? "en",
+        theme: formData.theme,
+        personalHints: formData.personalHints,
+        tone: formData.tone ?? "warm",
+        albumGoal: formData.albumGoal ?? ["stories"],
+        makeItPersonal: formData.makeItPersonal,
+        topicsToAvoid: formData.topicsToAvoid,
         questions: validQuestions,
       };
 
@@ -199,14 +212,12 @@ export default function GeneratedAlbum() {
           questionSetPremise: album.questionSetPremise,
         },
         formData: {
-          yourName: formData.yourName,
-          phone: formData.phone,
           recipientName: formData.recipientName,
-          occasion: formData.occasion,
-          instructions: formData.instructions ?? "",
-          title: formData.title ?? "",
-          email: formData.email ?? "",
+          theme: formData.theme,
+          occasion: formData.theme,
           language: formData.language ?? "en",
+          personalHints: formData.personalHints,
+          instructions: formData.personalHints ?? "",
           questions: formData.questions ?? [],
         },
       };

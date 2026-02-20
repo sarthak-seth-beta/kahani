@@ -18,14 +18,14 @@ export interface GeneratedAlbumData {
 }
 
 export interface GeneratedAlbumFormData {
-  yourName: string;
-  phone: string;
   recipientName: string;
-  occasion: string;
-  instructions?: string;
-  title?: string;
-  email?: string;
   language?: string;
+  theme: string;
+  personalHints?: string;
+  tone?: string;
+  albumGoal?: string[];
+  makeItPersonal?: boolean;
+  topicsToAvoid?: string;
   questions?: { text: string }[];
 }
 
