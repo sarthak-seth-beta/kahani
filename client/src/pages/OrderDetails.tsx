@@ -1,10 +1,11 @@
 import { useLocation } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FreeTrialForm } from "@/components/FreeTrialForm";
 import { Footer } from "@/components/Footer";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Album {
   id: string;
@@ -16,6 +17,7 @@ export default function OrderDetails() {
   const [, setLocation] = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
   let albumId = urlParams.get("albumId") || "";
+  const paymentOrderId = urlParams.get("paymentOrderId");
 
   // Clean up albumId - remove any trailing query params or fragments
   if (albumId.includes("&")) {
@@ -25,6 +27,39 @@ export default function OrderDetails() {
     albumId = albumId.split("#")[0];
   }
   albumId = albumId.trim();
+
+  // Payment verification guard: verify the payment is actually successful
+  // before allowing access to this page.
+  const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!paymentOrderId) {
+      setLocation(`/free-trial${albumId ? `?albumId=${albumId}` : ""}`);
+      return;
+    }
+
+    const verifyPayment = async () => {
+      try {
+        const response = await apiRequest(
+          "GET",
+          `/api/transactions/by-payment-order/${paymentOrderId}`,
+        );
+        if (response.ok) {
+          const txn = await response.json();
+          if (txn.paymentStatus === "success") {
+            setPaymentVerified(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Payment verification failed:", error);
+      }
+      setPaymentVerified(false);
+      setLocation(`/free-trial${albumId ? `?albumId=${albumId}` : ""}`);
+    };
+
+    verifyPayment();
+  }, [paymentOrderId]);
 
   const { data: albums } = useQuery<Album[]>({
     queryKey: ["/api/albums"],
@@ -43,6 +78,17 @@ export default function OrderDetails() {
     }
     return "";
   }, [albumId, albumById, albums]);
+
+  if (paymentVerified !== true) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#EEE9DF]">
+        <div className="text-center p-8">
+          <Loader2 className="w-10 h-10 animate-spin text-[#C8553D] mx-auto mb-4" />
+          <p className="text-gray-600">Verifying payment...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#EEE9DF]">

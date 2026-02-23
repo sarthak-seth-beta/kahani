@@ -2628,6 +2628,38 @@ FINAL QUALITY CHECK
     }
   });
 
+  // ─── Route guard: /order-details requires verified payment ─────────
+  // Runs before the SPA catch-all. On full page loads (direct URL, back
+  // button, refresh) this checks the DB and redirects away if there is
+  // no completed payment for the given paymentOrderId.
+  app.get("/order-details", async (req, res, next) => {
+    try {
+      const paymentOrderId = req.query.paymentOrderId as string | undefined;
+
+      if (!paymentOrderId) {
+        const albumId = (req.query.albumId as string) || "";
+        return res.redirect(
+          `/free-trial${albumId ? `?albumId=${albumId}` : ""}`,
+        );
+      }
+
+      const txn =
+        await storage.getTransactionByPaymentOrderId(paymentOrderId);
+
+      if (!txn || txn.paymentStatus !== "success") {
+        const albumId = (req.query.albumId as string) || "";
+        return res.redirect(
+          `/free-trial${albumId ? `?albumId=${albumId}` : ""}`,
+        );
+      }
+
+      next();
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      next();
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
