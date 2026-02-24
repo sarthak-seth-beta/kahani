@@ -30,6 +30,7 @@ import ContactUs from "@/pages/ContactUs";
 import OrderDetails from "@/pages/OrderDetails";
 import CompanyLegal from "@/pages/CompanyLegal";
 import Blogs from "@/pages/Blogs";
+import BlogDetail from "@/pages/BlogDetail";
 import AlbumsGallery from "@/pages/AlbumsGallery";
 import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
 import VinylGallery from "@/pages/VinylGallery";
@@ -177,6 +178,7 @@ function App() {
             <Route path="/payment/callback" component={PaymentCallback} />
 
             <Route path="/blogs" component={Blogs} />
+            <Route path="/blogs/:slug" component={BlogDetail} />
             <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
             <Route
               path="/playlist-albums/:trialId"

@@ -2660,6 +2660,41 @@ FINAL QUALITY CHECK
     }
   });
 
+  // ── Blog endpoints ──
+
+  app.get("/api/blogs", async (req: Request, res: Response) => {
+    try {
+      const { pool } = await import("./db");
+      const result = await pool.query(
+        `SELECT id, title, slug, meta_description, featured_image, excerpt, published_at, created_at
+         FROM blogs
+         WHERE published = true
+         ORDER BY published_at DESC NULLS LAST, created_at DESC`,
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      res.status(500).json({ error: "Failed to fetch blogs" });
+    }
+  });
+
+  app.get("/api/blogs/:slug", async (req: Request, res: Response) => {
+    try {
+      const { pool } = await import("./db");
+      const result = await pool.query(
+        `SELECT * FROM blogs WHERE slug = $1 AND published = true LIMIT 1`,
+        [req.params.slug],
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Blog not found" });
+      }
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error fetching blog:", error);
+      res.status(500).json({ error: "Failed to fetch blog" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,230 +1,177 @@
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
 import { Footer } from "@/components/Footer";
+
+interface BlogSummary {
+  id: string;
+  title: string;
+  slug: string;
+  meta_description: string | null;
+  featured_image: string | null;
+  excerpt: string | null;
+  published_at: string | null;
+  created_at: string;
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function BlogCardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-[#C9C1B1]/20">
+      <Skeleton className="h-48 w-full" />
+      <div className="p-5 space-y-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    </div>
+  );
+}
 
 export default function Blogs() {
   const [, setLocation] = useLocation();
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
-        <div className="flex items-center justify-between px-6 py-4 md:px-12">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLocation("/")}
-            className="min-h-[44px] min-w-[44px]"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+  const { data: blogs, isLoading, error } = useQuery<BlogSummary[]>({
+    queryKey: ["/api/blogs"],
+  });
 
+  return (
+    <div className="min-h-screen bg-[#EEE9DF]">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full bg-[#EEE9DF]/95 backdrop-blur-sm border-b border-[#C9C1B1]/30 shadow-sm">
+        <div className="relative flex items-center justify-center px-6 py-4 md:px-12">
+          <button
+            onClick={() => setLocation("/")}
+            className="w-9 h-9 xs:w-10 xs:h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center hover:bg-white/80 transition-all shadow-sm absolute left-2 xs:left-4 top-1/2 -translate-y-1/2"
+            aria-label="Back to Home"
+          >
+            <ArrowLeft className="w-4 h-4 xs:w-5 xs:h-5 text-[#1B2632]" />
+          </button>
           <img
             src={kahaniLogo}
             alt="Kahani Logo"
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain cursor-pointer"
+            style={{ zIndex: 10 }}
+            onClick={() => setLocation("/")}
           />
-
           <div className="w-[44px]" />
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-16">
+      {/* Page Content */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-12">
         {/* Page Title */}
         <div className="text-center mb-12">
-          <img
-            src={kahaniLogo}
-            alt="Kahani Logo"
-            className="h-24 w-auto object-contain mx-auto mb-8"
-          />
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground">
-            BLOG
+          <h1 className="text-4xl sm:text-5xl font-bold text-[#1B2632] mb-3">
+            Our Blog
           </h1>
+          <p className="text-lg text-[#1B2632]/60 max-w-2xl mx-auto">
+            Stories, reflections, and guides to help you capture the memories
+            that matter most.
+          </p>
         </div>
 
-        {/* Blog Posts */}
-        <div className="space-y-16">
-          {/* Blog 1 */}
-          <article className="space-y-4" data-testid="blog-post-1">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              The Power of Stories in Everyday Life
-            </h2>
-            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-              <p>
-                Stories are more than just words—they are the threads that
-                connect our past, present, and future. Every family has tales
-                that make them unique, moments that bring laughter, tears, or
-                inspiration. Preserving these stories ensures that memories live
-                on, long after moments pass.
-              </p>
-              <p>
-                At Kahani, we believe everyone's story matters. Sharing a story
-                is not just about recounting events; it's about celebrating
-                life, connecting generations, and passing down wisdom in a way
-                that no photo or video can fully capture. Stories have the power
-                to teach empathy, spark creativity, and create a sense of
-                belonging.
-              </p>
-              <p>
-                In today's fast-paced world, it's easy for these precious
-                memories to get lost. That's why Kahani provides an easy way to
-                record and preserve your stories. Whether it's a childhood
-                memory, a family tradition, or a lesson learned, each story
-                carries a piece of your heart.
-              </p>
-              <p>
-                By sharing stories with loved ones, we also spread joy. A simple
-                tale can brighten someone's day, evoke nostalgia, or inspire
-                reflection. Every story shared strengthens the bonds between
-                people, reminding us that our experiences, no matter how small,
-                are worth remembering.
-              </p>
-              <p className="font-medium text-foreground">
-                Preserve your stories. Share the joy. Celebrate life's moments
-                with Kahani, and ensure that your stories continue to inspire
-                and connect, generation after generation.
-              </p>
-            </div>
-          </article>
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-16">
+            <p className="text-[#1B2632]/60 text-lg">
+              Something went wrong loading the blogs. Please try again later.
+            </p>
+          </div>
+        )}
 
-          {/* Blog 2 */}
-          <article className="space-y-4" data-testid="blog-post-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Why Every Family Needs a Storytelling Tradition
-            </h2>
-            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-              <p>
-                Family stories are the heartbeat of our identity. They give us
-                roots, teach us values, and show us where we come from. Many of
-                us grew up listening to grandparents recount tales of their
-                childhood, or parents sharing the lessons they learned along the
-                way. These stories do more than entertain—they shape who we are.
-              </p>
-              <p>
-                Creating a storytelling tradition in your family has immense
-                value. It encourages children to listen, learn, and even
-                contribute their own experiences. It strengthens relationships,
-                fosters communication, and keeps family history alive.
-              </p>
-              <p>
-                With modern life moving at lightning speed, these moments of
-                shared storytelling are often overlooked. Kahani aims to bring
-                them back in a meaningful way. Our platform allows you to record
-                and store your stories safely, making it simple to preserve
-                memories for years to come.
-              </p>
-              <p>
-                Sharing stories isn't just about remembering—it's about joy.
-                When we narrate a family anecdote, celebrate a triumph, or
-                recount a funny mishap, we create laughter, pride, and
-                connection. Every story shared adds a new layer to your family's
-                legacy.
-              </p>
-              <p className="font-medium text-foreground">
-                Start small—record a favorite memory, an unforgettable lesson,
-                or a cherished tradition. Over time, these stories will form a
-                rich tapestry of family heritage. With Kahani, you can ensure
-                that your stories live on, bringing happiness and connection to
-                everyone who hears them.
-              </p>
-            </div>
-          </article>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <BlogCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
 
-          {/* Blog 3 */}
-          <article className="space-y-4" data-testid="blog-post-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Kahani: Where Stories Spark Family Bonds
-            </h2>
-            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-              <p>
-                In a world where everyone is constantly on the go, meaningful
-                family connections can sometimes take a backseat. Between busy
-                schedules, scattered locations, and the distractions of digital
-                life, it's easy to lose touch with the stories that make a
-                family unique. That's where Kahani comes in.
-              </p>
-              <p>
-                Kahani isn't just a platform—it's a bridge. By giving families
-                an easy way to record and share their stories via WhatsApp,
-                Kahani brings loved ones closer, no matter the distance. A
-                childhood memory, a funny mishap, or a lesson passed down
-                through generations suddenly becomes a shared moment of joy and
-                connection.
-              </p>
-              <p>
-                The magic of Kahani lies in its simplicity. No complicated apps,
-                no long forms—just real stories from real people. Each story
-                shared becomes a thread weaving a stronger family fabric.
-                Parents, grandparents, and children alike can participate,
-                ensuring that everyone's voice is heard and cherished.
-              </p>
-              <p>
-                Sharing stories also sparks conversation. A tale from the past
-                can lead to laughter, reflection, or even new traditions.
-                Through Kahani, families don't just preserve memories—they
-                create opportunities to connect, celebrate, and understand each
-                other better.
-              </p>
-              <p className="font-medium text-foreground">
-                Ultimately, Kahani works because it focuses on what truly
-                matters: people and their stories. Every memory shared
-                strengthens bonds, every laugh creates closeness, and every
-                story becomes a gift that families can carry forward for
-                generations. With Kahani, connection is just a story away.
-              </p>
-            </div>
-          </article>
+        {/* Empty State */}
+        {!isLoading && !error && blogs?.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-[#1B2632]/60 text-lg">
+              No blog posts yet. Check back soon!
+            </p>
+          </div>
+        )}
 
-          {/* Blog 4 */}
-          <article className="space-y-4" data-testid="blog-post-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              The Story Behind Kahani: Preserving Memories, Connecting Hearts
-            </h2>
-            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-              <p>
-                Every family has stories—moments that make them laugh, lessons
-                that shape their lives, and memories that stay with them
-                forever. Yet, in today's fast-paced world, many of these stories
-                are at risk of being forgotten. That simple realization is what
-                sparked the idea for Kahani.
-              </p>
-              <p>
-                We started Kahani because we believe every story matters.
-                Personal stories aren't just memories; they are threads that
-                weave families together. A shared story can bridge generations,
-                spark joy, and create understanding in ways that photos or
-                videos alone cannot. We wanted to build a space where these
-                moments are not only preserved but celebrated.
-              </p>
-              <p className="font-medium text-foreground">
-                Our goal was to make storytelling effortless and inclusive. Many
-                people have memories they want to share but don't know how or
-                where to start. With Kahani, anyone can record their stories
-                easily, even on a platform as familiar as WhatsApp. It's about
-                making the act of sharing simple, enjoyable, and meaningful.
-              </p>
-            </div>
-          </article>
-        </div>
+        {/* Blog Cards Grid */}
+        {!isLoading && blogs && blogs.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {blogs.map((blog) => (
+              <article
+                key={blog.id}
+                onClick={() => setLocation(`/blogs/${blog.slug}`)}
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border border-[#C9C1B1]/20 hover:shadow-md hover:border-[#C9C1B1]/40 transition-all duration-200 cursor-pointer"
+              >
+                {/* Card Image */}
+                <div className="relative h-48 bg-gradient-to-br from-[#C9C1B1]/30 to-[#EEE9DF] overflow-hidden">
+                  {blog.featured_image ? (
+                    <img
+                      src={blog.featured_image}
+                      alt={blog.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img
+                        src={kahaniLogo}
+                        alt="Kahani"
+                        className="h-16 w-auto opacity-30"
+                      />
+                    </div>
+                  )}
+                </div>
 
-        {/* Return Home Button */}
-        <div className="text-center pt-12">
-          <Button
-            size="lg"
-            onClick={() => setLocation("/")}
-            className="px-8 py-6 text-lg font-semibold min-h-[56px]"
-            data-testid="button-home"
-          >
-            Return to Home
-          </Button>
-        </div>
+                {/* Card Content */}
+                <div className="p-5">
+                  {/* Date */}
+                  {(blog.published_at || blog.created_at) && (
+                    <div className="flex items-center gap-1.5 text-xs text-[#1B2632]/40 mb-3">
+                      <Calendar className="h-3 w-3" />
+                      <span>
+                        {formatDate(blog.published_at || blog.created_at)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Title */}
+                  <h2 className="text-lg font-semibold text-[#1B2632] mb-2 line-clamp-2 group-hover:text-[#1B2632]/80 transition-colors">
+                    {blog.title}
+                  </h2>
+
+                  {/* Excerpt */}
+                  <p className="text-sm text-[#1B2632]/60 line-clamp-3">
+                    {blog.excerpt || blog.meta_description || ""}
+                  </p>
+
+                  {/* Read More */}
+                  <div className="mt-4 flex items-center gap-1 text-sm font-medium text-[#1B2632]/70 group-hover:text-[#1B2632] transition-colors">
+                    <span>Read more</span>
+                    <ArrowLeft className="h-3.5 w-3.5 rotate-180 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

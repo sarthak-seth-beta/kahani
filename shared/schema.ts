@@ -834,3 +834,76 @@ export const validateDiscountSchema = z.object({
 });
 
 export type ValidateDiscount = z.infer<typeof validateDiscountSchema>;
+
+// Blog content block types
+export const blogContentBlockSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("paragraph"), text: z.string() }),
+  z.object({
+    type: z.literal("heading"),
+    level: z.union([z.literal(2), z.literal(3)]),
+    text: z.string(),
+  }),
+  z.object({
+    type: z.literal("list"),
+    style: z.enum(["ordered", "unordered"]),
+    items: z.array(z.string()),
+  }),
+  z.object({
+    type: z.literal("faq"),
+    items: z.array(z.object({ question: z.string(), answer: z.string() })),
+  }),
+]);
+
+export type BlogContentBlock = z.infer<typeof blogContentBlockSchema>;
+
+// Blogs Table
+export const blogs = pgTable(
+  "blogs",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    title: text("title").notNull(),
+    slug: text("slug").notNull().unique(),
+    metaDescription: text("meta_description"),
+    primaryKeyword: text("primary_keyword"),
+    secondaryKeywords: jsonb("secondary_keywords").$type<string[]>(),
+    featuredImage: text("featured_image"),
+    excerpt: text("excerpt"),
+    content: jsonb("content").$type<BlogContentBlock[]>().notNull(),
+    published: boolean("published").notNull().default(false),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("blogs_slug_idx").on(table.slug),
+    publishedIdx: index("blogs_published_idx").on(table.published),
+    publishedAtIdx: index("blogs_published_at_idx").on(table.publishedAt),
+  }),
+);
+
+export type BlogRow = typeof blogs.$inferSelect;
+export type InsertBlogRow = typeof blogs.$inferInsert;
+
+export const blogSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+  metaDescription: z.string().nullable().optional(),
+  primaryKeyword: z.string().nullable().optional(),
+  secondaryKeywords: z.array(z.string()).nullable().optional(),
+  featuredImage: z.string().nullable().optional(),
+  excerpt: z.string().nullable().optional(),
+  content: z.array(blogContentBlockSchema),
+  published: z.boolean(),
+  publishedAt: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type Blog = z.infer<typeof blogSchema>;
