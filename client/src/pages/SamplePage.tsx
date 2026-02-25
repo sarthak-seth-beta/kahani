@@ -172,13 +172,21 @@ export default function SamplePage() {
         </ul>
 
         {/* CTA Button */}
-        <div className="mt-6 xs:mt-8 sm:mt-10 flex justify-center">
+        <div className="mt-6 xs:mt-8 sm:mt-10 flex flex-col items-center justify-center">
+          <Button
+            variant="outline"
+            className="mb-4 px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 border-2 border-[#A35139] text-[#A35139] bg-transparent hover:bg-[#F5E9DF] rounded-xl shadow-sm transition-all duration-300 text-sm xs:text-base sm:text-lg font-semibold"
+            onClick={() => setLocation("/how-to-use")}
+          >
+            How it works
+          </Button>
           <Button
             onClick={() => setLocation("/all-albums")}
             className="px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 text-sm xs:text-base sm:text-lg font-semibold"
           >
-            Start Your Story
+            Get Started
           </Button>
+          <p className="mt-3 text-[#A35139] text-sm xs:text-base font-medium">Starting from ₹199 only</p>
         </div>
       </section>
 
