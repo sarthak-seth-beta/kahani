@@ -78,14 +78,9 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
               You invite them on WhatsApp. They speak. <br />
               We make the book.
             </p>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="inline-block text-[11px] sm:text-sm font-semibold text-[#FFB162] bg-white/5 rounded px-2 py-[2px] shadow-none">
-                Start your family’s legacy – just <span className="text-[#FFB162] font-bold">₹199</span>
-              </span>
-              <span className="text-[10px] sm:text-xs text-white/50 font-normal italic">
-                per story
-              </span>
-            </div>
+            <p className="text-[10px] sm:text-sm text-white/70 font-medium tracking-normal sm:tracking-wider capitalize whitespace-nowrap">
+              Starting at ₹199 only
+            </p>
           </div>
         </div>
       </div>
@@ -132,6 +127,9 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
             </p>
             <p className="text-[14px] sm:text-md text-white/70 font-medium tracking-normal sm:tracking-wider capitalize whitespace-nowrap">
               They speak. We make the book.
+            </p>
+            <p className="text-xs text-white/70 font-medium tracking-normal sm:tracking-wider capitalize whitespace-nowrap mt-1">
+              Starting at ₹199 only
             </p>
           </div>
         </div>
