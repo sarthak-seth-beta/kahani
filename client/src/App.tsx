@@ -11,7 +11,6 @@ import HeroSection from "@/components/HeroSection";
 import ValueProposition from "@/components/ValueProposition";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import GetStartedSection from "@/components/GetStartedSection";
-import PdfViewerSection from "@/components/PdfViewerSection";
 import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
 import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
 import SectionFiveFAQs from "@/components/SectionFiveFAQs";
@@ -49,7 +48,7 @@ import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
 import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
-import SectionYTTestimonials from "./components/SectionYTTestimonials";
+import R2VideoTestimonials from "./components/R2VideoTestimonials";
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -129,7 +128,7 @@ function HomePage() {
 
       {/* Section 3 - Testimonials */}
       {/* <SectionThreeTestimonials onLearnMore={handleLearnMore} /> */}
-      <SectionYTTestimonials onLearnMore={handleLearnMore} />
+      <R2VideoTestimonials />
 
       {/* How It Works Section */}
       <HowItWorksSection />

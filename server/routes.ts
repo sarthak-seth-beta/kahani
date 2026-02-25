@@ -2628,6 +2628,33 @@ FINAL QUALITY CHECK
     }
   });
 
+  // ─── Testimonial videos (served from R2 site-assets bucket) ────────
+  app.get("/api/testimonial-videos", async (_req, res) => {
+    try {
+      const { listSiteAssets } = await import("./r2");
+      const assets = await listSiteAssets("testimonials/");
+
+      const videos = assets
+        .filter((a) => /\.(mp4|webm|mov)$/i.test(a.key))
+        .map((a) => {
+          const fileName = a.key.split("/").pop() || a.key;
+          const nameWithoutExt = fileName.replace(/\.[^.]+$/, "");
+          const label = nameWithoutExt
+            .replace(/[-_]/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+          return { key: a.key, url: a.url, label };
+        });
+
+      res.set({
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=7200",
+      });
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching testimonial videos:", error);
+      res.status(500).json({ error: "Failed to fetch testimonial videos" });
+    }
+  });
+
   // ─── Route guard: /order-details requires verified payment ─────────
   // Runs before the SPA catch-all. On full page loads (direct URL, back
   // button, refresh) this checks the DB and redirects away if there is

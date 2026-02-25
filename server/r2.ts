@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
@@ -229,4 +230,41 @@ export async function uploadWebhookMediaToR2(
 export async function deleteImageFromR2(fileName: string): Promise<boolean> {
   const key = fileName;
   return deleteFromR2(R2_ALBUM_COVERS_BUCKET, key);
+}
+
+// ─── Site assets (public) ─────────────────────────────────────────
+export const R2_SITE_ASSETS_BUCKET =
+  process.env.R2_SITE_ASSETS_BUCKET || "site-assets";
+const R2_SITE_ASSETS_PUBLIC_BASE_URL =
+  process.env.R2_SITE_ASSETS_PUBLIC_BASE_URL || "";
+
+/**
+ * List objects under a given prefix in the site-assets bucket.
+ * Returns public URLs for each object found.
+ */
+export async function listSiteAssets(
+  prefix: string,
+): Promise<{ key: string; url: string }[]> {
+  const client = getR2Client();
+  if (!client) return [];
+
+  try {
+    const response = await client.send(
+      new ListObjectsV2Command({
+        Bucket: R2_SITE_ASSETS_BUCKET,
+        Prefix: prefix,
+      }),
+    );
+
+    if (!response.Contents) return [];
+
+    return response.Contents.filter((obj) => obj.Key && obj.Size && obj.Size > 0)
+      .map((obj) => ({
+        key: obj.Key!,
+        url: `${R2_SITE_ASSETS_PUBLIC_BASE_URL}/${obj.Key}`,
+      }));
+  } catch (error) {
+    console.error("Error listing site assets from R2:", { prefix, error });
+    return [];
+  }
 }
