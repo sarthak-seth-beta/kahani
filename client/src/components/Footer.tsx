@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { SiWhatsapp, SiInstagram } from "react-icons/si";
+import { SiWhatsapp, SiInstagram, } from "react-icons/si";
+import { SlSocialTwitter, SlSocialYoutube } from "react-icons/sl";
 
 export function Footer() {
   const [, setLocation] = useLocation();
@@ -66,6 +67,22 @@ export function Footer() {
               className="w-10 h-10 flex items-center justify-center rounded-full bg-[#EEE9DF] text-[#1B1B1B] hover:bg-[#FFB162] hover:text-white transition-all transform hover:scale-110"
             >
               <SiInstagram className="w-5 h-5" />
+            </a>
+            <a
+              href="https://www.youtube.com/@vaanibykahani"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-[#EEE9DF] text-[#1B1B1B] hover:bg-[#FFB162] hover:text-white transition-all transform hover:scale-110"
+            >
+              <SlSocialYoutube className="w-5 h-5" />
+            </a>
+            <a
+              href="https://x.com/Kahani_xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-[#EEE9DF] text-[#1B1B1B] hover:bg-[#FFB162] hover:text-white transition-all transform hover:scale-110"
+            >
+              <SlSocialTwitter className="w-5 h-5" />
             </a>
           </div>
 
