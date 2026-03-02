@@ -7,19 +7,22 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
 import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
-import R2VideoTestimonials from "./components/R2VideoTestimonials";
 import ScrollToTop from "@/components/ScrollToTop";
 import SmoothScroll from "@/components/SmoothScroll";
+import LazySection from "@/components/LazySection";
 
-// Landing page components
+// Above-fold landing components — loaded eagerly (part of initial bundle)
 import SimpleHeader from "@/components/SimpleHeader";
 import HeroSection from "@/components/HeroSection";
 import ValueProposition from "@/components/ValueProposition";
-import HowItWorksSection from "@/components/HowItWorksSection";
-import GetStartedSection from "@/components/GetStartedSection";
-import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
-import SectionFiveFAQs from "@/components/SectionFiveFAQs";
-import { Footer } from "@/components/Footer";
+
+// Below-fold landing components — lazy loaded (JS only downloads when near viewport)
+const R2VideoTestimonials = lazy(() => import("@/components/R2VideoTestimonials"));
+const HowItWorksSection   = lazy(() => import("@/components/HowItWorksSection"));
+const GetStartedSection   = lazy(() => import("@/components/GetStartedSection"));
+const SectionFourAlbumsNew = lazy(() => import("@/components/SectionFourAlbumsNew"));
+const SectionFiveFAQs     = lazy(() => import("@/components/SectionFiveFAQs"));
+const Footer              = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
 
 // Other Pages (lazy loaded)
 const Checkout            = lazy(() => import("@/pages/Checkout"));
@@ -116,37 +119,48 @@ function HomePage() {
 
   return (
     <div className="w-full min-h-screen bg-[#EEE9DF]">
-      {/* Simple Header - Fixed at top (Restored) */}
+      {/* Always loaded — above the fold */}
       <SimpleHeader onRecordClick={handleRecordClick} />
-
-
-      {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
-      {/* <div className="h-20" /> */}
-
-      {/* Hero Section - Full Screen with Button */}
       <HeroSection onHearKahaniClick={handleHearKahaniClick} />
-
-      {/* Value Proposition with Logo */}
       <ValueProposition />
 
-      {/* Section 3 - Testimonials */}
-      {/* <SectionThreeTestimonials onLearnMore={handleLearnMore} /> */}
-      <R2VideoTestimonials />
+      {/* Below-fold sections — rendered only when the user scrolls near them.
+          Suspense handles the async JS chunk load; LazySection handles DOM mount/unmount. */}
+      <LazySection>
+        <Suspense fallback={null}>
+          <R2VideoTestimonials />
+        </Suspense>
+      </LazySection>
 
-      {/* How It Works Section */}
-      <HowItWorksSection />
+      <LazySection>
+        <Suspense fallback={null}>
+          <HowItWorksSection />
+        </Suspense>
+      </LazySection>
 
-      {/* Get Started Section */}
-      <GetStartedSection />
+      <LazySection>
+        <Suspense fallback={null}>
+          <GetStartedSection />
+        </Suspense>
+      </LazySection>
 
-      {/* Section 4 - Albums (Moved above Testimonials) */}
-      <SectionFourAlbumsNew />
+      <LazySection>
+        <Suspense fallback={null}>
+          <SectionFourAlbumsNew />
+        </Suspense>
+      </LazySection>
 
-      {/* Section 5 - FAQs */}
-      <SectionFiveFAQs />
+      <LazySection>
+        <Suspense fallback={null}>
+          <SectionFiveFAQs />
+        </Suspense>
+      </LazySection>
 
-      {/* Footer */}
-      <Footer />
+      <LazySection>
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
+      </LazySection>
     </div>
   );
 }

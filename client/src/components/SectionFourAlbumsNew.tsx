@@ -26,7 +26,7 @@ export default function SectionFourAlbumsNew({
   });
 
   const allAlbums = propAlbums || fetchedAlbums || [];
-  const displayAlbums = allAlbums;
+  const displayAlbums = allAlbums.slice(0, 6);
   // Total cards = albums + "View All" card
   const totalCards = displayAlbums.length + 1;
 
