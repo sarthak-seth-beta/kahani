@@ -14,10 +14,8 @@ const storyTexts = [
   "MUMMY'S",
 ];
 
-const LargeImage =
-  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section.jpg";
-const SmallImage =
-  "https://opkrioqnroyckxqcclav.supabase.co/storage/v1/object/public/static_image_assets/hero_section_mobile.jpg";
+const LargeImage = "https://site-assets.kahani.xyz/hero_section.webp";
+const SmallImage = "https://site-assets.kahani.xyz/hero_section_mobile.webp";
 
 export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
   const [, setLocation] = useLocation();
