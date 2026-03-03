@@ -1,54 +1,60 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import ScrollToTop from "@/components/ScrollToTop";
-import SmoothScroll from "@/components/SmoothScroll";
-import SimpleHeader from "@/components/SimpleHeader";
-import HeroSection from "@/components/HeroSection";
-import ValueProposition from "@/components/ValueProposition";
-import HowItWorksSection from "@/components/HowItWorksSection";
-import GetStartedSection from "@/components/GetStartedSection";
-import SectionThreeTestimonials from "@/components/SectionThreeTestimonials";
-import SectionFourAlbumsNew from "@/components/SectionFourAlbumsNew";
-import SectionFiveFAQs from "@/components/SectionFiveFAQs";
-import { Footer } from "@/components/Footer";
-import Checkout from "@/pages/Checkout";
-import FreeTrial from "@/pages/FreeTrial";
-import HowToUse from "@/pages/HowToUse";
-import ThankYou from "@/pages/ThankYou";
-import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import RefundPolicy from "@/pages/RefundPolicy";
-import TermsOfService from "@/pages/TermsOfService";
-import DataDeletion from "@/pages/DataDeletion";
-import Affiliate from "@/pages/Affiliate";
-import AboutUs from "@/pages/AboutUs";
-import ContactUs from "@/pages/ContactUs";
-import OrderDetails from "@/pages/OrderDetails";
-import CompanyLegal from "@/pages/CompanyLegal";
-import Blogs from "@/pages/Blogs";
-import BlogDetail from "@/pages/BlogDetail";
-import AlbumsGallery from "@/pages/AlbumsGallery";
-import PlaylistAlbumsGallery from "@/pages/PlaylistAlbumsGallery";
-import VinylGallery from "@/pages/VinylGallery";
-import AllAlbums from "@/pages/AllAlbums";
-import CreateAlbum from "@/pages/CreateAlbum";
-import GeneratedAlbum from "@/pages/GeneratedAlbum";
-import CustomAlbumCover from "@/pages/CustomAlbumCover";
-import YlPersonalSupport from "@/pages/YlPersonalSupport";
-import Admin from "@/pages/Admin";
-import ManageAlbums from "@/pages/ManageAlbums";
-import SampleAlbum from "@/pages/SampleAlbum";
-import SamplePage from "@/pages/SamplePage";
-import Payment from "@/pages/Payment";
-import PaymentCallback from "@/pages/PaymentCallback";
-import NotFound from "@/pages/not-found";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
 import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
-import R2VideoTestimonials from "./components/R2VideoTestimonials";
+import ScrollToTop from "@/components/ScrollToTop";
+import SmoothScroll from "@/components/SmoothScroll";
+import LazySection from "@/components/LazySection";
+
+// Above-fold landing components — loaded eagerly (part of initial bundle)
+import SimpleHeader from "@/components/SimpleHeader";
+import HeroSection from "@/components/HeroSection";
+import ValueProposition from "@/components/ValueProposition";
+
+// Below-fold landing components — lazy loaded (JS only downloads when near viewport)
+const R2VideoTestimonials = lazy(() => import("@/components/R2VideoTestimonials"));
+const HowItWorksSection   = lazy(() => import("@/components/HowItWorksSection"));
+const GetStartedSection   = lazy(() => import("@/components/GetStartedSection"));
+const SectionFourAlbumsNew = lazy(() => import("@/components/SectionFourAlbumsNew"));
+const SectionFiveFAQs     = lazy(() => import("@/components/SectionFiveFAQs"));
+const Footer              = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
+
+// Other Pages (lazy loaded)
+const Checkout            = lazy(() => import("@/pages/Checkout"));
+const FreeTrial           = lazy(() => import("@/pages/FreeTrial"));
+const HowToUse            = lazy(() => import("@/pages/HowToUse"));
+const ThankYou            = lazy(() => import("@/pages/ThankYou"));
+const PrivacyPolicy       = lazy(() => import("@/pages/PrivacyPolicy"));
+const RefundPolicy        = lazy(() => import("@/pages/RefundPolicy"));
+const TermsOfService      = lazy(() => import("@/pages/TermsOfService"));
+const DataDeletion        = lazy(() => import("@/pages/DataDeletion"));
+const Affiliate           = lazy(() => import("@/pages/Affiliate"));
+const AboutUs             = lazy(() => import("@/pages/AboutUs"));
+const ContactUs           = lazy(() => import("@/pages/ContactUs"));
+const OrderDetails        = lazy(() => import("@/pages/OrderDetails"));
+const CompanyLegal        = lazy(() => import("@/pages/CompanyLegal"));
+const Blogs               = lazy(() => import("@/pages/Blogs"));
+const BlogDetail          = lazy(() => import("@/pages/BlogDetail"));
+const AlbumsGallery       = lazy(() => import("@/pages/AlbumsGallery"));
+const PlaylistAlbumsGallery = lazy(() => import("@/pages/PlaylistAlbumsGallery"));
+const VinylGallery        = lazy(() => import("@/pages/VinylGallery"));
+const AllAlbums           = lazy(() => import("@/pages/AllAlbums"));
+const CreateAlbum         = lazy(() => import("@/pages/CreateAlbum"));
+const GeneratedAlbum      = lazy(() => import("@/pages/GeneratedAlbum"));
+const CustomAlbumCover    = lazy(() => import("@/pages/CustomAlbumCover"));
+const YlPersonalSupport   = lazy(() => import("@/pages/YlPersonalSupport"));
+const Admin               = lazy(() => import("@/pages/Admin"));
+const ManageAlbums        = lazy(() => import("@/pages/ManageAlbums"));
+const SampleAlbum         = lazy(() => import("@/pages/SampleAlbum"));
+const SamplePage          = lazy(() => import("@/pages/SamplePage"));
+const Payment             = lazy(() => import("@/pages/Payment"));
+const PaymentCallback     = lazy(() => import("@/pages/PaymentCallback"));
+const NotFound            = lazy(() => import("@/pages/not-found"));
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -113,37 +119,48 @@ function HomePage() {
 
   return (
     <div className="w-full min-h-screen bg-[#EEE9DF]">
-      {/* Simple Header - Fixed at top (Restored) */}
+      {/* Always loaded — above the fold */}
       <SimpleHeader onRecordClick={handleRecordClick} />
-
-
-      {/* Spacer to prevent content from being hidden behind fixed bottom bar */}
-      {/* <div className="h-20" /> */}
-
-      {/* Hero Section - Full Screen with Button */}
       <HeroSection onHearKahaniClick={handleHearKahaniClick} />
-
-      {/* Value Proposition with Logo */}
       <ValueProposition />
 
-      {/* Section 3 - Testimonials */}
-      {/* <SectionThreeTestimonials onLearnMore={handleLearnMore} /> */}
-      <R2VideoTestimonials />
+      {/* Below-fold sections — rendered only when the user scrolls near them.
+          Suspense handles the async JS chunk load; LazySection handles DOM mount/unmount. */}
+      <LazySection>
+        <Suspense fallback={null}>
+          <R2VideoTestimonials />
+        </Suspense>
+      </LazySection>
 
-      {/* How It Works Section */}
-      <HowItWorksSection />
+      <LazySection>
+        <Suspense fallback={null}>
+          <HowItWorksSection />
+        </Suspense>
+      </LazySection>
 
-      {/* Get Started Section */}
-      <GetStartedSection />
+      <LazySection>
+        <Suspense fallback={null}>
+          <GetStartedSection />
+        </Suspense>
+      </LazySection>
 
-      {/* Section 4 - Albums (Moved above Testimonials) */}
-      <SectionFourAlbumsNew />
+      <LazySection>
+        <Suspense fallback={null}>
+          <SectionFourAlbumsNew />
+        </Suspense>
+      </LazySection>
 
-      {/* Section 5 - FAQs */}
-      <SectionFiveFAQs />
+      <LazySection>
+        <Suspense fallback={null}>
+          <SectionFiveFAQs />
+        </Suspense>
+      </LazySection>
 
-      {/* Footer */}
-      <Footer />
+      <LazySection>
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
+      </LazySection>
     </div>
   );
 }
@@ -158,10 +175,10 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GeneratedAlbumProvider>
-        <TooltipProvider>
-          <ScrollToTop />
-          <SmoothScroll />
+      <TooltipProvider>
+        <ScrollToTop />
+        <SmoothScroll />
+        <Suspense fallback={null}>
           <Switch>
             {/* foundational pages */}
             <Route path="/" component={HomePage} />
@@ -186,8 +203,19 @@ function App() {
             <Route path="/all-albums" component={AllAlbums} />
             <Route path="/sample-album" component={SampleAlbum} />
             <Route path="/sample" component={SamplePage} />
-            <Route path="/create-album" component={CreateAlbum} />
-            <Route path="/generated-album" component={GeneratedAlbum} />
+
+            {/* GeneratedAlbumProvider scoped only to routes that use the store */}
+            <Route path="/create-album">
+              <GeneratedAlbumProvider>
+                <CreateAlbum />
+              </GeneratedAlbumProvider>
+            </Route>
+            <Route path="/generated-album">
+              <GeneratedAlbumProvider>
+                <GeneratedAlbum />
+              </GeneratedAlbumProvider>
+            </Route>
+
             <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
             <Route
               path="/custom-album-cover/:trialId"
@@ -211,9 +239,9 @@ function App() {
             {/* 404 */}
             <Route component={NotFound} />
           </Switch>
-          <Toaster />
-        </TooltipProvider>
-      </GeneratedAlbumProvider>
+        </Suspense>
+        <Toaster />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
