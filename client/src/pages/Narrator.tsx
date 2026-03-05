@@ -34,7 +34,7 @@ export default function Narrator() {
     return (
         <div className="w-full min-h-screen bg-[#EEE9DF] flex flex-col items-center">
             {/* Header */}
-            <header className="w-full relative z-40 max-w-7xl mx-auto flex items-center px-4 py-4 md:py-6">
+            <header className="w-full relative z-40 max-w-7xl mx-auto flex items-center px-4 pt-4 pb-2 md:py-6">
                 <Button
                     variant="ghost"
                     size="icon"
@@ -46,9 +46,9 @@ export default function Narrator() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 md:py-16 flex flex-col items-center justify-center">
+            <main className="flex-1 w-full max-w-4xl mx-auto px-4 md:py-16 flex flex-col items-center justify-center">
                 <div className="text-center mb-8 md:mb-12 space-y-4 px-4">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#1B2632] font-['Outfit'] tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-[#1B2632] font-['Outfit'] tracking-tight">
                         Whose Kahani is this?
                     </h1>
                 </div>
