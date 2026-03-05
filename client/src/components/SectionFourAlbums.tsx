@@ -85,14 +85,21 @@ export default function SectionFourAlbums({
         >
           <div className="flex gap-6 pb-4" style={{ width: "max-content" }}>
             {albums.map((album) => (
-              <AlbumCard
+              <div
                 key={album.id}
-                album={album}
-                questionsToShow={3}
-                className="flex-shrink-0 w-[70vw] max-w-[320px]"
+                className="flex-shrink-0 w-[70vw] max-w-[320px] h-[520px]"
                 style={{ scrollSnapAlign: "center" }}
                 aria-roledescription="carousel item"
-              />
+              >
+                <AlbumCard
+                  album={album}
+                  onClick={() =>
+                    setLocation(
+                      `/free-trial?albumId=${encodeURIComponent(album.id)}`,
+                    )
+                  }
+                />
+              </div>
             ))}
 
             {/* View All Albums CTA - Right side of 4th album */}
