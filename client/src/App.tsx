@@ -44,6 +44,7 @@ const AlbumsGallery = lazy(() => import("@/pages/AlbumsGallery"));
 const PlaylistAlbumsGallery = lazy(() => import("@/pages/PlaylistAlbumsGallery"));
 const VinylGallery = lazy(() => import("@/pages/VinylGallery"));
 const AllAlbums = lazy(() => import("@/pages/AllAlbums"));
+const Albums = lazy(() => import("@/pages/Albums"));
 const Narrator = lazy(() => import("@/pages/Narrator"));
 const CreateAlbum = lazy(() => import("@/pages/CreateAlbum"));
 const GeneratedAlbum = lazy(() => import("@/pages/GeneratedAlbum"));
@@ -201,6 +202,7 @@ function App() {
               path="/playlist-albums/:trialId"
               component={PlaylistAlbumsGallery}
             />
+            <Route path="/albums" component={Albums} />
             <Route path="/all-albums" component={AllAlbums} />
             <Route path="/narrator" component={Narrator} />
             <Route path="/sample-album" component={SampleAlbum} />

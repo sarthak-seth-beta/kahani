@@ -26,9 +26,14 @@ export default function Narrator() {
         return "bg-gradient-to-br from-[#1B2632] to-[#2C3B4D]";
     };
 
-    const handleSelectRelation = (label: string) => {
-        const category = label === "all" ? "All" : label;
-        setLocation(`/all-albums?category=${encodeURIComponent(category)}`);
+    const handleSelectRelation = (id: string, label: string) => {
+        // "Myself" goes to /all-albums (full catalog), others go to /albums (curated view)
+        if (id === "all") {
+            setLocation("/all-albums");
+        } else {
+            const category = label;
+            setLocation(`/albums?category=${encodeURIComponent(category)}`);
+        }
     };
 
     return (
@@ -58,7 +63,7 @@ export default function Narrator() {
                     {RELATIONS.map((relation, index) => (
                         <div
                             key={relation.id}
-                            onClick={() => handleSelectRelation(relation.id)}
+                            onClick={() => handleSelectRelation(relation.id, relation.label)}
                             className={cn(
                                 "relative rounded-2xl shadow-md",
                                 "flex flex-col items-center justify-center",
