@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Loader2, ArrowLeft, Search, X } from "lucide-react";
+import { Loader2, ArrowLeft, Search, X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
 import { type Album } from "@/components/AlbumCard";
-import { AlbumMasonryGrid } from "@/components/AlbumMasonryGrid";
+import { LargeAlbumCard } from "@/components/LargeAlbumCard";
 import { cn } from "@/lib/utils";
 
 export default function AllAlbums() {
@@ -85,31 +85,10 @@ export default function AllAlbums() {
     return result;
   }, [shuffledAlbums, selectedCategory, searchQuery]);
 
-  // Inject Custom Card at index 2 (3rd position)
+  // Limit to 3 albums to leave room for the custom trailing card
   const displayAlbums = useMemo(() => {
     if (!filteredAlbums) return [];
-
-    // Only inject if we have enough albums or if it's the filtered view where we want it.
-    // User said "in place of the 3rd card... addition to the cards list".
-    // We'll inject it at index 2.
-    const withCustom = [...filteredAlbums];
-    const customPlaceholder: Album = {
-      id: "custom-card-placeholder",
-      title: "Create Your Own",
-      description: "Customize a Kahani album",
-      cover_image: "",
-      questions: [],
-      best_fit_for: [],
-    };
-
-    // Check if we should insert or push
-    if (withCustom.length >= 2) {
-      withCustom.splice(2, 0, customPlaceholder);
-    } else {
-      withCustom.push(customPlaceholder);
-    }
-
-    return withCustom;
+    return filteredAlbums.slice(0, 3);
   }, [filteredAlbums]);
 
   return (
@@ -242,7 +221,7 @@ export default function AllAlbums() {
       {/* --- MAIN CONTENT AREA --- */}
       <main className="flex-1 min-w-0">
         <section className="w-full px-1 md:px-8 pt-12 md:pt-8 pb-4 min-h-screen flex flex-col items-center">
-          <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-8">
+          <div className="w-full max-w-5xl mx-auto flex flex-col flex-1 space-y-4 md:space-y-8">
             {/* Page Header - Sticky on Desktop, Normal on Mobile */}
             <div className="text-center space-y-2 sticky top-0 md:static z-30 pt-4 pb-2 md:pt-0 md:pb-0 bg-[#EEE9DF]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1B2632] font-['Outfit']">
@@ -286,29 +265,59 @@ export default function AllAlbums() {
 
             {/* Error State */}
             {error && (
-              <div className="text-center py-12">
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
                 <p className="text-[#1B2632]/70 text-lg">
                   Failed to load albums. Please try again later.
                 </p>
               </div>
             )}
 
-            {/* Staggered Masonry Grid */}
+            {/* 2x2 Grid with up to 3 LargeAlbumCards + 1 Custom Card */}
             {!isLoading && !error && displayAlbums.length > 0 && (
-              <div className="w-full px-1">
-                <AlbumMasonryGrid
-                  albums={displayAlbums}
-                  hideRelation={true}
-                  hideLikeButton={true}
-                  showCompactDescription={true}
-                  onCustomCardClick={() => setLocation("/create-album")}
-                />
+              <div className="w-full px-2 flex-1 flex flex-col justify-center pb-8 md:pb-16">
+                <div className="grid grid-cols-2 gap-3 md:gap-6 w-full max-w-lg md:max-w-4xl mx-auto content-center">
+                  {displayAlbums.map((album) => (
+                    <LargeAlbumCard
+                      key={album.id}
+                      album={album}
+                      hideRelation={true}
+                      hideLikeButton={true}
+                      onClick={() => setLocation(`/free-trial?albumId=${encodeURIComponent(album.id)}`)}
+                    />
+                  ))}
+
+                  {/* Custom 'Create Album' Card mimicking original CustomAlbumCard but sized like LargeAlbumCard */}
+                  <div
+                    onClick={() => setLocation("/create-album")}
+                    className="group relative flex flex-col w-full bg-[#EEE9DF] rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-500 border border-gray-200"
+                  >
+                    {/* We use flex-1 to fill the full card height alongside aspect-square so it matches LargeAlbumCard perfectly */}
+                    <div className="relative w-full flex-1 min-h-0 aspect-square flex flex-col items-center justify-center bg-white group-hover:bg-[#fcfbf9] transition-colors duration-300">
+                      {/* Dashed Border Inner Container */}
+                      <div className="absolute inset-3 md:inset-4 border-2 border-dashed border-[#1B2632]/20 rounded-lg flex flex-col items-center justify-center gap-3">
+                        {/* Plus button */}
+                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#A35139]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Plus className="w-5 h-5 md:w-7 md:h-7 text-[#A35139]" />
+                        </div>
+
+                        <div className="flex flex-col items-center text-center px-2">
+                          <span className="text-xs md:text-sm font-bold text-[#1B2632]/80 font-['Outfit'] uppercase tracking-wide">
+                            Generate with AI
+                          </span>
+                          <span className="text-[10px] md:text-xs text-[#1B2632]/50 font-medium mt-1">
+                            Craft your own album
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Empty State */}
             {displayAlbums.length === 0 && !isLoading && !error && (
-              <div className="text-center py-20 flex flex-col items-center justify-center">
+              <div className="flex-1 text-center py-20 flex flex-col items-center justify-center">
                 <h3 className="text-xl font-bold text-[#1B2632] mb-2 font-['Outfit']">
                   No albums found
                 </h3>
