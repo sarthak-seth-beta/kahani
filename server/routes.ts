@@ -1207,7 +1207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create transaction record (one per payment attempt)
   app.post("/api/transactions", async (req, res) => {
     try {
-      const { name, phone, phoneE164, albumId, packageType } = req.body;
+      const { name, phone, phoneE164, albumId, packageType, storytellerName, storytellerLanguagePreference } = req.body;
 
       // Validate request
       if (!name || !phone || !albumId || !packageType) {
@@ -1221,6 +1221,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneE164: phoneE164 || phone,
         albumId,
         packageType,
+        storytellerName: storytellerName || null,
+        storytellerLanguagePreference: storytellerLanguagePreference || null,
         paymentStatus: "pending",
       });
 

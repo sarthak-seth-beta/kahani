@@ -437,6 +437,7 @@ export default function FreeTrial() {
             </DialogTrigger>
             <DialogContent
               data-lenis-prevent
+              hideCloseButton
               className="max-w-md md:max-w-lg w-[90vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-[#EEE9DF] [scrollbar-width:none] md:[scrollbar-width:auto] [-ms-overflow-style:none] md:[-ms-overflow-style:auto] [&::-webkit-scrollbar]:hidden md:[&::-webkit-scrollbar]:block md:[&::-webkit-scrollbar]:w-1.5 md:[&::-webkit-scrollbar-thumb]:bg-black/10 md:[&::-webkit-scrollbar-thumb]:rounded"
             >
               <VisuallyHidden>

@@ -753,6 +753,10 @@ export const transactions = pgTable(
     paymentAmount: integer("payment_amount"),
     packageType: varchar("package_type", { length: 20 }),
     albumId: varchar("album_id", { length: 255 }),
+    storytellerName: varchar("storyteller_name", { length: 255 }),
+    storytellerLanguagePreference: varchar("storyteller_language_preference", {
+      length: 2,
+    }),
 
     // Discount tracking
     expectedAmountPaise: integer("expected_amount_paise"),
@@ -787,6 +791,11 @@ export const insertTransactionSchema = z.object({
   phoneE164: z.string().optional(),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
   packageType: z.enum(["digital", "ebook", "printed"]),
+  storytellerName: z
+    .string()
+    .min(2, "Storyteller name must be at least 2 characters")
+    .optional(),
+  storytellerLanguagePreference: z.enum(["en", "hn", "other"]).optional(),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

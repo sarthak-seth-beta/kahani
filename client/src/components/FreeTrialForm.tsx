@@ -85,6 +85,12 @@ export function FreeTrialForm({
           if (userData.name) {
             form.setValue("buyerName", userData.name);
           }
+          if (userData.storytellerName) {
+            form.setValue("storytellerName", userData.storytellerName);
+          }
+          if (userData.storytellerLanguagePreference) {
+            form.setValue("storytellerLanguagePreference", userData.storytellerLanguagePreference);
+          }
         } else {
           toast({
             title: "Warning",
