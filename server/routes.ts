@@ -199,19 +199,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Slack slash command: /export-trials — exports free_trials to CSV and posts to channel
+  // Slack slash command — exports free_trials to CSV and posts to channel
   app.post("/api/slack/export-free-trials", async (req, res) => {
     const signingSecret = process.env.SLACK_SIGNING_SECRET;
     const slackToken = process.env.SLACK_BOT_TOKEN;
     const rawBody = (req as { rawBody?: Buffer }).rawBody;
     const signature = req.headers["x-slack-signature"] as string | undefined;
+    const timestamp = req.headers["x-slack-request-timestamp"] as string | undefined;
 
     if (!signingSecret || !slackToken) {
       console.error("[Slack] Missing SLACK_SIGNING_SECRET or SLACK_BOT_TOKEN");
       return res.status(500).send("Slack integration not configured");
     }
 
-    if (!verifySlackRequest(signingSecret, signature, rawBody)) {
+    if (!verifySlackRequest(signingSecret, signature, timestamp, rawBody)) {
       return res.status(401).send("Invalid signature");
     }
 
