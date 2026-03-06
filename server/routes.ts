@@ -1,7 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import { WebClient } from "@slack/web-api";
 import { storage } from "./storage";
+import { verifySlackRequest } from "./slackVerify";
 import {
   insertOrderSchema,
   insertFreeTrialSchema,
@@ -195,6 +197,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: error.message,
       });
     }
+  });
+
+  // Slack slash command: /export-trials — exports free_trials to CSV and posts to channel
+  app.post("/api/slack/export-free-trials", async (req, res) => {
+    const signingSecret = process.env.SLACK_SIGNING_SECRET;
+    const slackToken = process.env.SLACK_BOT_TOKEN;
+    const rawBody = (req as { rawBody?: Buffer }).rawBody;
+    const signature = req.headers["x-slack-signature"] as string | undefined;
+
+    if (!signingSecret || !slackToken) {
+      console.error("[Slack] Missing SLACK_SIGNING_SECRET or SLACK_BOT_TOKEN");
+      return res.status(500).send("Slack integration not configured");
+    }
+
+    if (!verifySlackRequest(signingSecret, signature, rawBody)) {
+      return res.status(401).send("Invalid signature");
+    }
+
+    const channelId = req.body?.channel_id as string | undefined;
+    if (!channelId) {
+      return res.status(400).send("Missing channel_id");
+    }
+
+    // Respond immediately (Slack requires response within 3 seconds)
+    res.status(200).send("Exporting trials... I'll post the CSV shortly.");
+
+    // Run export in background
+    (async () => {
+      try {
+        const { pool } = await import("./db");
+        const query = `SELECT * FROM free_trials ORDER BY created_at DESC`;
+        const result = await pool.query(query);
+
+        const phoneColumns = ["customer_phone", "storyteller_phone", "phone"];
+        const columns =
+          result.rows.length > 0 ? Object.keys(result.rows[0]) : [];
+
+        const csvRows =
+          result.rows.length === 0
+            ? ["No data"]
+            : [
+                columns.join(","),
+                ...result.rows.map((row: Record<string, unknown>) =>
+                  columns
+                    .map((col) => {
+                      const val = row[col];
+                      if (val === null || val === undefined) return "";
+                      if (phoneColumns.includes(col) && val)
+                        return `="${String(val)}"`;
+                      if (typeof val === "object")
+                        return `"${JSON.stringify(val).replace(/"/g, '""')}"`;
+                      if (
+                        typeof val === "string" &&
+                        (val.includes(",") || val.includes('"') || val.includes("\n"))
+                      )
+                        return `"${String(val).replace(/"/g, '""')}"`;
+                      return String(val);
+                    })
+                    .join(","),
+                ),
+              ];
+
+        const csv = csvRows.join("\n");
+        const dateStr = new Date().toISOString().split("T")[0];
+        const filename = `free_trials_${dateStr}.csv`;
+        const rowCount = result.rows.length;
+
+        const slack = new WebClient(slackToken);
+        const { ok, error: uploadError } = await slack.files.uploadV2({
+          content: csv,
+          filename,
+          channel_id: channelId,
+          initial_comment: `Free trials export (${rowCount} rows) — ${dateStr}`,
+        });
+
+        if (!ok || uploadError) {
+          console.error("[Slack] Upload failed:", uploadError);
+        }
+      } catch (err) {
+        console.error("[Slack] Export failed:", err);
+      }
+    })();
   });
 
   // Admin endpoint: Get daily WhatsApp messages (outgoing and incoming)
