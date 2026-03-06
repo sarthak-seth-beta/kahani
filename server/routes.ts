@@ -126,6 +126,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Export free trials as CSV (all columns, raw data)
+  app.get("/api/admin/export-free-trials", async (req, res) => {
+    try {
+      const { pool } = await import("./db");
+
+      // Query ALL columns from free_trials table
+      const query = `SELECT * FROM free_trials ORDER BY created_at DESC`;
+      const result = await pool.query(query);
+
+      if (result.rows.length === 0) {
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename="free_trials_empty.csv"`);
+        return res.send("No data");
+      }
+
+      // Get column names from the first row
+      const columns = Object.keys(result.rows[0]);
+      
+      // Columns that contain phone numbers (should be treated as text in Excel)
+      const phoneColumns = ["customer_phone", "storyteller_phone", "phone"];
+      
+      // Generate CSV with all columns
+      const csvRows = [columns.join(",")];
+
+      for (const row of result.rows) {
+        const values = columns.map((col) => {
+          const val = row[col];
+          if (val === null || val === undefined) {
+            return "";
+          }
+          // Force phone numbers to be text by prefixing with = and wrapping in quotes
+          // This tells Excel to treat it as a text formula
+          if (phoneColumns.includes(col) && val) {
+            return `="${String(val)}"`;
+          }
+          if (typeof val === "object") {
+            return `"${JSON.stringify(val).replace(/"/g, '""')}"`;
+          }
+          if (typeof val === "string" && (val.includes(",") || val.includes('"') || val.includes("\n"))) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
+          return String(val);
+        });
+        csvRows.push(values.join(","));
+      }
+
+      const csv = csvRows.join("\n");
+
+      // Set headers for CSV download
+      const filename = `free_trials_${new Date().toISOString().split("T")[0]}.csv`;
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.send(csv);
+    } catch (error: any) {
+      console.error("Error exporting free trials:", error);
+      res.status(500).json({
+        error: "Failed to export free trials",
+        message: error.message,
+      });
+    }
+  });
+
   // Admin endpoint: Get daily WhatsApp messages (outgoing and incoming)
   app.get("/api/admin/daily-whatsapp-messages", async (req, res) => {
     try {
@@ -755,6 +817,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Solo Trial endpoint (for users recording their own stories - "Myself" flow)
+  app.post("/api/solo-trial", async (req, res) => {
+    try {
+      const body = req.body as Record<string, unknown>;
+      const albumIdRaw = (body.albumId ?? body.album_id) as string | undefined;
+      let albumId = typeof albumIdRaw === "string" ? albumIdRaw.trim() : "";
+
+      // Remove any trailing query params or fragments that might have been included
+      if (albumId.includes("&")) {
+        albumId = albumId.split("&")[0];
+      }
+      if (albumId.includes("#")) {
+        albumId = albumId.split("#")[0];
+      }
+
+      // Final trim after cleaning
+      albumId = albumId.trim();
+
+      if (!albumId) {
+        console.error(
+          "[SoloTrial] Empty albumId after cleaning. Raw value:",
+          albumIdRaw,
+        );
+        return res.status(400).json({ error: "Album ID is required" });
+      }
+
+      // Validate UUID format
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(albumId)) {
+        console.error(
+          "[SoloTrial] Invalid UUID format:",
+          albumId,
+          "Raw:",
+          albumIdRaw,
+        );
+        return res.status(400).json({ error: "Invalid album ID format" });
+      }
+
+      const { insertSoloTrialSchema } = await import("@shared/schema");
+      const validatedData = insertSoloTrialSchema.parse({ ...body, albumId });
+
+      const { normalizePhoneNumber } = await import("./whatsapp");
+      const normalizedPhone = normalizePhoneNumber(validatedData.customerPhone);
+
+      // Get album to verify it exists (include inactive e.g. generated albums)
+      let album = await storage.getAlbumByIdIncludeInactive(
+        validatedData.albumId,
+      );
+      if (!album) {
+        const allAlbums = await storage.getAllAlbumsAdmin();
+        album =
+          allAlbums.find((a) => a.id === validatedData.albumId) ?? undefined;
+      }
+      if (!album) {
+        console.error(
+          "[SoloTrial] Album not found for ID:",
+          validatedData.albumId,
+        );
+        return res.status(400).json({ error: "Invalid album ID" });
+      }
+
+      console.log("[SoloTrial] Album found:", {
+        albumId: album.id,
+        title: album.title,
+        isActive: album.isActive,
+      });
+
+      const trial = await storage.createSoloTrial({
+        customerPhone: normalizedPhone,
+        buyerName: validatedData.buyerName,
+        albumId: validatedData.albumId,
+        languagePreference: validatedData.languagePreference,
+      });
+
+      // Track solo trial creation on server side
+      trackServerEvent(trial.id, "solo_trial_created", {
+        trial_id: trial.id,
+        album_id: validatedData.albumId,
+        album_title: album.title,
+        language_preference: validatedData.languagePreference,
+      });
+
+      res.json({
+        ...trial,
+      });
+    } catch (error: any) {
+      console.error("Error creating solo trial:", error);
+      if (error.name === "ZodError") {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: error.errors });
+      }
+      const errorMessage = error?.message || "Unknown error";
+      const errorStack =
+        process.env.NODE_ENV === "development" ? error?.stack : undefined;
+      res.status(500).json({
+        error: "Failed to create solo trial",
+        message: errorMessage,
+        ...(errorStack && { stack: errorStack }),
+      });
+    }
+  });
+
+  // Get solo trial by ID
+  app.get("/api/solo-trial/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const trial = await storage.getSoloTrialById(id);
+      if (!trial) {
+        return res.status(404).json({ error: "Solo trial not found" });
+      }
+      res.json(trial);
+    } catch (error: any) {
+      console.error("Error fetching solo trial:", error);
+      res.status(500).json({ error: "Failed to fetch solo trial" });
+    }
+  });
+
   app.get("/api/albums/:trialId", async (req, res) => {
     try {
       const { trialId } = req.params;
@@ -1207,7 +1388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create transaction record (one per payment attempt)
   app.post("/api/transactions", async (req, res) => {
     try {
-      const { name, phone, phoneE164, albumId, packageType } = req.body;
+      const { name, phone, phoneE164, albumId, packageType, storytellerName, storytellerLanguagePreference } = req.body;
 
       // Validate request
       if (!name || !phone || !albumId || !packageType) {
@@ -1221,6 +1402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneE164: phoneE164 || phone,
         albumId,
         packageType,
+        storytellerName: storytellerName || null,
+        storytellerLanguagePreference: storytellerLanguagePreference || null,
         paymentStatus: "pending",
       });
 
@@ -1388,7 +1571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PhonePe: Create payment order
   app.post("/api/phonepe/create-order", async (req, res) => {
     try {
-      const { albumId, packageType, transactionId, discountCode } = req.body;
+      const { albumId, packageType, transactionId, discountCode, mode } = req.body;
 
       if (!albumId || !packageType) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -1447,7 +1630,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create PhonePe order
       const { phonePeService } = await import("./phonepe");
-      const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ""}`;
+      const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ""}${mode === "solo" ? "&mode=solo" : ""}`;
+      
+      console.log("[PhonePe] Mode param received:", mode, "| Redirect URL:", redirectUrl);
 
       const orderResponse = await phonePeService.createOrder({
         amount: finalAmountPaise,

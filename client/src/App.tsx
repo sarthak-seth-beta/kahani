@@ -18,43 +18,45 @@ import ValueProposition from "@/components/ValueProposition";
 
 // Below-fold landing components — lazy loaded (JS only downloads when near viewport)
 const R2VideoTestimonials = lazy(() => import("@/components/R2VideoTestimonials"));
-const HowItWorksSection   = lazy(() => import("@/components/HowItWorksSection"));
-const GetStartedSection   = lazy(() => import("@/components/GetStartedSection"));
+const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
+const GetStartedSection = lazy(() => import("@/components/GetStartedSection"));
 const SectionFourAlbumsNew = lazy(() => import("@/components/SectionFourAlbumsNew"));
-const SectionFiveFAQs     = lazy(() => import("@/components/SectionFiveFAQs"));
-const Footer              = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
+const SectionFiveFAQs = lazy(() => import("@/components/SectionFiveFAQs"));
+const Footer = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
 
 // Other Pages (lazy loaded)
-const Checkout            = lazy(() => import("@/pages/Checkout"));
-const FreeTrial           = lazy(() => import("@/pages/FreeTrial"));
-const HowToUse            = lazy(() => import("@/pages/HowToUse"));
-const ThankYou            = lazy(() => import("@/pages/ThankYou"));
-const PrivacyPolicy       = lazy(() => import("@/pages/PrivacyPolicy"));
-const RefundPolicy        = lazy(() => import("@/pages/RefundPolicy"));
-const TermsOfService      = lazy(() => import("@/pages/TermsOfService"));
-const DataDeletion        = lazy(() => import("@/pages/DataDeletion"));
-const Affiliate           = lazy(() => import("@/pages/Affiliate"));
-const AboutUs             = lazy(() => import("@/pages/AboutUs"));
-const ContactUs           = lazy(() => import("@/pages/ContactUs"));
-const OrderDetails        = lazy(() => import("@/pages/OrderDetails"));
-const CompanyLegal        = lazy(() => import("@/pages/CompanyLegal"));
-const Blogs               = lazy(() => import("@/pages/Blogs"));
-const BlogDetail          = lazy(() => import("@/pages/BlogDetail"));
-const AlbumsGallery       = lazy(() => import("@/pages/AlbumsGallery"));
+const Checkout = lazy(() => import("@/pages/Checkout"));
+const FreeTrial = lazy(() => import("@/pages/FreeTrial"));
+const HowToUse = lazy(() => import("@/pages/HowToUse"));
+const ThankYou = lazy(() => import("@/pages/ThankYou"));
+const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const RefundPolicy = lazy(() => import("@/pages/RefundPolicy"));
+const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
+const DataDeletion = lazy(() => import("@/pages/DataDeletion"));
+const Affiliate = lazy(() => import("@/pages/Affiliate"));
+const AboutUs = lazy(() => import("@/pages/AboutUs"));
+const ContactUs = lazy(() => import("@/pages/ContactUs"));
+const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
+const CompanyLegal = lazy(() => import("@/pages/CompanyLegal"));
+const Blogs = lazy(() => import("@/pages/Blogs"));
+const BlogDetail = lazy(() => import("@/pages/BlogDetail"));
+const AlbumsGallery = lazy(() => import("@/pages/AlbumsGallery"));
 const PlaylistAlbumsGallery = lazy(() => import("@/pages/PlaylistAlbumsGallery"));
-const VinylGallery        = lazy(() => import("@/pages/VinylGallery"));
-const AllAlbums           = lazy(() => import("@/pages/AllAlbums"));
-const CreateAlbum         = lazy(() => import("@/pages/CreateAlbum"));
-const GeneratedAlbum      = lazy(() => import("@/pages/GeneratedAlbum"));
-const CustomAlbumCover    = lazy(() => import("@/pages/CustomAlbumCover"));
-const YlPersonalSupport   = lazy(() => import("@/pages/YlPersonalSupport"));
-const Admin               = lazy(() => import("@/pages/Admin"));
-const ManageAlbums        = lazy(() => import("@/pages/ManageAlbums"));
-const SampleAlbum         = lazy(() => import("@/pages/SampleAlbum"));
-const SamplePage          = lazy(() => import("@/pages/SamplePage"));
-const Payment             = lazy(() => import("@/pages/Payment"));
-const PaymentCallback     = lazy(() => import("@/pages/PaymentCallback"));
-const NotFound            = lazy(() => import("@/pages/not-found"));
+const VinylGallery = lazy(() => import("@/pages/VinylGallery"));
+const AllAlbums = lazy(() => import("@/pages/AllAlbums"));
+const Albums = lazy(() => import("@/pages/Albums"));
+const Narrator = lazy(() => import("@/pages/Narrator"));
+const CreateAlbum = lazy(() => import("@/pages/CreateAlbum"));
+const GeneratedAlbum = lazy(() => import("@/pages/GeneratedAlbum"));
+const CustomAlbumCover = lazy(() => import("@/pages/CustomAlbumCover"));
+const YlPersonalSupport = lazy(() => import("@/pages/YlPersonalSupport"));
+const Admin = lazy(() => import("@/pages/Admin"));
+const ManageAlbums = lazy(() => import("@/pages/ManageAlbums"));
+const SampleAlbum = lazy(() => import("@/pages/SampleAlbum"));
+const SamplePage = lazy(() => import("@/pages/SamplePage"));
+const Payment = lazy(() => import("@/pages/Payment"));
+const PaymentCallback = lazy(() => import("@/pages/PaymentCallback"));
+const NotFound = lazy(() => import("@/pages/not-found"));
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -110,7 +112,7 @@ function HomePage() {
   };
 
   const handleRecordClick = () => {
-    setLocation("/all-albums");
+    setLocation("/narrator");
   };
 
   const handleLearnMore = () => {
@@ -200,7 +202,9 @@ function App() {
               path="/playlist-albums/:trialId"
               component={PlaylistAlbumsGallery}
             />
+            <Route path="/albums" component={Albums} />
             <Route path="/all-albums" component={AllAlbums} />
+            <Route path="/narrator" component={Narrator} />
             <Route path="/sample-album" component={SampleAlbum} />
             <Route path="/sample" component={SamplePage} />
 

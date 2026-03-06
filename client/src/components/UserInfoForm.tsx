@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { Loader2, ArrowLeft, Check } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,15 +16,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/PhoneInput";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertTransactionSchema } from "@shared/schema";
@@ -37,6 +34,7 @@ interface UserInfoFormProps {
   discountCode?: string;
   onBack?: () => void;
   onSuccess?: () => void;
+  isSoloMode?: boolean;
 }
 
 export function UserInfoForm({
@@ -45,12 +43,12 @@ export function UserInfoForm({
   discountCode,
   onBack,
   onSuccess,
+  isSoloMode = false,
 }: UserInfoFormProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<UserInfoFormData | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const form = useForm<UserInfoFormData>({
     resolver: zodResolver(insertTransactionSchema),
@@ -60,20 +58,15 @@ export function UserInfoForm({
       phoneE164: "",
       albumId,
       packageType,
+      storytellerName: "",
+      storytellerLanguagePreference: "en",
     },
   });
 
-  const onSubmit = (data: UserInfoFormData) => {
-    setFormData(data);
-    setShowConfirmation(true);
-  };
-
-  const handleConfirm = async () => {
-    if (!formData) return;
-
+  const onSubmit = async (data: UserInfoFormData) => {
     setIsSubmitting(true);
     try {
-      const response = await apiRequest("POST", "/api/transactions", formData);
+      const response = await apiRequest("POST", "/api/transactions", data);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -84,20 +77,21 @@ export function UserInfoForm({
 
       const transaction = await response.json();
 
-      toast({
-        title: "Success",
-        description: "Your information has been saved!",
-      });
+      // Show redirecting state
+      setIsRedirecting(true);
 
       // Navigate to payment page with transactionId, phone, and optional discount code
       const paymentParams = new URLSearchParams({
         transactionId: transaction.id,
-        phone: formData.phone,
+        phone: data.phone,
         albumId,
         packageType,
       });
       if (discountCode) {
         paymentParams.set("discountCode", discountCode);
+      }
+      if (isSoloMode) {
+        paymentParams.set("mode", "solo");
       }
       setLocation(`/payment?${paymentParams.toString()}`);
 
@@ -112,29 +106,21 @@ export function UserInfoForm({
           error.message || "Failed to save your information. Please try again.",
         variant: "destructive",
       });
-      setShowConfirmation(false);
-    } finally {
       setIsSubmitting(false);
+      setIsRedirecting(false);
     }
   };
 
   return (
     <>
-      <div className="space-y-6">
-        {onBack && (
-          <Button variant="ghost" size="sm" onClick={onBack} className="mb-2">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to packages
-          </Button>
-        )}
-
-        <div className="text-center mb-6">
+      <div className="space-y-2">
+        <div className="text-center">
           <h2 className="text-lg font-bold mb-2 text-[#1B2632]">
             Enter Your Details
           </h2>
-          <p className="text-muted-foreground text-sm">
+          {/* <p className="text-muted-foreground text-sm">
             We'll use these details to process your payment and keep you updated
-          </p>
+          </p> */}
         </div>
 
         <Form {...form}>
@@ -187,14 +173,73 @@ export function UserInfoForm({
               )}
             />
 
+            {!isSoloMode && (
+              <FormField
+                control={form.control}
+                name="storytellerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-[#1B2632]">
+                      What you call them with love!
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Mom / Dad / Amma / Nani"
+                        className="h-11 text-sm"
+                        data-testid="input-storyteller-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="storytellerLanguagePreference"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold text-[#1B2632]">
+                    {isSoloMode
+                      ? "What's your preferred language?"
+                      : "What is their preferred language?"}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue="en"
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-11 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="hn">हिंदी (Hindi)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="flex justify-center mt-6">
               <Button
                 type="submit"
                 size="lg"
                 className="w-full text-base h-12 bg-[#A35139] text-white rounded-xl shadow-md hover:bg-[#A35139]/90 transition-all duration-300"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isRedirecting}
               >
-                {isSubmitting ? (
+                {isRedirecting ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Redirecting...
+                  </>
+                ) : isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Processing...
@@ -204,49 +249,16 @@ export function UserInfoForm({
                 )}
               </Button>
             </div>
+
+            {onBack && (
+              <Button variant="ghost" size="sm" onClick={onBack} className="w-full" >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to packages
+              </Button>
+            )}
           </form>
         </Form>
       </div>
-
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Your Details</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>Please confirm your information is correct:</p>
-              <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
-                <div>
-                  <span className="font-semibold">Name:</span> {formData?.name}
-                </div>
-                <div>
-                  <span className="font-semibold">Phone:</span>{" "}
-                  {formData?.phone}
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>Edit</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirm}
-              disabled={isSubmitting}
-              className="bg-[#A35139] hover:bg-[#A35139]/90"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Confirm & Continue
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

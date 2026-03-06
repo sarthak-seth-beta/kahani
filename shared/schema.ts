@@ -382,6 +382,122 @@ export const freeTrials = pgTable(
 export type FreeTrialRow = typeof freeTrials.$inferSelect;
 export type InsertFreeTrialRow = typeof freeTrials.$inferInsert;
 
+// Solo Trials Table (for users recording their own stories - "Myself" flow)
+export const soloTrials = pgTable(
+  "solo_trials",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
+    buyerName: varchar("buyer_name", { length: 255 }).notNull(),
+    albumId: varchar("album_id", { length: 255 })
+      .notNull()
+      .references(() => albums.id, { onDelete: "restrict" }),
+    languagePreference: varchar("language_preference", { length: 2 }),
+    conversationState: varchar("conversation_state", { length: 50 })
+      .notNull()
+      .default("awaiting_initial_contact"),
+    currentQuestionIndex: integer("current_question_index")
+      .notNull()
+      .default(0),
+    retryReadinessAt: timestamp("retry_readiness_at", { withTimezone: true }),
+    retryCount: integer("retry_count").notNull().default(0),
+    lastReadinessResponse: varchar("last_readiness_response", { length: 50 }),
+    welcomeSentAt: timestamp("welcome_sent_at", { withTimezone: true }),
+    readinessAskedAt: timestamp("readiness_asked_at", { withTimezone: true }),
+    lastQuestionSentAt: timestamp("last_question_sent_at", {
+      withTimezone: true,
+    }),
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+    questionReminderCount: integer("question_reminder_count")
+      .notNull()
+      .default(0),
+    nextQuestionScheduledFor: timestamp("next_question_scheduled_for", {
+      withTimezone: true,
+    }),
+    customCoverImageUrl: text("custom_cover_image_url"),
+    forwardLinkSentAt: timestamp("forward_link_sent_at", {
+      withTimezone: true,
+    }),
+    checkinScheduledFor: timestamp("checkin_scheduled_for", {
+      withTimezone: true,
+    }),
+    checkinSentAt: timestamp("checkin_sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    conversationStateIdx: index("solo_trials_conversation_state_idx").on(
+      table.conversationState,
+    ),
+    retryReadinessIdx: index("solo_trials_retry_readiness_at_idx").on(
+      table.retryReadinessAt,
+    ),
+    nextQuestionScheduledIdx: index(
+      "solo_trials_next_question_scheduled_idx",
+    ).on(table.nextQuestionScheduledFor),
+    customerPhoneIdx: index("solo_trials_customer_phone_idx").on(
+      table.customerPhone,
+    ),
+    createdAtIdx: index("solo_trials_created_at_idx").on(table.createdAt),
+    stateLastQuestionIdx: index("solo_trials_state_last_question_idx").on(
+      table.conversationState,
+      table.lastQuestionSentAt,
+    ),
+  }),
+);
+
+export type SoloTrialRow = typeof soloTrials.$inferSelect;
+export type InsertSoloTrialRow = typeof soloTrials.$inferInsert;
+
+// Zod schema for inserting solo trials
+export const insertSoloTrialSchema = z.object({
+  customerPhone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine(
+      (phone) => {
+        const phoneDigits = extractPhoneNumberDigits(phone);
+        return phoneDigits.length === 10;
+      },
+      {
+        message: "Phone number must be exactly 10 digits",
+      },
+    ),
+  buyerName: z.string().min(2, "Name must be at least 2 characters"),
+  albumId: z.string().uuid("Album ID must be a valid UUID"),
+  languagePreference: z.enum(["en", "hn", "other"]).default("en"),
+});
+
+export type InsertSoloTrial = z.infer<typeof insertSoloTrialSchema>;
+
+export const soloTrialSchema = insertSoloTrialSchema.extend({
+  id: z.string(),
+  createdAt: z.string(),
+  conversationState: z
+    .enum([
+      "awaiting_initial_contact",
+      "awaiting_readiness",
+      "ready",
+      "in_progress",
+      "completed",
+    ])
+    .default("awaiting_initial_contact"),
+  currentQuestionIndex: z.number().default(0),
+  retryReadinessAt: z.string().optional(),
+  retryCount: z.number().default(0),
+  lastReadinessResponse: z.string().optional(),
+  welcomeSentAt: z.string().optional(),
+  readinessAskedAt: z.string().optional(),
+  lastQuestionSentAt: z.string().optional(),
+  reminderSentAt: z.string().optional(),
+  nextQuestionScheduledFor: z.string().optional(),
+});
+
+export type SoloTrial = z.infer<typeof soloTrialSchema>;
+
 export const voiceNotes = pgTable(
   "voice_notes",
   {
@@ -753,6 +869,10 @@ export const transactions = pgTable(
     paymentAmount: integer("payment_amount"),
     packageType: varchar("package_type", { length: 20 }),
     albumId: varchar("album_id", { length: 255 }),
+    storytellerName: varchar("storyteller_name", { length: 255 }),
+    storytellerLanguagePreference: varchar("storyteller_language_preference", {
+      length: 2,
+    }),
 
     // Discount tracking
     expectedAmountPaise: integer("expected_amount_paise"),
@@ -787,6 +907,12 @@ export const insertTransactionSchema = z.object({
   phoneE164: z.string().optional(),
   albumId: z.string().uuid("Album ID must be a valid UUID"),
   packageType: z.enum(["digital", "ebook", "printed"]),
+  storytellerName: z
+    .string()
+    .min(2, "Storyteller name must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
+  storytellerLanguagePreference: z.enum(["en", "hn", "other"]).optional(),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

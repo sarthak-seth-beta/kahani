@@ -181,7 +181,7 @@ export default function SamplePage() {
             How it works
           </Button>
           <Button
-            onClick={() => setLocation("/all-albums")}
+            onClick={() => setLocation("/narrator")}
             className="px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 text-sm xs:text-base sm:text-lg font-semibold"
           >
             Get Started

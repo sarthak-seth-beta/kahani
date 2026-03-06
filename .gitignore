@@ -7,3 +7,5 @@ vite.config.ts.*
 .env
 
 docs/codebase_summary.md
+
+.cursor/

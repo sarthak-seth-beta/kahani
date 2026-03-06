@@ -57,7 +57,7 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
         <div className="flex flex-col items-left gap-4">
           <div className="flex items-left gap-4">
             <Button
-              onClick={() => setLocation("/all-albums")}
+              onClick={() => setLocation("/narrator")}
               className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] border-none text-white rounded-2xl text-lg shadow-md hover:bg-[#8B4430] transition-all duration-300 w-fit"
             >
               Get Started
@@ -105,7 +105,7 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
           </Button> */}
           <div className="flex items-left gap-2">
             <Button
-              onClick={() => setLocation("/all-albums")}
+              onClick={() => setLocation("/narrator")}
               className="bg-[#A35139] hover:bg-[#8B4430] border-none text-white rounded-2xl text-lg shadow-md hover:bg-[#8B4430] transition-all duration-300"
             >
               Get Started

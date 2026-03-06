@@ -24,6 +24,7 @@ export default function Payment() {
       const packageType = params.get("packageType");
       const transactionId = params.get("transactionId");
       const discountCode = params.get("discountCode");
+      const mode = params.get("mode");
 
       if (!albumId || !packageType) {
         throw new Error("Missing album or package information");
@@ -41,6 +42,9 @@ export default function Payment() {
       };
       if (discountCode) {
         orderBody.discountCode = discountCode;
+      }
+      if (mode) {
+        orderBody.mode = mode;
       }
 
       const response = await apiRequest(

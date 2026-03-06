@@ -11,29 +11,39 @@ export default function ThankYou() {
   // const businessPhone = import.meta.env.VITE_WHATSAPP_BUSINESS_NUMBER_E164;
   const businessPhone = "918700242804"; // E.164 format without + for URL
   const [trialId, setTrialId] = useState<string | null>(null);
+  const [isSoloMode, setIsSoloMode] = useState<boolean>(false);
   const [buttonText, setButtonText] = useState<string>(
     "Redirecting to WhatsApp...",
   );
   const [hasRedirected, setHasRedirected] = useState<boolean>(false);
 
   useEffect(() => {
-    // Extract trialId from URL query parameters
+    // Extract trialId or soloTrialId from URL query parameters
     const params = new URLSearchParams(window.location.search);
-    console.log(params);
 
-    const id = params.get("trialId");
-    setTrialId(id);
+    const regularTrialId = params.get("trialId");
+    const soloTrialId = params.get("soloTrialId");
+    
+    if (soloTrialId) {
+      setTrialId(soloTrialId);
+      setIsSoloMode(true);
+    } else if (regularTrialId) {
+      setTrialId(regularTrialId);
+      setIsSoloMode(false);
+    }
   }, [location]);
 
   const handleWhatsAppRedirect = useCallback(() => {
     if (!businessPhone || !trialId) return;
 
-    const prefilledMessage = `Hi Vaani, I just placed an order on Kahani.xyz. My order ID is by_${trialId} `;
+    // Use different order ID prefix for solo mode
+    const orderIdPrefix = isSoloMode ? "solo_" : "by_";
+    const prefilledMessage = `Hi Vaani, I just placed an order on Kahani.xyz. My order ID is ${orderIdPrefix}${trialId} `;
     const whatsappLink = `https://wa.me/${businessPhone}?text=${encodeURIComponent(prefilledMessage)}`;
     // Use window.location.href for better mobile compatibility
     // This will open WhatsApp app on mobile devices and WhatsApp Web on desktop
     window.location.href = whatsappLink;
-  }, [businessPhone, trialId]);
+  }, [businessPhone, trialId, isSoloMode]);
 
   useEffect(() => {
     // Auto-redirect after 3 seconds if trialId and businessPhone are available
@@ -83,7 +93,9 @@ export default function ThankYou() {
             </h1>
 
             <p className="text-xl sm:text-2xl text-[#1B2632] font-medium leading-relaxed">
-              To start Kahani, you need to message Vaani on WhatsApp.
+              {isSoloMode
+                ? "To start recording your stories, message Vaani on WhatsApp."
+                : "To start Kahani, you need to message Vaani on WhatsApp."}
             </p>
           </div>
 
@@ -111,16 +123,32 @@ export default function ThankYou() {
       {/* Footer Note */}
       <div className="p-6 text-center">
         <p className="text-xs sm:text-sm text-[#1B2632]/50 max-w-2xl mx-auto leading-relaxed">
-          Note: We do not ask for any information of your storyteller. This is
-          absolutely safe and secure. For more information, refer to our{" "}
-          <a href="/faqs" className="underline hover:text-[#A35139]">
-            FAQs
-          </a>{" "}
-          and{" "}
-          <a href="/privacy-policy" className="underline hover:text-[#A35139]">
-            Privacy Policy
-          </a>
-          .
+          {isSoloMode ? (
+            <>
+              Your stories are safe with us. For more information, refer to our{" "}
+              <a href="/faqs" className="underline hover:text-[#A35139]">
+                FAQs
+              </a>{" "}
+              and{" "}
+              <a href="/privacy-policy" className="underline hover:text-[#A35139]">
+                Privacy Policy
+              </a>
+              .
+            </>
+          ) : (
+            <>
+              Note: We do not ask for any information of your storyteller. This is
+              absolutely safe and secure. For more information, refer to our{" "}
+              <a href="/faqs" className="underline hover:text-[#A35139]">
+                FAQs
+              </a>{" "}
+              and{" "}
+              <a href="/privacy-policy" className="underline hover:text-[#A35139]">
+                Privacy Policy
+              </a>
+              .
+            </>
+          )}
         </p>
       </div>
     </div>

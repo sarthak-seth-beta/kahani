@@ -11,6 +11,7 @@ import { PACKAGE_PRICES } from "@shared/schema";
 interface ProductSelectionProps {
   albumId: string;
   onContinue?: () => void;
+  isSoloMode?: boolean;
 }
 
 const PRODUCTS = [
@@ -54,6 +55,7 @@ interface DiscountInfo {
 export function ProductSelection({
   albumId,
   onContinue,
+  isSoloMode = false,
 }: ProductSelectionProps) {
   const [, setLocation] = useLocation();
 
@@ -148,6 +150,7 @@ export function ProductSelection({
           discountCode={appliedDiscount?.code}
           onBack={handleBack}
           onSuccess={onContinue}
+          isSoloMode={isSoloMode}
         />
       </div>
     );

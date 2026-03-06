@@ -26,6 +26,7 @@ export default function PaymentCallback() {
     const merchantOrderId = params.get("merchantOrderId");
     const albumId = params.get("albumId");
     const packageType = params.get("packageType");
+    const mode = params.get("mode");
 
     if (!merchantOrderId) {
       setState("failed");
@@ -85,6 +86,9 @@ export default function PaymentCallback() {
             paymentAmount: data.amount?.toString() || "",
             packageType: packageType || "",
           });
+          if (mode === "solo") {
+            orderParams.set("mode", "solo");
+          }
           setLocation(`/order-details?${orderParams.toString()}`);
         }, 2000);
       } else {
