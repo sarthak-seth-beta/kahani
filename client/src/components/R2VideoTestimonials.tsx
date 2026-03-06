@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Play, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Play, Pause, Volume2, VolumeX } from "lucide-react";
 
 type TestimonialVideo = {
   key: string;
@@ -52,6 +52,28 @@ export default function R2VideoTestimonials() {
       }
     },
     [muted, pauseAll],
+  );
+
+  const togglePlayPause = useCallback(
+    (index: number) => {
+      const video = videoRefs.current[index];
+      if (!video) return;
+
+      if (video.paused) {
+        // If this video is paused but was active, just resume
+        // Otherwise, pause all and play this one
+        if (activeIndex !== index) {
+          pauseAll();
+        }
+        video.muted = muted;
+        video.play().catch(() => {});
+        setActiveIndex(index);
+      } else {
+        video.pause();
+        setActiveIndex(null);
+      }
+    },
+    [activeIndex, muted, pauseAll],
   );
 
   const toggleMute = useCallback(() => {
@@ -122,11 +144,7 @@ export default function R2VideoTestimonials() {
                   }}
                   className="flex-shrink-0 w-[60vw] max-w-[220px] sm:w-[50vw] sm:max-w-[240px] bg-white rounded-2xl shadow-md border border-[#C9C1B1]/40 overflow-hidden snap-center cursor-pointer"
                   onClick={() => {
-                    if (isActive) {
-                      toggleMute();
-                    } else {
-                      playVideo(index);
-                    }
+                    togglePlayPause(index);
                   }}
                 >
                   <div className="w-full aspect-[9/16] bg-black relative overflow-hidden">
@@ -142,14 +160,16 @@ export default function R2VideoTestimonials() {
                       className="w-full h-full object-cover"
                     />
 
-                    {/* Play overlay when not active */}
-                    {!isActive && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                    {/* Play/Pause overlay */}
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isActive ? 'bg-transparent opacity-0 hover:opacity-100' : 'bg-black/20 opacity-100'}`}>
+                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                        {isActive ? (
+                          <Pause className="w-5 h-5 text-[#1B2632]" />
+                        ) : (
                           <Play className="w-5 h-5 text-[#1B2632] ml-0.5" />
-                        </div>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {/* Mute toggle when active */}
                     {isActive && (
