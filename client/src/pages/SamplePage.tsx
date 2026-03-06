@@ -186,7 +186,9 @@ export default function SamplePage() {
           >
             Get Started
           </Button>
-          <p className="mt-3 text-[#A35139] text-sm xs:text-base font-medium">Starting from ₹199 only</p>
+          <p className="mt-3 text-[#A35139] text-sm xs:text-base font-medium">
+            Starting from ₹199 only
+          </p>
         </div>
       </section>
 

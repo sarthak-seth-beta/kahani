@@ -17,12 +17,18 @@ import HeroSection from "@/components/HeroSection";
 import ValueProposition from "@/components/ValueProposition";
 
 // Below-fold landing components — lazy loaded (JS only downloads when near viewport)
-const R2VideoTestimonials = lazy(() => import("@/components/R2VideoTestimonials"));
+const R2VideoTestimonials = lazy(
+  () => import("@/components/R2VideoTestimonials"),
+);
 const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
 const GetStartedSection = lazy(() => import("@/components/GetStartedSection"));
-const SectionFourAlbumsNew = lazy(() => import("@/components/SectionFourAlbumsNew"));
+const SectionFourAlbumsNew = lazy(
+  () => import("@/components/SectionFourAlbumsNew"),
+);
 const SectionFiveFAQs = lazy(() => import("@/components/SectionFiveFAQs"));
-const Footer = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
+const Footer = lazy(() =>
+  import("@/components/Footer").then((m) => ({ default: m.Footer })),
+);
 
 // Other Pages (lazy loaded)
 const Checkout = lazy(() => import("@/pages/Checkout"));
@@ -41,7 +47,9 @@ const CompanyLegal = lazy(() => import("@/pages/CompanyLegal"));
 const Blogs = lazy(() => import("@/pages/Blogs"));
 const BlogDetail = lazy(() => import("@/pages/BlogDetail"));
 const AlbumsGallery = lazy(() => import("@/pages/AlbumsGallery"));
-const PlaylistAlbumsGallery = lazy(() => import("@/pages/PlaylistAlbumsGallery"));
+const PlaylistAlbumsGallery = lazy(
+  () => import("@/pages/PlaylistAlbumsGallery"),
+);
 const VinylGallery = lazy(() => import("@/pages/VinylGallery"));
 const AllAlbums = lazy(() => import("@/pages/AllAlbums"));
 const Albums = lazy(() => import("@/pages/Albums"));

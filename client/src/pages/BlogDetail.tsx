@@ -191,9 +191,7 @@ export default function BlogDetail() {
               The blog post you're looking for doesn't exist or has been
               removed.
             </p>
-            <Button onClick={() => setLocation("/blogs")}>
-              Back to Blogs
-            </Button>
+            <Button onClick={() => setLocation("/blogs")}>Back to Blogs</Button>
           </div>
         )}
 

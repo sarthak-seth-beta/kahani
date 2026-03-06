@@ -1,9 +1,10 @@
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2, Check, User, Phone, MessageCircle, Globe, Package, BookOpen } from "lucide-react";
+import { ArrowLeft, Loader2, Check, User, Phone, MessageCircle, Globe, Package, BookOpen, Share2, Mail, Copy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SiWhatsapp } from "react-icons/si";
 import { FreeTrialForm } from "@/components/FreeTrialForm";
 import { Footer } from "@/components/Footer";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,94 @@ const LANGUAGE_LABELS: Record<string, string> = {
   hn: "हिंदी (Hindi)",
 };
 
+const SHARE_TEXT = "I just started preserving precious memories with Kahani! You should try it too:";
+
+function ShareButton({ onCopied }: { onCopied: () => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const currentUrl = window.location.href;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const handleWhatsApp = () => {
+    const message = `${SHARE_TEXT} ${currentUrl}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+    setIsOpen(false);
+  };
+
+  const handleEmail = () => {
+    const subject = "Check out Kahani - Preserve Your Stories";
+    const body = `${SHARE_TEXT}\n\n${currentUrl}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setIsOpen(false);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      onCopied();
+      setIsOpen(false);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div className="absolute top-4 right-4 z-10" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-10 h-10 rounded-full bg-[#F5F3EF] hover:bg-[#E8E4DC] flex items-center justify-center transition-colors shadow-sm"
+        aria-label="Share"
+      >
+        {isOpen ? (
+          <X className="w-4 h-4 text-[#1B2632]" />
+        ) : (
+          <Share2 className="w-4 h-4 text-[#1B2632]" />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[#C9C1B1]/30 py-2">
+          <button
+            onClick={handleWhatsApp}
+            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-[#F5F3EF] transition-colors text-left"
+          >
+            <SiWhatsapp className="w-4 h-4 text-[#25D366]" />
+            <span className="text-sm text-[#1B2632]">WhatsApp</span>
+          </button>
+          <button
+            onClick={handleEmail}
+            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-[#F5F3EF] transition-colors text-left"
+          >
+            <Mail className="w-4 h-4 text-[#A35139]" />
+            <span className="text-sm text-[#1B2632]">Email</span>
+          </button>
+          <button
+            onClick={handleCopyLink}
+            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-[#F5F3EF] transition-colors text-left"
+          >
+            <Copy className="w-4 h-4 text-[#1B2632]/70" />
+            <span className="text-sm text-[#1B2632]">Copy link</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function OrderDetails() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -58,7 +147,8 @@ export default function OrderDetails() {
   // Payment verification guard: verify the payment is actually successful
   // before allowing access to this page.
   const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null);
-  const [transactionData, setTransactionData] = useState<TransactionData | null>(null);
+  const [transactionData, setTransactionData] =
+    useState<TransactionData | null>(null);
 
   useEffect(() => {
     if (!paymentOrderId) {
@@ -113,7 +203,10 @@ export default function OrderDetails() {
   const isSoloMode = useMemo(() => {
     if (modeFromUrl) return true;
     // If transaction has language preference but no storytellerName, it's a solo transaction
-    if (transactionData?.storytellerLanguagePreference && !transactionData?.storytellerName) {
+    if (
+      transactionData?.storytellerLanguagePreference &&
+      !transactionData?.storytellerName
+    ) {
       return true;
     }
     return false;
@@ -135,7 +228,7 @@ export default function OrderDetails() {
   const freeTrialMutation = useMutation({
     mutationFn: async () => {
       if (!transactionData) throw new Error("No transaction data");
-      
+
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_STARTED, {
         album_id: albumId,
         album_title: albumTitle,
@@ -150,14 +243,16 @@ export default function OrderDetails() {
             customerPhone: transactionData.phone,
             buyerName: transactionData.name,
             albumId: albumId,
-            languagePreference: transactionData.storytellerLanguagePreference || "en",
+            languagePreference:
+              transactionData.storytellerLanguagePreference || "en",
           }
         : {
             customerPhone: transactionData.phone,
             buyerName: transactionData.name,
             storytellerName: transactionData.storytellerName,
             albumId: albumId,
-            storytellerLanguagePreference: transactionData.storytellerLanguagePreference || "en",
+            storytellerLanguagePreference:
+              transactionData.storytellerLanguagePreference || "en",
           };
 
       const response = await apiRequest("POST", endpoint, payload);
@@ -174,7 +269,9 @@ export default function OrderDetails() {
       return response.json();
     },
     onSuccess: async (trial) => {
-      queryClient.invalidateQueries({ queryKey: isSoloMode ? ["/api/solo-trial"] : ["/api/free-trial"] });
+      queryClient.invalidateQueries({
+        queryKey: isSoloMode ? ["/api/solo-trial"] : ["/api/free-trial"],
+      });
 
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
         trial_id: trial.id,
@@ -191,7 +288,9 @@ export default function OrderDetails() {
             packageType,
             buyerName: transactionData?.name,
             customerPhone: transactionData?.phone,
-            storytellerName: isSoloMode ? undefined : transactionData?.storytellerName,
+            storytellerName: isSoloMode
+              ? undefined
+              : transactionData?.storytellerName,
             languagePreference: transactionData?.storytellerLanguagePreference,
             albumId,
             albumTitle,
@@ -214,7 +313,8 @@ export default function OrderDetails() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to complete order. Please try again.",
+        description:
+          error.message || "Failed to complete order. Please try again.",
         variant: "destructive",
       });
     },
@@ -252,7 +352,10 @@ export default function OrderDetails() {
         </header>
 
         <main className="container mx-auto px-4 py-8 max-w-lg">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 relative">
+            {/* Share Button - Top Right */}
+            <ShareButton onCopied={() => toast({ title: "Link copied!", description: "Share it with your friends and family." })} />
+
             {/* Success message */}
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -261,11 +364,27 @@ export default function OrderDetails() {
               <h2 className="text-xl font-bold mb-2 text-[#1B2632]">
                 Payment Successful!
               </h2>
-              <p className="text-muted-foreground text-sm">
-                {isSoloMode
-                  ? "Please review your order details and confirm to begin recording your stories."
-                  : "Please review your order details and confirm to begin your Kahani journey."}
-              </p>
+              {isSoloMode ? (
+                <div className="text-muted-foreground text-sm space-y-3 text-left">
+                  <p>Thank you for placing your order! We'll get back to you within <span className="font-bold">24 hours</span>.</p>
+                  <p>You will receive updates on your WhatsApp number regarding the status of your order.</p>
+                  <p>
+                    Questions?{" "}
+                    <a 
+                      href="https://wa.me/8510889286" 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#A35139] font-medium hover:underline"
+                    >
+                      Drop a text on WhatsApp
+                    </a>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Please review your order details and confirm to begin your Kahani journey.
+                </p>
+              )}
             </div>
 
             {/* Order Details */}
@@ -273,13 +392,15 @@ export default function OrderDetails() {
               <h3 className="text-sm font-semibold text-[#1B2632]/60 uppercase tracking-wider">
                 Your Details
               </h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
                   <User className="w-5 h-5 text-[#A35139]" />
                   <div>
                     <p className="text-xs text-[#1B2632]/60">Your Name</p>
-                    <p className="font-medium text-[#1B2632]">{transactionData.name}</p>
+                    <p className="font-medium text-[#1B2632]">
+                      {transactionData.name}
+                    </p>
                   </div>
                 </div>
 
@@ -287,7 +408,9 @@ export default function OrderDetails() {
                   <Phone className="w-5 h-5 text-[#A35139]" />
                   <div>
                     <p className="text-xs text-[#1B2632]/60">WhatsApp Number</p>
-                    <p className="font-medium text-[#1B2632]">{transactionData.phone}</p>
+                    <p className="font-medium text-[#1B2632]">
+                      {transactionData.phone}
+                    </p>
                   </div>
                 </div>
 
@@ -295,8 +418,12 @@ export default function OrderDetails() {
                   <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
                     <MessageCircle className="w-5 h-5 text-[#A35139]" />
                     <div>
-                      <p className="text-xs text-[#1B2632]/60">Your Loved One</p>
-                      <p className="font-medium text-[#1B2632]">{transactionData.storytellerName}</p>
+                      <p className="text-xs text-[#1B2632]/60">
+                        Your Loved One
+                      </p>
+                      <p className="font-medium text-[#1B2632]">
+                        {transactionData.storytellerName}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -305,10 +432,14 @@ export default function OrderDetails() {
                   <Globe className="w-5 h-5 text-[#A35139]" />
                   <div>
                     <p className="text-xs text-[#1B2632]/60">
-                      {isSoloMode ? "Your Preferred Language" : "Preferred Language"}
+                      {isSoloMode
+                        ? "Your Preferred Language"
+                        : "Preferred Language"}
                     </p>
                     <p className="font-medium text-[#1B2632]">
-                      {LANGUAGE_LABELS[transactionData.storytellerLanguagePreference || "en"] || "English"}
+                      {LANGUAGE_LABELS[
+                        transactionData.storytellerLanguagePreference || "en"
+                      ] || "English"}
                     </p>
                   </div>
                 </div>
@@ -320,7 +451,7 @@ export default function OrderDetails() {
               <h3 className="text-sm font-semibold text-[#1B2632]/60 uppercase tracking-wider">
                 Package
               </h3>
-              
+
               <div className="flex items-center gap-3 p-3 bg-[#A35139]/5 border border-[#A35139]/20 rounded-lg">
                 <BookOpen className="w-5 h-5 text-[#A35139]" />
                 <div className="flex-1">
@@ -334,27 +465,45 @@ export default function OrderDetails() {
               </div>
             </div>
 
-            {/* Confirm Button */}
-            <Button
-              onClick={() => freeTrialMutation.mutate()}
-              disabled={freeTrialMutation.isPending}
-              className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white font-bold h-12 text-base rounded-xl shadow-md"
-            >
-              {freeTrialMutation.isPending ? (
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {isSoloMode ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing...
+                  <Button
+                    onClick={() => setLocation("/albums")}
+                    className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white font-bold h-12 text-base rounded-xl shadow-md"
+                  >
+                    View Other Albums
+                  </Button>
+
+                  <p className="text-xs text-center text-[#1B2632]/50">
+                    Explore more albums to preserve stories for your loved ones.
+                  </p>
                 </>
               ) : (
-                "Continue to WhatsApp"
-              )}
-            </Button>
+                <>
+                  <Button
+                    onClick={() => freeTrialMutation.mutate()}
+                    disabled={freeTrialMutation.isPending}
+                    className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white font-bold h-12 text-base rounded-xl shadow-md"
+                  >
+                    {freeTrialMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Continue to WhatsApp"
+                    )}
+                  </Button>
 
-            <p className="text-xs text-center text-[#1B2632]/50">
-              {isSoloMode
-                ? "By confirming, you'll receive a welcome message on WhatsApp to start recording your stories."
-                : "By confirming, you'll receive an invite message on WhatsApp to share with your loved one."}
-            </p>
+                  <p className="text-xs text-center text-[#1B2632]/50">
+                    By confirming, you'll receive an invite message on WhatsApp to share with your loved one.
+                  </p>
+                </>
+              )}
+
+            </div>
           </div>
         </main>
 

@@ -43,7 +43,11 @@ function BlogCardSkeleton() {
 export default function Blogs() {
   const [, setLocation] = useLocation();
 
-  const { data: blogs, isLoading, error } = useQuery<BlogSummary[]>({
+  const {
+    data: blogs,
+    isLoading,
+    error,
+  } = useQuery<BlogSummary[]>({
     queryKey: ["/api/blogs"],
   });
 

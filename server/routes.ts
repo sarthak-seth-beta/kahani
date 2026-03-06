@@ -137,16 +137,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (result.rows.length === 0) {
         res.setHeader("Content-Type", "text/csv");
-        res.setHeader("Content-Disposition", `attachment; filename="free_trials_empty.csv"`);
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="free_trials_empty.csv"`,
+        );
         return res.send("No data");
       }
 
       // Get column names from the first row
       const columns = Object.keys(result.rows[0]);
-      
+
       // Columns that contain phone numbers (should be treated as text in Excel)
       const phoneColumns = ["customer_phone", "storyteller_phone", "phone"];
-      
+
       // Generate CSV with all columns
       const csvRows = [columns.join(",")];
 
@@ -164,7 +167,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (typeof val === "object") {
             return `"${JSON.stringify(val).replace(/"/g, '""')}"`;
           }
-          if (typeof val === "string" && (val.includes(",") || val.includes('"') || val.includes("\n"))) {
+          if (
+            typeof val === "string" &&
+            (val.includes(",") || val.includes('"') || val.includes("\n"))
+          ) {
             return `"${val.replace(/"/g, '""')}"`;
           }
           return String(val);
@@ -177,7 +183,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set headers for CSV download
       const filename = `free_trials_${new Date().toISOString().split("T")[0]}.csv`;
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`,
+      );
       res.send(csv);
     } catch (error: any) {
       console.error("Error exporting free trials:", error);
@@ -1388,7 +1397,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create transaction record (one per payment attempt)
   app.post("/api/transactions", async (req, res) => {
     try {
-      const { name, phone, phoneE164, albumId, packageType, storytellerName, storytellerLanguagePreference } = req.body;
+      const {
+        name,
+        phone,
+        phoneE164,
+        albumId,
+        packageType,
+        storytellerName,
+        storytellerLanguagePreference,
+      } = req.body;
 
       // Validate request
       if (!name || !phone || !albumId || !packageType) {
@@ -1571,7 +1588,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PhonePe: Create payment order
   app.post("/api/phonepe/create-order", async (req, res) => {
     try {
-      const { albumId, packageType, transactionId, discountCode, mode } = req.body;
+      const { albumId, packageType, transactionId, discountCode, mode } =
+        req.body;
 
       if (!albumId || !packageType) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -1631,8 +1649,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create PhonePe order
       const { phonePeService } = await import("./phonepe");
       const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ""}${mode === "solo" ? "&mode=solo" : ""}`;
-      
-      console.log("[PhonePe] Mode param received:", mode, "| Redirect URL:", redirectUrl);
+
+      console.log(
+        "[PhonePe] Mode param received:",
+        mode,
+        "| Redirect URL:",
+        redirectUrl,
+      );
 
       const orderResponse = await phonePeService.createOrder({
         amount: finalAmountPaise,
@@ -2855,8 +2878,7 @@ FINAL QUALITY CHECK
         );
       }
 
-      const txn =
-        await storage.getTransactionByPaymentOrderId(paymentOrderId);
+      const txn = await storage.getTransactionByPaymentOrderId(paymentOrderId);
 
       if (!txn || txn.paymentStatus !== "success") {
         const albumId = (req.query.albumId as string) || "";

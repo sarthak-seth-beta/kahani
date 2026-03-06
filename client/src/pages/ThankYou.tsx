@@ -23,7 +23,7 @@ export default function ThankYou() {
 
     const regularTrialId = params.get("trialId");
     const soloTrialId = params.get("soloTrialId");
-    
+
     if (soloTrialId) {
       setTrialId(soloTrialId);
       setIsSoloMode(true);
@@ -130,20 +130,26 @@ export default function ThankYou() {
                 FAQs
               </a>{" "}
               and{" "}
-              <a href="/privacy-policy" className="underline hover:text-[#A35139]">
+              <a
+                href="/privacy-policy"
+                className="underline hover:text-[#A35139]"
+              >
                 Privacy Policy
               </a>
               .
             </>
           ) : (
             <>
-              Note: We do not ask for any information of your storyteller. This is
-              absolutely safe and secure. For more information, refer to our{" "}
+              Note: We do not ask for any information of your storyteller. This
+              is absolutely safe and secure. For more information, refer to our{" "}
               <a href="/faqs" className="underline hover:text-[#A35139]">
                 FAQs
               </a>{" "}
               and{" "}
-              <a href="/privacy-policy" className="underline hover:text-[#A35139]">
+              <a
+                href="/privacy-policy"
+                className="underline hover:text-[#A35139]"
+              >
                 Privacy Policy
               </a>
               .
