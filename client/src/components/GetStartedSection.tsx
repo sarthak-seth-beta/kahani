@@ -119,10 +119,7 @@ export default function GetStartedSection2() {
 
 function Card({ item, setLocation }: { item: any; setLocation: any }) {
   // Generate gradient based on label/id using specific brand colors
-  const getGradient = (id: string, type: string) => {
-    if (type === "coming-soon")
-      return "bg-gradient-to-br from-[#EEE9DF] to-[#C9C1B1]"; // Palladian -> Oatmeal
-
+  const getGradient = (id: string) => {
     // Female relations (Warm): Truffle Trouble -> Burning Flame
     if (
       ["mom", "nani", "dadi", "mom_2", "wife", "grandchild", "sister"].some(
@@ -139,9 +136,7 @@ function Card({ item, setLocation }: { item: any; setLocation: any }) {
   return (
     <div
       onClick={() => {
-        if (item.type === "active") {
-          setLocation(`/albums?category=${encodeURIComponent(item.label)}`);
-        }
+        setLocation(`/albums?category=${encodeURIComponent(item.label)}`);
       }}
       className={`
         relative flex-none 
@@ -149,13 +144,10 @@ function Card({ item, setLocation }: { item: any; setLocation: any }) {
         rounded-lg shadow-sm 
         flex items-center justify-center 
         cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-300
-        ${getGradient(item.id, item.type)}
-        ${item.type === "coming-soon" ? "opacity-90 cursor-not-allowed" : ""}
+        ${getGradient(item.id)}
       `}
     >
-      <span
-        className={`font-['Outfit'] font-medium text-lg ${item.type === "coming-soon" ? "text-gray-400" : "text-white"}`}
-      >
+      <span className="font-['Outfit'] font-medium text-lg text-white">
         {item.label}
       </span>
     </div>
