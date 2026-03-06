@@ -258,11 +258,12 @@ export async function listSiteAssets(
 
     if (!response.Contents) return [];
 
-    return response.Contents.filter((obj) => obj.Key && obj.Size && obj.Size > 0)
-      .map((obj) => ({
-        key: obj.Key!,
-        url: `${R2_SITE_ASSETS_PUBLIC_BASE_URL}/${obj.Key}`,
-      }));
+    return response.Contents.filter(
+      (obj) => obj.Key && obj.Size && obj.Size > 0,
+    ).map((obj) => ({
+      key: obj.Key!,
+      url: `${R2_SITE_ASSETS_PUBLIC_BASE_URL}/${obj.Key}`,
+    }));
   } catch (error) {
     console.error("Error listing site assets from R2:", { prefix, error });
     return [];

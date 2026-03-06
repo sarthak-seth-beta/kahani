@@ -251,7 +251,12 @@ export function UserInfoForm({
             </div>
 
             {onBack && (
-              <Button variant="ghost" size="sm" onClick={onBack} className="w-full" >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="w-full"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to packages
               </Button>

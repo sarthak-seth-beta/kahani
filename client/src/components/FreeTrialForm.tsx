@@ -89,7 +89,10 @@ export function FreeTrialForm({
             form.setValue("storytellerName", userData.storytellerName);
           }
           if (userData.storytellerLanguagePreference) {
-            form.setValue("storytellerLanguagePreference", userData.storytellerLanguagePreference);
+            form.setValue(
+              "storytellerLanguagePreference",
+              userData.storytellerLanguagePreference,
+            );
           }
         } else {
           toast({

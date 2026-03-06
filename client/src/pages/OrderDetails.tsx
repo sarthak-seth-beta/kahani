@@ -147,7 +147,8 @@ export default function OrderDetails() {
   // Payment verification guard: verify the payment is actually successful
   // before allowing access to this page.
   const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null);
-  const [transactionData, setTransactionData] = useState<TransactionData | null>(null);
+  const [transactionData, setTransactionData] =
+    useState<TransactionData | null>(null);
 
   useEffect(() => {
     if (!paymentOrderId) {
@@ -202,7 +203,10 @@ export default function OrderDetails() {
   const isSoloMode = useMemo(() => {
     if (modeFromUrl) return true;
     // If transaction has language preference but no storytellerName, it's a solo transaction
-    if (transactionData?.storytellerLanguagePreference && !transactionData?.storytellerName) {
+    if (
+      transactionData?.storytellerLanguagePreference &&
+      !transactionData?.storytellerName
+    ) {
       return true;
     }
     return false;
@@ -224,7 +228,7 @@ export default function OrderDetails() {
   const freeTrialMutation = useMutation({
     mutationFn: async () => {
       if (!transactionData) throw new Error("No transaction data");
-      
+
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_STARTED, {
         album_id: albumId,
         album_title: albumTitle,
@@ -239,14 +243,16 @@ export default function OrderDetails() {
             customerPhone: transactionData.phone,
             buyerName: transactionData.name,
             albumId: albumId,
-            languagePreference: transactionData.storytellerLanguagePreference || "en",
+            languagePreference:
+              transactionData.storytellerLanguagePreference || "en",
           }
         : {
             customerPhone: transactionData.phone,
             buyerName: transactionData.name,
             storytellerName: transactionData.storytellerName,
             albumId: albumId,
-            storytellerLanguagePreference: transactionData.storytellerLanguagePreference || "en",
+            storytellerLanguagePreference:
+              transactionData.storytellerLanguagePreference || "en",
           };
 
       const response = await apiRequest("POST", endpoint, payload);
@@ -263,7 +269,9 @@ export default function OrderDetails() {
       return response.json();
     },
     onSuccess: async (trial) => {
-      queryClient.invalidateQueries({ queryKey: isSoloMode ? ["/api/solo-trial"] : ["/api/free-trial"] });
+      queryClient.invalidateQueries({
+        queryKey: isSoloMode ? ["/api/solo-trial"] : ["/api/free-trial"],
+      });
 
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
         trial_id: trial.id,
@@ -280,7 +288,9 @@ export default function OrderDetails() {
             packageType,
             buyerName: transactionData?.name,
             customerPhone: transactionData?.phone,
-            storytellerName: isSoloMode ? undefined : transactionData?.storytellerName,
+            storytellerName: isSoloMode
+              ? undefined
+              : transactionData?.storytellerName,
             languagePreference: transactionData?.storytellerLanguagePreference,
             albumId,
             albumTitle,
@@ -303,7 +313,8 @@ export default function OrderDetails() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to complete order. Please try again.",
+        description:
+          error.message || "Failed to complete order. Please try again.",
         variant: "destructive",
       });
     },
@@ -381,13 +392,15 @@ export default function OrderDetails() {
               <h3 className="text-sm font-semibold text-[#1B2632]/60 uppercase tracking-wider">
                 Your Details
               </h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
                   <User className="w-5 h-5 text-[#A35139]" />
                   <div>
                     <p className="text-xs text-[#1B2632]/60">Your Name</p>
-                    <p className="font-medium text-[#1B2632]">{transactionData.name}</p>
+                    <p className="font-medium text-[#1B2632]">
+                      {transactionData.name}
+                    </p>
                   </div>
                 </div>
 
@@ -395,7 +408,9 @@ export default function OrderDetails() {
                   <Phone className="w-5 h-5 text-[#A35139]" />
                   <div>
                     <p className="text-xs text-[#1B2632]/60">WhatsApp Number</p>
-                    <p className="font-medium text-[#1B2632]">{transactionData.phone}</p>
+                    <p className="font-medium text-[#1B2632]">
+                      {transactionData.phone}
+                    </p>
                   </div>
                 </div>
 
@@ -403,8 +418,12 @@ export default function OrderDetails() {
                   <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
                     <MessageCircle className="w-5 h-5 text-[#A35139]" />
                     <div>
-                      <p className="text-xs text-[#1B2632]/60">Your Loved One</p>
-                      <p className="font-medium text-[#1B2632]">{transactionData.storytellerName}</p>
+                      <p className="text-xs text-[#1B2632]/60">
+                        Your Loved One
+                      </p>
+                      <p className="font-medium text-[#1B2632]">
+                        {transactionData.storytellerName}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -413,10 +432,14 @@ export default function OrderDetails() {
                   <Globe className="w-5 h-5 text-[#A35139]" />
                   <div>
                     <p className="text-xs text-[#1B2632]/60">
-                      {isSoloMode ? "Your Preferred Language" : "Preferred Language"}
+                      {isSoloMode
+                        ? "Your Preferred Language"
+                        : "Preferred Language"}
                     </p>
                     <p className="font-medium text-[#1B2632]">
-                      {LANGUAGE_LABELS[transactionData.storytellerLanguagePreference || "en"] || "English"}
+                      {LANGUAGE_LABELS[
+                        transactionData.storytellerLanguagePreference || "en"
+                      ] || "English"}
                     </p>
                   </div>
                 </div>
@@ -428,7 +451,7 @@ export default function OrderDetails() {
               <h3 className="text-sm font-semibold text-[#1B2632]/60 uppercase tracking-wider">
                 Package
               </h3>
-              
+
               <div className="flex items-center gap-3 p-3 bg-[#A35139]/5 border border-[#A35139]/20 rounded-lg">
                 <BookOpen className="w-5 h-5 text-[#A35139]" />
                 <div className="flex-1">

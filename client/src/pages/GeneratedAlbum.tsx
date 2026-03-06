@@ -69,7 +69,8 @@ export default function GeneratedAlbum() {
           };
           const fd = parsed?.formData;
           const hasTheme = typeof fd?.theme === "string" && fd.theme.trim();
-          const hasOccasion = typeof fd?.occasion === "string" && fd.occasion.trim();
+          const hasOccasion =
+            typeof fd?.occasion === "string" && fd.occasion.trim();
           if (
             fd &&
             typeof fd.recipientName === "string" &&
@@ -88,9 +89,7 @@ export default function GeneratedAlbum() {
                     ? fd.instructions
                     : undefined,
               tone: typeof fd.tone === "string" ? fd.tone : undefined,
-              albumGoal: Array.isArray(fd.albumGoal)
-                ? fd.albumGoal
-                : undefined,
+              albumGoal: Array.isArray(fd.albumGoal) ? fd.albumGoal : undefined,
               makeItPersonal:
                 typeof fd.makeItPersonal === "boolean"
                   ? fd.makeItPersonal

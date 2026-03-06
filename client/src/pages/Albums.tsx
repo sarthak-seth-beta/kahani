@@ -282,7 +282,11 @@ export default function Albums() {
                       album={album}
                       hideRelation={true}
                       hideLikeButton={true}
-                      onClick={() => setLocation(`/free-trial?albumId=${encodeURIComponent(album.id)}`)}
+                      onClick={() =>
+                        setLocation(
+                          `/free-trial?albumId=${encodeURIComponent(album.id)}`,
+                        )
+                      }
                     />
                   ))}
 
