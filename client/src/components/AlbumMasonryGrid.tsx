@@ -11,6 +11,7 @@ interface AlbumMasonryGridProps {
   hideLikeButton?: boolean;
   showCompactDescription?: boolean;
   onCustomCardClick?: () => void;
+  isSoloMode?: boolean;
 }
 
 export const AlbumMasonryGrid = ({
@@ -19,6 +20,7 @@ export const AlbumMasonryGrid = ({
   hideLikeButton = false,
   showCompactDescription = false,
   onCustomCardClick,
+  isSoloMode = false,
 }: AlbumMasonryGridProps) => {
   const [, setLocation] = useLocation();
 
@@ -39,7 +41,8 @@ export const AlbumMasonryGrid = ({
   }, [albums]);
 
   const handleCardClick = (albumId: string) => {
-    setLocation(`/free-trial?albumId=${encodeURIComponent(albumId)}`);
+    const baseUrl = `/free-trial?albumId=${encodeURIComponent(albumId)}`;
+    setLocation(isSoloMode ? `${baseUrl}&mode=solo` : baseUrl);
   };
 
   // Helper to decide which card to render based on position in its own column

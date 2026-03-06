@@ -24,6 +24,8 @@ import {
   type InsertDiscountRow,
   type DiscountRedemptionRow,
   type InsertDiscountRedemptionRow,
+  type SoloTrialRow,
+  type InsertSoloTrialRow,
   freeTrials,
   voiceNotes,
   albums,
@@ -32,6 +34,7 @@ import {
   transactions,
   discounts,
   discountRedemptions,
+  soloTrials,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -106,6 +109,14 @@ export interface IStorage {
     id: string,
     updates: Partial<VoiceNoteRow>,
   ): Promise<VoiceNoteRow>;
+
+  // Solo Trials (for users recording their own stories - "Myself" flow)
+  createSoloTrial(trial: Omit<InsertSoloTrialRow, "id">): Promise<SoloTrialRow>;
+  getSoloTrialById(id: string): Promise<SoloTrialRow | undefined>;
+  updateSoloTrial(
+    id: string,
+    updates: Partial<SoloTrialRow>,
+  ): Promise<SoloTrialRow>;
 
   getStories(uniqueCode: string): Promise<any>;
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -868,6 +879,45 @@ export class DatabaseStorage implements IStorage {
     }
 
     return updatedNote;
+  }
+
+  // Solo Trials implementation (for users recording their own stories - "Myself" flow)
+  async createSoloTrial(
+    insertTrial: Omit<InsertSoloTrialRow, "id">,
+  ): Promise<SoloTrialRow> {
+    const [trial] = await db
+      .insert(soloTrials)
+      .values({
+        ...insertTrial,
+        id: randomUUID(),
+      })
+      .returning();
+    return trial;
+  }
+
+  async getSoloTrialById(id: string): Promise<SoloTrialRow | undefined> {
+    const [trial] = await db
+      .select()
+      .from(soloTrials)
+      .where(eq(soloTrials.id, id));
+    return trial;
+  }
+
+  async updateSoloTrial(
+    id: string,
+    updates: Partial<SoloTrialRow>,
+  ): Promise<SoloTrialRow> {
+    const [updatedTrial] = await db
+      .update(soloTrials)
+      .set(updates)
+      .where(eq(soloTrials.id, id))
+      .returning();
+
+    if (!updatedTrial) {
+      throw new Error(`Solo trial with id ${id} not found`);
+    }
+
+    return updatedTrial;
   }
 
   async getStories(uniqueCode: string): Promise<any> {

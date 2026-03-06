@@ -29,6 +29,7 @@ export default function FreeTrial() {
   const urlParams = new URLSearchParams(window.location.search);
   const albumIdFromUrl = urlParams.get("albumId") || "";
   const albumTitleFromUrl = urlParams.get("album") || ""; // Backward compatibility
+  const isSoloMode = urlParams.get("mode") === "solo";
 
   type AlbumListItem = {
     id: string;
@@ -446,6 +447,7 @@ export default function FreeTrial() {
               <ProductSelection
                 albumId={selectedAlbum.id}
                 onContinue={() => setIsFormOpen(false)}
+                isSoloMode={isSoloMode}
               />
             </DialogContent>
           </Dialog>

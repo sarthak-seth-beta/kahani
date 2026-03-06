@@ -27,9 +27,9 @@ export default function Narrator() {
     };
 
     const handleSelectRelation = (id: string, label: string) => {
-        // "Myself" goes to /all-albums (full catalog), others go to /albums (curated view)
+        // "Myself" goes to /all-albums with solo mode, others go to /albums (curated view)
         if (id === "all") {
-            setLocation("/all-albums");
+            setLocation("/all-albums?mode=solo");
         } else {
             const category = label;
             setLocation(`/albums?category=${encodeURIComponent(category)}`);

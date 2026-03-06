@@ -34,6 +34,7 @@ interface UserInfoFormProps {
   discountCode?: string;
   onBack?: () => void;
   onSuccess?: () => void;
+  isSoloMode?: boolean;
 }
 
 export function UserInfoForm({
@@ -42,6 +43,7 @@ export function UserInfoForm({
   discountCode,
   onBack,
   onSuccess,
+  isSoloMode = false,
 }: UserInfoFormProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -87,6 +89,9 @@ export function UserInfoForm({
       });
       if (discountCode) {
         paymentParams.set("discountCode", discountCode);
+      }
+      if (isSoloMode) {
+        paymentParams.set("mode", "solo");
       }
       setLocation(`/payment?${paymentParams.toString()}`);
 
@@ -168,27 +173,29 @@ export function UserInfoForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="storytellerName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold text-[#1B2632]">
-                    What you call them with love!
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="Mom / Dad / Amma / Nani"
-                      className="h-11 text-sm"
-                      data-testid="input-storyteller-name"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isSoloMode && (
+              <FormField
+                control={form.control}
+                name="storytellerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-[#1B2632]">
+                      What you call them with love!
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Mom / Dad / Amma / Nani"
+                        className="h-11 text-sm"
+                        data-testid="input-storyteller-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -196,7 +203,9 @@ export function UserInfoForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-semibold text-[#1B2632]">
-                    What is their preferred language?
+                    {isSoloMode
+                      ? "What's your preferred language?"
+                      : "What is their preferred language?"}
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}

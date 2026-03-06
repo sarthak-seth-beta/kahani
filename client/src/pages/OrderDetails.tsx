@@ -44,6 +44,7 @@ export default function OrderDetails() {
   let albumId = urlParams.get("albumId") || "";
   const paymentOrderId = urlParams.get("paymentOrderId");
   const packageType = urlParams.get("packageType") || "digital";
+  const modeFromUrl = urlParams.get("mode") === "solo";
 
   // Clean up albumId - remove any trailing query params or fragments
   if (albumId.includes("&")) {
@@ -107,15 +108,30 @@ export default function OrderDetails() {
     return "";
   }, [albumId, albumById, albums]);
 
+  // Determine if this is solo mode - either from URL param or by checking if storytellerName is missing
+  // (solo transactions don't have storytellerName)
+  const isSoloMode = useMemo(() => {
+    if (modeFromUrl) return true;
+    // If transaction has language preference but no storytellerName, it's a solo transaction
+    if (transactionData?.storytellerLanguagePreference && !transactionData?.storytellerName) {
+      return true;
+    }
+    return false;
+  }, [modeFromUrl, transactionData]);
+
   // Check if we have all required data from transaction
+  // Solo mode doesn't need storytellerName
   const hasAllDetails = useMemo(() => {
+    if (isSoloMode) {
+      return !!transactionData?.storytellerLanguagePreference;
+    }
     return !!(
       transactionData?.storytellerName &&
       transactionData?.storytellerLanguagePreference
     );
-  }, [transactionData]);
+  }, [transactionData, isSoloMode]);
 
-  // Mutation to create free trial from existing transaction data
+  // Mutation to create free trial or solo trial from existing transaction data
   const freeTrialMutation = useMutation({
     mutationFn: async () => {
       if (!transactionData) throw new Error("No transaction data");
@@ -124,34 +140,48 @@ export default function OrderDetails() {
         album_id: albumId,
         album_title: albumTitle,
         language_preference: transactionData.storytellerLanguagePreference,
+        is_solo: isSoloMode,
       });
 
-      const response = await apiRequest("POST", "/api/free-trial", {
-        customerPhone: transactionData.phone,
-        buyerName: transactionData.name,
-        storytellerName: transactionData.storytellerName,
-        albumId: albumId,
-        storytellerLanguagePreference: transactionData.storytellerLanguagePreference || "en",
-      });
+      // Use different API endpoint for solo mode
+      const endpoint = isSoloMode ? "/api/solo-trial" : "/api/free-trial";
+      const payload = isSoloMode
+        ? {
+            customerPhone: transactionData.phone,
+            buyerName: transactionData.name,
+            albumId: albumId,
+            languagePreference: transactionData.storytellerLanguagePreference || "en",
+          }
+        : {
+            customerPhone: transactionData.phone,
+            buyerName: transactionData.name,
+            storytellerName: transactionData.storytellerName,
+            albumId: albumId,
+            storytellerLanguagePreference: transactionData.storytellerLanguagePreference || "en",
+          };
+
+      const response = await apiRequest("POST", endpoint, payload);
 
       if (!response.ok) {
         const errorData = await response.json();
         trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_ERROR, {
           error_message: errorData.error || "Failed to create order",
           album_id: albumId,
+          is_solo: isSoloMode,
         });
         throw new Error(errorData.error || "Failed to create order");
       }
       return response.json();
     },
     onSuccess: async (trial) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/free-trial"] });
+      queryClient.invalidateQueries({ queryKey: isSoloMode ? ["/api/solo-trial"] : ["/api/free-trial"] });
 
       trackEvent(AnalyticsEvents.FREE_TRIAL_FORM_SUBMITTED, {
         trial_id: trial.id,
         album_id: albumId,
         album_title: albumTitle,
         language_preference: transactionData?.storytellerLanguagePreference,
+        is_solo: isSoloMode,
       });
 
       // Send email for premium packages (ebook or printed)
@@ -161,10 +191,11 @@ export default function OrderDetails() {
             packageType,
             buyerName: transactionData?.name,
             customerPhone: transactionData?.phone,
-            storytellerName: transactionData?.storytellerName,
+            storytellerName: isSoloMode ? undefined : transactionData?.storytellerName,
             languagePreference: transactionData?.storytellerLanguagePreference,
             albumId,
             albumTitle,
+            isSoloMode,
           };
 
           await apiRequest("POST", "/api/premium-order-email", emailPayload);
@@ -173,7 +204,12 @@ export default function OrderDetails() {
         }
       }
 
-      setLocation(`/thank-you?trialId=${trial.id}`);
+      // Navigate to thank-you with appropriate ID
+      if (isSoloMode) {
+        setLocation(`/thank-you?soloTrialId=${trial.id}`);
+      } else {
+        setLocation(`/thank-you?trialId=${trial.id}`);
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -226,7 +262,9 @@ export default function OrderDetails() {
                 Payment Successful!
               </h2>
               <p className="text-muted-foreground text-sm">
-                Please review your order details and confirm to begin your Kahani journey.
+                {isSoloMode
+                  ? "Please review your order details and confirm to begin recording your stories."
+                  : "Please review your order details and confirm to begin your Kahani journey."}
               </p>
             </div>
 
@@ -253,18 +291,22 @@ export default function OrderDetails() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
-                  <MessageCircle className="w-5 h-5 text-[#A35139]" />
-                  <div>
-                    <p className="text-xs text-[#1B2632]/60">Your Loved One</p>
-                    <p className="font-medium text-[#1B2632]">{transactionData.storytellerName}</p>
+                {!isSoloMode && (
+                  <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
+                    <MessageCircle className="w-5 h-5 text-[#A35139]" />
+                    <div>
+                      <p className="text-xs text-[#1B2632]/60">Your Loved One</p>
+                      <p className="font-medium text-[#1B2632]">{transactionData.storytellerName}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
                   <Globe className="w-5 h-5 text-[#A35139]" />
                   <div>
-                    <p className="text-xs text-[#1B2632]/60">Preferred Language</p>
+                    <p className="text-xs text-[#1B2632]/60">
+                      {isSoloMode ? "Your Preferred Language" : "Preferred Language"}
+                    </p>
                     <p className="font-medium text-[#1B2632]">
                       {LANGUAGE_LABELS[transactionData.storytellerLanguagePreference || "en"] || "English"}
                     </p>
@@ -304,12 +346,14 @@ export default function OrderDetails() {
                   Processing...
                 </>
               ) : (
-                "Confirm & Continue to WhatsApp"
+                "Continue to WhatsApp"
               )}
             </Button>
 
             <p className="text-xs text-center text-[#1B2632]/50">
-              By confirming, you'll receive an invite message on WhatsApp to share with your loved one.
+              {isSoloMode
+                ? "By confirming, you'll receive a welcome message on WhatsApp to start recording your stories."
+                : "By confirming, you'll receive an invite message on WhatsApp to share with your loved one."}
             </p>
           </div>
         </main>

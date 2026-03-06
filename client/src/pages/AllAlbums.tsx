@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils";
 export default function AllAlbums() {
   const [, setLocation] = useLocation();
 
-  // Get initial category from URL query params
+  // Get initial category and mode from URL query params
   const urlParams = new URLSearchParams(window.location.search);
   const initialCategory = urlParams.get("category") || "All";
+  const isSoloMode = urlParams.get("mode") === "solo";
 
   const [selectedCategory, setSelectedCategory] =
     useState<string>(initialCategory);
@@ -302,6 +303,7 @@ export default function AllAlbums() {
                   hideLikeButton={true}
                   showCompactDescription={true}
                   onCustomCardClick={() => setLocation("/create-album")}
+                  isSoloMode={isSoloMode}
                 />
               </div>
             )}
