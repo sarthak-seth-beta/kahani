@@ -126,6 +126,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Export free trials as CSV (all columns, raw data)
+  app.get("/api/admin/export-free-trials", async (req, res) => {
+    try {
+      const { pool } = await import("./db");
+
+      // Query ALL columns from free_trials table
+      const query = `SELECT * FROM free_trials ORDER BY created_at DESC`;
+      const result = await pool.query(query);
+
+      if (result.rows.length === 0) {
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename="free_trials_empty.csv"`);
+        return res.send("No data");
+      }
+
+      // Get column names from the first row
+      const columns = Object.keys(result.rows[0]);
+      
+      // Columns that contain phone numbers (should be treated as text in Excel)
+      const phoneColumns = ["customer_phone", "storyteller_phone", "phone"];
+      
+      // Generate CSV with all columns
+      const csvRows = [columns.join(",")];
+
+      for (const row of result.rows) {
+        const values = columns.map((col) => {
+          const val = row[col];
+          if (val === null || val === undefined) {
+            return "";
+          }
+          // Force phone numbers to be text by prefixing with = and wrapping in quotes
+          // This tells Excel to treat it as a text formula
+          if (phoneColumns.includes(col) && val) {
+            return `="${String(val)}"`;
+          }
+          if (typeof val === "object") {
+            return `"${JSON.stringify(val).replace(/"/g, '""')}"`;
+          }
+          if (typeof val === "string" && (val.includes(",") || val.includes('"') || val.includes("\n"))) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
+          return String(val);
+        });
+        csvRows.push(values.join(","));
+      }
+
+      const csv = csvRows.join("\n");
+
+      // Set headers for CSV download
+      const filename = `free_trials_${new Date().toISOString().split("T")[0]}.csv`;
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.send(csv);
+    } catch (error: any) {
+      console.error("Error exporting free trials:", error);
+      res.status(500).json({
+        error: "Failed to export free trials",
+        message: error.message,
+      });
+    }
+  });
+
   // Admin endpoint: Get daily WhatsApp messages (outgoing and incoming)
   app.get("/api/admin/daily-whatsapp-messages", async (req, res) => {
     try {

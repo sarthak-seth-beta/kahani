@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Plus, Calendar as CalendarIcon, Check, RotateCcw } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Check, RotateCcw, Download } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO, isAfter, isBefore, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -237,14 +237,27 @@ export default function Admin() {
                   Analytics Dashboard
                 </CardDescription>
               </div>
-              <Button
-                onClick={() => setLocation("/enzo-xyz/albums")}
-                className="text-xs"
-                size="sm"
-              >
-                <Plus size={14} />
-                Manage Albums
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    window.location.href = "/api/admin/export-free-trials";
+                  }}
+                  variant="outline"
+                  className="text-xs"
+                  size="sm"
+                >
+                  <Download size={14} />
+                  Export Trials CSV
+                </Button>
+                <Button
+                  onClick={() => setLocation("/enzo-xyz/albums")}
+                  className="text-xs"
+                  size="sm"
+                >
+                  <Plus size={14} />
+                  Manage Albums
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
