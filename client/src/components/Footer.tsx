@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { SiWhatsapp, SiInstagram, } from "react-icons/si";
+import { SiWhatsapp, SiInstagram } from "react-icons/si";
 import { SlSocialTwitter, SlSocialYoutube } from "react-icons/sl";
 
 export function Footer() {

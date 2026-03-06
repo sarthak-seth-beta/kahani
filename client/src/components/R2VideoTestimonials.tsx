@@ -47,7 +47,9 @@ export default function R2VideoTestimonials() {
         const cardRect = card.getBoundingClientRect();
         const offset = cardRect.left - containerRect.left;
         const target =
-          container.scrollLeft + offset - (containerRect.width - cardRect.width) / 2;
+          container.scrollLeft +
+          offset -
+          (containerRect.width - cardRect.width) / 2;
         container.scrollTo({ left: target, behavior: "smooth" });
       }
     },
@@ -132,7 +134,8 @@ export default function R2VideoTestimonials() {
                   <div className="w-full aspect-[9/16] bg-black relative overflow-hidden">
                     <video
                       ref={(el) => {
-                        videoRefs.current[index] = el as HTMLVideoElement | null;
+                        videoRefs.current[index] =
+                          el as HTMLVideoElement | null;
                       }}
                       src={video.url}
                       playsInline

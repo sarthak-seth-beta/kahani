@@ -57,7 +57,7 @@ const createAlbumSchema = z.object({
     .array(
       z.object({
         text: z.string(),
-      })
+      }),
     )
     .optional(),
 });
@@ -181,7 +181,10 @@ export default function CreateAlbum() {
       if (!response.ok) {
         const msg = result.error || "Failed to generate album";
         // If server returns old validation message, suggest refresh/restart
-        if (typeof msg === "string" && /yourName|phone.*occasion|occasion.*phone/.test(msg)) {
+        if (
+          typeof msg === "string" &&
+          /yourName|phone.*occasion|occasion.*phone/.test(msg)
+        ) {
           throw new Error(
             "Server is using an old version. Please restart the dev server (stop and run yarn dev again), then try again.",
           );
@@ -311,10 +314,7 @@ export default function CreateAlbum() {
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
                     Language (for your storyteller)
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 bg-white">
                         <SelectValue placeholder="Select language" />
@@ -385,10 +385,7 @@ export default function CreateAlbum() {
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
                     Tone
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 bg-white">
                         <SelectValue placeholder="Select tone" />
@@ -396,7 +393,9 @@ export default function CreateAlbum() {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="warm">Warm & casual</SelectItem>
-                      <SelectItem value="respectful">Respectful & formal</SelectItem>
+                      <SelectItem value="respectful">
+                        Respectful & formal
+                      </SelectItem>
                       <SelectItem value="funny">Funny & light</SelectItem>
                       <SelectItem value="calm">Calm & emotional</SelectItem>
                     </SelectContent>
@@ -418,9 +417,18 @@ export default function CreateAlbum() {
                   <div className="space-y-3 rounded-md border border-[#C9C1B1]/30 p-4 bg-white/50">
                     {[
                       { value: "stories" as const, label: "Capture stories" },
-                      { value: "family_history" as const, label: "Capture family history" },
-                      { value: "values_lessons" as const, label: "Capture values & lessons" },
-                      { value: "voice_future" as const, label: "Capture voice for the future" },
+                      {
+                        value: "family_history" as const,
+                        label: "Capture family history",
+                      },
+                      {
+                        value: "values_lessons" as const,
+                        label: "Capture values & lessons",
+                      },
+                      {
+                        value: "voice_future" as const,
+                        label: "Capture voice for the future",
+                      },
                     ].map((option) => (
                       <div
                         key={option.value}
@@ -433,7 +441,7 @@ export default function CreateAlbum() {
                             const next = checked
                               ? [...(field.value || []), option.value]
                               : (field.value || []).filter(
-                                  (v) => v !== option.value
+                                  (v) => v !== option.value,
                                 );
                             field.onChange(next);
                           }}
@@ -480,9 +488,7 @@ export default function CreateAlbum() {
                       <FormControl>
                         <Checkbox
                           checked={field.value ?? false}
-                          onCheckedChange={(v) =>
-                            field.onChange(v === true)
-                          }
+                          onCheckedChange={(v) => field.onChange(v === true)}
                         />
                       </FormControl>
                       <FormLabel className="font-normal cursor-pointer">
