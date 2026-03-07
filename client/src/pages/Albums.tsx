@@ -323,7 +323,7 @@ export default function Albums() {
             {displayAlbums.length === 0 && !isLoading && !error && (
               <div className="flex-1 text-center py-20 flex flex-col items-center justify-center">
                 <h3 className="text-xl font-bold text-[#1B2632] mb-2 font-['Outfit']">
-                  No albums found
+                  Coming Soon
                 </h3>
                 <p className="text-[#1B2632]/70 text-base max-w-sm mx-auto">
                   Try selecting a different category.
