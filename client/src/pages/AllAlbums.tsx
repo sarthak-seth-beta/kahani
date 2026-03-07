@@ -123,6 +123,7 @@ export default function AllAlbums() {
             {!isSearchOpen ? (
               <>
                 <Button
+                  id="all-albums-back-home-mobile"
                   variant="ghost"
                   size="icon"
                   onClick={() => setLocation("/")}
@@ -132,6 +133,7 @@ export default function AllAlbums() {
                 </Button>
 
                 <Button
+                  id="all-albums-set-is-search-open"
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsSearchOpen(true)}
@@ -154,6 +156,7 @@ export default function AllAlbums() {
                   />
                   {searchQuery && (
                     <button
+                      id="all-albums-clear-search-mobile"
                       onClick={() => setSearchQuery("")}
                       className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-gray-100 rounded-full"
                     >
@@ -162,6 +165,7 @@ export default function AllAlbums() {
                   )}
                 </div>
                 <Button
+                  id="all-albums-cancel-search-mobile"
                   variant="ghost"
                   onClick={() => {
                     setIsSearchOpen(false);
@@ -181,6 +185,7 @@ export default function AllAlbums() {
       <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-[#E5E0D5]/50 border-r border-[#C9C1B1]/20 p-6 z-50 backdrop-blur-sm">
         {/* Back Button */}
         <Button
+          id="all-albums-back-home-desktop"
           variant="ghost"
           size="icon"
           onClick={() => setLocation("/")}
@@ -201,6 +206,7 @@ export default function AllAlbums() {
           />
           {searchQuery && (
             <button
+              id="all-albums-clear-search-desktop"
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-gray-100 rounded-full"
             >
@@ -219,6 +225,7 @@ export default function AllAlbums() {
           <AnimatePresence initial={false}>
             {sortedCategories.map((category) => (
               <motion.button
+                id={`all-albums-filter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -257,6 +264,7 @@ export default function AllAlbums() {
                 <AnimatePresence initial={false}>
                   {sortedCategories.map((category) => (
                     <motion.button
+                      id={`all-albums-mobile-filter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                       layout
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -318,6 +326,7 @@ export default function AllAlbums() {
                   Try selecting a different category.
                 </p>
                 <Button
+                  id="all-albums-set-selected-category"
                   variant="ghost"
                   onClick={() => setSelectedCategory("All")}
                   className="text-[#A35139] mt-4 hover:bg-[#A35139]/10"

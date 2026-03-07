@@ -31,6 +31,7 @@ export function Footer() {
 
         {/* Record Button */}
         <button
+          id="footer-record-now"
           onClick={() => setLocation("/narrator")}
           className="group relative px-8 py-4 bg-transparent border border-[#EEE9DF]/30 rounded-full text-lg font-medium hover:bg-[#EEE9DF] hover:text-[#1B1B1B] transition-all duration-300 overflow-hidden"
         >

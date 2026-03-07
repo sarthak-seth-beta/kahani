@@ -140,6 +140,7 @@ export function BottomHomeNavbar({
         {/* Left: Album Art & Info */}
         <div className="flex items-center gap-3 flex-1 min-w-0 z-10">
           <div
+            id="playlist-albums-f6258c48-043e-4b23-883b-dfb4ace3b43c"
             className="relative group cursor-pointer shrink-0"
             onClick={() =>
               setLocation(
@@ -190,6 +191,7 @@ export function BottomHomeNavbar({
         {/* Right: Play Button */}
         <div className="flex items-center justify-end flex-none z-20">
           <button
+            id="bottom-home-navbar-toggle-play"
             onClick={togglePlay}
             className="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#A35139] text-white shadow-md hover:bg-[#8B4430] hover:scale-105 transition-all active:scale-95"
             aria-label={isPlaying ? "Pause" : isEnded ? "Replay" : "Play"}

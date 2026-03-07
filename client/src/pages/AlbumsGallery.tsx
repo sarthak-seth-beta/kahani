@@ -127,6 +127,7 @@ export default function AlbumsGallery() {
           Failed to load album
         </p>
         <button
+          id="albums-gallery-navigate"
           onClick={() => setLocation("/")}
           style={{
             fontFamily: "Outfit",
@@ -229,6 +230,7 @@ export default function AlbumsGallery() {
     >
       {/* Close button - fixed top-left */}
       <button
+        id="albums-gallery-close"
         onClick={handleClose}
         style={{
           position: "fixed",

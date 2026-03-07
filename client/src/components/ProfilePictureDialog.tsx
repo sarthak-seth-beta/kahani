@@ -113,6 +113,7 @@ const ProfilePictureDialog = ({
                 Upload a new photo to reposition and crop.
               </p>
               <Button
+                id="profile-picture-dialog-trigger-upload"
                 onClick={triggerUpload}
                 className="bg-[#A35139] hover:bg-[#8B4229] text-white rounded-full px-8"
               >
@@ -149,6 +150,7 @@ const ProfilePictureDialog = ({
                   {/* Rotate & Zoom */}
                   <div className="flex items-center gap-4">
                     <Button
+                      id="profile-picture-dialog-set-rotation"
                       type="button"
                       variant="ghost"
                       size="icon"
@@ -174,6 +176,7 @@ const ProfilePictureDialog = ({
 
                   <div className="flex justify-between mt-2 gap-3">
                     <Button
+                      id="profile-picture-dialog-change-photo"
                       variant="ghost"
                       onClick={triggerUpload}
                       className="text-gray-600 hover:text-[#A35139] hover:bg-gray-50"
@@ -188,6 +191,7 @@ const ProfilePictureDialog = ({
                       />
                     </Button>
                     <Button
+                      id="profile-picture-dialog-save"
                       onClick={handleSave}
                       disabled={isSaving}
                       className="bg-[#A35139] hover:bg-[#8B4229] text-white rounded-full px-8 min-w-[120px]"

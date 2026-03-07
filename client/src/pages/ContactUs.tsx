@@ -43,6 +43,7 @@ export default function ContactUs() {
       <header className="absolute top-0 left-0 right-0 z-40 w-full">
         <div className="flex items-start px-4 py-3 md:px-6 md:py-4">
           <Button
+            id="contact-us-navigate"
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/")}
@@ -87,6 +88,7 @@ export default function ContactUs() {
             <div className="flex flex-col items-start gap-4 sm:gap-5 mt-6 sm:mt-8 w-full max-w-md mx-auto">
               {/* Email */}
               <a
+                id="contact-us-copy-email"
                 href={`mailto:${email}`}
                 className="flex items-center gap-4 cursor-pointer group w-full"
                 onClick={handleCopyEmail}
@@ -108,6 +110,7 @@ export default function ContactUs() {
 
               {/* WhatsApp */}
               <a
+                id="contact-us-copy-whats-app"
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"

@@ -262,6 +262,7 @@ function SidebarTrigger({
 
   return (
     <Button
+      id="sidebar-toggle-sidebar"
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
@@ -285,6 +286,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   // Note: Tailwind v3.4 doesn't support "in-" selectors. So the rail won't work perfectly.
   return (
     <button
+      id="sidebar-rail-toggle"
       data-sidebar="rail"
       data-slot="sidebar-rail"
       aria-label="Toggle Sidebar"

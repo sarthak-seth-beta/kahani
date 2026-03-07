@@ -96,6 +96,7 @@ export default function Checkout() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           <div className="flex items-center justify-between h-16">
             <button
+              id="checkout-navigate"
               onClick={() => {
                 trackEvent(AnalyticsEvents.BACK_BUTTON_CLICKED, {
                   source_page: "checkout",
@@ -172,6 +173,7 @@ export default function Checkout() {
                       </span>
                       <div className="flex items-center gap-3">
                         <Button
+                          id={`checkout-decrease-${album.id}`}
                           variant="outline"
                           size="icon"
                           onClick={() => handleQuantityChange(album.id, -1)}
@@ -188,6 +190,7 @@ export default function Checkout() {
                           {quantities[album.id]}
                         </span>
                         <Button
+                          id={`checkout-increase-${album.id}`}
                           variant="outline"
                           size="icon"
                           onClick={() => handleQuantityChange(album.id, 1)}
@@ -218,6 +221,7 @@ export default function Checkout() {
             {/* Single Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Button
+                id="checkout-buy-now"
                 size="lg"
                 className="flex-1 bg-[#1B2632] text-[#EEE9DF] rounded-2xl shadow-xl border border-[#1B2632]"
                 onClick={handleBuyNow}
@@ -226,6 +230,7 @@ export default function Checkout() {
                 Buy Now
               </Button>
               <Button
+                id="checkout-free-trial"
                 size="lg"
                 variant="outline"
                 className="flex-1 border-2 border-[#A35139] text-[#A35139] rounded-2xl"

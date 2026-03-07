@@ -176,6 +176,7 @@ export function ProductSelection({
           const isSelected = selectedId === product.id;
           return (
             <div
+              id={`product-selection-package-${product.id}`}
               key={product.id}
               onClick={() => handleSelectPackage(product.id)}
               className={cn(
@@ -213,6 +214,7 @@ export function ProductSelection({
       {/* Discount code section */}
       {!showDiscountField ? (
         <button
+          id="product-selection-show-discount"
           type="button"
           onClick={() => setShowDiscountField(true)}
           className="flex items-center gap-1.5 text-sm text-[#A35139] hover:text-[#A35139]/80 transition-colors mx-auto"
@@ -234,6 +236,7 @@ export function ProductSelection({
                 </span>
               </div>
               <button
+                id="product-selection-remove-discount"
                 type="button"
                 onClick={handleRemoveDiscount}
                 className="p-1 text-green-600 hover:text-green-800 rounded"
@@ -259,6 +262,7 @@ export function ProductSelection({
                 }}
               />
               <Button
+                id="product-selection-apply-discount"
                 type="button"
                 onClick={handleApplyDiscount}
                 disabled={discountLoading || !discountInput.trim()}
@@ -293,10 +297,11 @@ export function ProductSelection({
       )}
 
       <Button
+        id="product-selection-continue"
         onClick={handleContinue}
         className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white font-bold h-10 text-base rounded-xl shadow-md"
       >
-        Continue
+        Checkout
       </Button>
     </div>
   );

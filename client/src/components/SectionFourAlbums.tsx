@@ -63,7 +63,7 @@ export default function SectionFourAlbums({
   }
   return (
     <section
-      id="albums"
+      id="section-four-albums"
       className="w-full bg-[#EEE9DF] px-4 sm:px-6 py-8 sm:py-12"
     >
       <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
@@ -122,6 +122,7 @@ export default function SectionFourAlbums({
                       : "View all albums in our collection"}
                   </p>
                   <Button
+                    id="section-four-albums-view-all"
                     onClick={() => {
                       trackEvent(AnalyticsEvents.VIEW_ALL_ALBUMS_CLICKED, {
                         total_albums: allAlbums?.length || 0,
@@ -158,6 +159,7 @@ export default function SectionFourAlbums({
         {onTryDemo && (
           <div className="text-center pt-8">
             <Button
+              id="section-four-albums-try-demo"
               onClick={() => {
                 trackEvent(AnalyticsEvents.TRY_DEMO_CLICKED, {
                   demo_album_id: "demo-album-id",

@@ -464,6 +464,7 @@ export default function AlbumGallery({
             }}
           >
             <button
+              id="album-gallery-play"
               onClick={handlePlay}
               style={{
                 flex: 1,
@@ -547,6 +548,7 @@ export default function AlbumGallery({
 
                         return (
                           <div
+                            id={`album-gallery-track-${globalIndex}`}
                             key={globalIndex}
                             style={{
                               display: "flex",
@@ -579,6 +581,7 @@ export default function AlbumGallery({
                               </p>
                             </div>
                             <button
+                              id={`album-gallery-track-play-${globalIndex}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!track.mediaUrl) return;
@@ -636,6 +639,7 @@ export default function AlbumGallery({
 
                   return (
                     <div
+                      id={`album-gallery-track-${index}`}
                       key={index}
                       style={{
                         display: "flex",
@@ -665,6 +669,7 @@ export default function AlbumGallery({
                         </p>
                       </div>
                       <button
+                        id={`album-gallery-track-play-${index}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!track.mediaUrl) return;

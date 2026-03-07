@@ -247,6 +247,7 @@ export default function SampleAlbum() {
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[#FDF4DC]/95 backdrop-blur-sm border-b border-black/5 px-4 py-3 flex items-center justify-between">
         <button
+          id="sample-album-navigate"
           onClick={() => setLocation("/")}
           className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
         >
@@ -255,6 +256,7 @@ export default function SampleAlbum() {
 
         <div className="flex items-center gap-2">
           <button
+            id="sample-album-toggle-language-dropdown"
             onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-black/10 hover:bg-black/5 transition-colors font-['Outfit'] text-sm text-[#1B2632]"
           >
@@ -264,6 +266,7 @@ export default function SampleAlbum() {
           {isLanguageDropdownOpen && (
             <div className="absolute top-full right-4 mt-2 bg-white rounded-xl shadow-xl border border-black/5 overflow-hidden min-w-[120px]">
               <button
+                id="sample-album-language-en"
                 onClick={() => {
                   setSelectedLanguage("en");
                   setIsLanguageDropdownOpen(false);
@@ -273,6 +276,7 @@ export default function SampleAlbum() {
                 English
               </button>
               <button
+                id="sample-album-language-hi"
                 onClick={() => {
                   setSelectedLanguage("hi");
                   setIsLanguageDropdownOpen(false);
@@ -321,6 +325,7 @@ export default function SampleAlbum() {
 
                 return (
                   <div
+                    id={`sample-album-track-${absoluteIndex}`}
                     key={absoluteIndex}
                     onClick={() => handlePlayPause(absoluteIndex)}
                     className={`
@@ -398,12 +403,14 @@ export default function SampleAlbum() {
 
             <div className="flex items-center gap-2 sm:gap-4">
               <button
+                id="sample-album-previous-track"
                 onClick={handlePreviousTrack}
                 className="p-2 text-[#1B2632]/40 hover:text-[#1B2632]"
               >
                 <SkipBack className="w-5 h-5" />
               </button>
               <button
+                id="sample-album-play-pause"
                 onClick={() => handlePlayPause(playingTrackIndex!)}
                 className="w-12 h-12 rounded-full bg-[#A35139] text-white flex items-center justify-center shadow-lg hover:bg-[#8B4430] active:scale-95 transition-all"
               >
@@ -414,6 +421,7 @@ export default function SampleAlbum() {
                 )}
               </button>
               <button
+                id="sample-album-next-track"
                 onClick={handleNextTrack}
                 className="p-2 text-[#1B2632]/40 hover:text-[#1B2632]"
               >

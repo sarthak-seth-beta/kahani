@@ -3,6 +3,12 @@ import { Play, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Album } from "./AlbumCard";
 
+const toIdPart = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export const CompactAlbumCard = ({
   album,
   onClick,
@@ -18,6 +24,7 @@ export const CompactAlbumCard = ({
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isBeating, setIsBeating] = useState(false);
+  const albumIdBase = `compact-album-card-${toIdPart(album.title)}-${album.id}`;
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -28,6 +35,7 @@ export const CompactAlbumCard = ({
 
   return (
     <div
+      id={`${albumIdBase}-tile`}
       onClick={onClick}
       className="group relative flex flex-col w-full bg-gray-100 rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-500 border border-gray-200"
     >
@@ -44,6 +52,7 @@ export const CompactAlbumCard = ({
 
         {/* Play Button - Centered or Top Right? Let's go Top Right for compact */}
         <button
+          id={`${albumIdBase}-play`}
           onClick={(e) => {
             e.stopPropagation();
             onClick();
@@ -87,6 +96,7 @@ export const CompactAlbumCard = ({
 
               {!hideLikeButton && (
                 <button
+                  id={`${albumIdBase}-like`}
                   onClick={handleLike}
                   className={cn(
                     "transition-all duration-300 transform ml-auto",

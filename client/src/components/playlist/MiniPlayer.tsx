@@ -102,6 +102,7 @@ export function MiniPlayer({
   return (
     <>
       <div
+        id="mini-player-expand"
         onClick={handleExpand}
         style={{
           position: isEmbedded ? "relative" : "fixed",
@@ -171,6 +172,7 @@ export function MiniPlayer({
           </p>
         </div>
         <button
+          id="mini-player-play-pause"
           onClick={handlePlayButtonClick}
           style={{
             width: "48px",

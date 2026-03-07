@@ -217,7 +217,7 @@ export default function SectionThreeTestimonials({
 
   return (
     <section
-      id="why-kahani"
+      id="why-kahani-stories"
       className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12"
     >
       <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10 relative">
@@ -230,6 +230,7 @@ export default function SectionThreeTestimonials({
         <div className="relative -mx-4 sm:-mx-6 md:-mx-8 group">
           {/* Navigation Arrows */}
           <button
+            id="section-three-testimonials-scroll-prev"
             onClick={scrollPrev}
             className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1B2632] transition-all duration-300"
             aria-label="Previous testimonial"
@@ -251,6 +252,7 @@ export default function SectionThreeTestimonials({
           </button>
 
           <button
+            id="section-three-testimonials-scroll-next"
             onClick={scrollNext}
             className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1B2632] transition-all duration-300"
             aria-label="Next testimonial"

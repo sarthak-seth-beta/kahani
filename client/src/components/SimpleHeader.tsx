@@ -40,6 +40,7 @@ export default function SimpleHeader({
       <div className="flex items-center justify-between px-3 py-2 md:px-8 gap-2 h-[60px] md:h-[70px]">
         {/* Logo */}
         <div
+          id="simple-header-navigate"
           onClick={() => setLocation("/")}
           className="cursor-pointer shrink-0"
         >
@@ -58,6 +59,7 @@ export default function SimpleHeader({
 
           {onRecordClick && (
             <button
+              id="simple-header-record-role"
               onClick={onRecordClick}
               className="px-2 h-7 md:h-9 bg-[#1B2632] text-[#EEE9DF] border-[#1B2632] rounded-xl font-bold text-sm md:text-base shadow-md hover:bg-[#1B2632]/90 hover:scale-105 active:scale-95 transition-all flex items-center justify-center overflow-hidden min-w-[80px] md:min-w-[110px]"
               data-testid="button-record"

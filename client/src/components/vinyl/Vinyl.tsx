@@ -20,6 +20,7 @@ export function Vinyl({
 
   return (
     <div
+      id="vinyl-widget-toggle"
       className={`${styles.record} ${isPlaying ? styles.spinning : styles.paused}`}
       style={style}
       onClick={onToggle}
@@ -46,6 +47,7 @@ export function Vinyl({
 
       {/* Play/Pause button overlay */}
       <button
+        id="vinyl-widget-play-pause"
         className={styles.playBtn}
         onClick={(e) => {
           e.stopPropagation();

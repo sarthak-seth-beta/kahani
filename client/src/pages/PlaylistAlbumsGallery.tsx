@@ -683,6 +683,7 @@ export default function PlaylistAlbumsGallery() {
           Failed to load album
         </p>
         <button
+          id="playlist-albums-gallery-go-home-error"
           onClick={() => setLocation("/")}
           style={{
             fontFamily: "Outfit",
@@ -771,6 +772,7 @@ export default function PlaylistAlbumsGallery() {
         }}
       >
         <button
+          id="playlist-albums-gallery-go-home-header"
           onClick={() => setLocation("/")}
           style={{
             background: "transparent",
@@ -798,6 +800,7 @@ export default function PlaylistAlbumsGallery() {
           {/* Language Dropdown */}
           <div style={{ position: "relative" }}>
             <button
+              id="playlist-albums-gallery-toggle-language-dropdown"
               onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
               style={{
                 background: "transparent",
@@ -829,6 +832,7 @@ export default function PlaylistAlbumsGallery() {
             {isLanguageDropdownOpen && (
               <>
                 <div
+                  id="playlist-albums-gallery-close-language-dropdown"
                   style={{
                     position: "fixed",
                     top: 0,
@@ -854,6 +858,7 @@ export default function PlaylistAlbumsGallery() {
                   }}
                 >
                   <button
+                    id="playlist-albums-gallery-language-change-en"
                     onClick={() => handleLanguageChange("en")}
                     style={{
                       width: "100%",
@@ -887,6 +892,7 @@ export default function PlaylistAlbumsGallery() {
                     English
                   </button>
                   <button
+                    id="playlist-albums-gallery-language-change-hi"
                     onClick={() => handleLanguageChange("hi")}
                     style={{
                       width: "100%",
@@ -925,6 +931,7 @@ export default function PlaylistAlbumsGallery() {
             )}
           </div>
           <button
+            id={`playlist-albums-gallery-share-${trial.id}`}
             onClick={async () => {
               if (!albumData) return;
               const url = window.location.href;
@@ -1161,6 +1168,7 @@ export default function PlaylistAlbumsGallery() {
             }}
           >
             <button
+              id="playlist-albums-gallery-play"
               onClick={handlePlay}
               style={{
                 flex: 1,
@@ -1191,6 +1199,7 @@ export default function PlaylistAlbumsGallery() {
               Play
             </button>
             <button
+              id="playlist-albums-gallery-shuffle"
               onClick={handleShuffle}
               style={{
                 padding: "0.875rem 1.5rem",
@@ -1275,6 +1284,7 @@ export default function PlaylistAlbumsGallery() {
 
                         return (
                           <div
+                            id={`playlist-albums-gallery-track-${trial.id}-${globalIndex}`}
                             key={globalIndex}
                             style={{
                               display: "flex",
@@ -1328,6 +1338,7 @@ export default function PlaylistAlbumsGallery() {
                               )}
                             </div>
                             <button
+                              id={`playlist-albums-gallery-track-play-${trial.id}-${globalIndex}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!track.mediaUrl) {
@@ -1389,6 +1400,7 @@ export default function PlaylistAlbumsGallery() {
 
                   return (
                     <div
+                      id={`playlist-albums-gallery-track-${trial.id}-${index}`}
                       key={index}
                       style={{
                         display: "flex",
@@ -1439,6 +1451,7 @@ export default function PlaylistAlbumsGallery() {
                         )}
                       </div>
                       <button
+                        id={`playlist-albums-gallery-track-play-${trial.id}-${index}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!track.mediaUrl) {

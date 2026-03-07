@@ -252,6 +252,7 @@ export function UserInfoForm({
 
             {onBack && (
               <Button
+                id="user-info-form-back"
                 variant="ghost"
                 size="sm"
                 onClick={onBack}

@@ -77,6 +77,7 @@ export default function ThankYou() {
     <div className="min-h-screen bg-[#EEE9DF] flex flex-col font-['Outfit'] relative overflow-hidden">
       {/* Circular Back Button */}
       <Button
+        id="thank-you-navigate"
         variant="ghost"
         size="icon"
         onClick={() => setLocation("/")}
@@ -107,6 +108,7 @@ export default function ThankYou() {
               </p>
 
               <Button
+                id="thank-you-open-whatsapp"
                 size="lg"
                 onClick={handleWhatsAppClick}
                 className="w-full sm:w-auto px-8 py-4 text-lg h-auto bg-[#A35139] text-white rounded-xl shadow-lg border border-[#A35139] hover:bg-[#A35139]/90 transition-all duration-300 flex items-center justify-center gap-2"

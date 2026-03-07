@@ -122,7 +122,7 @@ export default function R2VideoTestimonials() {
 
   return (
     <section
-      id="why-kahani"
+      id="why-kahani-videos"
       className="w-full bg-white px-4 sm:px-6 py-8 sm:py-12"
     >
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
@@ -140,6 +140,7 @@ export default function R2VideoTestimonials() {
 
               return (
                 <article
+                  id={`r2-video-testimonial-card-${video.key}`}
                   key={video.key}
                   ref={(el) => {
                     cardRefs.current[index] = el as HTMLDivElement | null;
@@ -164,7 +165,9 @@ export default function R2VideoTestimonials() {
                     />
 
                     {/* Play/Pause overlay */}
-                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isActive ? 'bg-transparent opacity-0 hover:opacity-100' : 'bg-black/20 opacity-100'}`}>
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isActive ? "bg-transparent opacity-0 hover:opacity-100" : "bg-black/20 opacity-100"}`}
+                    >
                       <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                         {isActive ? (
                           <Pause className="w-5 h-5 text-[#1B2632]" />
@@ -177,6 +180,7 @@ export default function R2VideoTestimonials() {
                     {/* Mute toggle when active */}
                     {isActive && (
                       <button
+                        id={`r2-video-testimonial-mute-${video.key}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleMute();

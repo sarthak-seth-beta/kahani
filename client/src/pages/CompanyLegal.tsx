@@ -51,6 +51,7 @@ export default function CompanyLegal() {
       {/* Header - Back Button */}
       <header className="absolute top-0 left-0 right-0 z-40 w-full px-4 py-3 md:px-6 md:py-4">
         <Button
+          id="company-legal-navigate"
           variant="ghost"
           size="icon"
           onClick={() => setLocation("/")}

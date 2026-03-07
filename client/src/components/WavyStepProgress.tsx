@@ -81,6 +81,7 @@ export default function WavyStepProgress({
 
             return (
               <div
+                id={`wavy-step-progress-step-${step.id}`}
                 key={step.id}
                 className="flex flex-col items-center gap-2 cursor-pointer group relative"
                 onClick={() => onStepClick?.(index)}

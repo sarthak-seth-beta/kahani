@@ -26,6 +26,7 @@ export default function Vinyl({
 
   return (
     <div
+      id="vinyl-player-toggle"
       className={`${styles.record} ${styles.spinning} ${!isPlaying ? styles.paused : ""}`}
       style={{ "--size": `${size}px` } as React.CSSProperties}
       onClick={handleClick}
@@ -45,6 +46,7 @@ export default function Vinyl({
 
       {/* Play/Pause button overlay */}
       <button
+        id="vinyl-player-play-pause"
         className={styles.playBtn}
         onClick={(e) => {
           e.stopPropagation();

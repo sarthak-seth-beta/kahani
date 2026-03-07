@@ -135,6 +135,7 @@ function Card({ item, setLocation }: { item: any; setLocation: any }) {
 
   return (
     <div
+      id={`get-started-category-${item.id}`}
       onClick={() => {
         setLocation(`/albums?category=${encodeURIComponent(item.label)}`);
       }}

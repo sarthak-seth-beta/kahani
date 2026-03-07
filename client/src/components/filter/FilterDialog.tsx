@@ -57,6 +57,7 @@ export function FilterDialog({
               <AccordionContent>
                 <div className="space-y-2 pt-2">
                   <button
+                    id="filter-dialog-type-all"
                     onClick={() => {
                       onFilterTypeChange("all");
                       trackEvent(AnalyticsEvents.FILTER_APPLIED, {
@@ -73,6 +74,7 @@ export function FilterDialog({
                     All Albums
                   </button>
                   <button
+                    id="filter-dialog-type-family"
                     onClick={() => {
                       onFilterTypeChange("family");
                       trackEvent(AnalyticsEvents.FILTER_APPLIED, {
@@ -89,6 +91,7 @@ export function FilterDialog({
                     Family & Childhood
                   </button>
                   <button
+                    id="filter-dialog-type-wisdom"
                     onClick={() => {
                       onFilterTypeChange("wisdom");
                       trackEvent(AnalyticsEvents.FILTER_APPLIED, {
@@ -105,6 +108,7 @@ export function FilterDialog({
                     Wisdom & Life Lessons
                   </button>
                   <button
+                    id="filter-dialog-type-love"
                     onClick={() => {
                       onFilterTypeChange("love");
                       trackEvent(AnalyticsEvents.FILTER_APPLIED, {
@@ -121,6 +125,7 @@ export function FilterDialog({
                     Love & Home
                   </button>
                   <button
+                    id="filter-dialog-type-career"
                     onClick={() => {
                       onFilterTypeChange("career");
                       trackEvent(AnalyticsEvents.FILTER_APPLIED, {
@@ -149,6 +154,7 @@ export function FilterDialog({
                 <AccordionContent>
                   <div className="space-y-2 pt-2">
                     <button
+                      id="filter-dialog-best-fit-all"
                       onClick={() => {
                         onFilterBestFitForChange(null);
                         trackEvent(AnalyticsEvents.FILTER_APPLIED, {
@@ -166,6 +172,7 @@ export function FilterDialog({
                     </button>
                     {uniqueBestFitFor.map((bestFit) => (
                       <button
+                        id={`filter-dialog-best-fit-${bestFit.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                         key={bestFit}
                         onClick={() => {
                           const newValue =
@@ -195,6 +202,7 @@ export function FilterDialog({
 
         <div className="flex justify-end gap-3 pt-4 border-t flex-shrink-0">
           <Button
+            id="filter-dialog-clear-all"
             variant="outline"
             onClick={() => {
               onFilterTypeChange("all");
@@ -205,6 +213,7 @@ export function FilterDialog({
             Clear All
           </Button>
           <Button
+            id="filter-dialog-apply"
             className="bg-[#A35139] text-white hover:bg-[#A35139]/90"
             onClick={() => onOpenChange(false)}
           >

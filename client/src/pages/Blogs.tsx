@@ -57,6 +57,7 @@ export default function Blogs() {
       <header className="sticky top-0 z-50 w-full bg-[#EEE9DF]/95 backdrop-blur-sm border-b border-[#C9C1B1]/30 shadow-sm">
         <div className="relative flex items-center justify-center px-6 py-4 md:px-12">
           <button
+            id="blogs-back-home"
             onClick={() => setLocation("/")}
             className="w-9 h-9 xs:w-10 xs:h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center hover:bg-white/80 transition-all shadow-sm absolute left-2 xs:left-4 top-1/2 -translate-y-1/2"
             aria-label="Back to Home"
@@ -64,6 +65,7 @@ export default function Blogs() {
             <ArrowLeft className="w-4 h-4 xs:w-5 xs:h-5 text-[#1B2632]" />
           </button>
           <img
+            id="blogs-logo-home"
             src={kahaniLogo}
             alt="Kahani Logo"
             className="h-12 w-auto object-contain cursor-pointer"
@@ -119,6 +121,7 @@ export default function Blogs() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {blogs.map((blog) => (
               <article
+                id={`blogs-card-${blog.slug}`}
                 key={blog.id}
                 onClick={() => setLocation(`/blogs/${blog.slug}`)}
                 className="group bg-white rounded-xl overflow-hidden shadow-sm border border-[#C9C1B1]/20 hover:shadow-md hover:border-[#C9C1B1]/40 transition-all duration-200 cursor-pointer"

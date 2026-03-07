@@ -219,6 +219,7 @@ export default function HowItWorksSection({
       {/* Restored Navigation Dots for Mobile with Arrows */}
       <div className="flex md:hidden items-center justify-center gap-4 mb-1">
         <button
+          id="how-it-works-scroll-left"
           onClick={() => scroll("left")}
           className="w-8 h-8 bg-[#EEE9DF] hover:bg-white rounded-full flex items-center justify-center text-[#1B2632] transition-all duration-300 border border-[#1B2632]/10"
           aria-label="Previous step"
@@ -240,6 +241,7 @@ export default function HowItWorksSection({
         </div>
 
         <button
+          id="how-it-works-scroll-right"
           onClick={() => scroll("right")}
           className="w-8 h-8 bg-[#EEE9DF] hover:bg-white rounded-full flex items-center justify-center text-[#1B2632] transition-all duration-300 border border-[#1B2632]/10"
           aria-label="Next step"
@@ -251,6 +253,7 @@ export default function HowItWorksSection({
       {/* 3. CTA Bottom to sample-albums page */}
       <div className="relative z-40 flex mx-auto mt-2 sm:mt-0 text-center">
         <Button
+          id="how-it-works-see-sample"
           onClick={() => setLocation("/sample")}
           className="px-6 py-2 bg-transparent border-2 border-[#1B2632] text-[#1B2632] hover:bg-[#1B2632] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
         >

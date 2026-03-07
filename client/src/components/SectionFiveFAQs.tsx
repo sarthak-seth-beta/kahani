@@ -105,6 +105,7 @@ export default function SectionFiveFAQs({
             >
               {/* Question Header */}
               <button
+                id={`section-five-faqs-toggle-${index + 1}`}
                 onClick={() => toggleFAQ(index)}
                 className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover-elevate active-elevate-2 gap-4"
                 aria-expanded={openIndex === index}

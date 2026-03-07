@@ -204,6 +204,7 @@ export default function PdfViewerSection() {
       {numPages > 0 && (
         <div className="mt-3 xs:mt-4 sm:mt-5 md:mt-5 lg:mt-5 flex items-center gap-1.5 xs:gap-2 sm:gap-3 md:gap-3 lg:gap-3 bg-slate-800/50 backdrop-blur-sm px-3 xs:px-4 sm:px-5 md:px-5 lg:px-5 py-1.5 xs:py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 rounded-full">
           <button
+            id="pdf-viewer-section-previous-page"
             onClick={previousPage}
             disabled={pageNumber <= 1 || isTransitioning}
             className="p-1 xs:p-1.5 sm:p-2 md:p-2 lg:p-2 hover:bg-white/10 rounded-full disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-white disabled:cursor-not-allowed active:scale-95"
@@ -219,6 +220,7 @@ export default function PdfViewerSection() {
           </div>
 
           <button
+            id="pdf-viewer-section-next-page"
             onClick={nextPage}
             disabled={pageNumber >= numPages || isTransitioning}
             className="p-1 xs:p-1.5 sm:p-2 md:p-2 lg:p-2 hover:bg-white/10 rounded-full disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-white disabled:cursor-not-allowed active:scale-95"

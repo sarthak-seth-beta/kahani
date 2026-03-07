@@ -173,6 +173,7 @@ export default function PaymentCallback() {
           {error || "Your payment could not be processed. Please try again."}
         </p>
         <Button
+          id="payment-callback-retry"
           onClick={handleRetry}
           className="bg-[#C8553D] hover:bg-[#A94438] text-white"
         >

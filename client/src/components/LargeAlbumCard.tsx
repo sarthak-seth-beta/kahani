@@ -10,6 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Album } from "./AlbumCard"; // Importing type from original card to keep consistent
 
+const toIdPart = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export const LargeAlbumCard = ({
   album,
   onClick,
@@ -24,6 +30,7 @@ export const LargeAlbumCard = ({
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   const [isBeating, setIsBeating] = useState(false);
+  const albumIdBase = `large-album-card-${toIdPart(album.title)}-${album.id}`;
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,6 +72,7 @@ export const LargeAlbumCard = ({
 
   return (
     <div
+      id={`${albumIdBase}-tile`}
       onClick={onClick}
       className="group relative flex flex-col w-full bg-white rounded-xl overflow-hidden shadow-md cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border border-gray-100"
     >
@@ -83,6 +91,7 @@ export const LargeAlbumCard = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
+              id={`${albumIdBase}-share-menu`}
               onClick={(e) => e.stopPropagation()}
               className="absolute top-2 right-2 p-1.5 bg-[#1B2632] hover:bg-[#1B2632]/90 rounded-full transition-all duration-300 group/share shadow-sm focus:outline-none"
             >
@@ -94,6 +103,7 @@ export const LargeAlbumCard = ({
             className="w-40 bg-white/95 backdrop-blur-sm border-[#1B2632]/10 shadow-xl rounded-lg"
           >
             <DropdownMenuItem
+              id={`${albumIdBase}-share-copy`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare("copy");
@@ -103,6 +113,7 @@ export const LargeAlbumCard = ({
               <Copy className="mr-2 h-3 w-3 md:h-4 md:w-4" /> Copy link
             </DropdownMenuItem>
             <DropdownMenuItem
+              id={`${albumIdBase}-share-whatsapp`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare("whatsapp");
@@ -112,6 +123,7 @@ export const LargeAlbumCard = ({
               <MessageCircle className="mr-2 h-3 w-3 md:h-4 md:w-4" /> Whatsapp
             </DropdownMenuItem>
             <DropdownMenuItem
+              id={`${albumIdBase}-share-email`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare("email");
@@ -122,6 +134,7 @@ export const LargeAlbumCard = ({
             </DropdownMenuItem>
             {typeof navigator.share === "function" && (
               <DropdownMenuItem
+                id={`${albumIdBase}-share-native`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleShare("native");
@@ -136,6 +149,7 @@ export const LargeAlbumCard = ({
 
         {/* Play Button - Floating on edge */}
         <button
+          id={`${albumIdBase}-play`}
           onClick={(e) => {
             e.stopPropagation();
             onClick();
@@ -176,6 +190,7 @@ export const LargeAlbumCard = ({
 
             {!hideLikeButton && (
               <button
+                id={`${albumIdBase}-like`}
                 onClick={handleLike}
                 className={cn(
                   "transition-all duration-300 transform ml-auto",

@@ -245,6 +245,7 @@ export default function Admin() {
               </div>
               <div className="flex gap-2">
                 <Button
+                  id="admin-export-trials-csv"
                   onClick={() => {
                     window.location.href = "/api/admin/export-free-trials";
                   }}
@@ -256,6 +257,7 @@ export default function Admin() {
                   Export Trials CSV
                 </Button>
                 <Button
+                  id="enzo-xyz-albums"
                   onClick={() => setLocation("/enzo-xyz/albums")}
                   className="text-xs"
                   size="sm"
@@ -339,6 +341,7 @@ export default function Admin() {
                     />
                     <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
                       <Button
+                        id="admin-reset-free-trial-date-range"
                         variant="ghost"
                         size="sm"
                         onClick={handleResetFreeTrialDateRange}
@@ -349,6 +352,7 @@ export default function Admin() {
                       </Button>
                       <div className="flex gap-2">
                         <Button
+                          id="admin-set-temp-free-trial-date-range"
                           variant="outline"
                           size="sm"
                           onClick={() => {
@@ -359,6 +363,7 @@ export default function Admin() {
                           Cancel
                         </Button>
                         <Button
+                          id="admin-apply-free-trial-date-range"
                           size="sm"
                           onClick={handleApplyFreeTrialDateRange}
                           disabled={
@@ -496,6 +501,7 @@ export default function Admin() {
                     />
                     <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
                       <Button
+                        id="admin-reset-whatsapp-date-range"
                         variant="ghost"
                         size="sm"
                         onClick={handleResetWhatsappDateRange}
@@ -506,6 +512,7 @@ export default function Admin() {
                       </Button>
                       <div className="flex gap-2">
                         <Button
+                          id="admin-set-temp-whatsapp-date-range"
                           variant="outline"
                           size="sm"
                           onClick={() => {
@@ -516,6 +523,7 @@ export default function Admin() {
                           Cancel
                         </Button>
                         <Button
+                          id="admin-apply-whatsapp-date-range"
                           size="sm"
                           onClick={handleApplyWhatsappDateRange}
                           disabled={

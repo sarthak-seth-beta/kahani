@@ -223,6 +223,7 @@ export default function ProductDetail() {
             </div>
 
             <Button
+              id="product-detail-add-to-cart"
               size="lg"
               className="w-full text-lg"
               onClick={handleAddToCart}

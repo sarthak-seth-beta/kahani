@@ -116,6 +116,7 @@ export default function Confirmation() {
                   legacyscribe.com/stories/{order.uniqueCode}
                 </code>
                 <Button
+                  id="confirmation-copy-story-link"
                   size="sm"
                   variant="outline"
                   onClick={() => {

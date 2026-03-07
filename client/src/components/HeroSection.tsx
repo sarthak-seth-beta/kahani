@@ -57,12 +57,14 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
         <div className="flex flex-col items-left gap-4">
           <div className="flex items-left gap-4">
             <Button
+              id="hero-get-started-desktop"
               onClick={() => setLocation("/narrator")}
               className="px-10 py-3 bg-[#A35139] hover:bg-[#8B4430] border-none text-white rounded-2xl text-lg shadow-md hover:bg-[#8B4430] transition-all duration-300 w-fit"
             >
               Get Started
             </Button>
             <Button
+              id="hero-see-sample-desktop"
               // onClick={onHearKahaniClick} // do not remove - existing functionality
               onClick={() => setLocation("/sample")}
               className="px-10 py-3 border-2 bg-transparent border-[#A35139] rounded-2xl text-lg shadow-md hover:bg-[#A35139] transition-all duration-300 w-fit"
@@ -105,12 +107,14 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
           </Button> */}
           <div className="flex items-left gap-2">
             <Button
+              id="hero-get-started-mobile"
               onClick={() => setLocation("/narrator")}
               className="bg-[#A35139] hover:bg-[#8B4430] border-none text-white rounded-2xl text-lg shadow-md hover:bg-[#8B4430] transition-all duration-300"
             >
               Get Started
             </Button>
             <Button
+              id="hero-see-sample-mobile"
               // onClick={onHearKahaniClick} // do not remove - existing functionality
               onClick={() => setLocation("/sample")}
               className="border-2 bg-transparent border-[#A35139] rounded-2xl text-lg shadow-md hover:bg-[#A35139] transition-all duration-300"

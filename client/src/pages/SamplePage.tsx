@@ -25,6 +25,7 @@ export default function SamplePage() {
       <div className="w-full flex flex-col items-center justify-center pt-3 pb-2 xs:pt-4 xs:pb-3 sm:pt-4 sm:pb-4 sticky top-0 z-50 bg-[#EEE9DF]/90 backdrop-blur-sm">
         <div className="w-full max-w-4xl flex items-center justify-center px-3 xs:px-4 sm:px-4 mb-2 xs:mb-3 sm:mb-4 relative">
           <button
+            id="sample-page-back-home"
             onClick={() => setLocation("/")}
             className="w-9 h-9 xs:w-10 xs:h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center hover:bg-white/80 transition-all shadow-sm absolute left-2 xs:left-4"
             aria-label="Back to Home"
@@ -35,6 +36,7 @@ export default function SamplePage() {
           {/* Tabs - compact on mobile, center-aligned */}
           <div className="flex bg-white/50 rounded-full p-0.5 xs:p-1 sm:p-1 shadow-sm backdrop-blur-sm z-10">
             <button
+              id="sample-page-tab-read"
               onClick={() => setActiveTab("read")}
               className={`px-3 py-1.5 xs:px-4 xs:py-2 sm:px-6 sm:py-2 rounded-full text-xs xs:text-sm font-semibold transition-all duration-300 ${
                 activeTab === "read"
@@ -45,6 +47,7 @@ export default function SamplePage() {
               Read
             </button>
             <button
+              id="sample-page-tab-listen"
               onClick={() => setActiveTab("listen")}
               className={`px-3 py-1.5 xs:px-4 xs:py-2 sm:px-6 sm:py-2 rounded-full text-xs xs:text-sm font-semibold transition-all duration-300 ${
                 activeTab === "listen"
@@ -174,6 +177,7 @@ export default function SamplePage() {
         {/* CTA Button */}
         <div className="mt-6 xs:mt-8 sm:mt-10 flex flex-col items-center justify-center">
           <Button
+            id="how-to-use"
             variant="outline"
             className="mb-4 px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 border-2 border-[#A35139] text-[#A35139] bg-transparent hover:bg-[#F5E9DF] rounded-xl shadow-sm transition-all duration-300 text-sm xs:text-base sm:text-lg font-semibold"
             onClick={() => setLocation("/how-to-use")}
@@ -181,6 +185,7 @@ export default function SamplePage() {
             How it works
           </Button>
           <Button
+            id="narrator"
             onClick={() => setLocation("/narrator")}
             className="px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300 text-sm xs:text-base sm:text-lg font-semibold"
           >

@@ -121,7 +121,10 @@ async function getTrialLanguagePreference(trialId) {
   console.log(
     `  Trial language preference: ${pref} → always transcribing both en-IN and hi-IN`,
   );
-  return { languageCodes: ["hi-IN", "en-IN"], transcribeBothHindiAndEnglish: true };
+  return {
+    languageCodes: ["hi-IN", "en-IN"],
+    transcribeBothHindiAndEnglish: true,
+  };
 }
 
 // ── Supabase fetchers (same as v1) ──────────────────────────────────

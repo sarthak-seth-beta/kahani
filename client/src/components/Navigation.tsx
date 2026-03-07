@@ -74,6 +74,7 @@ export function Navigation({ cartItemCount = 0 }: { cartItemCount?: number }) {
             </Link>
 
             <button
+              id="navigation-mobile-menu-toggle"
               className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               data-testid="button-mobile-menu"
@@ -98,6 +99,7 @@ export function Navigation({ cartItemCount = 0 }: { cartItemCount?: number }) {
                 data-testid={`link-mobile-${link.label.toLowerCase().replace(" ", "-")}`}
               >
                 <span
+                  id={`navigation-mobile-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   className={`block px-4 py-2 text-sm font-medium rounded-md hover-elevate transition-colors cursor-pointer ${
                     location === link.path
                       ? "text-primary bg-primary/10"
@@ -111,6 +113,7 @@ export function Navigation({ cartItemCount = 0 }: { cartItemCount?: number }) {
             ))}
             <Link href="/free-trial" data-testid="link-mobile-cta">
               <Button
+                id="navigation-mobile-trial-close-menu"
                 variant="secondary"
                 className="w-full mt-2"
                 onClick={() => setMobileMenuOpen(false)}

@@ -35,6 +35,7 @@ export default function AboutUsSection() {
         {/* Link to Full About Us Page */}
         <div className="pt-4">
           <Button
+            id="about-us"
             variant="outline"
             onClick={() => setLocation("/about-us")}
             className="px-6 py-3 text-base font-semibold border-[#1B2632] text-[#1B2632] hover:bg-[#1B2632] hover:text-[#EEE9DF] transition-colors"

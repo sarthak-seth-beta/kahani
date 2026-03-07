@@ -194,6 +194,7 @@ export default function Feedback() {
                     data-testid="input-referral-code"
                   />
                   <Button
+                    id="feedback-copy-referral-code"
                     variant="outline"
                     size="icon"
                     onClick={copyReferralCode}
@@ -211,6 +212,7 @@ export default function Feedback() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button
+                  id="feedback-share-whats-app"
                   variant="outline"
                   className="w-full"
                   onClick={shareWhatsApp}
@@ -220,6 +222,7 @@ export default function Feedback() {
                   Share on WhatsApp
                 </Button>
                 <Button
+                  id="feedback-share-email"
                   variant="outline"
                   className="w-full"
                   onClick={shareEmail}

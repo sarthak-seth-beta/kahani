@@ -121,6 +121,7 @@ export default function FreeTrial() {
 
           {/* Circular Back Button */}
           <Button
+            id="free-trial-back"
             variant="ghost"
             size="icon"
             onClick={() => window.history.back()}
@@ -159,6 +160,7 @@ export default function FreeTrial() {
               {selectedAlbum.questions_hn?.length > 0 && (
                 <div className="relative">
                   <button
+                    id="free-trial-language-toggle"
                     onClick={() =>
                       setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
                     }
@@ -174,11 +176,13 @@ export default function FreeTrial() {
                   {isLanguageDropdownOpen && (
                     <>
                       <div
+                        id="free-trial-language-overlay"
                         className="fixed inset-0 z-40"
                         onClick={() => setIsLanguageDropdownOpen(false)}
                       />
                       <div className="absolute top-full right-0 mt-2 bg-white border border-black/10 rounded-lg shadow-lg z-50 min-w-[140px] overflow-hidden">
                         <button
+                          id="free-trial-language-en"
                           onClick={() => {
                             setLang("en");
                             setIsLanguageDropdownOpen(false);
@@ -192,6 +196,7 @@ export default function FreeTrial() {
                           English
                         </button>
                         <button
+                          id="free-trial-language-hn"
                           onClick={() => {
                             setLang("hn");
                             setIsLanguageDropdownOpen(false);
@@ -433,7 +438,7 @@ export default function FreeTrial() {
                 size="lg"
                 className="flex-none w-full px-8 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12 md:max-w-[200px]"
               >
-                Get Started
+                Add to Cart
               </Button>
             </DialogTrigger>
             <DialogContent

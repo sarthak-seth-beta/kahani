@@ -17,7 +17,10 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
 
-function assertEnv(name: string, value: string | undefined): asserts value is string {
+function assertEnv(
+  name: string,
+  value: string | undefined,
+): asserts value is string {
   if (!value?.trim()) {
     throw new Error(`Missing required env: ${name}`);
   }

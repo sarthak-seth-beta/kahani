@@ -42,6 +42,7 @@ export default function HeroHeader({
 
             {/* Record Button - Soft Gradient */}
             <button
+              id="hero-header-record"
               onClick={onRecord}
               className="btn-gradient-soft px-5 py-2.5 font-medium text-sm shadow-md min-h-[44px] min-w-[44px]"
               data-testid="button-record"
@@ -77,6 +78,7 @@ export default function HeroHeader({
       {/* Start Trial Button - Gradient with Glow */}
       <div className="relative z-10 -mt-24 pb-12 px-8">
         <button
+          id="hero-header-start-trial"
           onClick={onStartTrial}
           className="btn-gradient-primary w-full max-w-md mx-auto block px-10 py-5 font-semibold text-base sm:text-lg shadow-2xl min-h-[56px]"
           data-testid="button-start-trial"

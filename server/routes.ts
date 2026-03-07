@@ -205,7 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const slackToken = process.env.SLACK_BOT_TOKEN;
     const rawBody = (req as { rawBody?: Buffer }).rawBody;
     const signature = req.headers["x-slack-signature"] as string | undefined;
-    const timestamp = req.headers["x-slack-request-timestamp"] as string | undefined;
+    const timestamp = req.headers["x-slack-request-timestamp"] as
+      | string
+      | undefined;
 
     if (!signingSecret || !slackToken) {
       console.error("[Slack] Missing SLACK_SIGNING_SECRET or SLACK_BOT_TOKEN");
@@ -251,7 +253,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         return `"${JSON.stringify(val).replace(/"/g, '""')}"`;
                       if (
                         typeof val === "string" &&
-                        (val.includes(",") || val.includes('"') || val.includes("\n"))
+                        (val.includes(",") ||
+                          val.includes('"') ||
+                          val.includes("\n"))
                       )
                         return `"${String(val).replace(/"/g, '""')}"`;
                       return String(val);

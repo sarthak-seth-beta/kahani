@@ -263,6 +263,7 @@ export default function CustomAlbumCover() {
                       Preview
                     </label>
                     <Button
+                      id="custom-album-cover-remove-file"
                       type="button"
                       variant="ghost"
                       size="sm"
@@ -291,6 +292,7 @@ export default function CustomAlbumCover() {
               {/* Upload Button */}
               {selectedFile && (
                 <Button
+                  id="custom-album-cover-upload"
                   onClick={handleUpload}
                   disabled={isUploading}
                   className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white"

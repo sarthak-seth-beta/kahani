@@ -31,6 +31,12 @@ const splitTitle = (title: string) => {
   );
 };
 
+const toIdPart = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export const AlbumCard = ({
   album,
   variant = "default",
@@ -43,6 +49,7 @@ export const AlbumCard = ({
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   const [isBeating, setIsBeating] = useState(false);
+  const albumIdBase = `album-card-${toIdPart(album.title)}-${album.id}`;
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,6 +91,7 @@ export const AlbumCard = ({
 
   return (
     <div
+      id={`${albumIdBase}-tile`}
       onClick={onClick}
       className="group relative flex flex-col w-full h-full bg-white rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 border border-gray-100"
     >
@@ -102,6 +110,7 @@ export const AlbumCard = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
+              id={`${albumIdBase}-share-menu`}
               onClick={(e) => e.stopPropagation()}
               className="absolute top-3 right-3 p-2 bg-[#1B2632] hover:bg-[#1B2632]/90 rounded-full transition-all duration-300 group/share shadow-md focus:outline-none"
             >
@@ -113,6 +122,7 @@ export const AlbumCard = ({
             className="w-48 bg-white/95 backdrop-blur-sm border-[#1B2632]/10 shadow-xl rounded-xl"
           >
             <DropdownMenuItem
+              id={`${albumIdBase}-share-copy`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare("copy");
@@ -122,6 +132,7 @@ export const AlbumCard = ({
               <Copy className="mr-2 h-4 w-4" /> Copy link
             </DropdownMenuItem>
             <DropdownMenuItem
+              id={`${albumIdBase}-share-whatsapp`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare("whatsapp");
@@ -131,6 +142,7 @@ export const AlbumCard = ({
               <MessageCircle className="mr-2 h-4 w-4" /> Whatsapp
             </DropdownMenuItem>
             <DropdownMenuItem
+              id={`${albumIdBase}-share-email`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare("email");
@@ -141,6 +153,7 @@ export const AlbumCard = ({
             </DropdownMenuItem>
             {typeof navigator.share === "function" && (
               <DropdownMenuItem
+                id={`${albumIdBase}-share-native`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleShare("native");
@@ -155,6 +168,7 @@ export const AlbumCard = ({
 
         {/* Play Button - Floating on edge */}
         <button
+          id={`${albumIdBase}-play`}
           onClick={(e) => {
             e.stopPropagation();
             onClick();
@@ -187,6 +201,7 @@ export const AlbumCard = ({
           </span>
 
           <button
+            id={`${albumIdBase}-like`}
             onClick={handleLike}
             className={cn(
               "transition-all duration-300 transform",

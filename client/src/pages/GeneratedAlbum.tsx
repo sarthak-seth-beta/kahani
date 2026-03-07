@@ -282,6 +282,7 @@ export default function GeneratedAlbum() {
             No generated album found. Generate one from the Create Album page.
           </p>
           <Button
+            id="create-album"
             onClick={() => setLocation("/create-album")}
             className="bg-[#A35139] hover:bg-[#8B4430] text-white"
           >
@@ -298,6 +299,7 @@ export default function GeneratedAlbum() {
         {/* Header with Back Button */}
         <div className="flex items-center gap-4 mb-6">
           <Button
+            id="generated-album-go-create-album"
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/create-album")}
@@ -334,6 +336,7 @@ export default function GeneratedAlbum() {
             {album.questionsHn?.length ? (
               <div className="relative">
                 <button
+                  id="generated-album-toggle-language-dropdown"
                   type="button"
                   onClick={() =>
                     setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
@@ -349,12 +352,14 @@ export default function GeneratedAlbum() {
                 {isLanguageDropdownOpen && (
                   <>
                     <div
+                      id="generated-album-language-overlay"
                       className="fixed inset-0 z-40"
                       aria-hidden
                       onClick={() => setIsLanguageDropdownOpen(false)}
                     />
                     <div className="absolute top-full right-0 mt-2 bg-white border border-[#C9C1B1]/20 rounded-lg shadow-lg z-50 min-w-[140px] overflow-hidden">
                       <button
+                        id="generated-album-language-en"
                         type="button"
                         onClick={() => {
                           setLang("en");
@@ -369,6 +374,7 @@ export default function GeneratedAlbum() {
                         English
                       </button>
                       <button
+                        id="generated-album-language-hn"
                         type="button"
                         onClick={() => {
                           setLang("hn");
@@ -436,6 +442,7 @@ export default function GeneratedAlbum() {
         <div className="mt-8 space-y-3">
           <div className="flex flex-col gap-3">
             <Button
+              id="generated-album-request-album"
               onClick={handleRequestAlbum}
               disabled={!formData || isRequesting || isRegenerating}
               className="flex-1 h-12 sm:h-14 text-base sm:text-lg bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-md transition-all duration-300"
@@ -453,6 +460,7 @@ export default function GeneratedAlbum() {
               )}
             </Button>
             <Button
+              id="generated-album-regenerate-album"
               onClick={handleRegenerateAlbum}
               disabled={!formData || isRegenerating || isRequesting}
               variant="outline"

@@ -1,5 +1,19 @@
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2, Check, User, Phone, MessageCircle, Globe, Package, BookOpen, Share2, Mail, Copy, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Check,
+  User,
+  Phone,
+  MessageCircle,
+  Globe,
+  Package,
+  BookOpen,
+  Share2,
+  Mail,
+  Copy,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiWhatsapp } from "react-icons/si";
 import { FreeTrialForm } from "@/components/FreeTrialForm";
@@ -38,7 +52,8 @@ const LANGUAGE_LABELS: Record<string, string> = {
   hn: "हिंदी (Hindi)",
 };
 
-const SHARE_TEXT = "I just started preserving precious memories with Kahani! You should try it too:";
+const SHARE_TEXT =
+  "I just started preserving precious memories with Kahani! You should try it too:";
 
 function ShareButton({ onCopied }: { onCopied: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -85,6 +100,7 @@ function ShareButton({ onCopied }: { onCopied: () => void }) {
   return (
     <div className="absolute top-4 right-4 z-10" ref={menuRef}>
       <button
+        id="order-details-set-is-open"
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 rounded-full bg-[#F5F3EF] hover:bg-[#E8E4DC] flex items-center justify-center transition-colors shadow-sm"
         aria-label="Share"
@@ -99,6 +115,7 @@ function ShareButton({ onCopied }: { onCopied: () => void }) {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[#C9C1B1]/30 py-2">
           <button
+            id="order-details-whats-app"
             onClick={handleWhatsApp}
             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-[#F5F3EF] transition-colors text-left"
           >
@@ -106,6 +123,7 @@ function ShareButton({ onCopied }: { onCopied: () => void }) {
             <span className="text-sm text-[#1B2632]">WhatsApp</span>
           </button>
           <button
+            id="order-details-email"
             onClick={handleEmail}
             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-[#F5F3EF] transition-colors text-left"
           >
@@ -113,6 +131,7 @@ function ShareButton({ onCopied }: { onCopied: () => void }) {
             <span className="text-sm text-[#1B2632]">Email</span>
           </button>
           <button
+            id="order-details-copy-link"
             onClick={handleCopyLink}
             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-[#F5F3EF] transition-colors text-left"
           >
@@ -124,7 +143,6 @@ function ShareButton({ onCopied }: { onCopied: () => void }) {
     </div>
   );
 }
-
 
 export default function OrderDetails() {
   const [, setLocation] = useLocation();
@@ -338,6 +356,7 @@ export default function OrderDetails() {
         <header className="sticky top-0 z-50 bg-[#EEE9DF]/90 backdrop-blur-sm border-b border-[#C9C1B1]/30">
           <div className="container mx-auto px-4 h-16 flex items-center">
             <Button
+              id="order-details-go-back"
               variant="ghost"
               size="icon"
               onClick={() => window.history.back()}
@@ -354,7 +373,14 @@ export default function OrderDetails() {
         <main className="container mx-auto px-4 py-8 max-w-lg">
           <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 relative">
             {/* Share Button - Top Right */}
-            <ShareButton onCopied={() => toast({ title: "Link copied!", description: "Share it with your friends and family." })} />
+            <ShareButton
+              onCopied={() =>
+                toast({
+                  title: "Link copied!",
+                  description: "Share it with your friends and family.",
+                })
+              }
+            />
 
             {/* Success message */}
             <div className="text-center mb-6">
@@ -366,12 +392,18 @@ export default function OrderDetails() {
               </h2>
               {isSoloMode ? (
                 <div className="text-muted-foreground text-sm space-y-3 text-left">
-                  <p>Thank you for placing your order! We'll get back to you within <span className="font-bold">24 hours</span>.</p>
-                  <p>You will receive updates on your WhatsApp number regarding the status of your order.</p>
+                  <p>
+                    Thank you for placing your order! We'll get back to you
+                    within <span className="font-bold">24 hours</span>.
+                  </p>
+                  <p>
+                    You will receive updates on your WhatsApp number regarding
+                    the status of your order.
+                  </p>
                   <p>
                     Questions?{" "}
-                    <a 
-                      href="https://wa.me/8510889286" 
+                    <a
+                      href="https://wa.me/8510889286"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#A35139] font-medium hover:underline"
@@ -382,7 +414,8 @@ export default function OrderDetails() {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
-                  Please review your order details and confirm to begin your Kahani journey.
+                  Please review your order details and confirm to begin your
+                  Kahani journey.
                 </p>
               )}
             </div>
@@ -470,6 +503,7 @@ export default function OrderDetails() {
               {isSoloMode ? (
                 <>
                   <Button
+                    id="order-details-view-other-albums"
                     onClick={() => setLocation("/albums")}
                     className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white font-bold h-12 text-base rounded-xl shadow-md"
                   >
@@ -483,6 +517,7 @@ export default function OrderDetails() {
               ) : (
                 <>
                   <Button
+                    id="order-details-start-free-trial"
                     onClick={() => freeTrialMutation.mutate()}
                     disabled={freeTrialMutation.isPending}
                     className="w-full bg-[#A35139] hover:bg-[#A35139]/90 text-white font-bold h-12 text-base rounded-xl shadow-md"
@@ -498,11 +533,11 @@ export default function OrderDetails() {
                   </Button>
 
                   <p className="text-xs text-center text-[#1B2632]/50">
-                    By confirming, you'll receive an invite message on WhatsApp to share with your loved one.
+                    By confirming, you'll receive an invite message on WhatsApp
+                    to share with your loved one.
                   </p>
                 </>
               )}
-
             </div>
           </div>
         </main>
@@ -518,6 +553,7 @@ export default function OrderDetails() {
       <header className="sticky top-0 z-50 bg-[#EEE9DF]/90 backdrop-blur-sm border-b border-[#C9C1B1]/30">
         <div className="container mx-auto px-4 h-16 flex items-center">
           <Button
+            id="order-details-back-fallback"
             variant="ghost"
             size="icon"
             onClick={() => window.history.back()}

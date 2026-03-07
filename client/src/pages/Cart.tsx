@@ -157,6 +157,7 @@ export default function Cart() {
                               </p>
                             </div>
                             <button
+                              id={`cart-remove-${item.productId}`}
                               onClick={() => removeItem(item.productId)}
                               className="text-muted-foreground hover:text-destructive transition-colors"
                               data-testid={`button-remove-${item.productId}`}
@@ -168,6 +169,7 @@ export default function Cart() {
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center gap-3">
                               <Button
+                                id={`cart-decrease-${item.productId}`}
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
@@ -185,6 +187,7 @@ export default function Cart() {
                                 {item.quantity}
                               </span>
                               <Button
+                                id={`cart-increase-${item.productId}`}
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
@@ -254,6 +257,7 @@ export default function Cart() {
                       data-testid="input-coupon"
                     />
                     <Button
+                      id="cart-apply-coupon"
                       variant="outline"
                       onClick={applyCoupon}
                       data-testid="button-apply-coupon"
@@ -264,6 +268,7 @@ export default function Cart() {
                 </div>
 
                 <Button
+                  id="checkout"
                   size="lg"
                   className="w-full text-lg mb-4"
                   onClick={() => setLocation("/checkout")}

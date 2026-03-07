@@ -7,6 +7,7 @@ interface CustomAlbumCardProps {
 export const CustomAlbumCard = ({ onClick }: CustomAlbumCardProps) => {
   return (
     <div
+      id="custom-album-card-create"
       onClick={onClick}
       className="group relative flex flex-col w-full bg-gray-100 rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-500 border border-gray-200"
     >

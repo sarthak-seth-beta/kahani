@@ -158,6 +158,7 @@ export default function BlogDetail() {
       <header className="sticky top-0 z-50 w-full bg-[#EEE9DF]/95 backdrop-blur-sm border-b border-[#C9C1B1]/30 shadow-sm">
         <div className="flex items-center justify-between px-6 py-4 md:px-12">
           <Button
+            id="blog-detail-back-to-blogs-header"
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/blogs")}
@@ -167,6 +168,7 @@ export default function BlogDetail() {
           </Button>
 
           <img
+            id="blog-detail-navigate"
             src={kahaniLogo}
             alt="Kahani Logo"
             className="h-12 w-auto object-contain cursor-pointer"
@@ -191,7 +193,12 @@ export default function BlogDetail() {
               The blog post you're looking for doesn't exist or has been
               removed.
             </p>
-            <Button onClick={() => setLocation("/blogs")}>Back to Blogs</Button>
+            <Button
+              id="blog-detail-go-blogs"
+              onClick={() => setLocation("/blogs")}
+            >
+              Back to Blogs
+            </Button>
           </div>
         )}
 
@@ -254,6 +261,7 @@ export default function BlogDetail() {
             {/* Back to blogs */}
             <div className="mt-12 pt-8 border-t border-[#C9C1B1]/30 text-center">
               <Button
+                id="blog-detail-all-blog-posts"
                 variant="outline"
                 onClick={() => setLocation("/blogs")}
                 className="px-8"

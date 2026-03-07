@@ -282,6 +282,7 @@ export function ExpandedPlayer({
       >
         {/* Close Button */}
         <button
+          id="expanded-player-close"
           onClick={onClose}
           style={{
             position: "absolute",
@@ -393,6 +394,7 @@ export function ExpandedPlayer({
           >
             {/* Previous Track */}
             <button
+              id="expanded-player-previous-track"
               onClick={onPreviousTrack}
               disabled={!hasPreviousTrack}
               style={{
@@ -413,6 +415,7 @@ export function ExpandedPlayer({
 
             {/* Skip Backward 10s */}
             <button
+              id="expanded-player-skip-backward"
               onClick={onSkipBackward}
               style={{
                 background: "transparent",
@@ -431,6 +434,7 @@ export function ExpandedPlayer({
 
             {/* Play/Pause */}
             <button
+              id="expanded-player-play-pause"
               onClick={onPlayPause}
               style={{
                 background: "#000000",
@@ -452,6 +456,7 @@ export function ExpandedPlayer({
 
             {/* Skip Forward 10s */}
             <button
+              id="expanded-player-skip-forward"
               onClick={onSkipForward}
               style={{
                 background: "transparent",
@@ -470,6 +475,7 @@ export function ExpandedPlayer({
 
             {/* Next Track */}
             <button
+              id="expanded-player-next-track"
               onClick={() => onNextTrack?.()}
               disabled={!hasNextTrack}
               style={{

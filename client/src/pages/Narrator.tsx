@@ -41,6 +41,7 @@ export default function Narrator() {
       {/* Header */}
       <header className="w-full relative z-40 max-w-7xl mx-auto flex items-center px-4 pt-4 pb-2 md:py-6">
         <Button
+          id="narrator-back-home"
           variant="ghost"
           size="icon"
           onClick={() => setLocation("/")}
@@ -62,6 +63,7 @@ export default function Narrator() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full max-w-3xl pb-16">
           {RELATIONS.map((relation, index) => (
             <div
+              id={`narrator-tiles-${relation.id}`}
               key={relation.id}
               onClick={() => handleSelectRelation(relation.id, relation.label)}
               className={cn(

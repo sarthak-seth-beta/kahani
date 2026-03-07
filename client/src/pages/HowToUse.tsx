@@ -52,6 +52,7 @@ export default function HowToUse() {
       <header className="sticky top-0 z-50 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
         <div className="flex items-center justify-between px-4 py-3 md:px-12 md:py-4">
           <Button
+            id="how-to-use-company-legal"
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/company-legal")}
@@ -125,6 +126,7 @@ export default function HowToUse() {
             precious memories.
           </p>
           <Button
+            id="free-trial-checkout"
             size="lg"
             onClick={() => setLocation("/free-trial-checkout")}
             className="w-full sm:w-auto px-8 py-6 text-lg font-semibold min-h-[56px]"

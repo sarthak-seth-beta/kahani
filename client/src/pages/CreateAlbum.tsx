@@ -259,6 +259,7 @@ export default function CreateAlbum() {
       {/* Header / Back Button */}
       <div className="w-full max-w-2xl mb-8 flex items-center">
         <Button
+          id="all-albums"
           variant="ghost"
           size="icon"
           onClick={() => setLocation("/all-albums")}
@@ -463,6 +464,7 @@ export default function CreateAlbum() {
             {/* Advanced Customization Toggle */}
             <div className="pt-4">
               <button
+                id="create-album-set-is-advanced-open"
                 type="button"
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                 className="flex items-center gap-2 text-[#A35139] font-medium text-sm hover:underline focus:outline-none"
@@ -526,6 +528,7 @@ export default function CreateAlbum() {
                       Any specific questions you want included?
                     </FormLabel>
                     <Button
+                      id="create-album-add-question"
                       type="button"
                       variant="outline"
                       size="sm"
@@ -557,6 +560,7 @@ export default function CreateAlbum() {
                         />
                         {fields.length > 1 && (
                           <Button
+                            id={`create-album-remove-question-${field.id}`}
                             type="button"
                             variant="ghost"
                             size="icon"
@@ -575,6 +579,7 @@ export default function CreateAlbum() {
 
             {/* Generate Album Button */}
             <Button
+              id="create-album-generate-album"
               type="button"
               onClick={handleGenerateAlbum}
               disabled={isSubmitting || isGenerating}

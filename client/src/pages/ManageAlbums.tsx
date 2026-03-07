@@ -304,6 +304,7 @@ export default function ManageAlbums() {
     <div className="min-h-screen bg-[#FDF4DC] px-3 pt-3 pb-0">
       <div className="w-full mx-auto max-w-4xl">
         <Button
+          id="enzo-xyz"
           variant="ghost"
           onClick={() => setLocation("/enzo-xyz")}
           className="mb-4 text-sm"
@@ -326,6 +327,7 @@ export default function ManageAlbums() {
                 </CardDescription>
               </div>
               <Button
+                id="manage-albums-reset"
                 type="button"
                 variant="outline"
                 size="sm"
@@ -481,6 +483,7 @@ export default function ManageAlbums() {
                             }}
                           />
                           <Button
+                            id="manage-albums-upload-cover-image"
                             type="button"
                             variant="outline"
                             size="sm"
@@ -497,6 +500,7 @@ export default function ManageAlbums() {
                           </Button>
                           {field.value && (
                             <Button
+                              id="manage-albums-remove-cover-image"
                               type="button"
                               variant="outline"
                               size="sm"
@@ -556,6 +560,7 @@ export default function ManageAlbums() {
                       />
                       {questionFields.length > 1 && (
                         <Button
+                          id={`manage-albums-remove-question-${field.id}`}
                           type="button"
                           variant="outline"
                           size="sm"
@@ -567,6 +572,7 @@ export default function ManageAlbums() {
                     </div>
                   ))}
                   <Button
+                    id="manage-albums-add-question"
                     type="button"
                     variant="outline"
                     size="sm"
@@ -585,6 +591,7 @@ export default function ManageAlbums() {
                   </FormLabel>
                   {questionHnFields.length === 0 && (
                     <Button
+                      id="manage-albums-add-hindi-questions"
                       type="button"
                       variant="outline"
                       size="sm"
@@ -614,6 +621,7 @@ export default function ManageAlbums() {
                         )}
                       />
                       <Button
+                        id={`manage-albums-remove-question-hn-${field.id}`}
                         type="button"
                         variant="outline"
                         size="sm"
@@ -625,6 +633,7 @@ export default function ManageAlbums() {
                   ))}
                   {questionHnFields.length > 0 && (
                     <Button
+                      id="manage-albums-add-more-hindi-questions"
                       type="button"
                       variant="outline"
                       size="sm"
@@ -644,6 +653,7 @@ export default function ManageAlbums() {
                   </FormLabel>
                   {bestFitFields.length === 0 && (
                     <Button
+                      id="manage-albums-add-best-fit-tag"
                       type="button"
                       variant="outline"
                       size="sm"
@@ -673,6 +683,7 @@ export default function ManageAlbums() {
                         )}
                       />
                       <Button
+                        id={`manage-albums-remove-best-fit-${field.id}`}
                         type="button"
                         variant="outline"
                         size="sm"
@@ -684,6 +695,7 @@ export default function ManageAlbums() {
                   ))}
                   {bestFitFields.length > 0 && (
                     <Button
+                      id="manage-albums-add-more-best-fit-tags"
                       type="button"
                       variant="outline"
                       size="sm"
@@ -712,6 +724,7 @@ export default function ManageAlbums() {
                   </Button>
                   {editingAlbumId && (
                     <Button
+                      id="manage-albums-cancel"
                       type="button"
                       variant="outline"
                       onClick={handleCancel}
@@ -743,6 +756,7 @@ export default function ManageAlbums() {
             {!shouldLoadAlbums ? (
               <div className="text-center py-8">
                 <Button
+                  id="manage-albums-set-should-load-albums"
                   type="button"
                   variant="outline"
                   onClick={() => setShouldLoadAlbums(true)}
@@ -760,6 +774,7 @@ export default function ManageAlbums() {
               <div className="space-y-2">
                 {albums.map((album) => (
                   <div
+                    id={`manage-albums-edit-${album.id}`}
                     key={album.id}
                     className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => handleEdit(album)}
@@ -786,6 +801,7 @@ export default function ManageAlbums() {
                         </div>
                       </div>
                       <Button
+                        id={`manage-albums-delete-${album.id}`}
                         type="button"
                         variant="destructive"
                         size="sm"
@@ -824,6 +840,7 @@ export default function ManageAlbums() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
+                id="manage-albums-delete-confirm"
                 onClick={handleDeleteConfirm}
                 disabled={deleteMutation.isPending}
                 className="bg-red-600 hover:bg-red-700"

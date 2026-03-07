@@ -25,6 +25,7 @@ export function StarRating({ value, onChange, size = 48 }: StarRatingProps) {
       <div className="flex gap-2" data-testid="star-rating-container">
         {[1, 2, 3, 4, 5].map((rating) => (
           <button
+            id={`star-rating-${rating}`}
             key={rating}
             type="button"
             onClick={() => onChange(rating)}

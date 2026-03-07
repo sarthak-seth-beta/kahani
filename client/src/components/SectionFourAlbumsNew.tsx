@@ -105,6 +105,7 @@ export default function SectionFourAlbumsNew({
         <div className="relative">
           {/* Navigation Buttons */}
           <button
+            id="section-four-albums-new-scroll-left"
             onClick={() => scroll("left")}
             className="absolute left-2 sm:left-0 top-1/2 -translate-y-1/2 sm:-ml-4 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full flex items-center justify-center text-[#1B2632] shadow-lg hover:bg-white transition-all opacity-100 sm:opacity-0 sm:group-hover/section:opacity-100 disabled:opacity-0"
             aria-label="Scroll left"
@@ -113,6 +114,7 @@ export default function SectionFourAlbumsNew({
           </button>
 
           <button
+            id="section-four-albums-new-scroll-right"
             onClick={() => scroll("right")}
             className="absolute right-2 sm:right-0 top-1/2 -translate-y-1/2 sm:-mr-4 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full flex items-center justify-center text-[#1B2632] shadow-lg hover:bg-white transition-all opacity-100 sm:opacity-0 sm:group-hover/section:opacity-100 disabled:opacity-0"
             aria-label="Scroll right"
@@ -149,6 +151,7 @@ export default function SectionFourAlbumsNew({
 
               {/* View All Albums Card */}
               <div
+                id="section-four-albums-new-view-all-card"
                 className="h-[520px] w-[85vw] sm:w-[320px] flex-shrink-0 bg-[#F5F5F0] rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-[#1B2632]/10 hover:border-[#A35139]/30 hover:bg-[#F0F0EB] transition-all duration-300 cursor-pointer group/view-all"
                 style={{ scrollSnapAlign: "center" }}
                 onClick={() => setLocation("/all-albums")}
@@ -172,6 +175,7 @@ export default function SectionFourAlbumsNew({
         {/* View All Button */}
         <div className="flex justify-center mt-2">
           <Button
+            id="section-four-albums-new-view-all-button"
             onClick={() => setLocation("/all-albums")}
             className="px-6 py-2 bg-transparent border-2 border-[#A35139] text-[#A35139] hover:bg-[#A35139] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
           >

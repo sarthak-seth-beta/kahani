@@ -14,6 +14,7 @@ export default function AboutUs() {
         <header className="sticky top-0 z-50 w-full bg-[#EEE9DF] border-b border-[#C9C1B1]/30">
           <div className="flex items-center justify-between px-6 py-4 md:px-12">
             <Button
+              id="about-us-back-home"
               variant="ghost"
               size="icon"
               onClick={() => setLocation("/")}
@@ -70,6 +71,7 @@ export default function AboutUs() {
             {/* Return Home Button */}
             <div className="pt-8">
               <Button
+                id="about-us-return-home"
                 size="lg"
                 onClick={() => setLocation("/")}
                 className="px-8 py-6 text-lg font-semibold min-h-[56px]"

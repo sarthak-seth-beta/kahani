@@ -342,6 +342,7 @@ const TrackSlide = forwardRef<TrackSlideRef, TrackSlideProps>(
           >
             {/* Previous Track */}
             <button
+              id="track-slide-previous-track"
               onClick={onPreviousTrack}
               disabled={!hasPreviousTrack}
               style={{
@@ -362,6 +363,7 @@ const TrackSlide = forwardRef<TrackSlideRef, TrackSlideProps>(
 
             {/* Skip Backward 10s */}
             <button
+              id="track-slide-skip-backward"
               onClick={handleSkipBackward}
               style={{
                 background: "transparent",
@@ -380,6 +382,7 @@ const TrackSlide = forwardRef<TrackSlideRef, TrackSlideProps>(
 
             {/* Play/Pause */}
             <button
+              id="track-slide-toggle-play-pause"
               onClick={togglePlayPause}
               style={{
                 background: "#000000",
@@ -401,6 +404,7 @@ const TrackSlide = forwardRef<TrackSlideRef, TrackSlideProps>(
 
             {/* Skip Forward 10s */}
             <button
+              id="track-slide-skip-forward"
               onClick={handleSkipForward}
               style={{
                 background: "transparent",
@@ -419,6 +423,7 @@ const TrackSlide = forwardRef<TrackSlideRef, TrackSlideProps>(
 
             {/* Next Track */}
             <button
+              id="track-slide-next-track"
               onClick={() => onNextTrack?.()}
               disabled={!hasNextTrack}
               style={{
