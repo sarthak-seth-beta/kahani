@@ -118,21 +118,10 @@ async function getTrialLanguagePreference(trialId) {
   }
 
   const pref = data.storyteller_language_preference || "other";
-
-  if (pref === "other" || !data.storyteller_language_preference) {
-    console.log("  Preference is 'other' or empty; using chirp_3 auto-detect.");
-    return { languageCodes: ["hi-IN", "en-IN"] };
-  }
-
-  const languageCodes = LANGUAGE_MAP[pref] ?? ["hi-IN", "en-IN"];
   console.log(
-    `  Trial language preference: ${pref} → ${JSON.stringify(languageCodes)}`,
+    `  Trial language preference: ${pref} → always transcribing both en-IN and hi-IN`,
   );
-
-  if (pref === "hn") {
-    return { languageCodes, transcribeBothHindiAndEnglish: true };
-  }
-  return { languageCodes };
+  return { languageCodes: ["hi-IN", "en-IN"], transcribeBothHindiAndEnglish: true };
 }
 
 // ── Supabase fetchers (same as v1) ──────────────────────────────────
@@ -223,7 +212,6 @@ async function sendTranscriptEmail({ to, trialId, trial, album, mergedPath }) {
   }
 
   const pref = trial.storyteller_language_preference || "en";
-  const isHn = pref === "hn";
   const questionsEn = Array.isArray(album.questions) ? album.questions : [];
   const questionsHn = Array.isArray(album.questions_hn)
     ? album.questions_hn
@@ -241,31 +229,18 @@ async function sendTranscriptEmail({ to, trialId, trial, album, mergedPath }) {
     `Album Name: ${album.title}`,
     `Language Preference: ${pref}`,
     "\n\n",
+    "Questions (English):",
+    ...questionsEn.map((q, i) => `  ${i + 1}. ${q}`),
+    "\n\n",
+    "Questions (Hindi):",
+    ...questionsHn.map((q, i) => `  ${i + 1}. ${q}`),
+    "\n\n",
+    "Question set titles (English):",
+    ...titlesEnList.map((t, i) => `  ${i + 1}. ${t}`),
+    "\n\n",
+    "Question set titles (Hindi):",
+    ...titlesHnList.map((t, i) => `  ${i + 1}. ${t}`),
   ];
-
-  if (isHn) {
-    bodyParts.push(
-      "Questions (English):",
-      ...questionsEn.map((q, i) => `  ${i + 1}. ${q}`),
-      "\n\n",
-      "Questions (Hindi):",
-      ...questionsHn.map((q, i) => `  ${i + 1}. ${q}`),
-      "\n\n",
-      "Question set titles (English):",
-      ...titlesEnList.map((t, i) => `  ${i + 1}. ${t}`),
-      "\n\n",
-      "Question set titles (Hindi):",
-      ...titlesHnList.map((t, i) => `  ${i + 1}. ${t}`),
-    );
-  } else {
-    bodyParts.push(
-      "Questions:",
-      ...questionsEn.map((q, i) => `  ${i + 1}. ${q}`),
-      "\n\n",
-      "Question set titles:",
-      ...titlesEnList.map((t, i) => `  ${i + 1}. ${t}`),
-    );
-  }
 
   const body = [
     ...bodyParts,
@@ -293,7 +268,7 @@ async function sendTranscriptEmail({ to, trialId, trial, album, mergedPath }) {
     const payload = {
       from: "Kahani Alerts <onboarding@resend.dev>",
       to: [to],
-      subject: `Transcripts for trialId: ${trialId}`,
+      subject: `AI Generated Transcripts for trialId: ${trialId}`,
       text: body,
     };
     if (attachments.length > 0) {
