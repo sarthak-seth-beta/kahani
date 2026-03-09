@@ -135,16 +135,30 @@ async function resolveTrial(
     return oldestTrial;
   }
 
-  // Priority 3: Fall back to any trial (for edge cases)
+  // Priority 3: Fall back to any trial by storyteller phone (for edge cases)
   const anyTrial = await storage.getFreeTrialByStorytellerPhone(fromNumber);
   if (anyTrial) {
-    console.log("Resolved any trial by phone number (fallback):", {
+    console.log("Resolved any trial by storyteller phone (fallback):", {
       trialId: anyTrial.id,
       conversationState: anyTrial.conversationState,
       fromNumber,
     });
+    return anyTrial;
   }
-  return anyTrial;
+
+  // Priority 4: Fall back to trial by buyer phone (e.g. buyer sending feedback like "It was nice" after completion)
+  const normalizedPhone = normalizePhoneNumber(fromNumber);
+  const buyerTrial = await storage.getFreeTrialByBuyerPhone(normalizedPhone);
+  if (buyerTrial) {
+    console.log("Resolved trial by buyer phone (fallback):", {
+      trialId: buyerTrial.id,
+      conversationState: buyerTrial.conversationState,
+      fromNumber,
+    });
+    return buyerTrial;
+  }
+
+  return null;
 }
 
 /**
@@ -442,6 +456,25 @@ async function handleCompletedTrial(
   fromNumber: string,
   messageText: string,
 ): Promise<void> {
+  const normalizedFrom = normalizePhoneNumber(fromNumber);
+  const isFromBuyer = trial.customerPhone === normalizedFrom;
+
+  const normalizedMessageText = messageText.toLowerCase().trim();
+  const isBuyerFeedback =
+    normalizedMessageText.includes("it was nice") ||
+    normalizedMessageText.includes("loved it") ||
+    normalizedMessageText.includes("could be better");
+
+  // When the buyer sends a message after completion (e.g. "It was nice"), treat as feedback —
+  // do not re-send the completion message (that was for the storyteller) and do not flag as help.
+  if (isFromBuyer && isBuyerFeedback) {
+    console.log("Buyer sent message after completion (treated as feedback):", {
+      trialId: trial.id,
+      messageText,
+    });
+    return;
+  }
+
   const { orderId } = extractOrderId(messageText);
   const isExplicitReference = orderId === trial.id;
 
