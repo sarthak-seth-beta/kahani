@@ -550,7 +550,7 @@ export async function sendScheduledFeedbackRequests(): Promise<void> {
 
     try {
       // Check for recent failed attempts to prevent infinite loops
-      const templateName = "feedback_from_buyer_en";
+      const templateName = "buyer_feedback_en";
       const hasRecentFailures = await storage.hasRecentFailedAttempts(
         trial.customerPhone,
         templateName,

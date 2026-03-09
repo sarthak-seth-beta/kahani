@@ -1391,7 +1391,7 @@ export async function sendBuyerFeedbackRequest(
 
   return sendTemplateMessageWithRetry(
     recipientNumber,
-    "feedback_from_buyer_en",
+    "buyer_feedback_en",
     templateParams,
     {
       orderId: trialId,
