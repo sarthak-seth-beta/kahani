@@ -1,17 +1,19 @@
-import posthog from "posthog-js";
+let _posthog: any = null;
 
-/**
- * Check if PostHog is ready
- */
-function isPostHogReady(): boolean {
+function getPostHog(): any {
+  if (_posthog) return _posthog;
   try {
-    // Check if PostHog is loaded
-    return (
-      typeof posthog !== "undefined" && (posthog as any).__loaded !== false
-    );
-  } catch {
-    return false;
-  }
+    // posthog-js exposes itself on window after init
+    if ((window as any).posthog?.__loaded) {
+      _posthog = (window as any).posthog;
+      return _posthog;
+    }
+  } catch {}
+  return null;
+}
+
+function isPostHogReady(): boolean {
+  return getPostHog() !== null;
 }
 
 /**
@@ -83,42 +85,21 @@ export const AnalyticsEvents = {
 export type AnalyticsEventName =
   (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents];
 
-/**
- * Base properties that should be included with every event
- */
 interface BaseEventProperties {
-  // Page/route information
   page_path?: string;
   page_title?: string;
-
-  // User agent info (non-PII)
   device_type?: "mobile" | "tablet" | "desktop";
   browser?: string;
-
-  // Timestamp
   timestamp?: number;
 }
 
-/**
- * Track a custom event
- */
 export function trackEvent(
   eventName: AnalyticsEventName,
   properties?: Record<string, any>,
 ): void {
-  if (!isPostHogReady()) {
-    return;
-  }
+  const ph = getPostHog();
+  if (!ph) return;
 
-  try {
-    if (!posthog) {
-      return;
-    }
-  } catch {
-    return;
-  }
-
-  // Add base properties
   const baseProperties: BaseEventProperties = {
     page_path: window.location.pathname,
     page_title: document.title,
@@ -126,43 +107,27 @@ export function trackEvent(
     timestamp: Date.now(),
   };
 
-  // Merge with custom properties
-  const eventProperties = {
+  const sanitizedProperties = sanitizeProperties({
     ...baseProperties,
     ...properties,
-  };
-
-  // Remove any potential PII (phone numbers, names, etc.)
-  const sanitizedProperties = sanitizeProperties(eventProperties);
+  });
 
   try {
-    posthog.capture(eventName, sanitizedProperties);
+    ph.capture(eventName, sanitizedProperties);
   } catch (error) {
     console.error("[Analytics] Failed to track event:", error);
   }
 }
 
-/**
- * Track a page view
- */
 export function trackPageView(path?: string, title?: string): void {
-  if (!isPostHogReady()) {
-    return;
-  }
-
-  try {
-    if (!posthog) {
-      return;
-    }
-  } catch {
-    return;
-  }
+  const ph = getPostHog();
+  if (!ph) return;
 
   const pagePath = path || window.location.pathname;
   const pageTitle = title || document.title;
 
   try {
-    posthog.capture("$pageview", {
+    ph.capture("$pageview", {
       $current_url: window.location.href,
       page_path: pagePath,
       page_title: pageTitle,
@@ -173,87 +138,46 @@ export function trackPageView(path?: string, title?: string): void {
   }
 }
 
-/**
- * Identify a user (without PII)
- * Use a hashed/anonymous identifier
- */
 export function identifyUser(
   userId: string,
   properties?: Record<string, any>,
 ): void {
-  if (!isPostHogReady()) {
-    return;
-  }
+  const ph = getPostHog();
+  if (!ph) return;
 
-  try {
-    if (!posthog) {
-      return;
-    }
-  } catch {
-    return;
-  }
-
-  // Sanitize properties to remove PII
   const sanitizedProperties = sanitizeProperties(properties || {});
 
   try {
-    posthog.identify(userId, sanitizedProperties);
+    ph.identify(userId, sanitizedProperties);
   } catch (error) {
     console.error("[Analytics] Failed to identify user:", error);
   }
 }
 
-/**
- * Set user properties (without PII)
- */
 export function setUserProperties(properties: Record<string, any>): void {
-  if (!isPostHogReady()) {
-    return;
-  }
-
-  try {
-    if (!posthog) {
-      return;
-    }
-  } catch {
-    return;
-  }
+  const ph = getPostHog();
+  if (!ph) return;
 
   const sanitizedProperties = sanitizeProperties(properties);
 
   try {
-    posthog.setPersonProperties(sanitizedProperties);
+    ph.setPersonProperties(sanitizedProperties);
   } catch (error) {
     console.error("[Analytics] Failed to set user properties:", error);
   }
 }
 
-/**
- * Reset user identification (on logout)
- */
 export function resetUser(): void {
-  if (!isPostHogReady()) {
-    return;
-  }
+  const ph = getPostHog();
+  if (!ph) return;
 
   try {
-    if (!posthog) {
-      return;
-    }
-  } catch {
-    return;
-  }
-
-  try {
-    posthog.reset();
+    ph.reset();
   } catch (error) {
     console.error("[Analytics] Failed to reset user:", error);
   }
 }
 
-/**
- * Helper: Get device type from window width
- */
 function getDeviceType(): "mobile" | "tablet" | "desktop" {
   const width = window.innerWidth;
   if (width < 640) return "mobile";
@@ -261,10 +185,6 @@ function getDeviceType(): "mobile" | "tablet" | "desktop" {
   return "desktop";
 }
 
-/**
- * Helper: Sanitize properties to remove PII
- * Removes phone numbers, emails, names, and other sensitive data
- */
 function sanitizeProperties(
   properties: Record<string, any> | undefined,
 ): Record<string, any> {
@@ -288,18 +208,14 @@ function sanitizeProperties(
   for (const [key, value] of Object.entries(properties)) {
     const lowerKey = key.toLowerCase();
 
-    // Skip sensitive keys
     if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
       continue;
     }
 
-    // Skip values that look like phone numbers or emails
     if (typeof value === "string") {
-      // Skip phone numbers (contains + and digits)
       if (/\+?\d{10,}/.test(value)) {
         continue;
       }
-      // Skip emails
       if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         continue;
       }

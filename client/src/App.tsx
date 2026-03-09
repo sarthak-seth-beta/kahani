@@ -1,15 +1,22 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
 import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
 import ScrollToTop from "@/components/ScrollToTop";
 import SmoothScroll from "@/components/SmoothScroll";
 import LazySection from "@/components/LazySection";
+
+const LazyToaster = lazy(() =>
+  import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })),
+);
+const LazyTooltipProvider = lazy(() =>
+  import("@/components/ui/tooltip").then((m) => ({
+    default: m.TooltipProvider,
+  })),
+);
 
 // Above-fold landing components — loaded eagerly (part of initial bundle)
 import SimpleHeader from "@/components/SimpleHeader";
@@ -183,77 +190,84 @@ function App() {
     trackPageView(location, document.title);
   }, [location]);
 
+  const [uiReady, setUiReady] = useState(false);
+  useEffect(() => { setUiReady(true); }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ScrollToTop />
-        <SmoothScroll />
+      <ScrollToTop />
+      <SmoothScroll />
+      <Suspense fallback={null}>
+        <Switch>
+          {/* foundational pages */}
+          <Route path="/" component={HomePage} />
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/free-trial" component={FreeTrial} />
+          <Route path="/thank-you" component={ThankYou} />
+          <Route path="/about-us" component={AboutUs} />
+          <Route path="/order-details" component={OrderDetails} />
+          <Route path="/contact-us" component={ContactUs} />
+
+          {/* payment pages */}
+          <Route path="/payment" component={Payment} />
+          <Route path="/payment/callback" component={PaymentCallback} />
+
+          <Route path="/blogs" component={Blogs} />
+          <Route path="/blogs/:slug" component={BlogDetail} />
+          <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
+          <Route
+            path="/playlist-albums/:trialId"
+            component={PlaylistAlbumsGallery}
+          />
+          <Route path="/albums" component={Albums} />
+          <Route path="/all-albums" component={AllAlbums} />
+          <Route path="/narrator" component={Narrator} />
+          <Route path="/sample-album" component={SampleAlbum} />
+          <Route path="/sample" component={SamplePage} />
+
+          {/* GeneratedAlbumProvider scoped only to routes that use the store */}
+          <Route path="/create-album">
+            <GeneratedAlbumProvider>
+              <CreateAlbum />
+            </GeneratedAlbumProvider>
+          </Route>
+          <Route path="/generated-album">
+            <GeneratedAlbumProvider>
+              <GeneratedAlbum />
+            </GeneratedAlbumProvider>
+          </Route>
+
+          <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
+          <Route
+            path="/custom-album-cover/:trialId"
+            component={CustomAlbumCover}
+          />
+          <Route path="/yl-personal-support" component={YlPersonalSupport} />
+
+          {/* static pages */}
+          <Route path="/how-to-use" component={HowToUse} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/refund-policy" component={RefundPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
+          <Route path="/data-deletion" component={DataDeletion} />
+          <Route path="/affiliate" component={Affiliate} />
+          <Route path="/company-legal" component={CompanyLegal} />
+
+          {/* admin pages */}
+          <Route path="/enzo-xyz" component={Admin} />
+          <Route path="/enzo-xyz/albums" component={ManageAlbums} />
+
+          {/* 404 */}
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
+      {uiReady && (
         <Suspense fallback={null}>
-          <Switch>
-            {/* foundational pages */}
-            <Route path="/" component={HomePage} />
-            <Route path="/checkout" component={Checkout} />
-            <Route path="/free-trial" component={FreeTrial} />
-            <Route path="/thank-you" component={ThankYou} />
-            <Route path="/about-us" component={AboutUs} />
-            <Route path="/order-details" component={OrderDetails} />
-            <Route path="/contact-us" component={ContactUs} />
-
-            {/* payment pages */}
-            <Route path="/payment" component={Payment} />
-            <Route path="/payment/callback" component={PaymentCallback} />
-
-            <Route path="/blogs" component={Blogs} />
-            <Route path="/blogs/:slug" component={BlogDetail} />
-            <Route path="/vinyl-albums/:trialId" component={AlbumsGallery} />
-            <Route
-              path="/playlist-albums/:trialId"
-              component={PlaylistAlbumsGallery}
-            />
-            <Route path="/albums" component={Albums} />
-            <Route path="/all-albums" component={AllAlbums} />
-            <Route path="/narrator" component={Narrator} />
-            <Route path="/sample-album" component={SampleAlbum} />
-            <Route path="/sample" component={SamplePage} />
-
-            {/* GeneratedAlbumProvider scoped only to routes that use the store */}
-            <Route path="/create-album">
-              <GeneratedAlbumProvider>
-                <CreateAlbum />
-              </GeneratedAlbumProvider>
-            </Route>
-            <Route path="/generated-album">
-              <GeneratedAlbumProvider>
-                <GeneratedAlbum />
-              </GeneratedAlbumProvider>
-            </Route>
-
-            <Route path="/vinyl-gallery/:trialId?" component={VinylGallery} />
-            <Route
-              path="/custom-album-cover/:trialId"
-              component={CustomAlbumCover}
-            />
-            <Route path="/yl-personal-support" component={YlPersonalSupport} />
-
-            {/* static pages */}
-            <Route path="/how-to-use" component={HowToUse} />
-            <Route path="/privacy-policy" component={PrivacyPolicy} />
-            <Route path="/refund-policy" component={RefundPolicy} />
-            <Route path="/terms-of-service" component={TermsOfService} />
-            <Route path="/data-deletion" component={DataDeletion} />
-            <Route path="/affiliate" component={Affiliate} />
-            <Route path="/company-legal" component={CompanyLegal} />
-
-            {/* admin pages */}
-            <Route path="/enzo-xyz" component={Admin} />
-            <Route path="/enzo-xyz/albums" component={ManageAlbums} />
-
-            {/* 404 */}
-            <Route component={NotFound} />
-          </Switch>
+          <LazyTooltipProvider>
+            <LazyToaster />
+          </LazyTooltipProvider>
         </Suspense>
-        <Toaster />
-      </TooltipProvider>
+      )}
     </QueryClientProvider>
   );
 }

@@ -27,11 +27,17 @@ export default function HeroSection({ onHearKahaniClick }: HeroSectionProps) {
           src={LargeImage}
           alt="Kahani storytelling experience"
           className="hidden md:block absolute inset-0 w-full h-full object-cover object-center"
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
         />
         <img
           src={SmallImage}
           alt="Kahani storytelling experience"
           className="md:hidden absolute inset-0 w-full h-full object-cover object-center"
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
         />
 
         {/* Dark gradient overlay for text readability (Centered) */}
