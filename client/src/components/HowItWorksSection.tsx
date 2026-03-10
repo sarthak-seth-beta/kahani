@@ -257,7 +257,7 @@ export default function HowItWorksSection({
           onClick={() => setLocation("/sample")}
           className="px-6 py-2 bg-transparent border-2 border-[#1B2632] text-[#1B2632] hover:bg-[#1B2632] hover:text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
         >
-          See Sample Album
+          See Sample
         </Button>
       </div>
 

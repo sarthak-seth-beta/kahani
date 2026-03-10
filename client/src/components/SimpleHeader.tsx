@@ -1,6 +1,5 @@
-import { Link, useLocation } from "wouter";
-import { BookOpen, Mic, ArrowRight } from "lucide-react";
-import kahaniLogo from "@assets/Kahani Dummy Logo (1)_1762679074954.png";
+import { useLocation } from "wouter";
+import kahaniLogo from "@assets/kahani-logo.webp";
 import { useState, useEffect } from "react";
 
 interface SimpleHeaderProps {
@@ -8,7 +7,7 @@ interface SimpleHeaderProps {
   onRecordClick?: () => void;
 }
 
-const ROLES = ["Mom", "Dad", "Dadu", "Nanu", "Nani", "Dadi"];
+const ROLES = ["Mom", "Dad", "Dadu", "Nanu", "Nani", "Dadi", "Partner", "Sibling"];
 
 export default function SimpleHeader({
   logoSrc = kahaniLogo,
@@ -47,6 +46,8 @@ export default function SimpleHeader({
           <img
             src={logoSrc}
             alt="Kahani Logo"
+            width={80}
+            height={80}
             className="h-14 md:h-20 w-auto object-contain"
           />
         </div>
