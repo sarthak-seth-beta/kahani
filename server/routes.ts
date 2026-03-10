@@ -373,6 +373,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Get traffic sources (source, count, created_at, updated_at)
+  app.get("/api/admin/traffic-sources", async (req, res) => {
+    try {
+      res.set({
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        Pragma: "no-cache",
+        Expires: "0",
+      });
+
+      const { pool } = await import("./db");
+
+      // Try with created_at/updated_at first; fallback to source+count if columns missing (e.g. old DB)
+      let result: { rows: Record<string, unknown>[] };
+      try {
+        result = await pool.query(
+          `SELECT source, count, created_at, updated_at FROM traffic_sources ORDER BY count DESC`,
+        );
+      } catch (queryErr: any) {
+        const msg = String(queryErr?.message || queryErr);
+        if (
+          msg.includes("created_at") ||
+          msg.includes("updated_at") ||
+          msg.includes("does not exist")
+        ) {
+          result = await pool.query(
+            `SELECT source, count FROM traffic_sources ORDER BY count DESC`,
+          );
+        } else {
+          throw queryErr;
+        }
+      }
+
+      const toIso = (raw: unknown): string | null => {
+        if (raw instanceof Date && !Number.isNaN((raw as Date).getTime())) {
+          return (raw as Date).toISOString();
+        }
+        if (raw != null) {
+          const d = new Date(raw as string | number);
+          return Number.isNaN(d.getTime()) ? null : d.toISOString();
+        }
+        return null;
+      };
+
+      const rows = result.rows.map((row: Record<string, unknown>) => ({
+        source: String(row.source),
+        count: Number(row.count),
+        created_at: toIso(row.created_at ?? row.createdAt),
+        updated_at: toIso(row.updated_at ?? row.updatedAt),
+      }));
+
+      res.json(rows);
+    } catch (error: any) {
+      console.error("Error fetching traffic sources:", error);
+      res.status(500).json({
+        error: "Failed to fetch traffic sources",
+        message: error.message,
+      });
+    }
+  });
+
   // Admin endpoint: Get all albums (including inactive)
   app.get("/api/admin/albums", async (req, res) => {
     try {
