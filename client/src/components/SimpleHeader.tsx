@@ -7,7 +7,7 @@ interface SimpleHeaderProps {
   onRecordClick?: () => void;
 }
 
-const ROLES = ["Mom", "Dad", "Dadu", "Nanu", "Nani", "Dadi"];
+const ROLES = ["Mom", "Dad", "Dadu", "Nanu", "Nani", "Dadi", "Partner", "Sibling"];
 
 export default function SimpleHeader({
   logoSrc = kahaniLogo,

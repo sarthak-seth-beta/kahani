@@ -32,21 +32,6 @@ export default function AllAlbums() {
 
   const allCategories = ["All", "Mom", "Dad", "Dadu", "Nanu", "Nani", "Dadi"];
 
-  // toggle logic (single select)
-  const toggleCategory = (category: string) => {
-    setSelectedCategory(category);
-  };
-
-  // Sort categories: selected one first
-  const sortedCategories = useMemo(() => {
-    return [...allCategories].sort((a, b) => {
-      const aSelected = a === selectedCategory;
-      const bSelected = b === selectedCategory;
-      if (aSelected === bSelected) return 0;
-      return aSelected ? -1 : 1;
-    });
-  }, [selectedCategory]);
-
   // Shuffle albums randomly on load and when category changes
   const shuffledAlbums = useMemo(() => {
     if (!albums) return [];
@@ -126,7 +111,7 @@ export default function AllAlbums() {
                   id="all-albums-back-home-mobile"
                   variant="ghost"
                   size="icon"
-                  onClick={() => setLocation("/")}
+                  onClick={() => setLocation("/narrator")}
                   className="min-h-[40px] min-w-[40px] h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90 border border-[#C9C1B1]/20"
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -188,7 +173,7 @@ export default function AllAlbums() {
           id="all-albums-back-home-desktop"
           variant="ghost"
           size="icon"
-          onClick={() => setLocation("/")}
+          onClick={() => setLocation("/narrator")}
           className="self-start mb-8 min-h-[40px] min-w-[40px] h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/90 border border-[#C9C1B1]/20"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -215,36 +200,7 @@ export default function AllAlbums() {
           )}
         </div>
 
-        {/* Filters Title */}
-        <h3 className="text-xs font-bold text-[#1B2632]/50 uppercase tracking-wider mb-4">
-          Filters
-        </h3>
-
-        {/* Vertical Category List */}
-        <div className="flex flex-col gap-2 relative">
-          <AnimatePresence initial={false}>
-            {sortedCategories.map((category) => (
-              <motion.button
-                id={`all-albums-filter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                key={category}
-                onClick={() => toggleCategory(category)}
-                className={cn(
-                  "w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
-                  selectedCategory === category
-                    ? "bg-[#1B2632] text-white shadow-md"
-                    : "text-[#1B2632]/70 hover:bg-white/60 hover:text-[#1B2632]",
-                )}
-              >
-                {category}
-              </motion.button>
-            ))}
-          </AnimatePresence>
-        </div>
+        {/* Filters removed from desktop sidebar */}
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
@@ -258,33 +214,7 @@ export default function AllAlbums() {
               </h1>
             </div>
 
-            {/* Mobile Filter Bar (md:hidden) */}
-            <div className="w-full overflow-x-auto no-scrollbar py-1 md:hidden sticky top-12 z-30 bg-[#EEE9DF]/95 backdrop-blur-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <div className="flex items-center justify-start gap-1 px-1 min-w-max mx-auto">
-                <AnimatePresence initial={false}>
-                  {sortedCategories.map((category) => (
-                    <motion.button
-                      id={`all-albums-mobile-filter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-                      layout
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.2 }}
-                      key={category}
-                      onClick={() => toggleCategory(category)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap",
-                        selectedCategory === category
-                          ? "bg-[#1B2632] text-white shadow-md"
-                          : "bg-white/50 text-[#1B2632]/70 hover:bg-white hover:text-[#1B2632] hover:shadow-sm",
-                      )}
-                    >
-                      {category}
-                    </motion.button>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
+            {/* Mobile filter chips removed */}
 
             {/* Loading State */}
             {isLoading && (

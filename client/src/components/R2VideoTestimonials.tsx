@@ -168,11 +168,11 @@ export default function R2VideoTestimonials() {
                     <div
                       className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isActive ? "bg-transparent opacity-0 hover:opacity-100" : "bg-black/20 opacity-100"}`}
                     >
-                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/20">
                         {isActive ? (
-                          <Pause className="w-5 h-5 text-[#1B2632]" />
+                          <Pause className="w-5 h-5 text-white" />
                         ) : (
-                          <Play className="w-5 h-5 text-[#1B2632] ml-0.5" />
+                          <Play className="w-5 h-5 text-white ml-0.5" />
                         )}
                       </div>
                     </div>

@@ -13,6 +13,7 @@ import {
   Mail,
   Copy,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiWhatsapp } from "react-icons/si";
@@ -102,7 +103,7 @@ function ShareButton({ onCopied }: { onCopied: () => void }) {
       <button
         id="order-details-set-is-open"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 rounded-full bg-[#F5F3EF] hover:bg-[#E8E4DC] flex items-center justify-center transition-colors shadow-sm"
+        className="w-10 h-10 rounded-full bg-[#F5F3EF] hover:bg-[#E8E4DC] flex items-center justify-center transition-colors shadow-sm mt-5"
         aria-label="Share"
       >
         {isOpen ? (
@@ -167,6 +168,7 @@ export default function OrderDetails() {
   const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null);
   const [transactionData, setTransactionData] =
     useState<TransactionData | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (!paymentOrderId) {
@@ -370,8 +372,8 @@ export default function OrderDetails() {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8 max-w-lg">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 relative">
+        <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8 max-w-lg">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm flex flex-col gap-5 sm:gap-6 relative min-h-[calc(100vh-112px)]">
             {/* Share Button - Top Right */}
             <ShareButton
               onCopied={() =>
@@ -384,6 +386,9 @@ export default function OrderDetails() {
 
             {/* Success message */}
             <div className="text-center mb-6">
+              <p className="text-xs font-semibold tracking-[0.18em] text-[#A35139] uppercase mb-2">
+                ONE LAST STEP REQUIRED!
+              </p>
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="w-8 h-8 text-green-600" />
               </div>
@@ -421,66 +426,82 @@ export default function OrderDetails() {
             </div>
 
             {/* Order Details */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-[#1B2632]/60 uppercase tracking-wider">
-                Your Details
-              </h3>
+            <div className="space-y-3 sm:space-y-4">
+              <button
+                type="button"
+                onClick={() => setDetailsOpen((open) => !open)}
+                className="w-full flex items-center justify-between rounded-lg bg-[#F5F3EF] px-3 py-2 text-left"
+                aria-expanded={detailsOpen}
+              >
+                <h3 className="text-sm font-semibold text-[#1B2632]/80">
+                  Your Details
+                </h3>
+                <ChevronDown
+                  className={`w-4 h-4 text-[#1B2632]/60 transition-transform duration-200 ${
+                    detailsOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
-                  <User className="w-5 h-5 text-[#A35139]" />
-                  <div>
-                    <p className="text-xs text-[#1B2632]/60">Your Name</p>
-                    <p className="font-medium text-[#1B2632]">
-                      {transactionData.name}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
-                  <Phone className="w-5 h-5 text-[#A35139]" />
-                  <div>
-                    <p className="text-xs text-[#1B2632]/60">WhatsApp Number</p>
-                    <p className="font-medium text-[#1B2632]">
-                      {transactionData.phone}
-                    </p>
-                  </div>
-                </div>
-
-                {!isSoloMode && (
+              {detailsOpen && (
+                <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
-                    <MessageCircle className="w-5 h-5 text-[#A35139]" />
+                    <User className="w-5 h-5 text-[#A35139]" />
                     <div>
-                      <p className="text-xs text-[#1B2632]/60">
-                        Your Loved One
-                      </p>
+                      <p className="text-xs text-[#1B2632]/60">Your Name</p>
                       <p className="font-medium text-[#1B2632]">
-                        {transactionData.storytellerName}
+                        {transactionData.name}
                       </p>
                     </div>
                   </div>
-                )}
 
-                <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
-                  <Globe className="w-5 h-5 text-[#A35139]" />
-                  <div>
-                    <p className="text-xs text-[#1B2632]/60">
-                      {isSoloMode
-                        ? "Your Preferred Language"
-                        : "Preferred Language"}
-                    </p>
-                    <p className="font-medium text-[#1B2632]">
-                      {LANGUAGE_LABELS[
-                        transactionData.storytellerLanguagePreference || "en"
-                      ] || "English"}
-                    </p>
+                  <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
+                    <Phone className="w-5 h-5 text-[#A35139]" />
+                    <div>
+                      <p className="text-xs text-[#1B2632]/60">
+                        WhatsApp Number
+                      </p>
+                      <p className="font-medium text-[#1B2632]">
+                        {transactionData.phone}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isSoloMode && (
+                    <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
+                      <MessageCircle className="w-5 h-5 text-[#A35139]" />
+                      <div>
+                        <p className="text-xs text-[#1B2632]/60">
+                          Your Loved One
+                        </p>
+                        <p className="font-medium text-[#1B2632]">
+                          {transactionData.storytellerName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 p-3 bg-[#F5F3EF] rounded-lg">
+                    <Globe className="w-5 h-5 text-[#A35139]" />
+                    <div>
+                      <p className="text-xs text-[#1B2632]/60">
+                        {isSoloMode
+                          ? "Your Preferred Language"
+                          : "Preferred Language"}
+                      </p>
+                      <p className="font-medium text-[#1B2632]">
+                        {LANGUAGE_LABELS[
+                          transactionData.storytellerLanguagePreference || "en"
+                        ] || "English"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Package Info */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <h3 className="text-sm font-semibold text-[#1B2632]/60 uppercase tracking-wider">
                 Package
               </h3>
@@ -499,7 +520,7 @@ export default function OrderDetails() {
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-3">
+            <div className="mt-auto pt-2 sm:pt-4 space-y-3">
               {isSoloMode ? (
                 <>
                   <Button
