@@ -292,7 +292,7 @@ export default function CreateAlbum() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Who is this for?
+                    Who is this for? <span className="text-[#A35139]">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -313,7 +313,8 @@ export default function CreateAlbum() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Language (for your storyteller)
+                    Language (for your storyteller){" "}
+                    <span className="text-[#A35139]">*</span>
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
@@ -338,7 +339,7 @@ export default function CreateAlbum() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Theme
+                    Theme <span className="text-[#A35139]">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -384,7 +385,7 @@ export default function CreateAlbum() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    Tone
+                    Tone <span className="text-[#A35139]">*</span>
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
@@ -413,7 +414,8 @@ export default function CreateAlbum() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm sm:text-base font-semibold text-[#1B2632]">
-                    What should the album achieve?
+                    What should the album achieve?{" "}
+                    <span className="text-[#A35139]">*</span>
                   </FormLabel>
                   <div className="space-y-3 rounded-md border border-[#C9C1B1]/30 p-4 bg-white/50">
                     {[
