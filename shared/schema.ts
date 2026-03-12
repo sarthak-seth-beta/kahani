@@ -799,6 +799,7 @@ export const discounts = pgTable(
     discountType: varchar("discount_type", { length: 20 }).notNull(), // 'percentage' | 'fixed_amount'
     discountValue: integer("discount_value").notNull(), // percentage (e.g. 20) or paise (e.g. 10000 = ₹100)
     isActive: boolean("is_active").notNull().default(true),
+    bookOrder: boolean("book_order").notNull().default(false), // if true, valid for book-order extra-copies flow
     usageLimitTotal: integer("usage_limit_total"), // NULL = unlimited
     usageLimitPerUser: integer("usage_limit_per_user"), // NULL = unlimited
     createdAt: timestamp("created_at", { withTimezone: true })

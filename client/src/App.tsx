@@ -42,6 +42,7 @@ const Checkout = lazy(() => import("@/pages/Checkout"));
 const FreeTrial = lazy(() => import("@/pages/FreeTrial"));
 const HowToUse = lazy(() => import("@/pages/HowToUse"));
 const ThankYou = lazy(() => import("@/pages/ThankYou"));
+const OrderConfirmed = lazy(() => import("@/pages/OrderConfirmed"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const RefundPolicy = lazy(() => import("@/pages/RefundPolicy"));
 const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
@@ -73,6 +74,7 @@ const SamplePage = lazy(() => import("@/pages/SamplePage"));
 const Payment = lazy(() => import("@/pages/Payment"));
 const PaymentCallback = lazy(() => import("@/pages/PaymentCallback"));
 const NotFound = lazy(() => import("@/pages/not-found"));
+const AddressForm = lazy(() => import("@/pages/AddressForm"));
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -205,6 +207,7 @@ function App() {
           <Route path="/checkout" component={Checkout} />
           <Route path="/free-trial" component={FreeTrial} />
           <Route path="/thank-you" component={ThankYou} />
+          <Route path="/book-order-confirmation" component={OrderConfirmed} />
           <Route path="/about-us" component={AboutUs} />
           <Route path="/order-details" component={OrderDetails} />
           <Route path="/contact-us" component={ContactUs} />
@@ -224,6 +227,7 @@ function App() {
           <Route path="/all-albums" component={AllAlbums} />
           <Route path="/narrator" component={Narrator} />
           <Route path="/narrator-else" component={NarratorElse} />
+          <Route path="/address-form/:trialId" component={AddressForm} />
           <Route path="/sample-album" component={SampleAlbum} />
           <Route path="/sample" component={SamplePage} />
 
