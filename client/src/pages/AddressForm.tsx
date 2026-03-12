@@ -60,7 +60,6 @@ export default function AddressForm({ params }: AddressFormProps) {
   const [extraCopiesOption, setExtraCopiesOption] = useState<string | null>(
     null,
   );
-  const [customExtraCopies, setCustomExtraCopies] = useState("");
   const [chapterTitles, setChapterTitles] = useState<string[]>([]);
   const [chapterImages, setChapterImages] = useState<(File | null)[]>([]);
   const [chapterPreviews, setChapterPreviews] = useState<(string | null)[]>([]);
@@ -99,12 +98,13 @@ export default function AddressForm({ params }: AddressFormProps) {
   const extraCopies = useMemo(() => {
     if (!extraCopiesOption || extraCopiesOption === "none") return 0;
     if (extraCopiesOption === "custom") {
-      const n = Number(customExtraCopies || "0");
-      return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+      // Bulk orders don't capture an exact count on the form.
+      // We store a sentinel value (999) in the DB to indicate bulk.
+      return 999;
     }
     const parsed = parseInt(extraCopiesOption, 10);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-  }, [extraCopiesOption, customExtraCopies]);
+  }, [extraCopiesOption]);
 
   const totalCopies = 1 + extraCopies;
   const baseExtraAmountPaise = extraCopies * 400 * 100;
@@ -609,9 +609,6 @@ export default function AddressForm({ params }: AddressFormProps) {
                         value={extraCopiesOption ?? "none"}
                         onValueChange={(value) => {
                           setExtraCopiesOption(value === "none" ? null : value);
-                          if (value !== "custom") {
-                            setCustomExtraCopies("");
-                          }
                           // Reset any applied discount when quantity changes
                           setAppliedDiscount(null);
                           setPromoCode("");
@@ -649,21 +646,10 @@ export default function AddressForm({ params }: AddressFormProps) {
                     </div>
 
                     {extraCopiesOption === "custom" && (
-                      <div className="space-y-1">
-                        <p className="text-[11px] text-[#4B5563]">
-                          For bulk orders (&gt; 5 extra copies), we won't charge you online.
-                          Our team will contact you to finalise pricing.
-                        </p>
-                        <input
-                          type="number"
-                          min={6}
-                          inputMode="numeric"
-                          value={customExtraCopies}
-                          onChange={(e) => setCustomExtraCopies(e.target.value)}
-                          className="w-full sm:w-40 rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm"
-                          placeholder="Enter total extra copies"
-                        />
-                      </div>
+                      <p className="text-[11px] text-[#4B5563]">
+                        For bulk orders, we won't charge you online. Our team will contact you to
+                        finalise pricing.
+                      </p>
                     )}
                   </div>
                 )}
@@ -850,29 +836,33 @@ export default function AddressForm({ params }: AddressFormProps) {
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
                 <div className="space-y-1 text-[11px] text-[#4B5563]">
-                  <p className="font-semibold text-[#1B2632]">Order summary</p>
-                  <p>Each additional copy is priced at ₹400.</p>
-                  {extraCopies > 0 && !isBulkOrder && (
+                  {!isBulkOrder && (
                     <>
-                      <p>
-                        <span className="font-medium">{totalCopies} copies total</span>{" "}
-                        — {extraCopies} extra × ₹400 ={" "}
-                        <span className={appliedDiscount ? "line-through text-[#9CA3AF]" : "font-semibold text-[#A35139]"}>
-                          ₹{Math.round(baseExtraAmountPaise / 100)}
-                        </span>
-                      </p>
-                      {appliedDiscount && (
-                        <p>
-                          Promo <span className="font-semibold">{appliedDiscount.code}</span>{" "}
-                          — You save ₹{Math.round(discountAmountPaise / 100)} ={" "}
-                          <span className="font-semibold text-[#A35139]">₹{extraAmount}</span>
-                        </p>
+                      <p className="font-semibold text-[#1B2632]">Order summary</p>
+                      <p>Each additional copy is priced at ₹400.</p>
+                      {extraCopies > 0 && (
+                        <>
+                          <p>
+                            <span className="font-medium">{totalCopies} copies total</span>{" "}
+                            — {extraCopies} extra × ₹400 ={" "}
+                            <span className={appliedDiscount ? "line-through text-[#9CA3AF]" : "font-semibold text-[#A35139]"}>
+                              ₹{Math.round(baseExtraAmountPaise / 100)}
+                            </span>
+                          </p>
+                          {appliedDiscount && (
+                            <p>
+                              Promo <span className="font-semibold">{appliedDiscount.code}</span>{" "}
+                              — You save ₹{Math.round(discountAmountPaise / 100)} ={" "}
+                              <span className="font-semibold text-[#A35139]">₹{extraAmount}</span>
+                            </p>
+                          )}
+                        </>
                       )}
                     </>
                   )}
                   {isBulkOrder && (
                     <p className="text-[11px] text-[#6B7280]">
-                      Bulk order &gt; 5 extra copies — no online payment now. Our team will reach out to confirm pricing.
+                      Bulk order — no online payment now. Our team will reach out to confirm pricing.
                     </p>
                   )}
                 </div>
