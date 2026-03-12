@@ -27,7 +27,8 @@ export const R2_WEBHOOK_DOCUMENT_BUCKET =
 const R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL =
   process.env.R2_VOICE_NOTE_PUBLIC_BUCKET_BASE_URL || null;
 const R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL =
-  process.env.R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL || "https://profile.kahani.xyz";
+  process.env.R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL ||
+  "https://profile.kahani.xyz";
 
 let r2Client: S3Client | null = null;
 

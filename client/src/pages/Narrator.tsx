@@ -78,7 +78,9 @@ export default function Narrator() {
               <div
                 id={`narrator-tiles-${relation.id}`}
                 key={relation.id}
-                onClick={() => handleSelectRelation(relation.id, relation.label)}
+                onClick={() =>
+                  handleSelectRelation(relation.id, relation.label)
+                }
                 className={cn(
                   "relative rounded-2xl shadow-md",
                   "flex flex-col items-center justify-center",

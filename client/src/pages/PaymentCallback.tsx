@@ -61,7 +61,10 @@ export default function PaymentCallback() {
               },
             );
           } catch (updateError) {
-            console.error("Failed to record extra-copies payment:", updateError);
+            console.error(
+              "Failed to record extra-copies payment:",
+              updateError,
+            );
           }
 
           setState("success");
@@ -122,7 +125,9 @@ export default function PaymentCallback() {
               `/api/user-order-details/payment/${merchantOrderId}`,
               { paymentStatus: "failed" },
             );
-          } catch (_) { /* non-fatal */ }
+          } catch (_) {
+            /* non-fatal */
+          }
         }
 
         setState("failed");

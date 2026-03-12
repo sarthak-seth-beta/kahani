@@ -12,7 +12,10 @@ export default function OrderConfirmed() {
       <div className="max-w-sm w-full text-center space-y-8">
         {/* Icon */}
         <div className="flex justify-center">
-          <CheckCircle2 className="h-20 w-20 text-[#A35139]" strokeWidth={1.5} />
+          <CheckCircle2
+            className="h-20 w-20 text-[#A35139]"
+            strokeWidth={1.5}
+          />
         </div>
 
         {/* Heading */}

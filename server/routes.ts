@@ -1562,8 +1562,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code?: string;
         baseAmountPaise?: number;
       };
-      if (!code || typeof baseAmountPaise !== "number" || baseAmountPaise <= 0) {
-        return res.status(400).json({ valid: false, error: "Missing code or amount" });
+      if (
+        !code ||
+        typeof baseAmountPaise !== "number" ||
+        baseAmountPaise <= 0
+      ) {
+        return res
+          .status(400)
+          .json({ valid: false, error: "Missing code or amount" });
       }
 
       const { pool } = await import("./db");
@@ -1627,7 +1633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error validating book-order discount:", error);
-      return res.status(500).json({ valid: false, error: "Failed to validate code" });
+      return res
+        .status(500)
+        .json({ valid: false, error: "Failed to validate code" });
     }
   });
 
@@ -2009,13 +2017,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/payment/callback", async (req, res) => {
     const baseUrl = process.env.APP_BASE_URL || "";
     try {
-      const { merchantOrderId, albumId, packageType, transactionId, flowType, orderDetailsId } =
-        req.query;
+      const {
+        merchantOrderId,
+        albumId,
+        packageType,
+        transactionId,
+        flowType,
+        orderDetailsId,
+      } = req.query;
 
       if (!merchantOrderId) {
-        return res.redirect(
-          `${baseUrl}/free-trial?error=missing_order_id`,
-        );
+        return res.redirect(`${baseUrl}/free-trial?error=missing_order_id`);
       }
 
       // Verify payment with PhonePe
@@ -2065,7 +2077,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   expected: order.extra_payment_amount_paise,
                   received: statusResponse.data.amount,
                 });
-                return res.redirect(`${baseUrl}/free-trial?error=amount_mismatch`);
+                return res.redirect(
+                  `${baseUrl}/free-trial?error=amount_mismatch`,
+                );
               }
 
               // Update user_order_details payment status
@@ -2086,7 +2100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     paymentAmount: statusResponse.data.amount,
                   });
                 } catch (txnErr) {
-                  console.error("Failed to update transaction for extra-copies payment:", txnErr);
+                  console.error(
+                    "Failed to update transaction for extra-copies payment:",
+                    txnErr,
+                  );
                 }
               }
             }
@@ -2102,13 +2119,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const { pool } = await import("./db");
 
             // Update status so the row isn't stuck at 'pending'
-            await pool.query(
-              `UPDATE user_order_details SET extra_payment_status = 'failed'
+            await pool
+              .query(
+                `UPDATE user_order_details SET extra_payment_status = 'failed'
                WHERE extra_payment_order_id = $1 AND extra_payment_status = 'pending'`,
-              [merchantOrderId],
-            ).catch((e: unknown) =>
-              console.error("Non-fatal: could not mark extra payment as failed:", e),
-            );
+                [merchantOrderId],
+              )
+              .catch((e: unknown) =>
+                console.error(
+                  "Non-fatal: could not mark extra payment as failed:",
+                  e,
+                ),
+              );
 
             let trialIdForRedirect: string | null = null;
 
@@ -2635,6 +2657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const {
+        orderId,
         recipientName,
         language,
         theme,
@@ -2717,115 +2740,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .map((q: { text: string }) => q.text)
           .join("\n- ") || "None";
 
-      // Zod schema adapts based on language preference
-      const questionsShape: Record<string, any> = {};
-      const chapterNamesShape: Record<string, any> = {};
-      const chapterPremiseShape: Record<string, any> = {};
-      if (needsEnglish) {
-        questionsShape.en = z.array(z.string()).min(15).max(15);
-        chapterNamesShape.en = z.array(z.string()).length(5);
-        chapterPremiseShape.en = z.array(z.string()).length(5);
-      }
-      if (needsHindi) {
-        questionsShape.hi = z.array(z.string()).min(15).max(15);
-        chapterNamesShape.hi = z.array(z.string()).length(5);
-        chapterPremiseShape.hi = z.array(z.string()).length(5);
-      }
-
-      // Zod schema for validation (matches the new structure)
+      // Zod schema for new album structure (order_id + album with chapters)
+      const questionPairSchema = z.object({ en: z.string(), hn: z.string() });
+      const chapterSchema = z.object({
+        title: z.object({ en: z.string(), hn: z.string() }),
+        premise: z.object({ en: z.string(), hn: z.string() }),
+        questions: z.array(questionPairSchema).length(3),
+      });
       const generatedAlbumSchema = z.object({
-        title: z.string(),
-        description: z.string(),
-        chapterNames: z.object(chapterNamesShape),
-        chapterPremise: z.object(chapterPremiseShape),
-        questions: z.object(questionsShape),
+        order_id: z.string(),
+        album: z.object({
+          title: z.object({ en: z.string(), hn: z.string() }),
+          description: z.object({ en: z.string(), hn: z.string() }),
+          chapters: z.array(chapterSchema).length(5),
+        }),
       });
 
-      // Build JSON schema for Gemini structured output
-      const langKeys = [];
-      if (needsEnglish) langKeys.push("en");
-      if (needsHindi) langKeys.push("hi");
-
-      const arrayOf15 = (desc: string) => ({
-        type: "array" as const,
-        items: { type: "string" as const },
-        minItems: 15,
-        maxItems: 15,
-        description: desc,
-      });
-      const arrayOf5 = (desc: string) => ({
-        type: "array" as const,
-        items: { type: "string" as const },
-        minItems: 5,
-        maxItems: 5,
-        description: desc,
-      });
-
-      const questionsProps: Record<string, any> = {};
-      const chapterNamesProps: Record<string, any> = {};
-      const chapterPremiseProps: Record<string, any> = {};
-      if (needsEnglish) {
-        questionsProps.en = arrayOf15("15 questions in English");
-        chapterNamesProps.en = arrayOf5("5 chapter names in English");
-        chapterPremiseProps.en = arrayOf5("5 chapter premises in English");
-      }
-      if (needsHindi) {
-        questionsProps.hi = arrayOf15(
-          "15 questions in Hindi (conversational Devanagari)",
-        );
-        chapterNamesProps.hi = arrayOf5("5 chapter names in Hindi");
-        chapterPremiseProps.hi = arrayOf5("5 chapter premises in Hindi");
-      }
-
+      // JSON schema for Gemini structured output (matches new album format)
       const responseJsonSchema = {
         type: "object",
         properties: {
-          title: {
+          order_id: {
             type: "string",
-            description: "Album title (2-4 words, no names)",
+            description: "Echo of the order_id from INPUTS",
           },
-          description: {
-            type: "string",
-            description: "Album description (2 short lines)",
-          },
-          chapterNames: {
+          album: {
             type: "object",
-            properties: chapterNamesProps,
-            required: langKeys,
-            description: "Chapter titles (1-3 words each, book-like)",
-          },
-          chapterPremise: {
-            type: "object",
-            properties: chapterPremiseProps,
-            required: langKeys,
-            description: "Brief premise for each chapter (1-2 sentences)",
-          },
-          questions: {
-            type: "object",
-            properties: questionsProps,
-            required: langKeys,
-            description: "Exactly 15 open-ended questions, 3 per chapter",
+            properties: {
+              title: {
+                type: "object",
+                properties: {
+                  en: { type: "string", description: "English" },
+                  hn: {
+                    type: "string",
+                    description: "Hindi in Devanagari script",
+                  },
+                },
+                required: ["en", "hn"],
+              },
+              description: {
+                type: "object",
+                properties: {
+                  en: { type: "string", description: "English" },
+                  hn: {
+                    type: "string",
+                    description: "Hindi in Devanagari script",
+                  },
+                },
+                required: ["en", "hn"],
+              },
+              chapters: {
+                type: "array",
+                minItems: 5,
+                maxItems: 5,
+                items: {
+                  type: "object",
+                  properties: {
+                    title: {
+                      type: "object",
+                      properties: {
+                        en: { type: "string", description: "English" },
+                        hn: {
+                          type: "string",
+                          description: "Hindi in Devanagari script",
+                        },
+                      },
+                      required: ["en", "hn"],
+                    },
+                    premise: {
+                      type: "object",
+                      properties: {
+                        en: { type: "string", description: "English" },
+                        hn: {
+                          type: "string",
+                          description: "Hindi in Devanagari script",
+                        },
+                      },
+                      required: ["en", "hn"],
+                    },
+                    questions: {
+                      type: "array",
+                      minItems: 3,
+                      maxItems: 3,
+                      items: {
+                        type: "object",
+                        properties: {
+                          en: { type: "string", description: "English" },
+                          hn: {
+                            type: "string",
+                            description: "Hindi in Devanagari script",
+                          },
+                        },
+                        required: ["en", "hn"],
+                      },
+                    },
+                  },
+                  required: ["title", "premise", "questions"],
+                },
+              },
+            },
+            required: ["title", "description", "chapters"],
           },
         },
-        required: [
-          "title",
-          "description",
-          "chapterNames",
-          "chapterPremise",
-          "questions",
-        ],
+        required: ["order_id", "album"],
       };
 
-      const prompt = `You are the Kahani Album Writer.
+      const prompt = `You are the Kahani Album Designer.
 
-Your job is to create a personalized story album from form inputs.
-The output must feel warm, human, conversational, and easy to answer on WhatsApp voice notes.
+Your job is to turn form inputs into a deeply personal, beautifully structured, WhatsApp-first story album.
 
-CORE OBJECTIVE
-Understand the user's true intention first, then design the album flow around that intention.
-The flow should feel natural, emotionally progressive, and relevant to the selected theme.
+You are not writing a survey.
+You are not writing an interview.
+You are not writing therapy prompts.
+You are designing a gentle storytelling journey that helps someone share their life through easy voice notes.
+
+The final output must feel like Kahani:
+- warm
+- personal
+- respectful
+- clear
+- easy to answer
+- emotionally real, never dramatic
+- simple enough for WhatsApp
+- thoughtful enough to become a keepsake book
+
+IMPORTANT BRAND BEHAVIOR
+Everything must feel comfort-first.
+Use familiar, everyday language.
+Keep emotional depth understated and natural.
+Nothing should feel pushy, literary, preachy, or over-written.
+Questions should feel like caring nudges.
+Premises should feel like soft reminders before speaking.
 
 INPUTS
+- order_id: ${orderId ?? ""}
 - who_is_this_for: ${recipientName}
 - language_preference: ${langPref}
 - theme: ${theme}
@@ -2836,39 +2884,324 @@ ${topicsToAvoid ? `- topics_to_avoid: ${topicsToAvoid}` : ""}
 ${makeItPersonal ? `- make_it_more_personal: true` : ""}
 ${customQuestionsText !== "None" ? `- must_include_questions:\n  - ${customQuestionsText}` : ""}
 
+YOUR THINKING PROCESS
+Before writing anything, silently decide:
+1. What kind of album this is emotionally.
+2. What the storyteller is most likely to enjoy talking about.
+3. What the receiver is most likely hoping to preserve.
+4. What should feel easy at the start.
+5. What should feel richer in the middle.
+6. What should feel meaningful at the end.
+7. How the selected goals should change the balance of memory, history, values, and voice.
+
+Then design the album around that.
+
+PRIMARY OBJECTIVE
+Create an album that feels specific, intimate, and easy to answer.
+It should unlock real stories, not generic responses.
+
+SECONDARY OBJECTIVE
+Make the album feel gift-worthy even before the stories are recorded.
+That means the album title, chapter titles, and description must feel elegant, simple, and emotionally right.
+
 NON-NEGOTIABLE RULES
-1) Keep language simple, conversational, and respectful.
-2) No jargon. No therapy tone. No interview-like phrasing.
-3) Questions must feel like caring prompts, not interrogation.
-4) Never use buyer name, storyteller name, or relation labels inside questions.
-5) Do not overuse names anywhere.
-6) Every question must be open-ended and voice-note friendly.
-7) Focus on experiences, beliefs, values, reflections, and advice.
-8) Keep each question short (max 18 words).
-9) Match the selected TONE (${toneValue}) in question phrasing and chapter premises.
-10) Shape questions to achieve the album goals: ${albumGoalsText}.
-${topicsToAvoid ? `11) DO NOT include any questions or prompts about: ${topicsToAvoid}.` : ""}
-${makeItPersonal ? `12) Add more intimate, personal questions that invite deeper sharing and emotional reflection.` : ""}
+1. Return exactly 5 chapters.
+2. Return exactly 3 questions per chapter.
+3. Return exactly 15 questions total.
+4. Every question must be open-ended.
+5. Every question must be a single ask only.
+6. Every question must feel easy to answer in a WhatsApp voice note.
+7. Never use buyer name, storyteller name, or relation labels inside any question.
+8. Never use names or relation words in album title or chapter titles.
+9. Do not ask count-based, fact-only, or trivia-style questions unless absolutely necessary to the theme.
+10. Do not use guilt, fear, trauma-bait, regret-bait, or morbid framing unless explicitly requested.
+11. Do not sound like a journalist, therapist, teacher, or historian.
+12. Do not make the album feel generic, ceremonial, or overly poetic.
+13. Keep all language natural and spoken.
+14. If must_include_questions are provided, lightly rewrite them to fit the flow and style.
+15. If topics_to_avoid are provided, exclude them completely.
 
-ALBUM STYLE RULES
-A) Album title: 2-4 words. Simple, memorable, book-like. No names. No relation words. No emojis.
-B) Album description: 2 short lines. Warm and clear. No fluff.
-C) Structure: Exactly 15 questions. Exactly 5 chapters. Exactly 3 questions per chapter.
-D) Arc: Do NOT use a fixed pre-set arc. Infer the best narrative arc from theme + personal_hints + album_goal + tone. Ensure smooth progression (easy start -> meaningful depth -> thoughtful close).
-E) Chapter names: Short and catchy (1-3 words). Book-like and non-generic. Include Hindi chapter names in light, daily-use, conversational Devanagari.
-F) Question quality: Easy to understand in one read. Invite a real memory or point of view. Encourage detail naturally. No long, vague, or repetitive questions.
+QUESTION RULES
+Every question must do at least one of these:
+- unlock a memory
+- open a scene
+- invite a reflection
+- reveal a habit, belief, or value
+- bring out a turning point
+- preserve a message or advice
 
-LANGUAGE BEHAVIOR
-- English: Light conversational English.
-- Hindi: Light conversational Devanagari.
-Return both English and Hindi in exact matching order.
+Questions should preferably lead to stories, not one-line answers.
 
-FINAL QUALITY CHECK
-- Exactly 15 questions, 5 chapters, 3 questions per chapter.
-- Question length <= 18 words.
-- No buyer/storyteller/relation names in questions.
-- Arc is inferred from intent, not hardcoded.
-- Output is valid JSON only.`;
+Avoid:
+- two-part questions
+- long setup before the real question
+- repeated phrasing patterns
+- overly abstract prompts
+- stiff phrasing
+- yes/no framing
+- fact-check style questions
+- generic prompts that could fit any person
+
+Prefer:
+- moments
+- people
+- places
+- routines
+- feelings around real events
+- decisions
+- lessons
+- small details that make memories vivid
+
+QUESTION LENGTH
+- Aim for 8-14 words.
+- Never exceed 18 words.
+
+FIRST-PERSON INTIMACY RULE
+Use first-person phrasing only where it makes the album feel warmer and more personal.
+Examples of allowed styles when appropriate:
+- What kind of child was I?
+- What do you remember about my early school days?
+- When did you first notice my personality?
+Do not overuse first-person framing.
+Use it only when it clearly fits the album context.
+
+GOAL MAPPING
+Use selected goals as weighted priorities.
+
+- Capture stories:
+  prioritize vivid memories, scenes, small details, people, moments
+- Capture family history:
+  prioritize place, background, family context, era, migration, traditions, timeline
+- Capture values & lessons:
+  prioritize beliefs, principles, choices, learnings, advice
+- Capture voice for the future:
+  prioritize messages, blessings, hopes, identity, reflection, essence
+
+If multiple goals are selected, blend them naturally.
+Do not make the album feel mechanically segmented by goals.
+
+TONE MAPPING
+The selected tone must affect both phrasing and structure.
+
+- Warm & casual:
+  soft, familiar, easy entry, emotionally open, natural
+- Respectful & formal:
+  dignified, polished, gentle, slightly more composed
+- Funny & light:
+  playful, affectionate, charming, easy, but never silly or jokey for the sake of it
+- Calm & emo:
+  tender, reflective, intimate, understated, emotionally deeper by the end
+
+TITLE RULES
+Album title matters a lot.
+It should feel like the cover of a keepsake book.
+
+Album title must be:
+- 2 to 5 words
+- elegant and memorable
+- emotionally suggestive, not descriptive
+- simple enough to feel timeless
+- giftable
+- non-generic
+- no names
+- no relation words
+- no emojis
+- no punctuation-heavy styling
+- no colons
+- no clichés like "Life Journey", "Sweet Memories", "My Story", "Precious Moments"
+
+Good titles feel like:
+- a mood
+- a thread
+- a world
+- a quiet emotional lens
+
+CHAPTER TITLE RULES
+Chapter titles matter a lot.
+They should feel like real book chapter titles, not category labels.
+
+Each chapter title must be:
+- 2 to 5 words
+- elegant, simple, and specific to the album
+- emotionally or narratively suggestive
+- not generic labels like Childhood, Family, Career, Lessons, Memories
+- not repetitive
+- no names
+- no relation words
+- natural in both English and Hindi
+- book-like, but still warm and accessible
+
+Use chapter titles that create curiosity and texture.
+They should feel like windows into a part of life, not folders.
+
+DESCRIPTION RULES
+Album description must be:
+- exactly 2 short lines
+- warm, clear, and meaningful
+- gift-worthy
+- simple, not salesy
+- no names
+- no relation words
+- no fluff
+- no overly poetic writing
+- no explanatory product language
+
+The description should help someone feel what kind of keepsake this is.
+
+CHAPTER PREMISE RULES
+Each chapter premise will be directly used in a WhatsApp flow before recording.
+So write it as a soft pre-speaking reminder.
+
+Each premise must be:
+- 1 or 2 short sentences
+- very easy to understand
+- calm and warm
+- not literary
+- not abstract
+- not long
+- not a summary of the chapter
+- not written like instructions from a teacher
+- not repetitive across chapters
+
+It should help the storyteller mentally enter that zone of memory before answering.
+
+Think:
+- gentle reminder
+- emotional context
+- light nudge toward detail
+
+TITLE AND CHAPTER TITLE REJECTION FILTER
+Reject and rewrite any title or chapter title that is:
+- generic
+- overused
+- category-like
+- relation-based
+- name-based
+- cliché
+- too broad
+- too explanatory
+- too sentimental in a filmi way
+
+Examples to reject:
+- Childhood Days
+- Family Memories
+- My Journey
+- Sweet Memories
+- Lessons of Life
+- Growing Up
+- Our Story
+- Precious Moments
+- Career Path
+- Mother's Love
+- Papa's Story
+- Nani Ke Kisse
+
+Prefer titles that feel subtler, fresher, and more book-like.
+
+RELATION WORDS TO AVOID IN TITLES
+Do not use words like:
+Mom, Mother, Dad, Father, Papa, Mummy, Sister, Brother, Dadi, Nani, Nana, Dada, Husband, Wife, Friend, Teacher, Uncle, Aunty
+or their Hindi equivalents.
+
+LANGUAGE RULES
+English:
+- light, conversational, natural
+- no stiff or formal translation tone
+
+Hindi:
+- write in Devanagari
+- keep it conversational
+- use very common spoken Hindi
+- common English words are allowed when they feel natural in everyday Hindi
+- do not make Hindi too formal, literary, Sanskrit-heavy, or textbook-like
+- do not transliterate Hindi into Roman script
+
+MATCHING RULE
+English and Hindi must match in meaning, order, and emotional intent.
+Hindi should not be a literal awkward translation.
+It should be the natural spoken equivalent.
+
+PERSONALIZATION RULES
+Use theme + personal_hints heavily.
+These inputs should influence:
+- album title direction
+- chapter design
+- chapter sequencing
+- wording of questions
+- emotional center of the album
+
+If personal_hints are rich:
+- make the album feel more custom and less universal
+
+If personal_hints are sparse:
+- stay warm and specific without becoming vague or generic
+
+STRUCTURE RULES
+Build a smooth emotional progression.
+The progression should usually feel like:
+- easy entry
+- lived moments
+- richer identity/history
+- values/reflection
+- meaningful close
+
+But do not force a rigid template if the theme suggests a better flow.
+
+QUALITY BAR FOR QUESTIONS
+A good Kahani question should make someone want to say:
+"Arre, this reminds me of something..."
+or
+"Achha, let me tell you properly..."
+
+A bad Kahani question sounds like:
+- a school assignment
+- a podcast interview
+- a counseling worksheet
+- a factual form field
+
+FINAL SELF-CHECK BEFORE OUTPUT
+Before returning output, verify all of this:
+- order_id is present
+- album title follows all rules
+- album description has exactly 2 short lines in both languages
+- exactly 5 chapters
+- each chapter has a title in English and Hindi
+- each chapter has a premise in English and Hindi
+- each chapter has exactly 3 questions
+- each question has English and Hindi
+- exactly 15 questions total
+- no empty Hindi anywhere
+- no names or relation words in title
+- no names or relation words in chapter titles
+- no names or relation labels inside questions
+- no question is double-barrelled
+- no question exceeds 18 words
+- tone is reflected in both structure and phrasing
+- selected goals are reflected in question balance
+- output is valid JSON only
+
+OUTPUT FORMAT
+Return valid JSON only in exactly this structure:
+
+{
+  "order_id": "",
+  "album": {
+    "title": { "en": "", "hn": "" },
+    "description": { "en": "", "hn": "" },
+    "chapters": [
+      {
+        "title": { "en": "", "hn": "" },
+        "premise": { "en": "", "hn": "" },
+        "questions": [
+          { "en": "", "hn": "" },
+          { "en": "", "hn": "" },
+          { "en": "", "hn": "" }
+        ]
+      },
+      (4 more chapters with same structure, 5 chapters total)
+    ]
+  }
+}`;
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
@@ -2892,21 +3225,37 @@ FINAL QUALITY CHECK
         throw new Error("Invalid album structure from Gemini");
       }
 
-      // Normalize to the format downstream code expects
-      const album = validated.data;
+      // Normalize from new album format to the shape downstream code expects.
+      // questionSetTitles / questionSetPremise: exactly 5 items each; .en = English, .hn = Hindi (Devanagari).
+      const { album: albumData } = validated.data;
+      const chapters = albumData.chapters;
+      const titlesEn = chapters.map((ch) => ch.title.en);
+      const titlesHn = chapters.map((ch) => ch.title.hn);
+      const premisesEn = chapters.map((ch) => ch.premise.en);
+      const premisesHn = chapters.map((ch) => ch.premise.hn);
+      if (
+        titlesEn.length !== 5 ||
+        titlesHn.length !== 5 ||
+        premisesEn.length !== 5 ||
+        premisesHn.length !== 5
+      ) {
+        throw new Error(
+          "Invalid album: questionSetTitles and questionSetPremise must have exactly 5 items each (en and hn)",
+        );
+      }
+      const questionsEn = chapters.flatMap((ch) =>
+        ch.questions.map((q) => q.en),
+      );
+      const questionsHn = chapters.flatMap((ch) =>
+        ch.questions.map((q) => q.hn),
+      );
       res.json({
-        title: album.title,
-        description: album.description,
-        questions: album.questions.en || album.questions.hi || [],
-        questionsHn: album.questions.hi || [],
-        questionSetTitles: {
-          en: album.chapterNames.en || album.chapterNames.hi || [],
-          hn: album.chapterNames.hi || [],
-        },
-        questionSetPremise: {
-          en: album.chapterPremise.en || album.chapterPremise.hi || [],
-          hn: album.chapterPremise.hi || [],
-        },
+        title: albumData.title.en,
+        description: albumData.description.en,
+        questions: questionsEn,
+        questionsHn,
+        questionSetTitles: { en: titlesEn, hn: titlesHn },
+        questionSetPremise: { en: premisesEn, hn: premisesHn },
       });
     } catch (error: any) {
       console.error("Error generating album:", error);
@@ -3400,7 +3749,12 @@ FINAL QUALITY CHECK
           files.map(async (file) => {
             const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
             const key = `userOrderUploads/${rowId}-${Date.now()}-${safeName}`;
-            return uploadToR2(R2_ALBUM_COVERS_BUCKET, key, file.buffer, file.mimetype);
+            return uploadToR2(
+              R2_ALBUM_COVERS_BUCKET,
+              key,
+              file.buffer,
+              file.mimetype,
+            );
           }),
         );
 
@@ -3451,9 +3805,7 @@ FINAL QUALITY CHECK
       const extraCopies = Math.max(order.additional_copies || 0, 0);
 
       if (extraCopies <= 0) {
-        return res
-          .status(400)
-          .json({ error: "No extra copies to charge for" });
+        return res.status(400).json({ error: "No extra copies to charge for" });
       }
 
       // ₹400 per extra copy → paise
@@ -3479,9 +3831,15 @@ FINAL QUALITY CHECK
               (baseAmountPaise * dRow.discount_value) / 100,
             );
           } else {
-            discountAmountPaise = Math.min(dRow.discount_value, baseAmountPaise);
+            discountAmountPaise = Math.min(
+              dRow.discount_value,
+              baseAmountPaise,
+            );
           }
-          finalAmountPaise = Math.max(baseAmountPaise - discountAmountPaise, 100);
+          finalAmountPaise = Math.max(
+            baseAmountPaise - discountAmountPaise,
+            100,
+          );
           discountAmountPaise = baseAmountPaise - finalAmountPaise;
           appliedPromoCode = normalizedCode;
         }
@@ -3508,7 +3866,9 @@ FINAL QUALITY CHECK
         !orderResponse.success ||
         !orderResponse.data?.instrumentResponse?.redirectInfo?.url
       ) {
-        return res.status(500).json({ error: "Failed to create payment order" });
+        return res
+          .status(500)
+          .json({ error: "Failed to create payment order" });
       }
 
       // Persist pending state so the callback can verify the amount

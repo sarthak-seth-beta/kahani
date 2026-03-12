@@ -25,10 +25,10 @@ interface AddressFormProps {
 
 // Dialog states that drive the single progress/result modal
 type DialogPhase =
-  | "idle"        // closed
-  | "submitting"  // "Submitting your data…"
-  | "uploading"   // "Uploading images…"
-  | "countdown";  // "Redirecting to payment in 3…"
+  | "idle" // closed
+  | "submitting" // "Submitting your data…"
+  | "uploading" // "Uploading images…"
+  | "countdown"; // "Redirecting to payment in 3…"
 
 export default function AddressForm({ params }: AddressFormProps) {
   const { trialId } = params;
@@ -42,10 +42,7 @@ export default function AddressForm({ params }: AddressFormProps) {
   }, []);
 
   // orderId is a stable human-readable identifier for this order
-  const orderId = useMemo(
-    () => trialId,
-    [trialId],
-  );
+  const orderId = useMemo(() => trialId, [trialId]);
 
   const [buyerName, setBuyerName] = useState("");
   const [authorName, setAuthorName] = useState("");
@@ -76,7 +73,8 @@ export default function AddressForm({ params }: AddressFormProps) {
     discountAmountPaise: number;
     finalAmountPaise: number;
   };
-  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
+  const [appliedDiscount, setAppliedDiscount] =
+    useState<AppliedDiscount | null>(null);
 
   // Dialog / progress state
   const [dialogPhase, setDialogPhase] = useState<DialogPhase>("idle");
@@ -85,14 +83,42 @@ export default function AddressForm({ params }: AddressFormProps) {
   const [phonePeUrl, setPhonePeUrl] = useState<string | null>(null);
 
   const INDIAN_STATES = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
-    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
-    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
-    "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
-    "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir",
-    "Ladakh", "Lakshadweep", "Puducherry",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Lakshadweep",
+    "Puducherry",
   ];
 
   const extraCopies = useMemo(() => {
@@ -115,8 +141,7 @@ export default function AddressForm({ params }: AddressFormProps) {
     ? appliedDiscount.discountAmountPaise
     : 0;
   const extraAmount = Math.round(finalAmountPaise / 100);
-  const isBulkOrder =
-    extraCopiesOption === "custom" && extraCopies > 5;
+  const isBulkOrder = extraCopiesOption === "custom" && extraCopies > 5;
 
   const selectedImageCount = useMemo(
     () => chapterImages.filter((f) => !!f).length,
@@ -290,7 +315,9 @@ export default function AddressForm({ params }: AddressFormProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error || `Request failed: ${res.status}`);
+        throw new Error(
+          (data as { error?: string }).error || `Request failed: ${res.status}`,
+        );
       }
 
       const data = await res.json();
@@ -298,14 +325,14 @@ export default function AddressForm({ params }: AddressFormProps) {
     } catch (err) {
       console.error(err);
       setDialogPhase("idle");
-      setError("Something went wrong while saving your details. Please try again.");
+      setError(
+        "Something went wrong while saving your details. Please try again.",
+      );
       return;
     }
 
     // ── Step 2: upload images ──────────────────────────────────────────
-    const filesToUpload = chapterImages.filter(
-      (f): f is File => !!f,
-    );
+    const filesToUpload = chapterImages.filter((f): f is File => !!f);
 
     if (filesToUpload.length > 0) {
       setDialogPhase("uploading");
@@ -339,16 +366,18 @@ export default function AddressForm({ params }: AddressFormProps) {
         const payRes = await fetch("/api/phonepe/create-extra-copies-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-                  credentials: "include",
-                  body: JSON.stringify({
-                    orderDetailsId: rowId,
-                    promoCode: appliedDiscount?.code ?? null,
-                  }),
+          credentials: "include",
+          body: JSON.stringify({
+            orderDetailsId: rowId,
+            promoCode: appliedDiscount?.code ?? null,
+          }),
         });
 
         if (!payRes.ok) {
           const d = await payRes.json().catch(() => ({}));
-          throw new Error((d as { error?: string }).error || "Payment setup failed");
+          throw new Error(
+            (d as { error?: string }).error || "Payment setup failed",
+          );
         }
 
         const payData = await payRes.json();
@@ -358,7 +387,9 @@ export default function AddressForm({ params }: AddressFormProps) {
       } catch (err) {
         console.error("Failed to create PhonePe order:", err);
         setDialogPhase("idle");
-        setError("Could not set up payment. Your order details were saved — please contact support.");
+        setError(
+          "Could not set up payment. Your order details were saved — please contact support.",
+        );
       }
     } else {
       navigate("/book-order-confirmation");
@@ -417,7 +448,9 @@ export default function AddressForm({ params }: AddressFormProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-3 rounded-lg bg-[#F5F3EF] px-4 py-3 text-center">
-            <p className="text-xs text-[#4B5563]">Amount due for extra copies</p>
+            <p className="text-xs text-[#4B5563]">
+              Amount due for extra copies
+            </p>
             <p className="text-2xl font-bold text-[#A35139]">₹{extraAmount}</p>
           </div>
         </>
@@ -468,12 +501,14 @@ export default function AddressForm({ params }: AddressFormProps) {
           <div className="max-w-3xl mx-auto px-4 py-6">
             {paymentFailed && (
               <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                Your payment was not completed. Don't worry — your details are saved. You can try again below.
+                Your payment was not completed. Don't worry — your details are
+                saved. You can try again below.
               </div>
             )}
 
             <p className="text-xs sm:text-sm text-[#4B5563] mb-4">
-              This helps us print your book correctly and ship it to the right address.
+              This helps us print your book correctly and ship it to the right
+              address.
             </p>
 
             <form
@@ -509,7 +544,8 @@ export default function AddressForm({ params }: AddressFormProps) {
 
                 <div>
                   <label className="block text-xs font-medium text-[#4B5563] mb-1">
-                    Author name to print on the book <span className="text-red-500">*</span>
+                    Author name to print on the book{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -524,10 +560,12 @@ export default function AddressForm({ params }: AddressFormProps) {
               {/* Photos – chapter wise */}
               <div>
                 <label className="block text-xs font-medium text-[#4B5563] mb-1">
-                  Upload photos chapter-wise <span className="text-red-500">*</span>
+                  Upload photos chapter-wise{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <p className="text-[11px] text-[#6B7280] mb-2">
-                  Add one photo per chapter. This helps us design the cover and chapter dividers.
+                  Add one photo per chapter. This helps us design the cover and
+                  chapter dividers.
                 </p>
 
                 {chapterTitles.length === 0 && (
@@ -597,14 +635,20 @@ export default function AddressForm({ params }: AddressFormProps) {
                     Extra copies (besides your first copy)
                   </span>
                   <span className="text-xs text-[#A35139] font-medium">
-                    {copiesOpen ? "Hide" : extraCopies > 0 ? `${extraCopies} selected` : "Add extra copies"}
+                    {copiesOpen
+                      ? "Hide"
+                      : extraCopies > 0
+                        ? `${extraCopies} selected`
+                        : "Add extra copies"}
                   </span>
                 </button>
 
                 {copiesOpen && (
                   <div className="mt-3 space-y-3">
                     <div className="flex items-center gap-3 text-[11px]">
-                      <span className="text-[#4B5563]">Number of extra copies:</span>
+                      <span className="text-[#4B5563]">
+                        Number of extra copies:
+                      </span>
                       <Select
                         value={extraCopiesOption ?? "none"}
                         onValueChange={(value) => {
@@ -620,25 +664,46 @@ export default function AddressForm({ params }: AddressFormProps) {
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent className="rounded-lg border-[#D4D4D4] bg-white shadow-md">
-                          <SelectItem value="none" className="text-xs text-[#6B7280]">
+                          <SelectItem
+                            value="none"
+                            className="text-xs text-[#6B7280]"
+                          >
                             None
                           </SelectItem>
-                          <SelectItem value="1" className="text-xs text-[#1B2632]">
+                          <SelectItem
+                            value="1"
+                            className="text-xs text-[#1B2632]"
+                          >
                             1
                           </SelectItem>
-                          <SelectItem value="2" className="text-xs text-[#1B2632]">
+                          <SelectItem
+                            value="2"
+                            className="text-xs text-[#1B2632]"
+                          >
                             2
                           </SelectItem>
-                          <SelectItem value="3" className="text-xs text-[#1B2632]">
+                          <SelectItem
+                            value="3"
+                            className="text-xs text-[#1B2632]"
+                          >
                             3
                           </SelectItem>
-                          <SelectItem value="4" className="text-xs text-[#1B2632]">
+                          <SelectItem
+                            value="4"
+                            className="text-xs text-[#1B2632]"
+                          >
                             4
                           </SelectItem>
-                          <SelectItem value="5" className="text-xs text-[#1B2632]">
+                          <SelectItem
+                            value="5"
+                            className="text-xs text-[#1B2632]"
+                          >
                             5
                           </SelectItem>
-                          <SelectItem value="custom" className="text-xs text-[#1B2632]">
+                          <SelectItem
+                            value="custom"
+                            className="text-xs text-[#1B2632]"
+                          >
                             Custom (bulk order)
                           </SelectItem>
                         </SelectContent>
@@ -647,8 +712,8 @@ export default function AddressForm({ params }: AddressFormProps) {
 
                     {extraCopiesOption === "custom" && (
                       <p className="text-[11px] text-[#4B5563]">
-                        For bulk orders, we won't charge you online. Our team will contact you to
-                        finalise pricing.
+                        For bulk orders, we won't charge you online. Our team
+                        will contact you to finalise pricing.
                       </p>
                     )}
                   </div>
@@ -664,28 +729,42 @@ export default function AddressForm({ params }: AddressFormProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-[11px] font-medium text-[#4B5563] mb-1">
-                      Recipient full name <span className="text-red-500">*</span>
+                      Recipient full name{" "}
+                      <span className="text-red-500">*</span>
                     </p>
-                    <input type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm" required />
+                    <input
+                      type="text"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm"
+                      required
+                    />
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[#4B5563] mb-1">
-                      Phone for delivery updates <span className="text-red-500">*</span>
+                      Phone for delivery updates{" "}
+                      <span className="text-red-500">*</span>
                     </p>
                     <div className="flex items-center rounded-lg border border-[#D4D4D4] bg-white overflow-hidden">
-                      <span className="px-2 py-2 text-xs text-[#4B5563] border-r border-[#D4D4D4]">+91</span>
+                      <span className="px-2 py-2 text-xs text-[#4B5563] border-r border-[#D4D4D4]">
+                        +91
+                      </span>
                       <input
                         type="tel"
                         pattern="\d{10}"
                         maxLength={10}
                         inputMode="numeric"
                         value={recipientPhone}
-                        onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ""))}
+                        onChange={(e) =>
+                          setRecipientPhone(e.target.value.replace(/\D/g, ""))
+                        }
                         className="flex-1 px-3 py-2 text-sm outline-none"
                         required
                       />
                     </div>
-                    <p className="text-[10px] text-[#6B7280] mt-1">10-digit Indian mobile number.</p>
+                    <p className="text-[10px] text-[#6B7280] mt-1">
+                      10-digit Indian mobile number.
+                    </p>
                   </div>
                 </div>
 
@@ -693,11 +772,24 @@ export default function AddressForm({ params }: AddressFormProps) {
                   <p className="text-[11px] font-medium text-[#4B5563] mb-1">
                     Address line 1 <span className="text-red-500">*</span>
                   </p>
-                  <input type="text" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm" required />
+                  <input
+                    type="text"
+                    value={addressLine1}
+                    onChange={(e) => setAddressLine1(e.target.value)}
+                    className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm"
+                    required
+                  />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium text-[#4B5563] mb-1">Address line 2 (optional)</p>
-                  <input type="text" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm" />
+                  <p className="text-[11px] font-medium text-[#4B5563] mb-1">
+                    Address line 2 (optional)
+                  </p>
+                  <input
+                    type="text"
+                    value={addressLine2}
+                    onChange={(e) => setAddressLine2(e.target.value)}
+                    className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -705,7 +797,13 @@ export default function AddressForm({ params }: AddressFormProps) {
                     <p className="text-[11px] font-medium text-[#4B5563] mb-1">
                       City <span className="text-red-500">*</span>
                     </p>
-                    <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm" required />
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm"
+                      required
+                    />
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[#4B5563] mb-1">
@@ -717,7 +815,11 @@ export default function AddressForm({ params }: AddressFormProps) {
                       </SelectTrigger>
                       <SelectContent className="max-h-64 rounded-lg border-[#D4D4D4] bg-white shadow-md">
                         {INDIAN_STATES.map((st) => (
-                          <SelectItem key={st} value={st} className="text-sm text-[#1B2632] focus:bg-[#FDF4F1] focus:text-[#A35139] cursor-pointer">
+                          <SelectItem
+                            key={st}
+                            value={st}
+                            className="text-sm text-[#1B2632] focus:bg-[#FDF4F1] focus:text-[#A35139] cursor-pointer"
+                          >
                             {st}
                           </SelectItem>
                         ))}
@@ -728,7 +830,13 @@ export default function AddressForm({ params }: AddressFormProps) {
                     <p className="text-[11px] font-medium text-[#4B5563] mb-1">
                       Pincode <span className="text-red-500">*</span>
                     </p>
-                    <input type="text" value={pincode} onChange={(e) => setPincode(e.target.value)} className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm" required />
+                    <input
+                      type="text"
+                      value={pincode}
+                      onChange={(e) => setPincode(e.target.value)}
+                      className="w-full rounded-lg border border-[#D4D4D4] px-3 py-2 text-sm"
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -742,7 +850,10 @@ export default function AddressForm({ params }: AddressFormProps) {
                   onChange={(e) => setConfirmed(e.target.checked)}
                   className="mt-1 h-4 w-4 rounded border-[#D4D4D4] text-[#A35139]"
                 />
-                <label htmlFor="address-form-confirm" className="text-xs text-[#4B5563]">
+                <label
+                  htmlFor="address-form-confirm"
+                  className="text-xs text-[#4B5563]"
+                >
                   I confirm these details are correct for printing and delivery.
                 </label>
               </div>
@@ -838,22 +949,38 @@ export default function AddressForm({ params }: AddressFormProps) {
                 <div className="space-y-1 text-[11px] text-[#4B5563]">
                   {!isBulkOrder && (
                     <>
-                      <p className="font-semibold text-[#1B2632]">Order summary</p>
+                      <p className="font-semibold text-[#1B2632]">
+                        Order summary
+                      </p>
                       <p>Each additional copy is priced at ₹400.</p>
                       {extraCopies > 0 && (
                         <>
                           <p>
-                            <span className="font-medium">{totalCopies} copies total</span>{" "}
+                            <span className="font-medium">
+                              {totalCopies} copies total
+                            </span>{" "}
                             — {extraCopies} extra × ₹400 ={" "}
-                            <span className={appliedDiscount ? "line-through text-[#9CA3AF]" : "font-semibold text-[#A35139]"}>
+                            <span
+                              className={
+                                appliedDiscount
+                                  ? "line-through text-[#9CA3AF]"
+                                  : "font-semibold text-[#A35139]"
+                              }
+                            >
                               ₹{Math.round(baseExtraAmountPaise / 100)}
                             </span>
                           </p>
                           {appliedDiscount && (
                             <p>
-                              Promo <span className="font-semibold">{appliedDiscount.code}</span>{" "}
-                              — You save ₹{Math.round(discountAmountPaise / 100)} ={" "}
-                              <span className="font-semibold text-[#A35139]">₹{extraAmount}</span>
+                              Promo{" "}
+                              <span className="font-semibold">
+                                {appliedDiscount.code}
+                              </span>{" "}
+                              — You save ₹
+                              {Math.round(discountAmountPaise / 100)} ={" "}
+                              <span className="font-semibold text-[#A35139]">
+                                ₹{extraAmount}
+                              </span>
                             </p>
                           )}
                         </>
@@ -862,7 +989,8 @@ export default function AddressForm({ params }: AddressFormProps) {
                   )}
                   {isBulkOrder && (
                     <p className="text-[11px] text-[#6B7280]">
-                      Bulk order — no online payment now. Our team will reach out to confirm pricing.
+                      Bulk order — no online payment now. Our team will reach
+                      out to confirm pricing.
                     </p>
                   )}
                 </div>

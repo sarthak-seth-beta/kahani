@@ -194,7 +194,9 @@ function App() {
   }, [location]);
 
   const [uiReady, setUiReady] = useState(false);
-  useEffect(() => { setUiReady(true); }, []);
+  useEffect(() => {
+    setUiReady(true);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

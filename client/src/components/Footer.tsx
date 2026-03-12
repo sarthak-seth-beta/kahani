@@ -20,7 +20,8 @@ export function Footer() {
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center space-y-6">
         {/* Main Heading */}
         <h2 className="text-base sm:text-3xl md:text-6xl lg:text-7xl font-bold font-['Outfit'] leading-snug tracking-tight">
-          We ask the questions you always wanted to,&nbsp; but life got busy<br />
+          We ask the questions you always wanted to,&nbsp; but life got busy
+          <br />
           {/* <span>- and life got busy</span> */}
         </h2>
 
@@ -45,7 +46,9 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-2">
           {/* Brand Tagline */}
           <div className="space-y-2">
-            <p className="text-lg sm:text-2xl font-serif text-[#FFB162]">Kahani</p>
+            <p className="text-lg sm:text-2xl font-serif text-[#FFB162]">
+              Kahani
+            </p>
             <span className="text-[#EEE9DF]/60 text-xs sm:text-base font-sans font-normal">
               by families, for families
             </span>
