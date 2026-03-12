@@ -14,6 +14,16 @@ import { logWebhookEvent, correlateWebhookToMessage } from "./whatsappLogger";
 import { sendErrorAlertEmail } from "./email";
 import { trackServerEvent, initPostHog } from "./posthog";
 
+// Base URL used for PhonePe callback URLs — must be HTTPS in production.
+// Set PHONEPE_CALLBACK_BASE_URL explicitly when APP_BASE_URL is localhost.
+function phonePeCallbackBase(): string {
+  return (
+    process.env.PHONEPE_CALLBACK_BASE_URL ||
+    process.env.APP_BASE_URL ||
+    "http://localhost:3000"
+  );
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize PostHog for server-side tracking
   initPostHog();
@@ -1542,6 +1552,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Validate a discount code for the book-order (extra-copies) flow.
+  // Code must have book_order = true, otherwise returns "code not valid".
+  // Uses raw SQL so the book_order column is always read even if the
+  // Drizzle schema hasn't been reloaded by the running server process.
+  app.post("/api/discounts/validate-book-order", async (req, res) => {
+    try {
+      const { code, baseAmountPaise } = req.body as {
+        code?: string;
+        baseAmountPaise?: number;
+      };
+      if (!code || typeof baseAmountPaise !== "number" || baseAmountPaise <= 0) {
+        return res.status(400).json({ valid: false, error: "Missing code or amount" });
+      }
+
+      const { pool } = await import("./db");
+      const normalizedCode = code.trim().toUpperCase();
+
+      const { rows } = await pool.query(
+        `SELECT id, code, discount_type, discount_value, is_active, book_order,
+                usage_limit_total, usage_limit_per_user
+         FROM discounts
+         WHERE code = $1 AND is_active = true
+         LIMIT 1`,
+        [normalizedCode],
+      );
+
+      if (rows.length === 0) {
+        return res.status(400).json({ valid: false, error: "Code not valid" });
+      }
+
+      const row = rows[0];
+
+      if (!row.book_order) {
+        return res.status(400).json({ valid: false, error: "Code not valid" });
+      }
+
+      // Usage limits — total
+      if (row.usage_limit_total !== null) {
+        const count = await storage.getDiscountRedemptionCount(row.id);
+        if (count >= row.usage_limit_total) {
+          return res.status(400).json({
+            valid: false,
+            error: "This code has reached its usage limit",
+          });
+        }
+      }
+
+      // Compute discount amount
+      let discountAmountPaise: number;
+      if (row.discount_type === "percentage") {
+        discountAmountPaise = Math.floor(
+          (baseAmountPaise * row.discount_value) / 100,
+        );
+      } else {
+        discountAmountPaise = Math.min(row.discount_value, baseAmountPaise);
+      }
+
+      const MIN = 100; // ₹1 floor
+      let finalAmountPaise = baseAmountPaise - discountAmountPaise;
+      if (finalAmountPaise < MIN) {
+        finalAmountPaise = MIN;
+        discountAmountPaise = baseAmountPaise - MIN;
+      }
+
+      return res.json({
+        valid: true,
+        code: row.code,
+        discountType: row.discount_type,
+        discountValue: row.discount_value,
+        baseAmountPaise,
+        discountAmountPaise,
+        finalAmountPaise,
+      });
+    } catch (error) {
+      console.error("Error validating book-order discount:", error);
+      return res.status(500).json({ valid: false, error: "Failed to validate code" });
+    }
+  });
+
   // Transaction Management Endpoints
   // Create transaction record (one per payment attempt)
   app.post("/api/transactions", async (req, res) => {
@@ -1797,7 +1886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create PhonePe order
       const { phonePeService } = await import("./phonepe");
-      const redirectUrl = `${process.env.APP_BASE_URL}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ""}${mode === "solo" ? "&mode=solo" : ""}`;
+      const redirectUrl = `${phonePeCallbackBase()}/payment/callback?merchantOrderId=${merchantOrderId}&albumId=${albumId}&packageType=${packageType}${transactionId ? `&transactionId=${transactionId}` : ""}${mode === "solo" ? "&mode=solo" : ""}`;
 
       console.log(
         "[PhonePe] Mode param received:",
@@ -1916,29 +2005,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PhonePe: Payment callback (fallback - client-side routing handles this)
-  // This route is kept as a backup in case client-side routing fails
+  // PhonePe: Payment callback — server-side handler (runs before React app)
   app.get("/payment/callback", async (req, res) => {
+    const baseUrl = process.env.APP_BASE_URL || "";
     try {
-      const { merchantOrderId, albumId, packageType, transactionId } =
+      const { merchantOrderId, albumId, packageType, transactionId, flowType, orderDetailsId } =
         req.query;
 
       if (!merchantOrderId) {
         return res.redirect(
-          `${process.env.APP_BASE_URL}/free-trial?error=missing_order_id`,
+          `${baseUrl}/free-trial?error=missing_order_id`,
         );
       }
 
       // Verify payment with PhonePe
       const { phonePeService } = await import("./phonepe");
+
+      // ── Extra-copies flow ──────────────────────────────────────────────
+      if (flowType === "extra-copies") {
+        // Wrap in try-catch because checkPaymentStatus throws on non-200
+        // from PhonePe (e.g. cancelled payments). We must still redirect
+        // the user back to the address form, not to the generic error page.
+        let statusResponse: Awaited<
+          ReturnType<typeof phonePeService.checkPaymentStatus>
+        > | null = null;
+        try {
+          statusResponse = await phonePeService.checkPaymentStatus(
+            merchantOrderId as string,
+          );
+        } catch (statusErr) {
+          console.error(
+            "Extra-copies payment status check failed (treating as non-success):",
+            statusErr,
+          );
+        }
+
+        const isSuccess =
+          statusResponse?.success &&
+          statusResponse?.data?.state === "COMPLETED";
+
+        if (isSuccess && statusResponse?.data) {
+          try {
+            const { pool } = await import("./db");
+            const { rows } = await pool.query(
+              `SELECT id, trial_id, transaction_id, extra_payment_amount_paise
+               FROM user_order_details WHERE extra_payment_order_id = $1`,
+              [merchantOrderId],
+            );
+
+            if (rows.length > 0) {
+              const order = rows[0];
+
+              // Amount integrity check
+              if (
+                typeof statusResponse.data.amount === "number" &&
+                order.extra_payment_amount_paise !== statusResponse.data.amount
+              ) {
+                console.error("SECURITY: Extra-copies amount mismatch", {
+                  expected: order.extra_payment_amount_paise,
+                  received: statusResponse.data.amount,
+                });
+                return res.redirect(`${baseUrl}/free-trial?error=amount_mismatch`);
+              }
+
+              // Update user_order_details payment status
+              await pool.query(
+                `UPDATE user_order_details SET extra_payment_status = 'success'
+                 WHERE extra_payment_order_id = $1`,
+                [merchantOrderId],
+              );
+
+              // Store payment details on the linked transaction using the existing helper
+              if (order.transaction_id) {
+                try {
+                  await storage.updateTransactionPayment(order.transaction_id, {
+                    paymentStatus: "success",
+                    paymentId: statusResponse.data.transactionId,
+                    paymentTransactionId: statusResponse.data.transactionId,
+                    paymentOrderId: merchantOrderId as string,
+                    paymentAmount: statusResponse.data.amount,
+                  });
+                } catch (txnErr) {
+                  console.error("Failed to update transaction for extra-copies payment:", txnErr);
+                }
+              }
+            }
+          } catch (dbErr) {
+            console.error("Extra-copies callback DB error:", dbErr);
+            // Non-fatal — still redirect to confirmed page
+          }
+
+          return res.redirect(`${baseUrl}/book-order-confirmation`);
+        } else {
+          // Failed / cancelled payment — mark as failed and redirect back to the address form
+          try {
+            const { pool } = await import("./db");
+
+            // Update status so the row isn't stuck at 'pending'
+            await pool.query(
+              `UPDATE user_order_details SET extra_payment_status = 'failed'
+               WHERE extra_payment_order_id = $1 AND extra_payment_status = 'pending'`,
+              [merchantOrderId],
+            ).catch((e: unknown) =>
+              console.error("Non-fatal: could not mark extra payment as failed:", e),
+            );
+
+            let trialIdForRedirect: string | null = null;
+
+            if (orderDetailsId) {
+              const byId = await pool.query(
+                `SELECT trial_id FROM user_order_details WHERE id = $1`,
+                [orderDetailsId],
+              );
+              trialIdForRedirect =
+                byId.rows.length > 0 ? (byId.rows[0].trial_id as string) : null;
+            }
+
+            if (!trialIdForRedirect) {
+              const byOrder = await pool.query(
+                `SELECT trial_id FROM user_order_details WHERE extra_payment_order_id = $1`,
+                [merchantOrderId],
+              );
+              trialIdForRedirect =
+                byOrder.rows.length > 0
+                  ? (byOrder.rows[0].trial_id as string)
+                  : null;
+            }
+
+            if (trialIdForRedirect) {
+              return res.redirect(
+                `${baseUrl}/address-form/${encodeURIComponent(
+                  trialIdForRedirect,
+                )}?error=payment_failed`,
+              );
+            }
+          } catch (lookupErr) {
+            console.error(
+              "Extra-copies callback redirect lookup error:",
+              lookupErr,
+            );
+          }
+
+          // Fallback if we couldn't resolve the trial
+          return res.redirect(`${baseUrl}/free-trial?error=payment_failed`);
+        }
+      }
+      // ── Standard purchase flow ────────────────────────────────────────
       const statusResponse = await phonePeService.checkPaymentStatus(
         merchantOrderId as string,
       );
       const isSuccess =
         statusResponse.success && statusResponse.data?.state === "COMPLETED";
 
-      // Redirect based on payment status
-      const baseUrl = process.env.APP_BASE_URL || "";
       if (isSuccess && statusResponse.data) {
         // UPDATE TRANSACTIONS TABLE WITH PAYMENT INFO
         try {
@@ -3077,6 +3295,303 @@ FINAL QUALITY CHECK
       res.status(500).json({ error: "Failed to fetch blog" });
     }
   });
+
+  // ─── User Order Details ─────────────────────────────────────────────
+  //
+  // Step 1 of 2 — save form fields to Supabase (JSON body, no files).
+  //   orderId is passed as "<trialId>-<transactionId>" from the client.
+  //   image_url is initialised as an empty JSON array; filled by step 2.
+
+  app.post("/api/user-order-details", async (req: Request, res: Response) => {
+    try {
+      const { pool } = await import("./db");
+
+      const {
+        trialId,
+        transactionId,
+        orderId,
+        buyerFullName,
+        authorName,
+        additionalCopies,
+        recipientName,
+        recipientPhone,
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        pincode,
+        detailsConfirmed,
+      } = req.body as Record<string, unknown>;
+
+      // transaction_id is uuid in the DB – guard against non-uuid strings
+      const txId =
+        typeof transactionId === "string" && transactionId.trim()
+          ? transactionId.trim()
+          : null;
+
+      const result = await pool.query(
+        `INSERT INTO user_order_details (
+           trial_id, transaction_id, order_id,
+           buyer_full_name, author_name,
+           additional_copies,
+           recipient_name, recipient_phone,
+           address_line1, address_line2,
+           city, state, pincode,
+           details_confirmed, image_url
+         ) VALUES (
+           $1, $2::uuid, $3,
+           $4, $5,
+           $6,
+           $7, $8,
+           $9, $10,
+           $11, $12, $13,
+           $14, '[]'::jsonb
+         )
+         RETURNING id`,
+        [
+          trialId || null,
+          txId,
+          orderId || null,
+          buyerFullName,
+          authorName,
+          parseInt(String(additionalCopies ?? "0"), 10),
+          recipientName,
+          recipientPhone,
+          addressLine1,
+          addressLine2 || null,
+          city,
+          state,
+          pincode,
+          detailsConfirmed === true || detailsConfirmed === "true",
+        ],
+      );
+
+      res.json({ success: true, id: result.rows[0].id as string });
+    } catch (error) {
+      console.error("Error saving user order details:", error);
+      res.status(500).json({ error: "Failed to save order details" });
+    }
+  });
+
+  // ─── User Order Images ───────────────────────────────────────────────
+  //
+  // Step 2 of 2 — upload photos to Cloudflare R2, then write the public
+  //   URLs back to the image_url column of the row saved in step 1.
+  //
+  //   Bucket : album-cover-images-user
+  //   Key    : userOrderUploads/<rowId>-<timestamp>-<safeName>
+  //   URL    : https://profile.kahani.xyz/userOrderUploads/<rowId>-<timestamp>-<safeName>
+
+  app.post(
+    "/api/user-order-images/:rowId",
+    upload.array("photos", 5),
+    async (req: Request, res: Response) => {
+      try {
+        const { pool } = await import("./db");
+        const { uploadToR2, R2_ALBUM_COVERS_BUCKET } = await import("./r2");
+
+        const { rowId } = req.params;
+        const files = (req.files ?? []) as Express.Multer.File[];
+
+        // Upload all photos in parallel
+        // Key  : userOrderUploads/<rowId>-<timestamp>-<safeName>
+        // URL  : https://profile.kahani.xyz/<key>  (via R2_ALBUM_COVERS_PUBLIC_BUCKET_BASE_URL)
+        const uploadResults = await Promise.all(
+          files.map(async (file) => {
+            const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
+            const key = `userOrderUploads/${rowId}-${Date.now()}-${safeName}`;
+            return uploadToR2(R2_ALBUM_COVERS_BUCKET, key, file.buffer, file.mimetype);
+          }),
+        );
+
+        const imageUrls = uploadResults.filter((u): u is string => u !== null);
+
+        // Persist URLs to Supabase
+        await pool.query(
+          `UPDATE user_order_details SET image_url = $1::jsonb WHERE id = $2`,
+          [JSON.stringify(imageUrls), rowId],
+        );
+
+        res.json({ success: true, imageUrls });
+      } catch (error) {
+        console.error("Error uploading order images:", error);
+        res.status(500).json({ error: "Failed to upload images" });
+      }
+    },
+  );
+
+  // ─── Extra-copies PhonePe payment ───────────────────────────────────
+  //
+  // Creates a PhonePe order for the surcharge on additional book copies.
+  // Amount is computed SERVER-SIDE from the saved user_order_details row
+  // (₹300 per copy beyond the first, × 100 to convert to paise).
+  // Returns the PhonePe redirect URL for the client to navigate to directly.
+
+  app.post("/api/phonepe/create-extra-copies-order", async (req, res) => {
+    try {
+      const { orderDetailsId, promoCode } = req.body as {
+        orderDetailsId?: string;
+        promoCode?: string | null;
+      };
+      if (!orderDetailsId) {
+        return res.status(400).json({ error: "Missing orderDetailsId" });
+      }
+
+      const { pool } = await import("./db");
+      const { rows } = await pool.query(
+        `SELECT id, additional_copies
+         FROM user_order_details WHERE id = $1`,
+        [orderDetailsId],
+      );
+      if (rows.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      const order = rows[0] as { additional_copies?: number };
+      const extraCopies = Math.max(order.additional_copies || 0, 0);
+
+      if (extraCopies <= 0) {
+        return res
+          .status(400)
+          .json({ error: "No extra copies to charge for" });
+      }
+
+      // ₹400 per extra copy → paise
+      const baseAmountPaise = extraCopies * 400 * 100;
+
+      // Apply book-order promo code if provided
+      let finalAmountPaise = baseAmountPaise;
+      let discountAmountPaise = 0;
+      let appliedPromoCode: string | null = null;
+
+      if (promoCode) {
+        const normalizedCode = promoCode.trim().toUpperCase();
+        const { rows: dRows } = await pool.query(
+          `SELECT id, code, discount_type, discount_value, book_order
+           FROM discounts WHERE code = $1 AND is_active = true LIMIT 1`,
+          [normalizedCode],
+        );
+        const dRow = dRows[0];
+
+        if (dRow && dRow.book_order) {
+          if (dRow.discount_type === "percentage") {
+            discountAmountPaise = Math.floor(
+              (baseAmountPaise * dRow.discount_value) / 100,
+            );
+          } else {
+            discountAmountPaise = Math.min(dRow.discount_value, baseAmountPaise);
+          }
+          finalAmountPaise = Math.max(baseAmountPaise - discountAmountPaise, 100);
+          discountAmountPaise = baseAmountPaise - finalAmountPaise;
+          appliedPromoCode = normalizedCode;
+        }
+      }
+
+      const extraAmountPaise = finalAmountPaise;
+
+      const { randomUUID } = await import("crypto");
+      const merchantOrderId = `EXT_${Date.now()}_${randomUUID().slice(0, 8)}`;
+      const merchantUserId = randomUUID();
+
+      const { phonePeService } = await import("./phonepe");
+      const callbackUrl = `${phonePeCallbackBase()}/payment/callback?merchantOrderId=${merchantOrderId}&flowType=extra-copies&orderDetailsId=${orderDetailsId}`;
+
+      const orderResponse = await phonePeService.createOrder({
+        amount: extraAmountPaise,
+        merchantOrderId,
+        merchantUserId,
+        redirectUrl: callbackUrl,
+        // metadata only supports albumId/packageType; extra-copies context is in the callback URL
+      });
+
+      if (
+        !orderResponse.success ||
+        !orderResponse.data?.instrumentResponse?.redirectInfo?.url
+      ) {
+        return res.status(500).json({ error: "Failed to create payment order" });
+      }
+
+      // Persist pending state so the callback can verify the amount
+      await pool.query(
+        `UPDATE user_order_details
+         SET extra_payment_status = 'pending',
+             extra_payment_order_id = $1,
+             extra_payment_amount_paise = $2
+         WHERE id = $3`,
+        [merchantOrderId, extraAmountPaise, orderDetailsId],
+      );
+
+      res.json({
+        success: true,
+        redirectUrl: orderResponse.data.instrumentResponse.redirectInfo.url,
+        baseAmountRupees: Math.round(baseAmountPaise / 100),
+        discountAmountRupees: Math.round(discountAmountPaise / 100),
+        finalAmountRupees: Math.round(finalAmountPaise / 100),
+        appliedPromoCode,
+      });
+    } catch (error) {
+      console.error("Error creating extra-copies PhonePe order:", error);
+      res.status(500).json({ error: "Failed to create payment order" });
+    }
+  });
+
+  // ─── Extra-copies payment callback update ───────────────────────────
+  // Called by PaymentCallback.tsx after PhonePe confirms the payment.
+  // Verifies the paid amount matches what was stored at order-create time.
+
+  app.put(
+    "/api/user-order-details/payment/:merchantOrderId",
+    async (req, res) => {
+      try {
+        const { merchantOrderId } = req.params;
+        const { paymentStatus, paymentTransactionId, paymentAmount } =
+          req.body as {
+            paymentStatus: string;
+            paymentTransactionId?: string;
+            paymentAmount?: number;
+          };
+
+        const { pool } = await import("./db");
+        const { rows } = await pool.query(
+          `SELECT id, extra_payment_amount_paise
+           FROM user_order_details WHERE extra_payment_order_id = $1`,
+          [merchantOrderId],
+        );
+        if (rows.length === 0) {
+          return res.status(404).json({ error: "Order not found" });
+        }
+
+        const order = rows[0];
+
+        // Amount integrity check for successful payments
+        if (
+          paymentStatus === "success" &&
+          typeof paymentAmount === "number" &&
+          order.extra_payment_amount_paise !== paymentAmount
+        ) {
+          console.error("SECURITY: Extra-copies amount mismatch", {
+            expected: order.extra_payment_amount_paise,
+            received: paymentAmount,
+          });
+          return res
+            .status(400)
+            .json({ error: "Payment amount verification failed" });
+        }
+
+        await pool.query(
+          `UPDATE user_order_details
+           SET extra_payment_status = $1
+           WHERE extra_payment_order_id = $2`,
+          [paymentStatus, merchantOrderId],
+        );
+
+        res.json({ success: true, id: order.id });
+      } catch (error) {
+        console.error("Error updating extra-copies payment status:", error);
+        res.status(500).json({ error: "Failed to update payment status" });
+      }
+    },
+  );
 
   const httpServer = createServer(app);
   return httpServer;

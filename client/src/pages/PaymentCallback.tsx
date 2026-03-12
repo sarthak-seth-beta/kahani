@@ -27,6 +27,7 @@ export default function PaymentCallback() {
     const albumId = params.get("albumId");
     const packageType = params.get("packageType");
     const mode = params.get("mode");
+    const flowType = params.get("flowType"); // "extra-copies" for additional book copies
 
     if (!merchantOrderId) {
       setState("failed");
@@ -46,12 +47,35 @@ export default function PaymentCallback() {
 
       const data = await response.json();
 
-      // Amount verification is now handled server-side via stored expected_amount_paise
-      // The PUT endpoint below will reject mismatched amounts
-
-      // Check if payment was successful
       if (data.isSuccess && data.state === "COMPLETED") {
-        // Update transactions table with payment information
+        // ── Extra-copies flow ──────────────────────────────────────────
+        if (flowType === "extra-copies") {
+          try {
+            await apiRequest(
+              "PUT",
+              `/api/user-order-details/payment/${merchantOrderId}`,
+              {
+                paymentStatus: "success",
+                paymentTransactionId: data.transactionId,
+                paymentAmount: data.amount,
+              },
+            );
+          } catch (updateError) {
+            console.error("Failed to record extra-copies payment:", updateError);
+          }
+
+          setState("success");
+
+          toast({
+            title: "Payment Successful!",
+            description: "Your extra copies have been confirmed.",
+          });
+
+          setTimeout(() => setLocation("/book-order-confirmation"), 2000);
+          return;
+        }
+
+        // ── Standard purchase flow ─────────────────────────────────────
         try {
           await apiRequest(
             "PUT",
@@ -66,7 +90,6 @@ export default function PaymentCallback() {
           );
         } catch (updateError) {
           console.error("Failed to update payment info:", updateError);
-          // Don't block the flow if this fails
         }
 
         setState("success");
@@ -76,7 +99,6 @@ export default function PaymentCallback() {
           description: "Redirecting to order details...",
         });
 
-        // Redirect to order details page
         setTimeout(() => {
           const orderParams = new URLSearchParams({
             albumId: albumId || "",
@@ -92,6 +114,17 @@ export default function PaymentCallback() {
           setLocation(`/order-details?${orderParams.toString()}`);
         }, 2000);
       } else {
+        // ── Failed ────────────────────────────────────────────────────
+        if (flowType === "extra-copies") {
+          try {
+            await apiRequest(
+              "PUT",
+              `/api/user-order-details/payment/${merchantOrderId}`,
+              { paymentStatus: "failed" },
+            );
+          } catch (_) { /* non-fatal */ }
+        }
+
         setState("failed");
         setError(data.message || "Payment was not successful");
 
@@ -116,8 +149,13 @@ export default function PaymentCallback() {
 
   const handleRetry = () => {
     const params = new URLSearchParams(window.location.search);
+    const flowType = params.get("flowType");
     const albumId = params.get("albumId");
-    setLocation(albumId ? `/free-trial?albumId=${albumId}` : "/free-trial");
+    if (flowType === "extra-copies") {
+      setLocation("/"); // extra-copies has no natural retry page
+    } else {
+      setLocation(albumId ? `/free-trial?albumId=${albumId}` : "/free-trial");
+    }
   };
 
   // Verifying state

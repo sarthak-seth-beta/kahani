@@ -140,20 +140,22 @@ export class PhonePeService {
     const accessToken = await this.getAuthToken();
     const url = `${this.getBaseUrl()}/checkout/v2/pay`;
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       merchantOrderId: request.merchantOrderId,
       amount: request.amount,
+      merchantUserId: request.merchantUserId,
       paymentFlow: {
         type: "PG_CHECKOUT",
         merchantUrls: { redirectUrl: request.redirectUrl },
       },
-      ...(request.metadata && {
-        metaInfo: {
-          udf1: request.metadata.albumId || "",
-          udf2: request.metadata.packageType || "",
-        },
-      }),
     };
+
+    if (request.metadata) {
+      payload.metaInfo = {
+        udf1: request.metadata.albumId || "",
+        udf2: request.metadata.packageType || "",
+      };
+    }
 
     console.log("[PhonePe] Creating order:", {
       merchantOrderId: request.merchantOrderId,
