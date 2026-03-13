@@ -80,6 +80,12 @@ export const AnalyticsEvents = {
   // Demo/Trial
   TRY_DEMO_CLICKED: "try_demo_clicked",
   START_RECORDING_CLICKED: "start_recording_clicked",
+
+  // Blind-spot events (custom capture for pricing/attribution)
+  PACKAGE_SELECTED: "package_selected",
+  CUSTOM_ALBUM_CLICKED: "custom_album_clicked",
+  DISCOUNT_CODE_APPLIED: "discount_code_applied",
+  NARRATOR_TYPE_SELECTED: "narrator_type_selected",
 } as const;
 
 export type AnalyticsEventName =
@@ -175,6 +181,39 @@ export function resetUser(): void {
     ph.reset();
   } catch (error) {
     console.error("[Analytics] Failed to reset user:", error);
+  }
+}
+
+/**
+ * Capture UTM parameters from the URL and register them as super properties.
+ * Ensures offline links (QR codes, flyers, WhatsApp) with UTM params are
+ * attributed to all subsequent events.
+ * Example: kahani.xyz?utm_source=holi-event&utm_medium=offline&utm_campaign=delhi-mar26
+ */
+export function captureUtmParams(): void {
+  const ph = getPostHog();
+  if (!ph) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const utmSource = params.get("utm_source");
+  const utmMedium = params.get("utm_medium");
+  const utmCampaign = params.get("utm_campaign");
+  const utmTerm = params.get("utm_term");
+  const utmContent = params.get("utm_content");
+
+  const utm: Record<string, string> = {};
+  if (utmSource) utm.utm_source = utmSource;
+  if (utmMedium) utm.utm_medium = utmMedium;
+  if (utmCampaign) utm.utm_campaign = utmCampaign;
+  if (utmTerm) utm.utm_term = utmTerm;
+  if (utmContent) utm.utm_content = utmContent;
+
+  if (Object.keys(utm).length > 0) {
+    try {
+      ph.register(utm);
+    } catch (error) {
+      console.error("[Analytics] Failed to register UTM params:", error);
+    }
   }
 }
 

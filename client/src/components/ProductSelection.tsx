@@ -6,6 +6,7 @@ import { BookOpen, Mic, Book, Loader2, Tag, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserInfoForm } from "@/components/UserInfoForm";
 import { apiRequest } from "@/lib/queryClient";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import { PACKAGE_PRICES } from "@shared/schema";
 
 interface ProductSelectionProps {
@@ -89,9 +90,30 @@ export function ProductSelection({
       if (!response.ok || !data.valid) {
         setDiscountError(data.error || "Invalid discount code");
         setAppliedDiscount(null);
+        trackEvent(AnalyticsEvents.DISCOUNT_CODE_APPLIED, {
+          code,
+          valid: false,
+          discount_percentage: null,
+          flow: "free_trial",
+        });
       } else {
         setAppliedDiscount(data as DiscountInfo);
         setDiscountError(null);
+        const discountInfo = data as DiscountInfo;
+        const discountPct =
+          discountInfo.discountType === "percentage"
+            ? discountInfo.discountValue
+            : Math.round(
+                (discountInfo.discountAmountPaise /
+                  discountInfo.baseAmountPaise) *
+                  100,
+              );
+        trackEvent(AnalyticsEvents.DISCOUNT_CODE_APPLIED, {
+          code,
+          valid: true,
+          discount_percentage: discountPct,
+          flow: "free_trial",
+        });
       }
     } catch {
       setDiscountError("Failed to validate discount code");
@@ -110,6 +132,14 @@ export function ProductSelection({
   // When package selection changes, re-validate discount if one is applied
   const handleSelectPackage = async (id: string) => {
     setSelectedId(id);
+
+    const product = PRODUCTS.find((p) => p.id === id);
+    if (product) {
+      trackEvent(AnalyticsEvents.PACKAGE_SELECTED, {
+        package_name: product.title,
+        price: product.pricePaise / 100,
+      });
+    }
 
     if (appliedDiscount) {
       // Re-validate for the new package type

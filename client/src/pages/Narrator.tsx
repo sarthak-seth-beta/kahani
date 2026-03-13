@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
@@ -22,6 +23,11 @@ export default function Narrator() {
   };
 
   const handleSelectRelation = (id: string, label: string) => {
+    const narratorType = id === "all" ? "myself" : "somebody_else";
+    trackEvent(AnalyticsEvents.NARRATOR_TYPE_SELECTED, {
+      narrator_type: narratorType,
+    });
+
     if (id === "all") {
       // Flow remains same for "Myself"
       setLocation("/all-albums?mode=solo");
