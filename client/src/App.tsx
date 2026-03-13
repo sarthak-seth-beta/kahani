@@ -2,7 +2,7 @@ import { Switch, Route, useLocation } from "wouter";
 import { useEffect, lazy, Suspense, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { trackPageView } from "@/lib/analytics";
+import { trackPageView, captureUtmParams } from "@/lib/analytics";
 import { apiRequest } from "./lib/queryClient";
 import { GeneratedAlbumProvider } from "@/stores/generatedAlbumStore";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -196,6 +196,7 @@ function App() {
   const [uiReady, setUiReady] = useState(false);
   useEffect(() => {
     setUiReady(true);
+    captureUtmParams();
   }, []);
 
   return (

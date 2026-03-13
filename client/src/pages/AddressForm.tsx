@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface AddressFormProps {
   params: {
@@ -254,6 +255,12 @@ export default function AddressForm({ params }: AddressFormProps) {
       const data = await res.json();
       if (!res.ok || !data.valid) {
         setPromoError(data.error || "Code not valid");
+        trackEvent(AnalyticsEvents.DISCOUNT_CODE_APPLIED, {
+          code,
+          valid: false,
+          discount_percentage: null,
+          flow: "book_order",
+        });
       } else {
         setAppliedDiscount({
           code: data.code,
@@ -261,6 +268,18 @@ export default function AddressForm({ params }: AddressFormProps) {
           discountValue: data.discountValue,
           discountAmountPaise: data.discountAmountPaise,
           finalAmountPaise: data.finalAmountPaise,
+        });
+        const discountPct =
+          data.discountType === "percentage"
+            ? data.discountValue
+            : Math.round(
+                (data.discountAmountPaise / data.baseAmountPaise) * 100,
+              );
+        trackEvent(AnalyticsEvents.DISCOUNT_CODE_APPLIED, {
+          code: data.code,
+          valid: true,
+          discount_percentage: discountPct,
+          flow: "book_order",
         });
       }
     } catch {
