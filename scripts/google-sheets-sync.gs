@@ -150,10 +150,16 @@ function syncFromAPI() {
     );
   }
 
-  // Read existing data (skip header row 1)
+  // Row 2 is a preserved "spacer" row (never overwritten by sync).
+  // Data rows start at row 3.
+  var DATA_START_ROW = 3;
+
+  // Read existing data (skip header row 1 and preserved row 2)
   var existingData = [];
-  if (lastRow > 1) {
-    existingData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  if (lastRow >= DATA_START_ROW) {
+    existingData = sheet
+      .getRange(DATA_START_ROW, 1, lastRow - DATA_START_ROW + 1, lastCol)
+      .getValues();
   }
 
   // 3. Build lookup map: trialId → { rowIndex (0-based in existingData), values }
@@ -181,7 +187,7 @@ function syncFromAPI() {
       var existing = trialIdLookup[tid];
       var merged = mergeRow(apiRow, existing.values, colMap, mappedColIndices);
       updatedRows.push({
-        sheetRow: existing.index + 2, // data starts at row 2
+        sheetRow: existing.index + DATA_START_ROW, // data starts at row 3 (row 2 is preserved)
         values: merged,
       });
     } else {
