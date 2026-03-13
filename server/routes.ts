@@ -209,6 +209,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint: Return sheet sync data as JSON for Google Apps Script
+  app.get("/api/admin/sheet-sync-data", async (req, res) => {
+    try {
+      // Simple API key auth
+      const apiKey = req.query.key as string;
+      const expectedKey = process.env.SHEET_SYNC_API_KEY;
+      if (!expectedKey || apiKey !== expectedKey) {
+        return res.status(401).json({ error: "Invalid or missing API key" });
+      }
+
+      const { pool } = await import("./db");
+
+      const query = `
+        SELECT
+          ft.id as trial_id,
+          ft.buyer_name,
+          ft.customer_phone,
+          ft.storyteller_name,
+          ft.storyteller_phone,
+          ft.created_at,
+          ft.conversation_state,
+          ft.current_question_index,
+          ft.retry_count,
+          ft.storyteller_language_preference,
+          ft.custom_cover_image_url,
+          a.title as album_title,
+          a.is_active as album_is_active,
+          a.best_fit_for as album_best_fit_for,
+          t.package_type,
+          t.discount_code_applied,
+          t.payment_amount,
+          t.payment_transaction_id,
+          CASE WHEN uod.id IS NOT NULL THEN true ELSE false END as has_book_form,
+          uod.additional_copies
+        FROM free_trials ft
+        LEFT JOIN albums a ON ft.album_id = a.id
+        LEFT JOIN LATERAL (
+          SELECT * FROM transactions t2
+          WHERE t2.album_id::text = ft.album_id AND t2.phone = ft.customer_phone
+          ORDER BY CASE WHEN t2.payment_status = 'success' THEN 0 ELSE 1 END,
+                   t2.created_at DESC
+          LIMIT 1
+        ) t ON true
+        LEFT JOIN LATERAL (
+          SELECT id, additional_copies FROM user_order_details uod2
+          WHERE uod2.trial_id = ft.id
+          LIMIT 1
+        ) uod ON true
+        ORDER BY ft.created_at DESC
+      `;
+
+      const result = await pool.query(query);
+
+      // Map rows to the sheet column format
+      const rows = result.rows.map((row: any) => {
+        const createdAt = row.created_at
+          ? new Date(row.created_at).toISOString().split("T")[0]
+          : "";
+        const isCustomAlbum =
+          row.album_is_active === true && row.album_best_fit_for != null
+            ? "Yes"
+            : "No";
+        const amountPaid =
+          row.payment_amount != null
+            ? (row.payment_amount / 100).toFixed(2)
+            : "";
+        const isCompleted =
+          row.conversation_state === "completed" ? "Yes" : "No";
+        const langMap: Record<string, string> = {
+          en: "English",
+          hn: "Hindi",
+        };
+        const language =
+          langMap[row.storyteller_language_preference] ||
+          row.storyteller_language_preference ||
+          "";
+        const photoUploaded = row.custom_cover_image_url ? "Yes" : "No";
+
+        return {
+          kahaniLink: `https://kahani.xyz/playlist-albums/${row.trial_id}`,
+          trialId: row.trial_id || "",
+          questionIndex:
+            row.current_question_index != null
+              ? row.current_question_index
+              : "",
+          buyerName: row.buyer_name || "",
+          buyerNumber: row.customer_phone || "",
+          storytellerName: row.storyteller_name || "",
+          storytellerNumber: row.storyteller_phone || "",
+          date: createdAt,
+          albumTitle: row.album_title || "",
+          customAlbum: isCustomAlbum,
+          skuSelected: row.package_type || "",
+          discountCodeUsed: row.discount_code_applied || "",
+          amountPaid: amountPaid,
+          paymentTransactionId: row.payment_transaction_id || "",
+          conversationState: row.conversation_state || "",
+          completed: isCompleted,
+          questionCount:
+            row.current_question_index != null
+              ? row.current_question_index
+              : "",
+          retryCount: row.retry_count != null ? row.retry_count : "",
+          languageSelected: language,
+          photoUploaded: photoUploaded,
+          bookForm: row.has_book_form ? "Yes" : "No",
+          noOfBooks: row.additional_copies != null ? row.additional_copies : "",
+        };
+      });
+
+      res.json({
+        success: true,
+        count: rows.length,
+        syncedAt: new Date().toISOString(),
+        rows,
+      });
+    } catch (error: any) {
+      console.error("Error fetching sheet sync data:", error);
+      res.status(500).json({
+        error: "Failed to fetch sheet sync data",
+        message: error.message,
+      });
+    }
+  });
+
   // Slack slash command — exports free_trials to CSV and posts to channel
   app.post("/api/slack/export-free-trials", async (req, res) => {
     const signingSecret = process.env.SLACK_SIGNING_SECRET;

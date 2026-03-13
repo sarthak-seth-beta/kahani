@@ -34,6 +34,7 @@ import {
   Download,
   ChevronDown,
   ChevronRight,
+  Sheet,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO, isAfter, isBefore, startOfDay } from "date-fns";
@@ -282,6 +283,22 @@ export default function Admin() {
                     >
                       <Plus size={14} />
                       Manage Albums
+                    </Button>
+                    <Button
+                      id="admin-sync-google-sheet"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(
+                          "https://docs.google.com/spreadsheets/d/1AulN6PEgDAZMwZRht5Z1ChNzmgjweMmNl4UN13dNsYE/edit",
+                          "_blank",
+                        );
+                      }}
+                      variant="outline"
+                      className="text-xs"
+                      size="sm"
+                    >
+                      <Sheet size={14} />
+                      Open Order Sheet
                     </Button>
                   </div>
                 </div>
