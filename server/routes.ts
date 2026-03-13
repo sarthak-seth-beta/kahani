@@ -248,7 +248,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN albums a ON ft.album_id = a.id
         LEFT JOIN LATERAL (
           SELECT * FROM transactions t2
-          WHERE t2.album_id::text = ft.album_id AND t2.phone = ft.customer_phone
+          WHERE t2.album_id::text = ft.album_id
+            AND TRIM(LEADING '+' FROM t2.phone) = TRIM(LEADING '+' FROM ft.customer_phone)
           ORDER BY CASE WHEN t2.payment_status = 'success' THEN 0 ELSE 1 END,
                    t2.created_at DESC
           LIMIT 1
