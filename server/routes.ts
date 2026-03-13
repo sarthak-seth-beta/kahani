@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? new Date(row.created_at).toISOString().split("T")[0]
           : "";
         const isCustomAlbum =
-          row.album_is_active === true && row.album_best_fit_for != null
+          row.album_is_active === false && row.album_best_fit_for != null
             ? "Yes"
             : "No";
         const amountPaid =
@@ -1770,6 +1770,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Transaction helpers ────────────────────────────────────────────────
+
+  // Send a Slack notification when a transaction's payment has completed.
+  async function postTransactionPaymentToSlack(transaction: {
+    id: string;
+    name: string;
+    phone: string;
+    albumId: string;
+    packageType: string;
+    paymentStatus?: string;
+    paymentAmount?: number | null;
+    paymentOrderId?: string | null;
+  }): Promise<void> {
+    const slackToken = process.env.SLACK_BOT_TOKEN;
+    const channelId = process.env.SLACK_TRANSACTIONS_CHANNEL_ID;
+
+    if (!slackToken || !channelId) {
+      // Slack integration is optional; just log and skip if not configured
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "[Slack] Missing SLACK_BOT_TOKEN or SLACK_TRANSACTIONS_CHANNEL_ID; skipping transaction notification",
+        );
+      }
+      return;
+    }
+
+    try {
+      const slack = new WebClient(slackToken);
+      await slack.chat.postMessage({
+        channel: channelId,
+        text: `Payment completed for transaction: ${transaction.id}`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "*Payment completed*\n" +
+                `• *ID*: ${transaction.id}\n` +
+                `• *Name*: ${transaction.name}\n` +
+                `• *Phone*: ${transaction.phone}\n` +
+                `• *Album ID*: ${transaction.albumId}\n` +
+                `• *Package*: ${transaction.packageType}\n` +
+                (transaction.paymentOrderId
+                  ? `• *Payment order ID*: ${transaction.paymentOrderId}\n`
+                  : "") +
+                (transaction.paymentAmount != null
+                  ? `• *Amount (paise)*: ${transaction.paymentAmount}\n`
+                  : "") +
+                (transaction.paymentStatus
+                  ? `• *Payment status*: ${transaction.paymentStatus}\n`
+                  : ""),
+            },
+          },
+        ],
+      });
+    } catch (err) {
+      console.error("[Slack] Failed to send transaction notification:", err);
+    }
+  }
+
   // Transaction Management Endpoints
   // Create transaction record (one per payment attempt)
   app.post("/api/transactions", async (req, res) => {
@@ -1921,6 +1982,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!updatedTxn) {
         return res.status(500).json({ error: "Failed to update transaction" });
+      }
+
+      // Only notify Slack when payment has actually completed successfully
+      if (updatedTxn.paymentStatus === "success") {
+        void postTransactionPaymentToSlack({
+          id: updatedTxn.id,
+          name: updatedTxn.name ?? "",
+          phone: updatedTxn.phone ?? "",
+          albumId: updatedTxn.albumId ?? "",
+          packageType: updatedTxn.packageType ?? "",
+          paymentStatus: updatedTxn.paymentStatus ?? undefined,
+          paymentAmount: updatedTxn.paymentAmount ?? undefined,
+          paymentOrderId: updatedTxn.paymentOrderId ?? undefined,
+        });
       }
 
       res.json(updatedTxn);
@@ -2356,6 +2431,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (fallbackError) {
               console.error("transactionId fallback failed:", fallbackError);
             }
+          }
+
+          // If we have an updated transaction row, notify Slack that payment completed.
+          if (updatedTxn) {
+            void postTransactionPaymentToSlack({
+              id: updatedTxn.id,
+              name: updatedTxn.name ?? "",
+              phone: updatedTxn.phone ?? "",
+              albumId: updatedTxn.albumId ?? "",
+              packageType: updatedTxn.packageType ?? "",
+              paymentStatus: updatedTxn.paymentStatus ?? undefined,
+              paymentAmount: updatedTxn.paymentAmount ?? undefined,
+              paymentOrderId: updatedTxn.paymentOrderId ?? undefined,
+            });
           }
         } catch (updateError) {
           console.error("Failed to update user payment info:", updateError);
