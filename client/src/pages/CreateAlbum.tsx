@@ -35,6 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useGeneratedAlbum } from "@/stores/generatedAlbumStore";
 import { getOrCreateSessionId } from "@/lib/sessionId";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 const toneEnum = z.enum(["warm", "respectful", "funny", "calm"]);
 const albumGoalEnum = z.enum([
@@ -129,6 +130,10 @@ export default function CreateAlbum() {
   }, [isGenerating]);
 
   const handleGenerateAlbum = async () => {
+    trackEvent(AnalyticsEvents.CUSTOM_ALBUM_CLICKED, {
+      source: "create_album",
+    });
+
     const valid = await form.trigger([
       "recipientName",
       "theme",
@@ -600,7 +605,7 @@ export default function CreateAlbum() {
               )}
             </Button>
 
-            {/* Submit Button */}
+            {/* Submit Button
             <Button
               type="submit"
               variant="outline"
@@ -618,7 +623,7 @@ export default function CreateAlbum() {
                   Request My Album
                 </>
               )}
-            </Button>
+            </Button> */}
           </form>
         </Form>
       </div>
