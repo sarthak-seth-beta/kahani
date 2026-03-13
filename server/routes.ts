@@ -240,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           t.package_type,
           t.discount_code_applied,
           t.payment_amount,
+          t.expected_amount_paise,
           t.payment_transaction_id,
           CASE WHEN uod.id IS NOT NULL THEN true ELSE false END as has_book_form,
           uod.additional_copies
@@ -272,8 +273,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? "Yes"
             : "No";
         const amountPaid =
-          row.payment_amount != null
-            ? (row.payment_amount / 100).toFixed(2)
+          row.expected_amount_paise != null
+            ? (row.expected_amount_paise / 100).toFixed(2)
             : "";
         const isCompleted =
           row.conversation_state === "completed" ? "Yes" : "No";
@@ -285,6 +286,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           langMap[row.storyteller_language_preference] ||
           row.storyteller_language_preference ||
           "";
+        const skuMap: Record<string, string> = {
+          digital: "Voice Only",
+          ebook: "Digital Book",
+          printed: "Physical Book",
+        };
         const photoUploaded = row.custom_cover_image_url ? "Yes" : "No";
 
         return {
@@ -301,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           date: createdAt,
           albumTitle: row.album_title || "",
           customAlbum: isCustomAlbum,
-          skuSelected: row.package_type || "",
+          skuSelected: skuMap[row.package_type] || row.package_type || "",
           discountCodeUsed: row.discount_code_applied || "",
           amountPaid: amountPaid,
           paymentTransactionId: row.payment_transaction_id || "",
