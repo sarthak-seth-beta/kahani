@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? new Date(row.created_at).toISOString().split("T")[0]
           : "";
         const isCustomAlbum =
-          row.album_is_active === true && row.album_best_fit_for != null
+          row.album_is_active === false && row.album_best_fit_for != null
             ? "Yes"
             : "No";
         const amountPaid =
