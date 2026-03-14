@@ -435,8 +435,10 @@ export default function FreeTrial() {
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button
+                type="button"
                 size="lg"
                 className="flex-none w-full px-8 bg-[#A35139] hover:bg-[#8B4430] text-white rounded-xl shadow-lg text-lg font-semibold h-12 md:max-w-[200px]"
+                onClick={() => setIsFormOpen(true)}
               >
                 Add to Cart
               </Button>

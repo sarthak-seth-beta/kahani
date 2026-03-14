@@ -1,5 +1,11 @@
 let _posthog: any = null;
 
+/** Events that fire before PostHog is ready are queued and sent once it loads */
+const eventQueue: {
+  eventName: AnalyticsEventName;
+  properties: Record<string, any>;
+}[] = [];
+
 function getPostHog(): any {
   if (_posthog) return _posthog;
   try {
@@ -14,6 +20,34 @@ function getPostHog(): any {
 
 function isPostHogReady(): boolean {
   return getPostHog() !== null;
+}
+
+/**
+ * Call this when PostHog has finished initializing (e.g. from init loaded callback).
+ * Sends any events that were queued before PostHog was ready.
+ */
+export function flushQueuedEvents(): void {
+  const ph = getPostHog();
+  if (!ph || eventQueue.length === 0) return;
+  const count = eventQueue.length;
+  if (import.meta.env.DEV) {
+    console.log("[Analytics] Flushing", count, "queued event(s)");
+  }
+  while (eventQueue.length > 0) {
+    const item = eventQueue.shift()!;
+    try {
+      ph.capture(item.eventName, item.properties);
+      if (import.meta.env.DEV) {
+        console.log("[Analytics] Queued event sent:", item.eventName);
+      }
+    } catch (error) {
+      console.error(
+        "[Analytics] Failed to flush queued event:",
+        item.eventName,
+        error,
+      );
+    }
+  }
 }
 
 /**
@@ -103,9 +137,6 @@ export function trackEvent(
   eventName: AnalyticsEventName,
   properties?: Record<string, any>,
 ): void {
-  const ph = getPostHog();
-  if (!ph) return;
-
   const baseProperties: BaseEventProperties = {
     page_path: window.location.pathname,
     page_title: document.title,
@@ -118,8 +149,23 @@ export function trackEvent(
     ...properties,
   });
 
+  const ph = getPostHog();
+  if (!ph) {
+    eventQueue.push({ eventName, properties: sanitizedProperties });
+    if (import.meta.env.DEV) {
+      console.log(
+        "[Analytics] Event queued (will send when PostHog is ready):",
+        eventName,
+      );
+    }
+    return;
+  }
+
   try {
     ph.capture(eventName, sanitizedProperties);
+    if (import.meta.env.DEV) {
+      console.log("[Analytics] Event sent:", eventName, sanitizedProperties);
+    }
   } catch (error) {
     console.error("[Analytics] Failed to track event:", error);
   }
