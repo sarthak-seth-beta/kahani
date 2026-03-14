@@ -52,6 +52,7 @@ export function initPostHog() {
   try {
     posthog.init(POSTHOG_API_KEY, {
       api_host: POSTHOG_HOST,
+      ui_host: "https://us.posthog.com",
       // Enable autocapture for automatic event tracking
       autocapture: true,
       // Enable session recording (can be configured per user/page later)
