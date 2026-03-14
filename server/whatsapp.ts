@@ -745,9 +745,9 @@ export function getLocalizedMessage(
     },
     reminderMessage: {
       en: (name: string, question?: string) =>
-        `Hi ${name}, just a gentle reminder about the question I sent earlier:\n\n*${question || ""}*\n\nWhenever you're ready, please share your story with a voice note. Take your time.`,
+        `Hi ${name}, quick reminder for this one: ${question || ""}\n\nWhenever you are free, please send a voice note.`,
       hn: (name: string, question?: string) =>
-        `नमस्ते ${name}, मैंने पहले भेजे गए प्रश्न के बारे में एक कोमल अनुस्मारक:\n\n*${question || ""}*\n\nजब भी आप तैयार हों, कृपया एक वॉइस नोट के साथ अपनी कहानी साझा करें। अपना समय लें।`,
+        `नमस्ते ${name}, बस याद दिला रही हूँ: ${question || ""}\n\nजब भी समय मिले, वॉइस नोट भेज दीजिए।`,
     },
     buyerCompletionMessage: {
       en: (buyerName: string, storytellerName: string) =>

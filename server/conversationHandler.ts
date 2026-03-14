@@ -1528,9 +1528,11 @@ export async function sendQuestion(
     await new Promise((resolve) => setTimeout(resolve, 45 * 1000));
   }
 
-  // Select the appropriate message template based on batch position for conversational albums
+  // Select the appropriate message template: use reminder template only for reminders; otherwise by batch position
   let messageKey = "questionMessage"; // Default for non-conversational albums
-  if (isConversationalAlbum) {
+  if (isReminder) {
+    messageKey = "reminderMessage";
+  } else if (isConversationalAlbum) {
     const batchPosition = targetQuestionIndex % 3; // 0 = 1st, 1 = 2nd, 2 = 3rd
     if (batchPosition === 0) {
       messageKey = "questionMessage1";
